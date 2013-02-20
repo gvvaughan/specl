@@ -1,20 +1,16 @@
 # SPECL
 
-A specification testing framework inspired by [RSpec]{rspec) for and
-in [Lua][lua].
+A specification testing framework, inspired by [RSpec], for and in [Lua].
 
 # WARNING
 
-It's still very alpha, and hasn't yet been used for any real specs.
-Essentially, you need to hack the code to make use of it at the moment,
-but I'm making progress...
+It's still very alpha, and hasn't yet been used to write any real specs.
 
 ## Documentation
 
 Specl uses the Lua parser to read the specifications, so the syntax is
 not as pretty as it might be:
 
-    specs = {
       {["describe specl"] = {
         before = function ()
           -- This runs before each element below.
@@ -45,8 +41,7 @@ not as pretty as it might be:
         after = function ()
           -- this runs after each element above.
         end,
-      }},
-    }
+      }}
 
 No support for mocks, or pending examples in the current version.
 

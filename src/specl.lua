@@ -49,9 +49,8 @@ end
 --[[ =========== ]]--
 
 
-formatter = {
+local formatter = {
   header = function ()
-    spec.formatter.on_first = true
   end,
 
   spec = function (spec)
@@ -214,9 +213,12 @@ end
 --[[ ============= ]]--
 
 
--- TODO: Environment sharing between before/example/after is not right :(
+local nop, run_specs, run_examples
 
-local run_specs, run_examples
+
+-- Always call before and after unconditionally.
+function nop () end
+
 
 function run_specs (specs, indent, env)
   indent = indent or ""
@@ -228,7 +230,6 @@ function run_specs (specs, indent, env)
   end
 end
 
-local function nop () end -- Always call before and after unconditionally.
 
 function run_examples (examples, indent, env)
   env = env or _G
@@ -270,36 +271,21 @@ function run_examples (examples, indent, env)
 end
 
 
--- TODO: command line parsing
--- TODO: remove fake specs
--- TODO: write some specs for specl!
--- TODO: make sure it really works with 5.1
+local function run (spec)
+  formatter.header (stats)
+  run_specs (spec)
+  formatter.footer (stats)
+end
 
---[[ Fake specs ]]--
 
-specs = {
-  {["describe specl"] = {
-    {["it should make a tree"] = function ()
-      expect (true).should_not_equal (false)
-    end},
+--[[ ----------------- ]]--
+--[[ Public Interface. ]]--
+--[[ ----------------- ]]--
 
-    {["describe when nesting contexts"] = {
-      {["it should create a branch"] = function ()
-          expect ({ "sample" }).should_not_be ({ "sample" })
-      end},
-
-      {["it should create more branches"] = function ()
-          expect ({ "sample" }).should_equal ({ "sample" })
-      end},
-    }},
-
-    {["it should have two leaves"] = function ()
-      expect ("English Language").should_contain ("e")
-    end},
-  }},
+local M = {
+  formatter = formatter,
+  matchers  = matchers,
+  run       = run,
 }
 
-
--- Do it!
-run_specs (specs)
-formatter.footer (stats)
+return M
