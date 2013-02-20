@@ -42,7 +42,9 @@ prog = {
     "Report bugs at http://github.com/gvvaughan/specl/issues."
 }
 
-options = {}
+options = {
+  Option {{"verbose", "v"}, "verbose mode"},
+}
 
 
 -- Called by io.processFiles() to concatenate a comma separated list of
@@ -79,6 +81,6 @@ end
 
 getopt.processArgs ()
 io.processFiles (slurp)
-specl.run (spec)
+specl.run (spec, getopt.opt.verbose and specl.report)
 
 os.exit (0)

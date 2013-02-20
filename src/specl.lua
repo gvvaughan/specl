@@ -49,7 +49,7 @@ end
 --[[ =========== ]]--
 
 
-local formatter = {
+local report = {
   header = function ()
   end,
 
@@ -81,6 +81,48 @@ local formatter = {
 	   (os.clock () - stats.starttime) .. " seconds.")
   end,
 }
+
+
+local progress = {
+  header = function ()
+    io.write (">")
+    io.flush ()
+  end,
+
+  spec = function (spec)
+  end,
+
+  example = function (example)
+  end,
+
+  expectations = function (expectations, indent)
+    io.write ("\08")
+    for i, expectation in ipairs (expectations) do
+      if expectation.status == true then
+        io.write (".")
+      else
+        io.write ("F")
+      end
+    end
+    io.write (">")
+    io.flush ()
+  end,
+
+  footer = function (stats)
+    io.write ("\08 \n")
+
+    if stats.fail == 0 then
+      io.write ("All examples worked, ")
+    else
+      io.write (stats.pass .. " passed, and " ..  stats.fail .. " failed ")
+    end
+    io.write ("in " ..  (os.clock () - stats.starttime) .. " seconds.\n")
+  end,
+}
+
+
+-- Use the simple progress formatter by default.  Can be changed by run().
+local formatter = progress
 
 
 
@@ -271,7 +313,8 @@ function run_examples (examples, indent, env)
 end
 
 
-local function run (spec)
+local function run (spec, format)
+  formatter = format or formatter
   formatter.header (stats)
   run_specs (spec)
   formatter.footer (stats)
@@ -283,8 +326,9 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  formatter = formatter,
   matchers  = matchers,
+  progress  = progress,
+  report    = report,
   run       = run,
 }
 
