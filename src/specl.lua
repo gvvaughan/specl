@@ -148,65 +148,52 @@ local function objcmp (o1, o2)
 end
 
 
+-- Quote strings nicely, and coerce non-strings into strings.
+local function q (obj)
+  if type (obj) == "string" then
+    return '"' .. obj:gsub ('[\\"]', "\\%0") .. '"'
+  end
+  return tostring (obj)
+end
+
+
 local matchers = {
   -- Deep comparison, matches if VALUE and EXPECTED share the same
   -- structure.
   equal = function (value, expected)
-    if objcmp (value, expected) == false then
-      local message = "expecting " .. tostring(expected) ..
-                      ", but got ".. tostring(value)
-      return false, message
-    end
-    return true
+    local m = "expecting " .. q(expected) .. ", but got ".. q(value)
+    return (objcmp (value, expected) == true), m
   end,
 
   -- Identity, only match if VALUE and EXPECTED are the same object.
   be = function (value, expected)
-    if value ~= expected then
-      local message = "expecting exactly " .. tostring(expected) .. 
-                      ", but got ".. tostring(value)
-      return false, message
-    end
-    return true
+    local m = "expecting exactly " .. q(expected) .. ", but got " .. q(value)
+    return (value == expected), m
   end,
 
   -- Matches if FUNC raises any error.
   ["error"] = function (func)
-    if pcall (func) then
-      return false, "expecting an error"
-    end
-    return true
+    local ok, err = pcall (func)
+    return ok, "expecting an error, and got " .. q(err)
   end,
 
   -- Matches if VALUE matches regular expression PATTERN.
-  match = function (value, pattern)
-    if type (value) ~= 'string' then
-      local message = "type error, " ..
-                      "should_match expecting target as string"
-      return false, message
+  match = function (target, pattern)
+    if type (target) ~= 'string' then
+      error ("type error, 'match' matcher expecting target as string")
     end
-    if not string.match (value, pattern) then
-      local message = "expecting string matching " .. pattern ..
-                      ", but got " .. value
-      return false, message
-    end
-    return true
+    local m = "expecting string matching " .. q(pattern) .. ", but got " .. q(value)
+    return (string.match (value, pattern) == true), m
   end,
 
   -- Matches if VALUE contains the string EXPECTED.
   contain = function (value, expected)
-    if type (value) ~= 'string' then
-      local message = "type error, " ..
-                      "should_match expecting target as string"
-      return false, message
+    if type (target) ~= 'string' then
+      error ("type error, 'contain' matcher expecting target as string")
     end
+    local m = "expecting string containing " .. q(expected) .. ", but got " .. q(value)
     local pattern = ".*" .. expected:gsub ("%W", "%%%0") .. ".*"
-    if not string.match (value, pattern) then
-      local message = "expecting string containing " .. expected ..
-                      ", but got " .. value
-      return false, message
-    end
-    return true
+    return (string.match (value, pattern)), m
   end,
 }
 
