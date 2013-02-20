@@ -306,7 +306,8 @@ function run_examples (examples, indent, env)
   for _, example in ipairs (examples) do
     -- Also, run every block in a sub-environment, so that before() and
     -- after() calls from one block don't affect any other.
-    setfenv (block, setmetatable ({}, { __index = env }))
+    local fenv = setmetatable ({}, { __index = env })
+    setfenv (block, fenv)
     block (example, fenv)
   end
   formatter.expectations (_G.expectations, "  " .. indent)

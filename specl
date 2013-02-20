@@ -29,7 +29,6 @@ local specl = require "specl"
 -- TODO: remove fake specs
 -- TODO: write some specs for specl!
 -- TODO: make sure it really works with 5.1
--- TODO: Environment sharing between before/example/after is not right :(
 
 prog = {
   name    = arg[0]:gsub ("^.*/", ""),
