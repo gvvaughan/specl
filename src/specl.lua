@@ -292,7 +292,10 @@ function run_examples (examples, indent, env)
       local fenv = { expect = expect }
       formatter.example (indent .. description:gsub ("^%w+%s+", "", 1))
       setfenv (definition, setmetatable (fenv, { __index = blockenv }))
+
+      _G.expectations = {} -- each example may have several expectations
       definition ()
+      formatter.expectations (_G.expectations, "  " .. indent)
 
     else
       -- Oh dear, most likely your nesting is not quite right!
@@ -302,7 +305,6 @@ function run_examples (examples, indent, env)
     after ()
   end
 
-  _G.expectations = {}
   for _, example in ipairs (examples) do
     -- Also, run every block in a sub-environment, so that before() and
     -- after() calls from one block don't affect any other.
@@ -310,7 +312,6 @@ function run_examples (examples, indent, env)
     setfenv (block, fenv)
     block (example, fenv)
   end
-  formatter.expectations (_G.expectations, "  " .. indent)
 end
 
 
