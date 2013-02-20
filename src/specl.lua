@@ -65,7 +65,8 @@ local report = {
     indent = indent or ""
     for i, expectation in ipairs (expectations) do
       if expectation.status ~= true then
-        print (indent .. i .. ". FAILED: " .. expectation.message)
+        print (indent .. "- FAILED expectation " .. i .. ": " ..
+	       expectation.message)
       end
     end
   end,
