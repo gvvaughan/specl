@@ -182,22 +182,22 @@ local matchers = {
   end,
 
   -- Matches if VALUE matches regular expression PATTERN.
-  match = function (target, pattern)
-    if type (target) ~= 'string' then
-      error ("type error, 'match' matcher expecting target as string")
+  match = function (value, pattern)
+    if type (value) ~= 'string' then
+      error ("type error, 'match' matcher expecting value as string, got " .. type (value))
     end
     local m = "expecting string matching " .. q(pattern) .. ", but got " .. q(value)
-    return (string.match (value, pattern) == true), m
+    return (value:match (pattern) ~= nil), m
   end,
 
   -- Matches if VALUE contains the string EXPECTED.
   contain = function (value, expected)
-    if type (target) ~= 'string' then
-      error ("type error, 'contain' matcher expecting target as string")
+    if type (value) ~= 'string' then
+      error ("type error, 'contain' matcher expecting value as string, got " .. type (value))
     end
     local m = "expecting string containing " .. q(expected) .. ", but got " .. q(value)
-    local pattern = ".*" .. expected:gsub ("%W", "%%%0") .. ".*"
-    return (string.match (value, pattern)), m
+    local pattern = expected:gsub ("%W", "%%%0")
+    return (value:match (pattern) ~= nil), m
   end,
 }
 
