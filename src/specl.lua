@@ -66,7 +66,7 @@ local report = {
     for i, expectation in ipairs (expectations) do
       if expectation.status ~= true then
         print (indent .. "- FAILED expectation " .. i .. ": " ..
-	       expectation.message)
+	       expectation.message:gsub ("\n", "%0" .. indent .. "  "))
       end
     end
   end,
@@ -172,9 +172,13 @@ local matchers = {
   end,
 
   -- Matches if FUNC raises any error.
-  ["error"] = function (func)
-    local ok, err = pcall (func)
-    return ok, "expecting an error, and got " .. q(err)
+  ["error"] = function (expected, ...)
+    local ok, err = pcall (...)
+    if not ok then -- "not ok" means an error occurred
+      local pattern = ".*" .. expected:gsub ("%W", "%%%0") .. ".*"
+      ok = not err:match (pattern)
+    end
+    return not ok, "expecting an error containing " .. q(expected) .. ", and got\n" .. q(err)
   end,
 
   -- Matches if VALUE matches regular expression PATTERN.
