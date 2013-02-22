@@ -76,7 +76,7 @@ local report = {
     local percent = 100 * stats.pass / total
 
     print ()
-    print (string.format ("%.2f%% of %d expectations.", percent, total))
+    print (string.format ("Met %.2f%% of %d expectations.", percent, total))
     print (stats.pass .. " passed, and " ..
            stats.fail .. " failed in " ..
 	   (os.clock () - stats.starttime) .. " seconds.")
@@ -113,7 +113,7 @@ local progress = {
     io.write ("\08 \n")
 
     if stats.fail == 0 then
-      io.write ("All examples worked, ")
+      io.write ("All expectations met, ")
     else
       io.write (stats.pass .. " passed, and " ..  stats.fail .. " failed ")
     end
