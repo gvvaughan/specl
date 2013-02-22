@@ -30,7 +30,7 @@ local specl = require "specl"
 
 prog = {
   name    = arg[0]:gsub ("^.*/", ""),
-  banner  = "Specl 0.1 by Gary V. Vaughan <gary@gnu.org>",
+  banner  = "Specl " .. specl._VERSION .. " by Gary V. Vaughan <gary@gnu.org>",
   purpose = "A specification testing framework.",
   notes   = "Copyright (c) 2013 Gary V. Vaughan\n" ..
     "Specl comes with ABSOLUTELY NO WARRANTY.\n" ..

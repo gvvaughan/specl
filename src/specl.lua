@@ -330,6 +330,8 @@ end
 --[[ ----------------- ]]--
 
 local M = {
+  _VERSION  = "0.1",
+
   matchers  = matchers,
   progress  = progress,
   report    = report,
