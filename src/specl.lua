@@ -184,7 +184,7 @@ local matchers = {
   -- Matches if VALUE matches regular expression PATTERN.
   match = function (value, pattern)
     if type (value) ~= "string" then
-      error ("type error, 'match' matcher expecting value as string, got " .. type (value))
+      error ("'match' matcher: string expected, but got " .. type (value))
     end
     local m = "expecting string matching " .. q(pattern) .. ", but got " .. q(value)
     return (value:match (pattern) ~= nil), m
@@ -207,7 +207,7 @@ local matchers = {
       end
       return false, m
     end
-    error ("type error, 'contain' matcher expecting value as string or table, got " .. type (value))
+    error ("'contain' matcher: string or table expected, but got " .. type (value))
   end,
 }
 
@@ -337,5 +337,11 @@ local M = {
   report    = report,
   run       = run,
 }
+
+
+if _G._SPEC then
+  -- Give specs access to some additional private access points.
+  M = table.merge (M, { _expect = expect })
+end
 
 return M

@@ -3,7 +3,7 @@
     specl = require "specl"
   end,
 
-  {["describe the contain matcher"] = {
+  {["describe contain matcher"] = {
     {["context when expect receives a string"] = {
       {["it compares against the expectation"] = function ()
         expect ("English Language").should_contain "e"
@@ -24,5 +24,18 @@
         expect ({{ "subtable one" }, { "subtable two" }}).should_not_contain "subtable one"
       end},
     }},
+    {["it diagnoses incompatible arguments"] = function ()
+      expect ("string or table expected").should_error (function ()
+                specl._expect (function () end).should_contain "nothing"
+	      end)
+    end},
+  }},
+
+  {["describe match matcher"] = {
+    {["it diagnoses non-string arguments"] = function ()
+      expect ("string expected").should_error (function ()
+                specl._expect ({"a table"}).should_match {}
+              end)
+    end},
   }},
 }}

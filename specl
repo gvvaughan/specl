@@ -20,11 +20,17 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+
+-- Notify modules that specifications are being checked.
+_G._SPEC = true
+
+
 require "std"
 
 package.path = "src/?.lua;" .. package.path
 
 local specl = require "specl"
+
 
 -- TODO: make sure it really works with 5.1
 
