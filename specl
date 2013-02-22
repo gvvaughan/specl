@@ -26,8 +26,6 @@ package.path = "src/?.lua;" .. package.path
 
 local specl = require "specl"
 
--- TODO: remove fake specs
--- TODO: write some specs for specl!
 -- TODO: make sure it really works with 5.1
 
 prog = {

@@ -124,7 +124,7 @@ one from the source, so this expectation fails:
 While the tables look the same, and have the same contents (i.e.
 nothing!), they are still separate and distinct objects.
 
-### 2.2. equal
+### 2.2. `equal`
 
 To get around that problem when comparing tables, use the `equal`
 matcher, which does a recursive element by element comparison of the
@@ -134,7 +134,7 @@ expectation. The following expectations all pass:
     expect ({1, two = "three"}).should_equal ({1, two = "three"})
     expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2} {{3}, 4}})
 
-### 2.3. contain
+### 2.3. `contain`
 
 When comparing strings, you might not want to write out the entire
 contents of a very long expected result, when you can easily tell with
@@ -142,17 +142,25 @@ just some substring whether `expect` has evaluated as specified:
 
     expect (backtrace).should_contain ("table expected")
 
-Passing a non-string to this matcher aborts [Specl][] with an error; use
-`tostring` or similar if you need it.
+Additionally, when `expect` evaluates to a table, this matcher will
+succeed if any element or key of that table matches the expectation
+string.  The comparison is done with `equal`, so table elements or
+keys can be of any type.
 
-### 2.4. match
+    expect ({{1}, {2}, {5}}).should_contain ({5})
+
+If `expect` passes anything other than a string or table to this
+matcher, [Specl][] aborts with an error; use `tostring` or similar if
+you need it.
+
+### 2.4. `match`
 
 When a simple substring search is not appropriate, `match` will compare
 the expectation against a [Lua][] pattern:
 
     expect (backtrace).should_match ("\nparse.lua: [0-9]+:")
 
-### 2.5. error
+### 2.5. `error`
 
 Specifications for error conditions are a great idea! And this matcher
 checks both that an `error` was raised and that the subsequent error

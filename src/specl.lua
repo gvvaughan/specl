@@ -183,21 +183,31 @@ local matchers = {
 
   -- Matches if VALUE matches regular expression PATTERN.
   match = function (value, pattern)
-    if type (value) ~= 'string' then
+    if type (value) ~= "string" then
       error ("type error, 'match' matcher expecting value as string, got " .. type (value))
     end
     local m = "expecting string matching " .. q(pattern) .. ", but got " .. q(value)
     return (value:match (pattern) ~= nil), m
   end,
 
-  -- Matches if VALUE contains the string EXPECTED.
+  -- Matches if VALUE contains EXPECTED.
   contain = function (value, expected)
-    if type (value) ~= 'string' then
-      error ("type error, 'contain' matcher expecting value as string, got " .. type (value))
+    if type (value) == "string" and type (expected) == "string" then
+      -- Look for a substring if VALUE is a string.
+      local pattern = expected:gsub ("%W", "%%%0")
+      local m = "expecting string containing " .. q(expected) .. ", but got " .. q(value)
+      return (value:match (pattern) ~= nil), m
+    elseif type (value) == "table" then
+      -- Do deep comparison against keys and values of the table.
+      local m = "expecting table containing " .. q(expected) .. ", but got " .. q(value)
+      for k, v in pairs (value) do
+        if objcmp (k, expected) or objcmp (v, expected) then
+          return true, m
+        end
+      end
+      return false, m
     end
-    local m = "expecting string containing " .. q(expected) .. ", but got " .. q(value)
-    local pattern = expected:gsub ("%W", "%%%0")
-    return (value:match (pattern) ~= nil), m
+    error ("type error, 'contain' matcher expecting value as string or table, got " .. type (value))
   end,
 }
 
