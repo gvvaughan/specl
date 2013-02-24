@@ -15,6 +15,21 @@ else
 
 include Makefile
 
+MKROCKSPECS = $(ROCKSPEC_ENV) $(LUA) $(srcdir)/build-aux/mkrockspecs.lua
+ROCKSPEC_TEMPLATE = $(srcdir)/specl-rockspec.lua
+
+luarocks-config.lua:
+	$(AM_V_GEN){				\
+	  echo 'rocks_trees = {';		\
+	  echo '  "$(abs_srcdir)/luarocks"';	\
+	  echo '}';				\
+	} > '$@'
+
+rockspecs: luarocks-config.lua
+	rm -f *.rockspec
+	$(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE)
+	$(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE)
+
 GIT ?= git
 
 tag-release:
