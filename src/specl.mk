@@ -91,6 +91,18 @@ docs/specl.1.in: src/specl src/version.lua
 	fi
 
 
+## ------ ##
+## Specs. ##
+## ------ ##
+
+EXTRA_DIST +=						\
+	specs/specl_spec.lua				\
+	$(NOTHING_ELSE)
+
+check-local:
+	$(AM_V_at)$(SPEC_ENV) $(LUA) src/specl $(srcdir)/specs/*_spec.lua
+
+
 ## ------------- ##
 ## Installation. ##
 ## ------------- ##
