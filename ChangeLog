@@ -1,0 +1,170 @@
+2013-02-25  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: don't check release tarball file in on release branch.
+	* .gitignore: Ignore specl-*.tar.gz.
+	* build-aux/.gitignore: Don't ignore manually imported
+	gitlog-to-changelog.
+
+	specl: update to cleaner stdlib-33 getopt formats.
+	* src/version.lua.in (M.COPYRIGHT_NOTICE): Remove stray '\n'.
+	* src/specl.in (prog): No longer needs to be a magic global.
+	(options): Ditto.  Move from here...
+	(prog.options): ...to here.
+	(prog.purpose, prog.description): Reword to match rockspec.
+	(prog.version): Add this for --version output.
+	(prog.banner): Remove.
+
+	maint: fix typos in GNUmakefile.
+	* GNUmakefile (unpack-distcheck-release): Add missing \s, ` and '.
+	(Makefile.in): Only one '-' in '-Wall'.
+
+	configury: install correctly from './configure; make all install'.
+	The latest 'm4/ax_lua.m4' sets up pkgluadir to point into Lua's
+	module directory.
+	* Makefile.am (install_edit, inplace_edit): Remove useless
+	@pkgdatadir@ and @pkgdocdir@ substitutions.
+	* src/specl.mk (specldatadir): Remove.
+	(specl_install_edit, specl_inplace_edit): Use pkgluadir instead.
+	(dist_specldata_DATA): Rename from this...
+	(dist_pkglua_DATA): ...to this.
+	* src/specl.in (package.path): Inject pkgluadir substitution.
+	(PATH_DATA, PATH_DOCDIR): Remove.  Unused variables.
+
+	configury: add rockspec machinery.
+	* specl-rockspec.lua: New file. Rockspec data.
+	* build-aux/mkrockspecs.lua: New file. Reuben's templating
+	rockspec building script.
+	* GNUmakefile (luarocks-config.lua, rockspecs): Use it to build
+	rockspecs.
+	* src/specl.mk (EXTRA_DIST): Add build-aux/mkrockspecs.lua.
+
+2013-02-24  Gary V. Vaughan  <gary@gnu.org>
+
+	specs: specl specs for specl.
+	* src/specl.mk (check-local): Run specs with 'make check'.
+
+	configury: use ./bootstrap && ./configure && make & sudo make install.
+	* bootstrap: New file, from Libtool master HEAD.
+	* bootstrap.conf: New file.  Configure bootstrap for Specl.
+	* build-aux/gitlog-to-changelog: New file.  Required for
+	'make dist'.
+	* configure.ac: New file. Check Specl build prerequisites.
+	* m4/ax_compare_version.m4, m4/ax_lua.m4, m4/ax_with_prog.m4:
+	New files. Used by configure.ac.
+	* src/version.lua.in: New file.  Configured constants.
+	* specl: Moved from here...
+	* specl.in: ...to here.  Rework to use src/version.lua.in.
+	* Makefile.am: New file. Top-level non-recursive Makefile.
+	* src/specl.mk: New file. Make fragment for specl directory.
+	* .gitignore, build-aux/.gitignore, src/.gitignore: New files.
+
+2013-02-22  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: set _G._SPEC to allow modules to expose additional APIs.
+	When a non-public API is being specified, we need a way to inform
+	the module to give the specification access to it.
+	* specl (_G._SPEC): Set this to true.
+	* src/specl.lua (M): Put _expect into the module table if it is set.
+	(matchers.contain): Improve wording of error message.
+	* specs/specl_spec.lua (describe contain matcher): Add spec for
+	error message.
+	* src/specl.lua (matchers.match): Improve wording of error message.
+	* specs/specl_spec.lua (describe match matcher): Add spec for error
+	message.
+
+	maint: store the version number in the interface table.
+	* src/specl.lua (M): Add _VERSION key.
+	* specl (prog): Use it in the --version output.
+
+	matchers: compare table key/value contents using contain matcher.
+	* src/specl.lua: When checking expectations against a table,
+	compare against each key and value in the table.
+	* specs/specl_spec.lua: Remove fake specs.
+	Specify behaviour of contain matcher.
+	* specl: Remove obsolete TODO entries.
+	* README.md: Document it.
+
+	formatters: Be consistent when reporting met expectations.
+	* src/specl.lua (report): Add "Met" prefix to output.
+	(progress): Write "expectations met", not "examples worked".
+
+	matchers: make the contain and match matchers useable.
+	Fix some silly bugs preventing these matchers from working
+	properly.
+	* src/specl.lua (matchers.match): Use VALUE consistently for
+	parameter name.
+	Set the return condition properly.
+	(matchers.contain): Likewise.
+	string.match patterns are not anchored, so no need to bookend
+	with .*.
+
+2013-02-21  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: initial draft documentation in README.
+	* README.md: Rewritten with initial draft documentation.
+
+2013-02-20  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: make the error matcher useable.
+	* src/specl.lua (matchers.error): Take arguments in reverse, so
+	that 'should_error' is called like pcall, and 'expect' is a
+	substring to match against any resulting error message.
+	(report.expectation): Since error messages can be very long,
+	reindent multiple lines as best as possible.
+
+	matchers: work properly with _not_ expectations.
+	* src/specl.lua (q): New function to quote strings in failure
+	messages nicely.
+	(matchers): Always return the failure status message, even if
+	the matcher succeeded, since it may be inverted later with a 'not'.
+
+	formatters: nicer fail message for report formatter.
+	* src/specl.lua (report.expectations): Reformat slightly for
+	better english, and to stand out better.
+
+	formatter: group and format expectations every example.
+	Fix a bug that counts a FAILed expectation incorrectly. Restart
+	the counter for every example, not just at the start of the
+	entire group.
+	* src/specl.lua (run_examples): Don't save up all the expectations
+	from the entire group before displaying, format them after every
+	example completes.
+
+	environments: fix the environment sharing TODO.
+	* src/specl.lua (run_examples): Pass the correct block environment
+	into the block, so that befores share settings with examples and
+	afters correctly, and then reset when they go out of scope.
+	* specl: Remove TODO.
+
+	specl: implement an alternate format, selected by -v option.
+	* specl (options): Accept -v or -verbose.
+	* src/specl.lua (run): Add new format parameter.  Assuming what
+	is passed conforms to the API, that formatter will be called as
+	the examples are executed.
+	(formatter): Move from here...
+	(report): ...to here.
+	(progress): New formatter that just prints dots as examples pass,
+	or F as they fail.
+	(formatter): Default formatter is the new progress formatter.
+	(M): Put the two formatters in the public interface.
+	* specl: Request the old report formatter in verbose mode.
+
+	maint: refill copyright notices.
+
+	specl: write a command line interface.
+	* src/specl.lua: Don't clobber the global namespace with anything.
+	(M): Record and return APIs.
+	(Fake specs): Move from here...
+	* specs/specl_spec.lua: New file. ...to here.
+	* specl: New file. Load the specl module, and use it to process
+	each spec file passed on the command line.
+	* README.md: Update.
+
+	maint: fix mistakes in pasted copyright header.
+	* src/specl.lua: Actually, not part of GNU Zile, and didn't exist
+	at all for the first 4 years of the 2009-2013 copyright range.
+
+	maint: add README.
+	* README.md: New file. Barely useful at the moment...
+
+	specl: initial import.
