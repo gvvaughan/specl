@@ -1,42 +1,97 @@
 SPECL
-====
+=====
 
-A specification testing framework, inspired by [RSpec][], for and in
-[Lua][].
+Behaviour Driven Development for [Lua][].
 
 
 1. Specifications
 -----------------
 
-Specifications are loaded from "spec" files, containing nested tables in
-standard Lua syntax, like this:
+You write your software specifications using [YAML][] with embedded
+examples written in Lua.  A minimal "spec" file outline follows:
 
-    {
-      {description_1 = context_1},
-      ...
-      {description_n = context_n},
-    }
+    describe spec file format:
+    - it is just a list of specifications, with example code: !lua |
+        print "Hello, Specl!"
 
-Only the first expression in each "spec" file is loaded, so make sure
-each file has (after comments) just a single table expression, or it
-won't load correctly.
+[YAML][] makes for a very readable specification file format, and allows
+embedded [Lua][] code within the standard.  For the first week of its
+existence, [Specl][] used nested Lua lists of function dictionaries,
+which may have been extremely easy to parse and load for the computer,
+but the swathe of brackets, braces and commas were a bit of an eyesore
+for the programmer.  [Specl][] still loads the new [YAML][] spec-files
+into the same nested function-dictionary-tables before using them, so
+you can still write them that way if you prefer.
+
+After any header comments and whitespace, the first significant line of
+a specification file is the description of the first example group,
+followed by `:\n` (colon, newline):
+
+    description of the following example group in plain English:
+
+More group descriptions can follow later, but before that the list of
+example descriptions for that group are all indented beneath, usually
+starting in the first column with `- ` (dash, space).  By default, the
+[YAML][] parser will assume that each description, up to the first `:`
+(colon), and the associated example code are both vanilla strings.
+Punctuation is not allowed in an unquoted [YAML][] string, however, so
+you will need to force the parser to read a the description as a string
+by surrounding in `"` (double-quote mark) if you want to write
+punctuation in the description:
+
+    - "it requires double-quote marks, but only when using punctuation":
+    
+Conversely, you also need to force the parser to read the example
+following the `:` (colon) as a Lua code by using a `!lua` tag:
+
+    - it uses a tag to force YAML to compile the code: !lua require "std"
+    
+It's very rare to fit both the example description and associated code
+on a single line, so you will normally use the [YAML][] literal block
+marker `|' (pipe) before the actual code, from all following lines
+indented underneath that description.  So you'll end up most of your
+examples written as follows:
+
+    - it treats all following indented lines as example code: !lua |
+        Stack = require "stack"
+        stack = Stack {}
+        ...
+        
+All that aside, the [YAML][] format has a few quirks as a result of
+minimizing punctuation as syntax, all of which you need to be careful
+of:
+
+  1. Indenting with TAB characters is a syntax error, because the
+     [YAML][] parser uses indentation columns to infer nesting.  Easiest
+     just to avoid putting TAB characters in your spec files entirely.
+  2. Indenting of the code following an example description must at
+     least one column further in than the first letter of the
+     description text above.
+  3. If you forget to mark a value as Lua code using the `!lua` tag,
+     that part of the specification will be added to the table as a
+     plain string, and cause [Specl][] to complain about a malformed
+     table.
+  4. If you accidentally add a `!lua' tag to a context description
+     ("describe spec file format"), [YAML][] will get excited and try to
+     make a [Lua][] function from everything beyond that point that's
+     indented further than that line.  [Specl][] will complain when it
+     tries to compile the function.
+  5. [YAML][] comments begin with ` #` (space, hash) and extend to the
+     end of the line.  You can use these anywhere outside of a `!lua`
+     block.  [Lua][] comments don't work outside of a `!lua` block, and
+     [YAML][] comments don't work inside a `!lua` block, so you have to
+     pick the right comment character, depending where in the hierarchy
+     it will go.
 
 ### 1.1. Contexts
 
-When describing the contexts (`description_1` above, etc.), it makes for
-much more readable specifications to use strings for the table keys:
-
-    {["describe this context"] = {
-      ...EXAMPLE-LIST...
-    }},
-    {["describe another context"] = {
-      ...EXAMPLE-LIST...
-    }},
-    ...
-
-[Specl][] requires wrapping each context entry in its own table like
-this, so that it can maintain the file order of your examples when it
-runs them.
+The core of your specifications are a list of contexts, described in
+plain English.   To easily keep track of what specifications go with
+what parts of your implementation, it's good practice to put all your
+specs in a subdirectory, with one spec named after each file being
+specified.  For example, your application might have a `src/stack.lua`
+class, along with a `specs/stack_spec.yaml` file that contains all the
+matching specifications.
 
 Traditionally, the context descriptions start with the words "describe"
 or "context", but [Lua][] doesn't mind what you call them as long as
@@ -45,16 +100,15 @@ they're all different.
 ### 1.2.  Examples
 
 Each context contains a nested list of one or more examples.  These too
-are best written with readable names in strings as table keys, and
-(unlike contexts) they are set to a function containing the associated
-code:
+are best written with readable names in plain English, but (unlike
+contexts) they are followed by the associated example code:
 
-    {["it has some functionality"] = function ()
+    describe this module:
+    - it has some functionality: !lua |
         ...EXAMPLE-CODE...
-     end},
-    {["it works properly"] = function ()
+
+    - it works properly: !lua |
       ...EXAMPLE-CODE...
-    end},
     ...
 
 Traditionally, the example descriptions start with the words "it",
@@ -64,19 +118,17 @@ understand (see [Command Line](#specl-command-line)).
 
 ### 1.3. Expectations
 
-Each of your "spec" files lists a series of expectations that [Specl][]
-runs to determine whether the specification of a part of your project is
+Each of your contexts lists a series of expectations that [Specl][] runs
+to determine whether the specification for that part of your project is
 being met. Inside the `function` part of each example element, you
 should write a small block of code that checks that the example being
 described meets your expectations. [Specl][] gives you a new `expect`
 command to check that each example evaluates as it should:
 
-    {["describe Stack"] = {
-      {["it has no elements when empty"] = function ()
-        stack = Stack {}
-        expect (#stack).should_be (0)
-      end},
-    }}
+    - describe Stack:
+        - it has no elements when empty: !lua |
+            stack = Stack {}
+            expect (#stack).should_be (0)
 
 The call to expect is almost like English: "Expect size of stack should
 be should be zero."
@@ -192,7 +244,7 @@ there too. Rather than implement another set of matchers to do that
 though, you can just insert `not_` right in the matcher method name.
 [Specl][] will still call the matcher according to the root name (see
 [Matchers](#specl-matchers)), but inverts the result of the comparison
-berfore reporting a pass or fail:
+before reporting a pass or fail:
 
     expect ({}).should_not_be ({})
     expect (tostring (hex)).should_not_contain ("[g-zG-Z]")
@@ -204,7 +256,7 @@ berfore reporting a pass or fail:
 It's important that every example be evaluated from a clean slate, both
 to prevent the side effects of one example affecting the start
 conditions of another, and in order to focus on a given example without
-worrying what the earlier examples might have done when reading a
+worrying what the earlier examples might have done when debugging a
 specification.
 
 [Specl][] achieves this by initialising a completely new environment in
@@ -226,13 +278,10 @@ need any fancy long descriptions for `before` and `after` functions,
 their table keys are just a bare `before` or `after` respectively:
 
     ...
-    before = function ()
-      stack = Stack {}
-    end,
+    - before: !lua stack = Stack {}
 
-    {["it has no elements when empty"] = function ()
-      expect (#stack).should_equal (0)
-    end}
+    - it has no elements when empty: !lua |
+        expect (#stack).should_equal (0)
     ...
 
 Note that, unlike normal [Lua][] code, we don't declare everything with
@@ -257,18 +306,18 @@ a group, where it will behave as if it were a `before(:all)` inside the
 group:
 
     ...
-    {["describe a Stack"] = {
-        before = function () -- equivalent to before(:all)
-          package.path = "src/?.lua;" .. package.path
-          Stack = require "stack"
-        end,
+    - describe a Stack:
+        - before: !lua | 
+            -- equivalent to before(:all)
+            package.path = "src/?.lua;" .. package.path
+            Stack = require "stack"
 
-        {["context when inspecting the stack"] = function ()
-          before = function () -- equivalent to before(:each)
-            stack = Stack {}
-          end,
+        - context when inspecting the stack:
+            - before: !lua |
+                -- equivalent to before(:each)
+                stack = Stack {}
 
-          {["it has no elements when empty"] = function ()
+            - it has no elements when empty: !lua |
             ...
 
 Tricky `before` placement aside, it's always a good idea to organize
@@ -336,7 +385,7 @@ project directory using the provided `specl` command.
 The `specl` command expects a list of "spec" files to follow, and is
 usually called like this:
 
-    specl specs/*_spec.lua
+    specl specs/*_spec.yaml
 
 The output will display results using the default `progress` formatter.
 To use the `report` formatter instead, add the `-v` option to the
@@ -355,6 +404,7 @@ The APIs for adding your own `matchers` and `formatters` are not yet
 documented.  Please read the code for now.
 
 
-[specl]: http://github.com/gvvaughan/specl
-[rspec]: http://github.com/rspec/rspec
 [lua]: http://www.lua.org
+[rspec]: http://github.com/rspec/rspec
+[specl]: http://github.com/gvvaughan/specl
+[yaml]: http//yaml.org
