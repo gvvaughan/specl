@@ -29,18 +29,16 @@ SPEC_ENV   = LUA_PATH="$(SPECL_PATH);$(LUA_PATH)"
 ## Declarations. ##
 ## ------------- ##
 
-specldatadir = $(datadir)/specl
-
 specl_install_edit =					\
 	$(install_edit)					\
-	-e 's|@specldatadir[@]|$(specldatadir)|g'	\
+	-e 's|@pkgluadir[@]|$(pkgluadir)|g'		\
 	-e 's|@builddir[@]/?.lua;||'			\
 	$(NOTHING_ELSE)
 
 specl_inplace_edit =					\
 	$(inplace_edit)					\
-	-e 's|@specldatadir[@]|$(abs_srcdir)/specl|g'	\
-	-e 's|@builddir[@]|$(abs_builddir)/specl|g'	\
+	-e 's|@pkgluadir[@]|$(abs_srcdir)/src|g'	\
+	-e 's|@builddir[@]|$(abs_builddir)/src|g'	\
 	$(NOTHING_ELSE)
 
 
@@ -52,7 +50,7 @@ bin_SCRIPTS += src/specl
 
 man_MANS += docs/specl.1
 
-dist_specldata_DATA =					\
+dist_pkglua_DATA =					\
 	src/specl.lua					\
 	src/version.lua					\
 	$(NOTHING_ELSE)

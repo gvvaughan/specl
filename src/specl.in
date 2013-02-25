@@ -28,9 +28,6 @@ A=--[[ exec @LUA@ "$0" "$@"  # -*- mode: lua; -*- ]]A
 -- Notify modules that specifications are being checked.
 _G._SPEC = true
 
--- Constants set by configure.
-PATH_DATA   = "@specldatadir@"
-PATH_DOCDIR = "@pkgdocdir@"
 
 -- Remove current directory from package search path.
 package.path = package.path:gsub (";%./%?.lua;", ";")
@@ -38,8 +35,7 @@ package.path = package.path:gsub ("^%./%?.lua;", "")
 package.path = package.path:gsub (";%./%?.lua$", "")
 
 package.path = "@builddir@/?.lua;" ..
-               "@specldatadir@/?.lua;" ..
-	       "@pkgdatadir@/?.lua;" ..
+               "@pkgluadir@/?.lua;" ..
 	       package.path
 
 require "std"

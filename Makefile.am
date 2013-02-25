@@ -48,14 +48,10 @@ install_exec_hooks	=
 man_MANS		=
 
 install_edit = sed					\
-	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'		\
-	-e 's|@pkgdocdir[@]|$(docdir)|g'		\
 	-e 's|@LUA[@]|$(LUA)|g'				\
 	$(NOTHING_ELSE)
 
 inplace_edit = sed					\
-	-e 's|@pkgdatadir[@]|$(abs_top_srcdir)/src|g'	\
-	-e 's|@pkgdocdir[@]|$(abs_top_srcdir)|g'	\
 	-e 's|@LUA[@]|$(LUA)|g'				\
 	$(NOTHING_ELSE)
 
