@@ -93,12 +93,17 @@ docs/specl.1.in: src/specl src/version.lua
 ## Specs. ##
 ## ------ ##
 
-EXTRA_DIST +=						\
-	specs/specl_spec.yaml				\
+specl_SPECS =						\
+	$(srcdir)/specs/environment_spec.yaml		\
+	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)
 
-check-local:
-	$(AM_V_at)$(SPEC_ENV) $(LUA) src/specl $(srcdir)/specs/*_spec.yaml
+EXTRA_DIST +=						\
+	$(specl_SPECS)					\
+	$(NOTHING_ELSE)
+
+check-local: src/specl $(specl_SPECS)
+	$(AM_V_at)$(LUA) src/specl $(specl_SPECS)
 
 
 ## ------------- ##

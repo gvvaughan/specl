@@ -1,0 +1,69 @@
+describe environments:
+- before: !lua |
+    overridden_symbol = false
+    defined_outer_symbol = true
+
+- it cannot find undefined symbols: !lua |
+    expect (undefined_symbol).should_be (nil)
+
+- it can find a symbol in the current scope: !lua |
+    in_the_same_example = true
+    overridden_symbol = true
+    expect (in_the_same_example).should_be (true)
+
+- it cannot find a symbol from a sibling example: !lua |
+    expect (in_the_same_example).should_be (nil)
+
+- it gets a clean environment for each example: !lua |
+    expect (overridden_symbol).should_be (false)
+
+- it can find a symbol from the current before block: !lua |
+    expect (defined_outer_symbol).should_be (true)
+
+- it cannot find symbols defined in an inner scope: !lua |
+    expect (defined_inner_symbol).should_be (nil)
+
+- context when looking up symbols from a nested context:
+    - before: !lua |
+        overridden_symbol = "overridden"
+        defined_inner_symbol = true
+
+    - it cannot find undefined symbols: !lua |
+        expect (undefined_outer_symbol).should_be (nil)
+
+    - it can find a symbol in an outer scope: !lua |
+        expect (defined_outer_symbol).should_be (true)
+
+    - it can find a symbol in the current scope: !lua |
+        in_the_nested_example = true
+        define_inner_symbol = false
+        expect (defined_inner_symbol).should_be (true)
+
+    - it cannot find a symbol from a sibling example: !lua |
+        expect (in_the_nested_example).should_be (nil)
+
+    - it cannot find a symbol from a parent example: !lua |
+        expect (in_the_same_example).should_be (nil)
+
+    - it gets a clean environment for each example: !lua |
+        expect (overridden_symbol).should_be ("overridden")
+
+    - it can find a symbol from the current before block: !lua |
+        expect (defined_inner_symbol).should_be (true)
+
+    - it can find a symbol from the parent before block: !lua |
+        expect (defined_outer_symbol).should_be (true)
+
+- context when looking up symbols from a nested before block:
+    - before: !lua |
+        defined_outer_symbol_reference = defined_outer_symbol
+        undefined_outer_symbol_reference = undefined_outer_symbol
+
+    - it can find a symbol in an outer scope: !lua |
+        expect (defined_outer_symbol_reference).should_be (true)
+
+    - it cannot find a symbol in a cousin example: !lua |
+        expect (in_the_nested_example).should_be (nil)
+
+#    - it cannot find a symbol in a sibling context: !lua |
+#        expect (defined_inner_symbol).should_be (nil)
