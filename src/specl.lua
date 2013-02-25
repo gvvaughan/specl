@@ -259,6 +259,8 @@ end
 
 local nop, run_specs, run_examples
 
+local reserved = set.new { "before", "after" }
+
 
 -- Always call before and after unconditionally.
 function nop () end
@@ -278,14 +280,32 @@ end
 function run_examples (examples, indent, env)
   env = env or _G
 
+  -- YAML specs store befores and afters in the ordered example list,
+  -- so we have to hoist them out so we can rerun them around each
+  -- real example in the list.
   local before, after = examples.before or nop, examples.after or nop
+  for _, example in ipairs (examples) do
+    -- There is only one, otherwise we can't maintain example order.
+    local description, definition = next (example)
+
+    if description == "before" then
+      before = definition
+    elseif description == "after" then
+      after = definition
+    end
+  end
+
+  -- With any reserved keys hoisted, this function runs the examples.
   local block = function (example, blockenv)
     before ()
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
-    if type (definition) == "table" then
+    if reserved:member (description) then
+      -- Handled outside main loop, nothing to do here.
+
+    elseif type (definition) == "table" then
       -- A nested context, revert back to run_specs.
       run_specs ({ example }, indent, env)
 
@@ -301,7 +321,7 @@ function run_examples (examples, indent, env)
 
     else
       -- Oh dear, most likely your nesting is not quite right!
-      error ("malformed spec in " .. tostring (description), 2)
+      error ('malformed spec in "' .. tostring (description) .. '", a ' .. type (definition) .. " (expecting table or function)")
     end
 
     after ()

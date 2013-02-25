@@ -5,6 +5,7 @@
 *.so
 *.html
 .deps
+.dirstamp
 .libs
 /release-notes-*
 /ChangeLog

@@ -29,18 +29,19 @@ A=--[[ exec @LUA@ "$0" "$@"  # -*- mode: lua; -*- ]]A
 _G._SPEC = true
 
 
--- Remove current directory from package search path.
-package.path = package.path:gsub (";%./%?.lua;", ";")
-package.path = package.path:gsub ("^%./%?.lua;", "")
-package.path = package.path:gsub (";%./%?.lua$", "")
+-- Remove current directory from package search paths.
+package.path  = ("@speclpath@;" .. package.path):gsub (
+                 ";%./%?.lua;", ";"):gsub (
+                 ";%./%?.lua$", "")
+package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
+                 ";%./%?.lua;", ";"):gsub (
+                 ";%./%?.lua$", "")
 
-package.path = "@builddir@/?.lua;" ..
-               "@pkgluadir@/?.lua;" ..
-	       package.path
 
 require "std"
+local yaml  = require "lyaml"
 local specl = require "specl"
-prog  = require "version"
+local prog  = require "version"
 
 prog = table.merge (prog, {
   purpose     = "Behaviour Driven Development for Lua.",
@@ -74,16 +75,10 @@ function slurp (filename)
   -- Remove leading comment lines, carefully preserving line numbers for
   -- error messages from 'load', and then inject the 'return' keyword at
   -- the start of the first non-blank line.
-  s = s:gsub ("^%s*%-%-[^\r\n]+i(\r*\n)%s*", "%1"
-      ):gsub ("[^\r\n]", "return %0", 1)
-  local f, errmsg = load (s, filename)
+  local t, errmsg = yaml.load (s)
  
   -- Execute the function from 'load', and save the value returned, or
   -- report any error right away.
-  local t
-  if f ~= nil then
-    t, errmsg = f ()
-  end
   if errmsg ~= nil then
     error (errmsg)
   end
@@ -95,4 +90,5 @@ end
 
 getopt.processArgs (prog)
 io.processFiles (slurp)
+
 os.exit (specl.run (spec, getopt.opt.verbose and specl.report))

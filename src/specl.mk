@@ -21,8 +21,8 @@
 ## Environment. ##
 ## ------------ ##
 
-SPECL_PATH = $(abs_buiddir)/src/?.lua
-SPEC_ENV   = LUA_PATH="$(SPECL_PATH);$(LUA_PATH)"
+SPECL_PATH  = $(abs_srcdir)/src/?.lua
+SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 
 ## ------------- ##
@@ -31,14 +31,14 @@ SPEC_ENV   = LUA_PATH="$(SPECL_PATH);$(LUA_PATH)"
 
 specl_install_edit =					\
 	$(install_edit)					\
-	-e 's|@pkgluadir[@]|$(pkgluadir)|g'		\
-	-e 's|@builddir[@]/?.lua;||'			\
+	-e 's|@speclpath[@]|$(luadir)/?.lua|g'		\
+	-e 's|@speclcpath[@]|$(luaexecdir)/?$(shrext)|g'\
 	$(NOTHING_ELSE)
 
 specl_inplace_edit =					\
 	$(inplace_edit)					\
-	-e 's|@pkgluadir[@]|$(abs_srcdir)/src|g'	\
-	-e 's|@builddir[@]|$(abs_builddir)/src|g'	\
+	-e 's|@speclpath[@]|$(SPECL_PATH)|g'		\
+	-e 's|@speclcpath[@]|$(SPECL_CPATH)|g'		\
 	$(NOTHING_ELSE)
 
 
@@ -66,7 +66,7 @@ src/specl: $(src_specl_DEPS)
 	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
 	$(AM_V_at)mv '$@.tmp' '$@'
 	$(AM_V_at)chmod +x '$@'
-	$(AM_V_at)$@ --version >/dev/null || rm '$@'
+	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
 
 docs/specl.1: docs/specl.1.in Makefile config.status
 	@test -d docs || mkdir docs
@@ -94,11 +94,11 @@ docs/specl.1.in: src/specl src/version.lua
 ## ------ ##
 
 EXTRA_DIST +=						\
-	specs/specl_spec.lua				\
+	specs/specl_spec.yaml				\
 	$(NOTHING_ELSE)
 
 check-local:
-	$(AM_V_at)$(SPEC_ENV) $(LUA) src/specl $(srcdir)/specs/*_spec.lua
+	$(AM_V_at)$(SPEC_ENV) $(LUA) src/specl $(srcdir)/specs/*_spec.yaml
 
 
 ## ------------- ##
