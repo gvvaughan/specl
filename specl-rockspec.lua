@@ -23,9 +23,15 @@ local default = {
     "lua >= 5.1",
     "stdlib >= 33",
   },
+  external_dependencies = {
+    YAML = { library = "yaml" }
+  },
   build = {
     type = "command",
-    build_command = "LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
+    build_command = "LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) " ..
+      "./configure CPPFLAGS=-I$(YAML_INCDIR) LDFLAGS='-L$(YAML_LIBDIR) " ..
+      "--prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) " ..
+      "&& make clean && make",
     install_command = "make install",
     copy_directories = {},
   },

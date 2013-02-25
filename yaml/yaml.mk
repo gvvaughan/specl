@@ -27,7 +27,6 @@ luaexec_LTLIBRARIES = yaml/lyaml.la
 
 yaml_lyaml_la_LDFLAGS  = -module -avoid-version
 yaml_lyaml_la_CPPFLAGS = $(LUA_INCLUDE) $(YAML_INCLUDE)
-yaml_lyaml_la_LIBADD   = -lyaml
 
 EXTRA_DIST +=				\
 	yaml/lua52compat.h		\

@@ -48,6 +48,11 @@ AX_PROG_LUA(5.1, 5.3)
 
 dnl Check for header files
 AC_HEADER_STDC
+AC_CHECK_HEADERS([yaml.h])
+
+dnl Search libs
+AC_SEARCH_LIBS([yaml_document_initialize], [yaml], [], [
+    AC_MSG_ERROR([Required library 'yaml' could not be found])])
 
 dnl Generate output files
 AC_CONFIG_HEADERS([config.h])
