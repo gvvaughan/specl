@@ -9,7 +9,7 @@ Makefile: Makefile.in
 	$(MAKE)
 
 Makefile.in:
-	./bootstrap --force --verbose --Wall --skip-git
+	./bootstrap --force --verbose -Wall --skip-git
 
 else
 
@@ -39,11 +39,11 @@ tag-release:
 define unpack-distcheck-release
 	rm -rf $(PACKAGE)-$(VERSION)/ && \
 	tar zxf $(PACKAGE)-$(VERSION).tar.gz && \
-	cp -a -f $(PACKAGE)-$(VERSION)/* . &&
+	cp -a -f $(PACKAGE)-$(VERSION)/* . && \
 	rm -rf $(PACKAGE)-$(VERSION)/ && \
 	echo "unpacked $(PACKAGE)-$(VERSION).tar.gz over current directory" && \
-	echo './configure && make all" && \
-	./configure --version && ./configure &&
+	echo './configure && make all' && \
+	./configure --version && ./configure && \
 	$(MAKE) all
 endef
 
@@ -55,7 +55,7 @@ check-in-release: distcheck
 	$(GIT) add . && \
 	$(GIT) commit -m "Release v$(VERSION)" && \
 	$(GIT) tag -a -m "Full source release tag" release-v$(VERSION); \
-	$(GIT) checkout `echo "$$current_branch" | sed 's,.*/,,g'
+	$(GIT) checkout `echo "$$current_branch" | sed 's,.*/,,g'`
 
 
 ## To test the release process without publishing upstream, use:
