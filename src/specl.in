@@ -45,15 +45,14 @@ prog  = require "version"
 prog = table.merge (prog, {
   purpose     = "Behaviour Driven Development for Lua.",
   version     = prog.program .. " " .. prog.VERSION .. "\n" ..
-    "Written by Gary V. Vaughan <gary@gnu.org>, 2013\n" ..
-    "\n" ..
-    prog.COPYRIGHT_NOTICE,
+    "Written by Gary V. Vaughan <gary@gnu.org>, 2013",
   description = "Develop and run BDD specs written in Lua for RSpec " ..
-    "style workflow.\n\n" ..
+    "style workflow.\n" ..
     "Execute specifications from FILEs or standard input, " ..
     "reporting results on standard output.\nIf no FILE is listed, or w" ..
     "here '-' is given as a FILE, read from standard input.",
   notes       = prog.BUGREPORT_NOTICE,
+  copyright   = prog.COPYRIGHT_NOTICE,
   options     = {
     getopt.Option {{"help"}, "print this help, then exit"},
     getopt.Option {{"version"}, "print version number, then exit"},
