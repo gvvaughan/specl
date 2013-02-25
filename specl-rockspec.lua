@@ -21,6 +21,7 @@ local default = {
   },
   dependencies = {
     "lua >= 5.1",
+    "stdlib >= 33",
   },
   build = {
     type = "command",
