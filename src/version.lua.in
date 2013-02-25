@@ -35,7 +35,7 @@ M.COPYRIGHT_STRING  = "Copyright (C) 2013 Gary V. Vaughan"
 M.COPYRIGHT_NOTICE  = M.Name .. " comes with ABSOLUTELY NO WARRANTY.\n" ..
   "You may redistribute copies of " .. M.Name .. "under the terms of the\n" ..
   "GNU General Public License; either version 3, or any later version.\n" ..
-  "For more information about these matters, see the file named COPYING.\n"
+  "For more information about these matters, see the file named COPYING."
 M.BUGREPORT_NOTICE  = "Report bugs to " .. M.PACKAGE_BUGREPORT .. "."
 
 return M
