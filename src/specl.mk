@@ -89,23 +89,6 @@ docs/specl.1.in: src/specl src/version.lua
 	fi
 
 
-## ------ ##
-## Specs. ##
-## ------ ##
-
-specl_SPECS =						\
-	$(srcdir)/specs/environment_spec.yaml		\
-	$(srcdir)/specs/specl_spec.yaml			\
-	$(NOTHING_ELSE)
-
-EXTRA_DIST +=						\
-	$(specl_SPECS)					\
-	$(NOTHING_ELSE)
-
-check-local: src/specl $(specl_SPECS)
-	$(AM_V_at)$(LUA) src/specl $(specl_SPECS)
-
-
 ## ------------- ##
 ## Installation. ##
 ## ------------- ##
