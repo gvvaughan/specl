@@ -63,15 +63,19 @@ check-in-release: distcheck
 GIT_PUBLISH ?= $(GIT)
 WOGER ?= woger
 
+WOGER_ENV = LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
+WOGER_OUT = $(WOGER_ENV) $(LUA) -l$(PACKAGE) -e
+
 release:
 	$(MAKE) tag-release && \
 	$(MAKE) check-in-release && \
 	$(GIT_PUBLISH) push && $(GIT_PUBLISH) push --tags && \
-	$(WOGER) lua package=$(PACKAGE) \
-	    package_name=$(PACKAGE_NAME) \
-	    version=$(VERSION) \
-	    description="" \
-	    notes=docs/RELEASE-NOTES-$(VERSION) \
-	    home="http://github.com/gvvaughan/specl"
+	$(WOGER) lua \
+	  package=$(PACKAGE) \
+	  package_name=$(PACKAGE_NAME) \
+	  version=$(VERSION) \
+	  notes=docs/RELEASE-NOTES-$(VERSION) \
+	  home="`$(WOGER_OUT) 'print (description.homepage)'`" \
+	  description="`$(WOGER_OUT) 'print (description.summary)'`"
 
 endif
