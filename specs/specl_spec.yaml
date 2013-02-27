@@ -1,34 +1,22 @@
-describe matchers:
-- before: !lua specl = require "specl"
+describe specl:
+- before: !lua |
+    function exit_status (cmd)
+      local output, status = "", nil
+      local f = io.popen (cmd .. "; echo $?")
+      while true do
+        local line = f:read ()
+        if line == nil then break end
+        output = output .. "\n" .. status
+        status = line
+      end
+      return tonumber (status)
+    end
 
-- describe contain matcher:
-  - it diagnoses incompatible arguments: !lua |
-      expect ("string or table expected").should_error (function ()
-                specl._expect (function () end).should_contain "nothing"
-              end)
+- describe command line interface:
+  - it exits with zero status when there are no failing examples: !lua |
+      yaml = "describe x:\n- it passes: !lua expect (0).should_be (0)"
+      expect (exit_status ("printf '" .. yaml .. "'|src/specl")).should_be (0)
 
-  - context when expect receives a string:
-    - it compares against the expectation: !lua |
-        expect ("English Language").should_contain "e"
-        expect ("English Language").should_not_contain "~"
-
-  - context when expect receives a table:
-    - it compares elements against the expectation: !lua |
-        expect ({ "one", "two", "five" }).should_contain "five"
-        expect ({ "one", "two", "five" }).should_not_contain "three"
-
-    - it compares keys against the expectation: !lua |
-        object = { one = true, two = true, five = true }
-        expect (object).should_contain "five"
-        expect (object).should_not_contain "three"
-
-    - "it makes a deep comparison of non-string elements": !lua |
-        object = {{ "subtable one" }, { "subtable two" }}
-        expect (object).should_contain { "subtable one" }
-        expect (object).should_not_contain "subtable one"
-
-- describe match matcher:
-  - it diagnoses non-string arguments: !lua |
-      expect ("string expected").should_error (function ()
-                specl._expect ({"a table"}).should_match {}
-              end)
+  - "it exits with non-zero status when there are failing examples": !lua |
+      yaml = "describe x:\n- it fails: !lua expect (1).should_be (0)"
+      expect (exit_status ("printf '" .. yaml .."'|src/specl")).should_not_be (0)
