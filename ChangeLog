@@ -1,4 +1,30 @@
+2013-02-28  Gary V. Vaughan  <gary@gnu.org>
+
+	rockspecs: allow arbitrary revision numbers.
+	* build-aux/mkrockspecs.lua (qualified_version): New value.
+	Extract this from the template, in case this is not a revision -1
+	rockspec.
+
+	maint: add stdlib dependency to rockspec.
+	* specl-rockspec.lua (dependencies): Add stdlib.
+	(version): Bump rockspec number to 2.
+	(build-command): Simplify slightly.
+
+	maint: don't distribute Makefile for luarocks git builds.
+	* .gitignore: Add Makefile.
+
+2013-02-26  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: keep release notes for release 1.
+	* docs/RELEASE-NOTES-1: New file.
+
 2013-02-25  Gary V. Vaughan  <gary@gnu.org>
+
+	Release v1
+
+	maint: prepare release branch.
+	* .gitignore: Don't ignore the files that belong in the release!
+	* build-aux/.gitignore: Remove.
 
 	maint: don't check release tarball file in on release branch.
 	* .gitignore: Ignore specl-*.tar.gz.
