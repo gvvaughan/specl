@@ -28,8 +28,8 @@ verbose mode
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 .PP
 Specl comes with ABSOLUTELY NO WARRANTY.
-You may redistribute copies of Speclunder the terms of the
-GNU General Public License; either version 3, or any later version.
-For more information about these matters, see the file named COPYING.
+You may redistribute copies of Speclunder the terms of the GNU
+General Public License; either version 3, or any later version.
+For more information, see <http://www.gnu.org/licenses>.
 .SH "REPORTING BUGS"
 Report bugs to http://github.com/gvvaughan/specl/issues.

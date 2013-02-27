@@ -1,5 +1,25 @@
 2013-02-28  Gary V. Vaughan  <gary@gnu.org>
 
+	specl: return non-zero exit status when there are failing specs.
+	* src/specl.lua (run): Return false when there are failing tests.
+
+	specl: fix --version and --help formatting with stdlib-33 getopt.
+	* src/specl.in (prog.version): Separate out copyright notice...
+	(prog.copyright): ...to here.
+	(prog.description): Latest stdlib getopt doesn't need double
+	newline paragraph separators.
+	* src/version.lua.in (M.COPYRIGHT_NOTICE): Rejustify slightly.
+	Point to gnu licenses webpage rather than COPYING file, which
+	might have been lost during installation!
+
+	rockspecs: keep rockspecs on release branch.
+
+	maint: remove debug line from mkrockspecs.lua.
+
+	maint: merge GNUmakefile improvements from master.
+
+	Release v1-2
+
 	rockspecs: allow arbitrary revision numbers.
 	* build-aux/mkrockspecs.lua (qualified_version): New value.
 	Extract this from the template, in case this is not a revision -1

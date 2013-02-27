@@ -70,6 +70,8 @@ release:
 	$(MAKE) tag-release && \
 	$(MAKE) check-in-release && \
 	$(GIT_PUBLISH) push && $(GIT_PUBLISH) push --tags && \
+	LUAROCKS_CONFIG=$(abs_srcdir)/luarocks-config.lua luarocks \
+	  --tree=$(abs_srcdir)/luarocks build $(PACKAGE)-$(VERSION)-1.rockspec && \
 	$(WOGER) lua \
 	  package=$(PACKAGE) \
 	  package_name=$(PACKAGE_NAME) \
