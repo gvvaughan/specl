@@ -1,4 +1,4 @@
-## Maintainer-only rules.
+## maintainer rules.
 
 dont-forget-to-bootstrap = $(wildcard Makefile)
 
@@ -42,9 +42,9 @@ define unpack-distcheck-release
 	cp -a -f $(PACKAGE)-$(VERSION)/* . && \
 	rm -rf $(PACKAGE)-$(VERSION)/ && \
 	echo "unpacked $(PACKAGE)-$(VERSION).tar.gz over current directory" && \
-	echo './configure && make all' && \
+	echo './configure && make all rockspecs' && \
 	./configure --version && ./configure && \
-	$(MAKE) all
+	$(MAKE) all rockspecs
 endef
 
 check-in-release: distcheck
@@ -53,7 +53,7 @@ check-in-release: distcheck
 	{ $(GIT) pull origin release || true; } && \
 	$(unpack-distcheck-release) && \
 	$(GIT) add . && \
-	$(GIT) commit -m "Release v$(VERSION)" && \
+	$(GIT) commit -a -m "Release v$(VERSION)" && \
 	$(GIT) tag -a -m "Full source release tag" release-v$(VERSION); \
 	$(GIT) checkout `echo "$$current_branch" | sed 's,.*/,,g'`
 
