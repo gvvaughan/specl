@@ -31,9 +31,12 @@ function format (x, indent)
   end
 end
 
-for f, spec in pairs (loadfile (template) ()) do
+local settings = loadfile (template) ()
+local qualified_version = settings.default.version
+for f, spec in pairs (settings) do
   if f ~= "default" then
-    local specfile = package_name.."-"..(f ~= "" and f:lower ().."-" or "")..version.."-1.rockspec"
+    local specfile = package_name.."-"..(f ~= "" and f:lower ().."-" or "")..qualified_version..".rockspec"
+    io.stderr:write ("specfile = "..specfile.."\n")
     h = io.open (specfile, "w")
     assert (h)
     flavour = f -- a global, visible in loadfile
