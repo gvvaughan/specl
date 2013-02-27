@@ -7,7 +7,7 @@
 
 local default = {
   package = package_name,
-  version = version.."-1",
+  version = version.."-2",
   source = {
     url = "git://github.com/gvvaughan/"..package_name..".git",
   },
@@ -21,10 +21,11 @@ local default = {
   },
   dependencies = {
     "lua >= 5.1",
+    "stdlib >= 33",
   },
   build = {
     type = "command",
-    build_command = "LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
+    build_command = "LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean all",
     install_command = "make install",
     copy_directories = {},
   },
