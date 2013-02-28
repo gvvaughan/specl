@@ -277,6 +277,21 @@ function run_specs (specs, indent, env)
 end
 
 
+function compile_example (s, filename)
+  local f = load ("return function () " .. s .. " end", filename)
+
+  -- Execute the function from 'load' or report an error right away.
+  if f ~= nil then
+    f, errmsg = f ()
+  end
+  if errmsg ~= nil then
+    error (errmsg)
+  end
+
+  return f
+end
+
+
 function run_examples (examples, indent, env)
   env = env or _G
 
@@ -289,9 +304,9 @@ function run_examples (examples, indent, env)
     local description, definition = next (example)
 
     if description == "before" then
-      before = definition
+      before = compile_example (definition)
     elseif description == "after" then
-      after = definition
+      after = compile_example (definition)
     end
   end
 
@@ -301,6 +316,11 @@ function run_examples (examples, indent, env)
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
+
+    if type (definition) == "string" then
+      -- Uncompiled example.
+      definition = compile_example (definition)
+    end
 
     if reserved:member (description) then
       -- Handled outside main loop, nothing to do here.

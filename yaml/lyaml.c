@@ -190,39 +190,21 @@ static void load_scalar(struct lua_yaml_loader *loader) {
    unsigned int length = loader->event.data.scalar.length;
    const char *tag = (char *)loader->event.data.scalar.tag;
 
-   if (tag) {
-      if (!strncmp(tag, LUAYAML_TAG_PREFIX, sizeof(LUAYAML_TAG_PREFIX) - 1)) {
-         tag += sizeof(LUAYAML_TAG_PREFIX) - 1;
+   if (tag && !strncmp(tag, LUAYAML_TAG_PREFIX, sizeof(LUAYAML_TAG_PREFIX) - 1)) {
+      tag += sizeof(LUAYAML_TAG_PREFIX) - 1;
 
-         if (!strcmp(tag, "str")) {
-            lua_pushlstring(loader->L, str, length);
-            return;
-         } else if (!strcmp(tag, "int")) {
-            lua_pushinteger(loader->L, strtol(str, NULL, 10));
-            return;
-         } else if (!strcmp(tag, "float")) {
-            lua_pushnumber(loader->L, strtod(str, NULL));
-            return;
-         } else if (!strcmp(tag, "bool")) {
-            lua_pushboolean(loader->L, !strcmp(str, "true") || !strcmp(str, "yes"));
-            return;
-         }
-      } else {
-         if (!strcmp(tag, "!lua")) {
-            const char *chunk;
-            lua_pushfstring(loader->L, "return function () %s end", str);
-            chunk = lua_tostring (loader->L, -1);
-
-	    if (luaL_dostring(loader->L, chunk) != LUA_OK) {
-	       lua_pop(loader->L, 1);
-	       lua_pushlstring(loader->L, str, length);
-	    }
-
-            /* Overwrite 'chunk' in the stack with the result of dostring
-               (or otherwise if dostring failed. */
-            lua_replace(loader->L, -2);
-	    return;
-	 }
+      if (!strcmp(tag, "str")) {
+         lua_pushlstring(loader->L, str, length);
+         return;
+      } else if (!strcmp(tag, "int")) {
+         lua_pushinteger(loader->L, strtol(str, NULL, 10));
+         return;
+      } else if (!strcmp(tag, "float")) {
+         lua_pushnumber(loader->L, strtod(str, NULL));
+         return;
+      } else if (!strcmp(tag, "bool")) {
+         lua_pushboolean(loader->L, !strcmp(str, "true") || !strcmp(str, "yes"));
+         return;
       }
    }
 

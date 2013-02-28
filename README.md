@@ -11,7 +11,7 @@ You write your software specifications using [YAML][] with embedded
 examples written in Lua.  A minimal "spec" file outline follows:
 
     describe spec file format:
-    - it is just a list of specifications, with example code: !lua |
+    - it is just a list of specifications, with example code: |
         print "Hello, Specl!"
 
 [YAML][] makes for a very readable specification file format, and allows
@@ -41,10 +41,9 @@ punctuation in the description:
 
     - "it requires double-quote marks, but only when using punctuation":
     
-Conversely, you also need to force the parser to read the example
-following the `:` (colon) as a Lua code by using a `!lua` tag:
+[Specl][] treats everything following the `:` (colon) as a Lua code:
 
-    - it uses a tag to force YAML to compile the code: !lua require "std"
+    - it uses a tag to force YAML to compile the code: stack = Stack {}
     
 It's very rare to fit both the example description and associated code
 on a single line, so you will normally use the [YAML][] literal block
@@ -52,7 +51,7 @@ marker `|' (pipe) before the actual code, from all following lines
 indented underneath that description.  So you'll end up most of your
 examples written as follows:
 
-    - it treats all following indented lines as example code: !lua |
+    - it treats all following indented lines as example code: |
         Stack = require "stack"
         stack = Stack {}
         ...
@@ -67,19 +66,10 @@ of:
   2. Indenting of the code following an example description must at
      least one column further in than the first letter of the
      description text above.
-  3. If you forget to mark a value as Lua code using the `!lua` tag,
-     that part of the specification will be added to the table as a
-     plain string, and cause [Specl][] to complain about a malformed
-     table.
-  4. If you accidentally add a `!lua' tag to a context description
-     ("describe spec file format"), [YAML][] will get excited and try to
-     make a [Lua][] function from everything beyond that point that's
-     indented further than that line.  [Specl][] will complain when it
-     tries to compile the function.
-  5. [YAML][] comments begin with ` #` (space, hash) and extend to the
-     end of the line.  You can use these anywhere outside of a `!lua`
-     block.  [Lua][] comments don't work outside of a `!lua` block, and
-     [YAML][] comments don't work inside a `!lua` block, so you have to
+  3. [YAML][] comments begin with ` #` (space, hash) and extend to the
+     end of the line.  You can use these anywhere outside of a Lua code
+     block.  [Lua][] comments don't work outside of a lua block, and
+     [YAML][] comments don't work inside a Lua block, so you have to
      pick the right comment character, depending where in the hierarchy
      it will go.
 
@@ -104,10 +94,10 @@ are best written with readable names in plain English, but (unlike
 contexts) they are followed by the associated example code:
 
     describe this module:
-    - it has some functionality: !lua |
+    - it has some functionality: |
         ...EXAMPLE-CODE...
 
-    - it works properly: !lua |
+    - it works properly: |
       ...EXAMPLE-CODE...
     ...
 
@@ -126,7 +116,7 @@ described meets your expectations. [Specl][] gives you a new `expect`
 command to check that each example evaluates as it should:
 
     - describe Stack:
-        - it has no elements when empty: !lua |
+        - it has no elements when empty: |
             stack = Stack {}
             expect (#stack).should_be (0)
 
@@ -278,9 +268,9 @@ need any fancy long descriptions for `before` and `after` functions,
 their table keys are just a bare `before` or `after` respectively:
 
     ...
-    - before: !lua stack = Stack {}
+    - before: stack = Stack {}
 
-    - it has no elements when empty: !lua |
+    - it has no elements when empty: |
         expect (#stack).should_equal (0)
     ...
 
@@ -307,17 +297,17 @@ group:
 
     ...
     - describe a Stack:
-        - before: !lua | 
+        - before: | 
             -- equivalent to before(:all)
             package.path = "src/?.lua;" .. package.path
             Stack = require "stack"
 
         - context when inspecting the stack:
-            - before: !lua |
+            - before: |
                 -- equivalent to before(:each)
                 stack = Stack {}
 
-            - it has no elements when empty: !lua |
+            - it has no elements when empty: |
             ...
 
 Tricky `before` placement aside, it's always a good idea to organize
