@@ -1,7 +1,4 @@
 TODO:
-- move compilation out into a 1-time pre-run_examples step.
-- have compiled table is old nested function lists format, so that
-  old format specs are accepted too.
 - add support for ansicolor.lua
 - add support for shared_examples: |
     shared_examples for any pizza:

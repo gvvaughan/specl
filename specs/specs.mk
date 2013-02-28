@@ -18,12 +18,45 @@
 
 
 ## ------ ##
+## Tools. ##
+## ------ ##
+
+check_SCRIPTS = build-aux/speclc
+
+build_aux_speclc_DEPS =					\
+	Makefile					\
+	build-aux/speclc.in				\
+	$(NOTHING_ELSE)
+
+build-aux/speclc: $(build_aux_speclc_DEPS)
+	@test -d build-aux || mkdir build-aux
+	@rm -f '$@' '$@.tmp'
+	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
+	$(AM_V_at)mv '$@.tmp' '$@'
+	$(AM_V_at)chmod +x '$@'
+
+EXTRA_DIST += build-aux/speclc.in
+
+DISTCLEANFILES += build-aux/speclc
+
+
+## ------ ##
 ## Specs. ##
 ## ------ ##
 
+SPECL = src/specl
+
+# Make Lua specs from YAML specs.
+.yaml.lua:
+	$(AM_V_GEN)build-aux/speclc '$^' > '$@'
+
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
+	$(srcdir)/specs/environment_spec.lua		\
+	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/matchers_spec.lua		\
 	$(srcdir)/specs/specl_spec.yaml			\
+	$(srcdir)/specs/specl_spec.lua			\
 	$(NOTHING_ELSE)
 
 EXTRA_DIST +=						\
@@ -31,4 +64,4 @@ EXTRA_DIST +=						\
 	$(NOTHING_ELSE)
 
 check-local: src/specl $(specl_SPECS)
-	$(AM_V_at)$(LUA) src/specl $(specl_SPECS)
+	$(AM_V_at)$(LUA) $(SPECL) $(specl_SPECS)

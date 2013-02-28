@@ -58,7 +58,7 @@ dist_pkglua_DATA =					\
 src_specl_DEPS =					\
 	Makefile					\
 	src/specl.in					\
-	$(dist_specldata_DATA)				\
+	$(dist_pkglua_DATA)				\
 	$(NOTHING_ELSE)
 
 src/specl: $(src_specl_DEPS)

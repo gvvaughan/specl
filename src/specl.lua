@@ -257,27 +257,85 @@ end
 --[[ ============= ]]--
 
 
-local nop, run_specs, run_examples
+local compile_specs, compile_contexts, compile_examples, compile_example
 
+
+-- These strings cannot be used for an example description.
 local reserved = set.new { "before", "after" }
 
 
--- Always call before and after unconditionally.
-function nop () end
-
-
-function run_specs (specs, indent, env)
-  indent = indent or ""
-  for _, detail in ipairs (specs) do
-    for description, examples in pairs (detail) do
-      formatter.spec (indent .. description:gsub ("^%w+%s+", "", 1))
-      run_examples (examples, indent .. "  ", env)
-    end
+-- SPECS are compiled destructively in the specs table itself.
+function compile_specs (specs)
+  for i, contexts in ipairs (specs) do
+    -- Compile every top-level context specification.
+    specs[i] = compile_contexts (contexts)
   end
 end
 
 
+-- CONTEXTS are also compiled destructively in place.
+function compile_contexts (contexts)
+  for description, examples in pairs (contexts) do
+    contexts[description] = compile_examples (examples)
+  end
+  return contexts
+end
+
+
+-- Return EXAMPLES table with all of the lua fragments compiled into
+-- callable functions.
+function compile_examples (examples)
+  local compiled = {}
+
+  -- Make sure we have a function for every reserved word.
+  for s in set.elems (reserved) do
+    -- Lua specs save ready compiled functions to examples[s] already.
+    compiled[s] = examples[s] or compile_example (s)
+  end
+
+  for _, example in ipairs (examples) do
+    -- There is only one, otherwise we can't maintain example order.
+    local description, definition = next (example)
+
+    if reserved:member (description) then
+      -- YAML specs store reserved words in the ordered example list,
+      -- so we have to hoist them out where we can rerun them around
+      -- each real example in the list, without digging through all the
+      -- entries each time.
+      compiled[description] = compile_example (definition)
+
+    elseif type (definition) == "function" then
+      -- Compiled Lua code.
+      table.insert (compiled, { [description] = definition })
+
+    elseif type (definition) == "string" then
+      -- Uncompiled Lua code.
+      table.insert (compiled, { [description] = compile_example (definition) })
+
+    elseif type (definition) == "table" then
+      -- A nested context table.
+      table.insert (compiled, compile_contexts (example))
+
+    else
+      -- Oh dear, most likely your nesting is not quite right!
+      error ('malformed spec in "' .. tostring (description) .. '", a ' ..
+             type (definition) .. " (expecting table or string)")
+    end
+  end
+
+  return compiled
+end
+
+
+local function nop () end
+
+-- Compile S into a callable function.  If S is a reserved word,
+-- then return a function that does nothing.
+-- If FILENAME is passed, it is used in error messages from load().
 function compile_example (s, filename)
+  if reserved:member (s) then return nop end
+
+  -- Wrap the fragment into a function that we can call later.
   local f = load ("return function () " .. s .. " end", filename)
 
   -- Execute the function from 'load' or report an error right away.
@@ -292,27 +350,27 @@ function compile_example (s, filename)
 end
 
 
+local run_contexts, run_examples, run
+
+
+-- Run each of CONTEXTS under ENV in order.
+-- INDENT is passed to the formatter, and expanded as we recurse.
+function run_contexts (contexts, indent, env)
+  indent = indent or ""
+  for description, examples in pairs (contexts) do
+    formatter.spec (indent .. description:gsub ("^%w+%s+", "", 1))
+    run_examples (examples, indent .. "  ", env)
+  end
+end
+
+
+-- Run each of EXAMPLES under ENV in order.
+-- INDENT is passed to the formatter, and expanded as we recurse.
 function run_examples (examples, indent, env)
   env = env or _G
 
-  -- YAML specs store befores and afters in the ordered example list,
-  -- so we have to hoist them out so we can rerun them around each
-  -- real example in the list.
-  local before, after = examples.before or nop, examples.after or nop
-  for _, example in ipairs (examples) do
-    -- There is only one, otherwise we can't maintain example order.
-    local description, definition = next (example)
-
-    if description == "before" then
-      before = compile_example (definition)
-    elseif description == "after" then
-      after = compile_example (definition)
-    end
-  end
-
-  -- With any reserved keys hoisted, this function runs the examples.
   local block = function (example, blockenv)
-    before ()
+    examples.before ()
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
@@ -322,12 +380,9 @@ function run_examples (examples, indent, env)
       definition = compile_example (definition)
     end
 
-    if reserved:member (description) then
-      -- Handled outside main loop, nothing to do here.
-
-    elseif type (definition) == "table" then
-      -- A nested context, revert back to run_specs.
-      run_specs ({ example }, indent, env)
+    if type (definition) == "table" then
+      -- A nested context, revert back to run_contexts.
+      run_contexts (example, indent, env)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
@@ -338,13 +393,9 @@ function run_examples (examples, indent, env)
       _G.expectations = {} -- each example may have several expectations
       definition ()
       formatter.expectations (_G.expectations, "  " .. indent)
-
-    else
-      -- Oh dear, most likely your nesting is not quite right!
-      error ('malformed spec in "' .. tostring (description) .. '", a ' .. type (definition) .. " (expecting table or function)")
     end
 
-    after ()
+    examples.after ()
   end
 
   for _, example in ipairs (examples) do
@@ -357,18 +408,28 @@ function run_examples (examples, indent, env)
 end
 
 
-local function run (spec, format)
+-- Run SPECS, routing output to FORMAT formatter.
+function run (specs, format)
   formatter = format or formatter
+
+  -- Precompile Lua code on initial pass.
+  compile_specs (specs)
+
+  -- Run compiled specs, in order.
   formatter.header (_G.stats)
-  run_specs (spec)
+  for _, contexts in ipairs (specs) do
+    run_contexts (contexts)
+  end
   formatter.footer (_G.stats)
   return _G.stats.fail == 0
 end
 
 
+
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
+
 
 local M = {
   _VERSION  = "0.1",

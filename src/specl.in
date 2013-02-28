@@ -75,7 +75,18 @@ function slurp (filename)
   -- Remove leading comment lines, carefully preserving line numbers for
   -- error messages from 'load', and then inject the 'return' keyword at
   -- the start of the first non-blank line.
-  local t, errmsg = yaml.load (s)
+  s = s:gsub ("^%s*%-%-[^\r\n]+i(\r*\n)%s*", "%1"
+      ):gsub (",%s*$", ""
+      ):gsub ("[^\r\n]", "return %0", 1)
+  local f, errmsg = load (s, filename)
+
+  local t
+  if f ~= nil then
+    t, errmsg = f ()
+  else
+    -- If loading as lua didn't work, try again as YAML.
+    t, errmsg = yaml.load (s)
+  end
  
   -- Execute the function from 'load', and save the value returned, or
   -- report any error right away.
