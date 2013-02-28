@@ -1,9 +1,18 @@
 TODO:
+- pending support:
+    it is not implemented yet: pending
+    it is implemented but still not working: |
+      pending ()
+      expect (running (this)).should_be (working)
+- add a have matcher, with support for items etc
+    expect (set).should_have (10).members
+    expect (coven).should_have (13).witches
+- add less_than matcher (with automatic greater_than support
+  in expect?)
 - add support for ansicolor.lua
 - add support for shared_examples: |
     shared_examples for any pizza:
       it has lots of cheese: expect (cheese).should_be ("lots")
-
     describe new york pizza:
       it behaves like: any pizza
 - add support for automatic subject: |
@@ -12,3 +21,4 @@ TODO:
 - add support for automatic require: |
     module:
       [[implied -> before: module = require "module"]]
+- LuaCov coverage reporting?
