@@ -1,0 +1,17 @@
+TODO:
+- move compilation out into a 1-time pre-run_examples step.
+- have compiled table is old nested function lists format, so that
+  old format specs are accepted too.
+- add support for ansicolor.lua
+- add support for shared_examples: |
+    shared_examples for any pizza:
+      it has lots of cheese: expect (cheese).should_be ("lots")
+
+    describe new york pizza:
+      it behaves like: any pizza
+- add support for automatic subject: |
+    Stack:
+      [[implied -> before: subject = Stack {}]]
+- add support for automatic require: |
+    module:
+      [[implied -> before: module = require "module"]]
