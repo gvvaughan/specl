@@ -29,7 +29,7 @@ local default = {
   build = {
     type = "command",
     build_command = "LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) " ..
-      "./configure CPPFLAGS=-I$(YAML_INCDIR) LDFLAGS='-L$(YAML_LIBDIR) " ..
+      "./configure CPPFLAGS=-I$(YAML_INCDIR) LDFLAGS='-L$(YAML_LIBDIR)' " ..
       "--prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) " ..
       "&& make clean && make",
     install_command = "make install",
