@@ -9,7 +9,8 @@ local default = {
   package = package_name,
   version = version.."-1",
   source = {
-    url = "git://github.com/gvvaughan/"..package_name..".git",
+    url = "http://github.com/gvvaughan/"..package_name.."/archive/release-v"..version.."-1.zip",
+    dir = package_name.."-release-v"..version.."-1",
   },
   description = {
     summary = "Behaviour Driven Development for Lua",
@@ -37,9 +38,7 @@ local default = {
   },
 }
 
-if version ~= "git" then
-  default.source.branch = "release-v"..version
-else
+if version == "git" then
   default.build.build_command = "./bootstrap && " .. default.build.build_command
 end
 

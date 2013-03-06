@@ -23,7 +23,7 @@
 ## 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #####
 
-luaexec_LTLIBRARIES = yaml/lyaml.la
+lib_LTLIBRARIES = yaml/lyaml.la
 
 yaml_lyaml_la_LDFLAGS  = -module -avoid-version
 yaml_lyaml_la_CPPFLAGS = $(LUA_INCLUDE) $(YAML_INCLUDE)

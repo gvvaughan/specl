@@ -31,8 +31,8 @@ SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 specl_install_edit =					\
 	$(install_edit)					\
-	-e 's|@speclpath[@]|$(luadir)/?.lua|g'		\
-	-e 's|@speclcpath[@]|$(luaexecdir)/?$(shrext)|g'\
+	-e 's|@speclpath[@]|$(pkgluadir)/?.lua|g'	\
+	-e 's|@speclcpath[@]|$(libdir)/?$(shrext)|g'	\
 	$(NOTHING_ELSE)
 
 specl_inplace_edit =					\
