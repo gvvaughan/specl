@@ -1,0 +1,11 @@
+*~
+*.o
+*.lo
+*.la
+*.so
+.deps
+.libs
+/autom4te.cache
+/config.status
+/specl-*.tar.gz
+/Makefile

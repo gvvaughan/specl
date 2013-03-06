@@ -1,7 +1,159 @@
+2013-03-06  Gary V. Vaughan  <gary@gnu.org>
+
+	rockspecs: correct source.url and source.dir for github.
+	* specl-rockspec.lua (source.url, source.dir): Remove '-1' suffix.
+
+	maint: distribute README.md.
+	* Makefile.am (EXTRA_DIST): Add README.md.
+
+	rockspecs: build from github zip file.
+	Rather than require git clone to checkout the source tree at
+	rockspec install time, download the automatic github zip file.
+	* specl-rockspec.lua (source): Extrapolate zip file location.
+	(source.branch): Remove.
+	* src/specl.mk (specl_install_edit): Use pkgluadir and libdir
+	to match luarocks installation dirs.
+	* yaml/yaml.mk (luaexec_LTLIBRARIES): Rename from this...
+	(lib_LTLIBRARIES): ...to this, or luarocks doubles up the
+	installation subdirectories to lua/5.x/lua/5.x!
+
+	rockspecs: fix missing quote in build_command.
+	* specl-rockspec.lua (build.build_command): Add missing quote.
+
+	maint: don't distribute compiled Lua specs.
+	* specs/specs.mk (SPECLC): Path to speclc program.
+	(specl_SPECS): Remove Lua spec files.
+	(specl_LUASPECS): List Lua spec files.
+	(.yaml.lua): Make sure there is a specs dir in the build tree.
+	(DISTCLEANFILES): Remove generated lua spec files.
+
+	maint: distribute specl-rockspec.lua.
+	* Makefile.am (EXTRA_DIST): Add specl-rockspec.lua.
+
+	specl: always pass a (small) number to os.exit().
+	os.exit in Lua 5.1 doesn't accept a boolean, so we pass it 1 if
+	there are any failures, otherwise 0.
+	* src/specl.lua (run): Return a small integer suitable for os.exit.
+	* src/specl.in: Remove completed TODO.
+
+	specl: use loadstring for Lua 5.1 compatibility.
+	* src/specl.lua (loadstring): If loadstring is not defined, then
+	this must be Lua 5.2, so define a loadstring work-a-like around
+	load.
+	* src/specl.in (slurp): Use loadstring, either from Lua 5.1 core,
+	or the wrapper above.
+
 2013-02-28  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: more TODO items.
+	* TODO.yaml: New items.
+
+	specl: support continued (undocumented!) specl-1 _spec.lua specs.
+	* src/specl.in (slurp): First try to load as pure Lua, and if
+	that fails, fall back to the YAML loader before erroring.
+	* src/specl.lua (copile_specs, compile_examples, compile_example):
+	Factor out compilation phase for YAML specs.
+	* build-aux/speclc.in: New file. %_spec.yaml to %_spec.lua
+	compiler (requires lyaml!).
+	* specs/specs.mk (build-aux/speclc): Build it from speclc.in.
+	(.yaml.lua): New rule to compile all yaml specs to lua to make
+	sure Lua specs continue to be fully functional.
+	(specl_SPECS): Add lua specs.
+	* build-aux/.gitignore: Add speclc.
+	* specs/environment_spec.yaml: Comment out a spec that fails
+	when loaded as a lua spec, but passes as a yaml spec :-?
+	* TODO.yaml: Remove done items.
+
+	maint: keep track of TODO items in the repository.
+	* TODO.yaml: New file. List pending TODO items.
+
+	yaml: compile lua fragments on the fly instead of requiring `!lua`.
+	* yaml/lyaml.c (load_scalar): Remove `!lua` precompiling support.
+	* src/specl.lua (compile_example): New function to compile an
+	example.
+	(run_examples): Use it when encountering an uncompiled example.
+	* specs/environment_spec.yaml, specs/matchers_spec.yaml,
+	specs/specl_spec.yaml: Remove all `!lua` tags.
+	* specs/specl_spec.yaml: New expectations for yaml specs on CLI
+	standard input.
+	* README.md: Update documentation. Particularly removing the
+	notes about dealing with quirks of `!lua`.
+
+	specs: specify exit statuses
+	* specs/specl_spec.yaml (describe specl): New examples to specify
+	exit status of specl.
+	(describe matchers): Move everything else from here...
+	* specs/matchers_spec.yaml: ...to here.
+
+	maint: GNUmakefile improvements.
+	* GNUmakefile (unpack-distcheck-release): Be sure to rebuild rockspecs.
+	(check-in-release): Commit all unpacked files on the release branch.
+
+	rockspecs: allow arbitrary revision numbers.
+	* build-aux/mkrockspecs.lua (qualified_version): New value.
+	Extract this from the template, in case this is not a revision -1
+	rockspec.
+
+2013-02-26  Gary V. Vaughan  <gary@gnu.org>
 
 	specl: return non-zero exit status when there are failing specs.
 	* src/specl.lua (run): Return false when there are failing tests.
+
+	maint: call woger properly at release time.
+	* GNUmakefile (WOGER_ENV): Lua environment settings for extracting
+	woger release variables.
+	(WOGER_OUT): Lua call for feretting out the rockspec file
+	settings used by woger.
+	(release): Fully populate all the fields needed to make a correct
+	woger release of Specl.
+
+2013-02-25  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: update README to document new YAML syntax spec files.
+	* README.md: Updated to document new YAML syntax spec files.
+
+	configury: user-overridable search for install libyaml.
+	* configure.ac (AC_CHECK_HEADERS): Look for yaml.h.
+	(AC_SEARCH_LIBS): Abort with an error if libyaml is not found.
+	* yaml/yaml.mk (yaml_lyaml_la_LIBADD): Remove hardcoded -lyaml.
+	* specl-rockspec.lua (external_dependencies): Add yaml.
+	(build.build_command): Pass through YAML options from rockspec
+	make command.
+
+	specs: factor out specification checking to a separate makefile.
+	* src/specl.mk (Specs): Move this section from here...
+	* specs/specs.mk: New file.  ...to here.
+	* Makefile.am: Include specs/specs.mk.
+
+	specs: a minimal environment sharing spec.
+	* specs/environment_spec.yaml: New file. Ensure before, after,
+	examples in the same scope share execution environments
+	correctly.
+	* src/specl.mk (specl_SPECS): New macro. List all spec files.
+	(EXTRA_DIST): Adjust.
+	(check-local): Add dependencies. Remove unnecessary environment
+	setting. Pass a static list of spec files.
+
+	specl: read yaml format spec files.
+	* yaml/lua52compat.h, yaml/yaml.c: New files.  Sources for yaml
+	module.
+	* yaml/yaml.mk: New file. Build yaml module.
+	* Makefile.am: Include it.
+	(lib_LTLIBRARIES): Initialise.
+	* configure.ac (AC_INIT): Bump version to 2.
+	(AM_INIT_AUTOMAKE): Use subdir-objects.
+	(LT_PREREQ, LT_INIT): Add libtool setup.
+	(AC_PROG_CC, AC_HEADER_STDC): Add C compiler setup.
+	(AC_CONFIG_HEADERS): Make config.h.
+	* specs/specl_spec.lua: Move from here...
+	* specs/specl_spec.yaml: ...to here. Reformat to yaml.
+	* src/specl.mk (check-local): Move from here...
+	* specs/specs.mk: New file. ...to here.
+	* src/specl.lua (run_examples): YAML doesn't provide a pleasant
+	way to format reserved descriptions (before, after) outside of
+	the ordered list of actual examples, so we have to make a first
+	pass over the list to extract them, and then be careful not to
+	run them again in the main loop.
 
 	specl: fix --version and --help formatting with stdlib-33 getopt.
 	* src/specl.in (prog.version): Separate out copyright notice...
@@ -12,39 +164,8 @@
 	Point to gnu licenses webpage rather than COPYING file, which
 	might have been lost during installation!
 
-	rockspecs: keep rockspecs on release branch.
-
-	maint: remove debug line from mkrockspecs.lua.
-
-	maint: merge GNUmakefile improvements from master.
-
-	Release v1-2
-
-	rockspecs: allow arbitrary revision numbers.
-	* build-aux/mkrockspecs.lua (qualified_version): New value.
-	Extract this from the template, in case this is not a revision -1
-	rockspec.
-
-	maint: add stdlib dependency to rockspec.
+	rockspecs: add dependency on latest stdlib rock.
 	* specl-rockspec.lua (dependencies): Add stdlib.
-	(version): Bump rockspec number to 2.
-	(build-command): Simplify slightly.
-
-	maint: don't distribute Makefile for luarocks git builds.
-	* .gitignore: Add Makefile.
-
-2013-02-26  Gary V. Vaughan  <gary@gnu.org>
-
-	maint: keep release notes for release 1.
-	* docs/RELEASE-NOTES-1: New file.
-
-2013-02-25  Gary V. Vaughan  <gary@gnu.org>
-
-	Release v1
-
-	maint: prepare release branch.
-	* .gitignore: Don't ignore the files that belong in the release!
-	* build-aux/.gitignore: Remove.
 
 	maint: don't check release tarball file in on release branch.
 	* .gitignore: Ignore specl-*.tar.gz.
