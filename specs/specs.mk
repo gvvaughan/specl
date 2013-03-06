@@ -44,24 +44,47 @@ DISTCLEANFILES += build-aux/speclc
 ## Specs. ##
 ## ------ ##
 
-SPECL = src/specl
+SPECL  = src/specl
+SPECLC = build-aux/speclc
 
-# Make Lua specs from YAML specs.
-.yaml.lua:
-	$(AM_V_GEN)build-aux/speclc '$^' > '$@'
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
-	$(srcdir)/specs/environment_spec.lua		\
 	$(srcdir)/specs/matchers_spec.yaml		\
-	$(srcdir)/specs/matchers_spec.lua		\
 	$(srcdir)/specs/specl_spec.yaml			\
-	$(srcdir)/specs/specl_spec.lua			\
 	$(NOTHING_ELSE)
+
+specl_LUASPECS =					\
+	specs/environment_spec.lua			\
+	specs/matchers_spec.lua				\
+	specs/specl_spec.lua				\
+	$(NOTHING_ELSE)
+
+# Make Lua specs from YAML specs.
+.yaml.lua:
+	@test -d specs || mkdir specs
+	$(AM_V_GEN)$(SPECLC) '$^' > '$@'
+
+# Lua specs require speclc compiler.
+$(specl_LUASPECS): $(SPECLC)
+
+check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
+	$(AM_V_at)$(LUA) $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
+
+
+## ------------- ##
+## Distribution. ##
+## ------------- ##
 
 EXTRA_DIST +=						\
 	$(specl_SPECS)					\
 	$(NOTHING_ELSE)
 
-check-local: src/specl $(specl_SPECS)
-	$(AM_V_at)$(LUA) $(SPECL) $(specl_SPECS)
+
+## ------------ ##
+## Maintenance. ##
+## ------------ ##
+
+DISTCLEANFILES +=					\
+	$(specl_LUASPECS)				\
+	$(NOTHING_ELSE)
