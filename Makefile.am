@@ -92,6 +92,7 @@ ChangeLog: FORCE
 
 EXTRA_DIST +=						\
 	GNUmakefile					\
+	README.md					\
 	specl-rockspec.lua				\
 	$(NOTHING_ELSE)
 
