@@ -9,8 +9,8 @@ local default = {
   package = package_name,
   version = version.."-1",
   source = {
-    url = "http://github.com/gvvaughan/"..package_name.."/archive/release-v"..version.."-1.zip",
-    dir = package_name.."-release-v"..version.."-1",
+    url = "http://github.com/gvvaughan/"..package_name.."/archive/release-v"..version..".zip",
+    dir = package_name.."-release-v"..version,
   },
   description = {
     summary = "Behaviour Driven Development for Lua",
