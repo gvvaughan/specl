@@ -6,5 +6,6 @@
 .deps
 .libs
 /autom4te.cache
+/config.status
 /specl-*.tar.gz
 /Makefile
