@@ -43,6 +43,10 @@ setfenv = setfenv or function(f, t)
 end
 
 
+loadstring = loadstring or function (chunk, chunkname)
+  return load (chunk, chunkname)
+end
+
 
 --[[ =========== ]]--
 --[[ Formatters. ]]--
@@ -331,14 +335,14 @@ local function nop () end
 
 -- Compile S into a callable function.  If S is a reserved word,
 -- then return a function that does nothing.
--- If FILENAME is passed, it is used in error messages from load().
+-- If FILENAME is passed, it is used in error messages from loadstring().
 function compile_example (s, filename)
   if reserved:member (s) then return nop end
 
   -- Wrap the fragment into a function that we can call later.
-  local f = load ("return function () " .. s .. " end", filename)
+  local f = loadstring ("return function () " .. s .. " end", filename)
 
-  -- Execute the function from 'load' or report an error right away.
+  -- Execute the function from 'loadstring' or report an error right away.
   if f ~= nil then
     f, errmsg = f ()
   end
