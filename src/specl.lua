@@ -425,7 +425,7 @@ function run (specs, format)
     run_contexts (contexts)
   end
   formatter.footer (_G.stats)
-  return _G.stats.fail == 0
+  return _G.stats.fail ~= 0 and 1 or 0
 end
 
 

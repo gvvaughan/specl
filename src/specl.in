@@ -22,9 +22,6 @@ A=--[[ exec @LUA@ "$0" "$@"  # -*- mode: lua; -*- ]]A
 -- MA 02111-1301, USA.
 
 
--- TODO: make sure it really works with 5.1
-
-
 -- Notify modules that specifications are being checked.
 _G._SPEC = true
 
