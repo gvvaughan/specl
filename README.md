@@ -341,7 +341,7 @@ a one line summary follows:
     ......
     All expectations met, in 0.00233 seconds.
 
-### 4.2.  Report Formatter
+### 4.2. Report Formatter
 
 The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
@@ -363,6 +363,51 @@ more detailed summary.
 Failed expectations are reported inline, making the failing example easy
 to find within a large "spec" file.
 
+### 4.3. Custom Formatters
+
+A formatter is just a table of functions that [Specl][] can call as it
+runs your specifications, so provided you supply the table keys that
+[Specl][] is expecting, you can write your own formatters:
+
+    my_formatter = {
+      header       = function () ... end,
+      spec         = function (description) ... end,
+      example      = function (description) ... end,
+      expectations = function (expectations, indent) ... end,
+      footer       = function (stats) ... end,
+    }
+
+The functions `header` and `footer` are called before any expectations,
+and after all expectations, respectively.  The `stats` argument to
+`footer` is a table containing:
+
+    stats = { pass = <PASSED>, fail = <FAILED>, starttime = <CLOCK> }
+
+You can use this to print out statistics at the end of the formatted
+output.
+
+The functions `spec` and `example` are called with the description of
+the specification or context header (the ones with descriptions that
+typically begin with either `describe` or `context`, and then the
+description of the example (the ones that typically begin with `it`),
+respectively.
+
+And finally, the function `expectations` is called after each example
+has been run, with a list of tables, one for each `expect` call in
+that example:
+
+    expectations = {
+      { status = (true|false), message = "error string" },
+      ...
+    }
+
+The standard Specl formatters in the `specl/formatters/` sub-directory
+of your installation show how these functions can be used to display
+progress in a format of your choice.
+
+See the next section for details of how to get [Specl][] to load
+your custom formatter..
+
 
 <a id="specl-command-line"></a>
 5. Command Line
@@ -381,6 +426,10 @@ The output will display results using the default `progress` formatter.
 To use the `report` formatter instead, add the `-v` option to the
 command line above.
 
+If you prefer to format the results of your specification examples with
+a custom formatter, you should make sure your formatter is visible on
+`LUA_PATH`, and use the `--formatter=BASENAME` option to load it.
+
 Pass the `-h` option for help and brief documentation on usage of the
 remaining available options.
 
@@ -390,8 +439,8 @@ remaining available options.
     
 No support for mocks, or pending examples in the current version.
 
-The APIs for adding your own `matchers` and `formatters` are not yet
-documented.  Please read the code for now.
+The APIs for adding your own `matchers` are not yet documented.
+Please read the code for now.
 
 
 [lua]: http://www.lua.org

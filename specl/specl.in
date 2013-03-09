@@ -55,6 +55,8 @@ prog = table.merge (prog, {
     getopt.Option {{"help"}, "print this help, then exit"},
     getopt.Option {{"version"}, "print version number, then exit"},
     getopt.Option {{"verbose", "v"}, "verbose mode"},
+    getopt.Option {{"formatter"},
+                   "use a custom formatter from FILE", "Req", "FILE"},
   },
 })
 
@@ -97,6 +99,18 @@ end
 
 
 getopt.processArgs (prog)
-io.processFiles (slurp)
 
-os.exit (specl.run (spec, getopt.opt.verbose and require "formatter.report"))
+-- Try to load and use a custom --formatter argument.
+local formatter = getopt.opt.verbose and require "formatter.report"
+if getopt.opt.formatter then
+  local ok, file = next (getopt.opt.formatter)
+  ok, formatter = pcall (require, getopt.opt.formatter[1])
+
+  if ok == false then
+    io.stderr:write ("could not load formatter: " .. formatter .. "\n")
+    os.exit (2)
+  end
+end
+
+io.processFiles (slurp)
+os.exit (specl.run (spec, formatter))

@@ -22,7 +22,7 @@ describe specl:
         output = output .. "\n" .. line
       end
       f:close ()
-      return output
+      return output:gsub ("^\n", "", 1)
     end
 
 - describe command line interface:
@@ -43,3 +43,29 @@ describe specl:
   - "it exits with non-zero status when there are failing examples": |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
       expect (exit_status ("printf '" .. yaml .."'|specl/specl")).should_not_be (0)
+
+  - when using a custom formatter:
+    - before: |
+        -- Write a very basic custom formatter to a temporary file, and add
+        -- its location to the lua search path.
+        tmpfile = os.tmpname ()
+        path = tmpfile:gsub ("[^/]*$", "?.specfmt;", 1)
+        f = io.open (tmpfile .. ".specfmt", "w")
+        f:write ([[return {
+            header  = function () io.write "h" end,
+            spec    = function (d) io.write "s" end,
+            example = function (d) io.write "x" end,
+            expectations = function (x) io.write "." end,
+            footer  = function (s) io.write "f"; io.flush () end,
+          }]])
+        f:close ()
+
+    - it formats expectations with the custom formatter: |
+        f = tmpfile:gsub (".*/", "")
+        output = capture_output ("printf '" .. yaml .. "'" ..
+                                 "|env LUA_PATH='" .. path .. ";' " ..
+                                 "specl/specl --formatter=" .. f .. " -")
+        expect (output).should_be ("hsx.f")
+
+    - after:
+        os.remove (tmpfile)
