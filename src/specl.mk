@@ -51,6 +51,7 @@ bin_SCRIPTS += src/specl
 man_MANS += docs/specl.1
 
 dist_pkglua_DATA =					\
+	src/matchers.lua				\
 	src/specl.lua					\
 	src/version.lua					\
 	$(NOTHING_ELSE)

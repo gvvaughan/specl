@@ -20,6 +20,7 @@
 
 require "std"
 
+local matchers = require "matchers"
 
 
 --[[ ================================= ]]--
@@ -128,131 +129,6 @@ local progress = {
 
 -- Use the simple progress formatter by default.  Can be changed by run().
 local formatter = progress
-
-
-
---[[ ========= ]]--
---[[ Matchers. ]]--
---[[ ========= ]]--
-
-
-local function objcmp (o1, o2)
-  local type1, type2 = type (o1), type (o2)
-  if type1 ~= type2 then return false end
-  if type1 ~= "table" or type2 ~= "table" then return o1 == o2 end
-
-  for k, v in pairs (o1) do
-    if o2[k] == nil or not objcmp (v, o2[k]) then return false end
-  end
-  -- any keys in o2, not already compared above denote a mismatch!
-  for k, _ in pairs (o2) do
-    if o1[k] == nil then return false end
-  end
-  return true
-end
-
-
--- Quote strings nicely, and coerce non-strings into strings.
-local function q (obj)
-  if type (obj) == "string" then
-    return '"' .. obj:gsub ('[\\"]', "\\%0") .. '"'
-  end
-  return tostring (obj)
-end
-
-
-local matchers = {
-  -- Deep comparison, matches if VALUE and EXPECTED share the same
-  -- structure.
-  equal = function (value, expected)
-    local m = "expecting " .. q(expected) .. ", but got ".. q(value)
-    return (objcmp (value, expected) == true), m
-  end,
-
-  -- Identity, only match if VALUE and EXPECTED are the same object.
-  be = function (value, expected)
-    local m = "expecting exactly " .. q(expected) .. ", but got " .. q(value)
-    return (value == expected), m
-  end,
-
-  -- Matches if FUNC raises any error.
-  ["error"] = function (expected, ...)
-    local ok, err = pcall (...)
-    if not ok then -- "not ok" means an error occurred
-      local pattern = ".*" .. expected:gsub ("%W", "%%%0") .. ".*"
-      ok = not err:match (pattern)
-    end
-    return not ok, "expecting an error containing " .. q(expected) .. ", and got\n" .. q(err)
-  end,
-
-  -- Matches if VALUE matches regular expression PATTERN.
-  match = function (value, pattern)
-    if type (value) ~= "string" then
-      error ("'match' matcher: string expected, but got " .. type (value))
-    end
-    local m = "expecting string matching " .. q(pattern) .. ", but got " .. q(value)
-    return (value:match (pattern) ~= nil), m
-  end,
-
-  -- Matches if VALUE contains EXPECTED.
-  contain = function (value, expected)
-    if type (value) == "string" and type (expected) == "string" then
-      -- Look for a substring if VALUE is a string.
-      local pattern = expected:gsub ("%W", "%%%0")
-      local m = "expecting string containing " .. q(expected) .. ", but got " .. q(value)
-      return (value:match (pattern) ~= nil), m
-    elseif type (value) == "table" then
-      -- Do deep comparison against keys and values of the table.
-      local m = "expecting table containing " .. q(expected) .. ", but got " .. q(value)
-      for k, v in pairs (value) do
-        if objcmp (k, expected) or objcmp (v, expected) then
-          return true, m
-        end
-      end
-      return false, m
-    end
-    error ("'contain' matcher: string or table expected, but got " .. type (value))
-  end,
-}
-
-
--- Wrap TARGET in metatable that dynamically looks up an appropriate
--- matcher from the table above for comparison with the following
--- parameter. Matcher names containing '_not_' invert their results
--- before returning.
---
--- For example:                  expect ({}).should_not_be {}
-
-_G.expectations = {}
-_G.stats = { pass = 0, fail = 0, starttime = os.clock () }
-
-local function expect (target)
-  return setmetatable ({}, {
-    __index = function(_, matcher)
-      local inverse = false
-      if matcher:match ("^should_not_") then
-        inverse, matcher = true, matcher:sub (12)
-      else
-        matcher = matcher:sub (8)
-      end
-      return function(...)
-        local success, message = matchers[matcher](target, ...)
-
-        if inverse then
-	  success = not success
-	  message = message and ("not " .. message)
-	end
-
-        if success ~= true then
-	  _G.stats.fail = _G.stats.fail + 1
-	else
-	  _G.stats.pass = _G.stats.pass + 1
-	end
-        table.insert (_G.expectations, { status = success, message = message })
-      end
-    end
-  })
-end
 
 
 
@@ -390,13 +266,13 @@ function run_examples (examples, indent, env)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
-      local fenv = { expect = expect }
+      local fenv = { expect = matchers.expect }
       formatter.example (indent .. description:gsub ("^%w+%s+", "", 1))
       setfenv (definition, setmetatable (fenv, { __index = blockenv }))
 
-      _G.expectations = {} -- each example may have several expectations
+      matchers.expectations = {} -- each example may have several expectations
       definition ()
-      formatter.expectations (_G.expectations, "  " .. indent)
+      formatter.expectations (matchers.expectations, "  " .. indent)
     end
 
     examples.after ()
@@ -420,12 +296,12 @@ function run (specs, format)
   compile_specs (specs)
 
   -- Run compiled specs, in order.
-  formatter.header (_G.stats)
+  formatter.header (matchers.stats)
   for _, contexts in ipairs (specs) do
     run_contexts (contexts)
   end
-  formatter.footer (_G.stats)
-  return _G.stats.fail ~= 0 and 1 or 0
+  formatter.footer (matchers.stats)
+  return matchers.stats.fail ~= 0 and 1 or 0
 end
 
 
@@ -438,8 +314,6 @@ local version = require "version"
 
 local M = {
   _VERSION  = version.VERSION,
-
-  matchers  = matchers,
   progress  = progress,
   report    = report,
   run       = run,
@@ -448,7 +322,7 @@ local M = {
 
 if _G._SPEC then
   -- Give specs access to some additional private access points.
-  M = table.merge (M, { _expect = expect })
+  M = table.merge (M, { _expect = matchers.expect })
 end
 
 return M
