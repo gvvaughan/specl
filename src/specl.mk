@@ -58,6 +58,7 @@ dist_pkglua_DATA =					\
 src_specl_DEPS =					\
 	Makefile					\
 	src/specl.in					\
+	yaml/lyaml.la					\
 	$(dist_pkglua_DATA)				\
 	$(NOTHING_ELSE)
 
