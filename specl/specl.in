@@ -35,10 +35,10 @@ package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
                  ";%./%?.lua$", "")
 
 
-require "std"
-local yaml  = require "lyaml"
-local specl = require "specl"
-local prog  = require "version"
+local getopt = require "std.getopt"
+local yaml   = require "lyaml"
+local specl  = require "specl"
+local prog   = require "version"
 
 prog = table.merge (prog, {
   purpose     = "Behaviour Driven Development for Lua.",

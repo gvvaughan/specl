@@ -22,7 +22,6 @@ local default = {
   },
   dependencies = {
     "lua >= 5.1",
-    "stdlib >= 33",
   },
   external_dependencies = {
     YAML = { library = "yaml" }

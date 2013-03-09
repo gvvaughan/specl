@@ -55,6 +55,7 @@ nobase_dist_lua_DATA =					\
 	specl/formatter/report.lua			\
 	specl/matchers.lua				\
 	specl/specl.lua					\
+	specl/std/getopt.lua				\
 	specl/version.lua				\
 	$(NOTHING_ELSE)
 

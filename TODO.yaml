@@ -1,6 +1,4 @@
 TODO:
-- break dependency on stdlib so that stdlib can use specl without
-  requiring two copies of itself in memory at once.
 - make sure empty before/after do not get compiled to nil
 - pending support:
     it is not implemented yet: pending
