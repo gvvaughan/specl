@@ -406,7 +406,7 @@ of your installation show how these functions can be used to display
 progress in a format of your choice.
 
 See the next section for details of how to get [Specl][] to load
-your custom formatter..
+your custom formatter.
 
 
 <a id="specl-command-line"></a>
@@ -429,6 +429,13 @@ command line above.
 If you prefer to format the results of your specification examples with
 a custom formatter, you should make sure your formatter is visible on
 `LUA_PATH`, and use the `--formatter=BASENAME` option to load it.
+
+Note that, for security reasons, Specl removes the current directory
+from the system search path, so if you want to load a formatter in the
+current directory, you will need to explicitly re-enable loading Lua
+code from the current directory:
+
+    LUA_PATH=`pwd`'/?.lua' specl --formatter=awesome specs/*_spec.yaml
 
 Pass the `-h` option for help and brief documentation on usage of the
 remaining available options.
