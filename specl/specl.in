@@ -99,4 +99,4 @@ end
 getopt.processArgs (prog)
 io.processFiles (slurp)
 
-os.exit (specl.run (spec, getopt.opt.verbose and specl.report))
+os.exit (specl.run (spec, getopt.opt.verbose and require "formatter.report"))

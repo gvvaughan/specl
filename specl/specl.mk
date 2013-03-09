@@ -21,7 +21,7 @@
 ## Environment. ##
 ## ------------ ##
 
-SPECL_PATH  = $(abs_srcdir)/src/?.lua
+SPECL_PATH  = $(abs_srcdir)/specl/?.lua
 SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 
@@ -31,7 +31,7 @@ SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 specl_install_edit =					\
 	$(install_edit)					\
-	-e 's|@speclpath[@]|$(pkgluadir)/?.lua|g'	\
+	-e 's|@speclpath[@]|$(luadir)/specl/?.lua|g'	\
 	-e 's|@speclcpath[@]|$(libdir)/?$(shrext)|g'	\
 	$(NOTHING_ELSE)
 
@@ -46,24 +46,26 @@ specl_inplace_edit =					\
 ## Build. ##
 ## ------ ##
 
-bin_SCRIPTS += src/specl
+bin_SCRIPTS += specl/specl
 
 man_MANS += docs/specl.1
 
-dist_pkglua_DATA =					\
-	src/matchers.lua				\
-	src/specl.lua					\
-	src/version.lua					\
+nobase_dist_lua_DATA =					\
+	specl/formatter/progress.lua			\
+	specl/formatter/report.lua			\
+	specl/matchers.lua				\
+	specl/specl.lua					\
+	specl/version.lua				\
 	$(NOTHING_ELSE)
 
-src_specl_DEPS =					\
+specl_specl_DEPS =					\
 	Makefile					\
-	src/specl.in					\
+	specl/specl.in					\
 	yaml/lyaml.la					\
-	$(dist_pkglua_DATA)				\
+	$(nobase_dist_lua_DATA)				\
 	$(NOTHING_ELSE)
 
-src/specl: $(src_specl_DEPS)
+specl/specl: $(specl_specl_DEPS)
 	@rm -f '$@' '$@.tmp'
 	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
 	$(AM_V_at)mv '$@.tmp' '$@'
@@ -76,7 +78,7 @@ docs/specl.1: docs/specl.1.in Makefile config.status
 	$(AM_V_GEN)$(specl_install_edit) '$(srcdir)/$@.in' >'$@.tmp'
 	$(AM_V_at)mv '$@.tmp' '$@'
 
-docs/specl.1.in: src/specl src/version.lua
+docs/specl.1.in: specl/specl specl/version.lua
 	@test -d docs || mkdir docs
 ## Exit gracefully if specl.1.in is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
@@ -87,7 +89,7 @@ docs/specl.1.in: src/specl src/version.lua
 	      '--output=$@'				\
 	      '--no-info'				\
 	      '--name=Specl'				\
-	      src/specl;				\
+	      specl/specl;				\
 	fi
 
 
@@ -97,8 +99,8 @@ docs/specl.1.in: src/specl src/version.lua
 
 install_exec_hooks += install-specl-hook
 install-specl-hook:
-	@$(specl_install_edit) $(srcdir)/src/specl.in >'$@.tmp'
-	@echo $(INSTALL_SCRIPT) src/specl $(DESTDIR)$(bindir)/specl
+	@$(specl_install_edit) $(srcdir)/specl/specl.in >'$@.tmp'
+	@echo $(INSTALL_SCRIPT) specl/specl $(DESTDIR)$(bindir)/specl
 	@$(INSTALL_SCRIPT) $@.tmp $(DESTDIR)$(bindir)/specl
 	@rm -f $@.tmp
 
@@ -110,7 +112,7 @@ install-specl-hook:
 EXTRA_DIST +=						\
 	build-aux/mkrockspecs.lua			\
 	docs/specl.1.in					\
-	src/specl.in					\
+	specl/specl.in					\
 	$(NOTHING_ELSE)
 
 
@@ -120,7 +122,7 @@ EXTRA_DIST +=						\
 
 CLEANFILES +=						\
 	docs/specl.1					\
-	src/specl					\
+	specl/specl					\
 	$(NOTHING_ELSE)
 
 DISTCLEANFILES +=					\

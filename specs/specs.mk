@@ -44,7 +44,7 @@ DISTCLEANFILES += build-aux/speclc
 ## Specs. ##
 ## ------ ##
 
-SPECL  = src/specl
+SPECL  = specl/specl
 SPECLC = build-aux/speclc
 
 

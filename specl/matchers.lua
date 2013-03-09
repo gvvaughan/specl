@@ -20,6 +20,8 @@
 
 require "std"
 
+local M = {}
+
 
 local function objcmp (o1, o2)
   local type1, type2 = type (o1), type (o2)
@@ -108,8 +110,8 @@ local matchers = {
 --
 -- For example:                  expect ({}).should_not_be {}
 
-local expectations = {}
-local stats = { pass = 0, fail = 0, starttime = os.clock () }
+M.expectations = {}
+M.stats = { pass = 0, fail = 0, starttime = os.clock () }
 
 local function expect (target)
   return setmetatable ({}, {
@@ -129,11 +131,11 @@ local function expect (target)
 	end
 
         if success ~= true then
-	  stats.fail = stats.fail + 1
+	  M.stats.fail = M.stats.fail + 1
 	else
-	  stats.pass = stats.pass + 1
+	  M.stats.pass = M.stats.pass + 1
 	end
-        table.insert (expectations, { status = success, message = message })
+        table.insert (M.expectations, { status = success, message = message })
       end
     end
   })
@@ -146,12 +148,7 @@ end
 --[[ ----------------- ]]--
 
 
-local M = {
+return table.merge (M, {
   expect       = expect,
-  expectations = expectations,
   matchers     = matchers,
-  stats        = stats,
-}
-
-
-return M
+})

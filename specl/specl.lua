@@ -20,7 +20,10 @@
 
 require "std"
 
-local matchers = require "matchers"
+-- Use the simple progress formatter by default.  Can be changed by run().
+local formatter  = require "formatter.progress"
+local matchers   = require "matchers"
+
 
 
 --[[ ================================= ]]--
@@ -47,88 +50,6 @@ end
 loadstring = loadstring or function (chunk, chunkname)
   return load (chunk, chunkname)
 end
-
-
---[[ =========== ]]--
---[[ Formatters. ]]--
---[[ =========== ]]--
-
-
-local report = {
-  header = function ()
-  end,
-
-  spec = function (spec)
-    print (spec)
-  end,
-
-  example = function (example)
-    print (example)
-  end,
-
-  expectations = function (expectations, indent)
-    indent = indent or ""
-    for i, expectation in ipairs (expectations) do
-      if expectation.status ~= true then
-        print (indent .. "- FAILED expectation " .. i .. ": " ..
-	       expectation.message:gsub ("\n", "%0" .. indent .. "  "))
-      end
-    end
-  end,
-
-  footer = function (stats)
-    local total   = stats.pass + stats.fail
-    local percent = 100 * stats.pass / total
-
-    print ()
-    print (string.format ("Met %.2f%% of %d expectations.", percent, total))
-    print (stats.pass .. " passed, and " ..
-           stats.fail .. " failed in " ..
-	   (os.clock () - stats.starttime) .. " seconds.")
-  end,
-}
-
-
-local progress = {
-  header = function ()
-    io.write (">")
-    io.flush ()
-  end,
-
-  spec = function (spec)
-  end,
-
-  example = function (example)
-  end,
-
-  expectations = function (expectations, indent)
-    io.write ("\08")
-    for i, expectation in ipairs (expectations) do
-      if expectation.status == true then
-        io.write (".")
-      else
-        io.write ("F")
-      end
-    end
-    io.write (">")
-    io.flush ()
-  end,
-
-  footer = function (stats)
-    io.write ("\08 \n")
-
-    if stats.fail == 0 then
-      io.write ("All expectations met, ")
-    else
-      io.write (stats.pass .. " passed, and " ..  stats.fail .. " failed ")
-    end
-    io.write ("in " ..  (os.clock () - stats.starttime) .. " seconds.\n")
-  end,
-}
-
-
--- Use the simple progress formatter by default.  Can be changed by run().
-local formatter = progress
 
 
 
@@ -314,8 +235,6 @@ local version = require "version"
 
 local M = {
   _VERSION  = version.VERSION,
-  progress  = progress,
-  report    = report,
   run       = run,
 }
 

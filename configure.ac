@@ -56,5 +56,5 @@ AC_SEARCH_LIBS([yaml_document_initialize], [yaml], [], [
 
 dnl Generate output files
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([Makefile src/version.lua])
+AC_CONFIG_FILES([Makefile specl/version.lua])
 AC_OUTPUT
