@@ -434,9 +434,10 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
+local version = require "version"
 
 local M = {
-  _VERSION  = "0.1",
+  _VERSION  = version.VERSION,
 
   matchers  = matchers,
   progress  = progress,
