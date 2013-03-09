@@ -21,7 +21,7 @@ AC_PREREQ([2.69])
 dnl Initialise autoconf and automake
 AC_INIT([Specl], [3], [http://github.com/gvvaughan/specl/issues])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_MACRO_DIR([m4])
 
 AS_BOX([Configuring AC_PACKAGE_TARNAME AC_PACKAGE_VERSION])
 echo
