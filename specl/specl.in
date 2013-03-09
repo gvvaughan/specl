@@ -52,11 +52,10 @@ prog = table.merge (prog, {
   notes       = prog.BUGREPORT_NOTICE,
   copyright   = prog.COPYRIGHT_NOTICE,
   options     = {
-    getopt.Option {{"help"}, "print this help, then exit"},
-    getopt.Option {{"version"}, "print version number, then exit"},
-    getopt.Option {{"verbose", "v"}, "verbose mode"},
-    getopt.Option {{"formatter"},
-                   "use a custom formatter from FILE", "Req", "FILE"},
+    {{"help"}, "print this help, then exit"},
+    {{"version"}, "print version number, then exit"},
+    {{"verbose", "v"}, "verbose mode"},
+    {{"formatter"}, "use a custom formatter from FILE", "Req", "FILE"},
   },
 })
 
