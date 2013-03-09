@@ -4,6 +4,7 @@
 *.la
 *.so
 *.html
+.DS_Store
 .deps
 .dirstamp
 .libs
