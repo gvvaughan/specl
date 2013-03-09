@@ -68,8 +68,15 @@ specl_LUASPECS =					\
 # Lua specs require speclc compiler.
 $(specl_LUASPECS): $(SPECLC)
 
+# Use 'make check V=1' for verbose output, or set SPECL_OPTS to
+# pass alternative options to specl command.
+SPECL_OPTS ?= $(specl_verbose_$(V))
+specl_verbose_ = $(specl_verbose_$(AM_DEFAULT_VERBOSITY))
+specl_verbose_0 =
+specl_verbose_1 = -v
+
 check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
-	$(AM_V_at)$(LUA) $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
+	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS) $(specl_LUASPECS)
 
 
 ## ------------- ##
