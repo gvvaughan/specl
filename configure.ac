@@ -45,6 +45,7 @@ dnl Check for programs
 AC_PROG_CC
 AX_WITH_PROG([HELP2MAN], [help2man], [false])
 AX_PROG_LUA(5.1, 5.3)
+AX_LUA_HEADERS
 
 dnl Check for header files
 AC_HEADER_STDC
