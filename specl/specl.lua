@@ -157,7 +157,6 @@ local run_contexts, run_examples, run
 -- Run each of CONTEXTS under ENV in order.
 -- INDENT is passed to the formatter, and expanded as we recurse.
 function run_contexts (contexts, indent, env)
-  indent = indent or ""
   for description, examples in pairs (contexts) do
     formatter.spec (indent .. description:gsub ("^%w+%s+", "", 1))
     run_examples (examples, indent .. "  ", env)
@@ -168,9 +167,11 @@ end
 -- Run each of EXAMPLES under ENV in order.
 -- INDENT is passed to the formatter, and expanded as we recurse.
 function run_examples (examples, indent, env)
-  env = env or _G
-
   local block = function (example, blockenv)
+    local metatable = { __index = blockenv }
+    local fenv = setmetatable ({ expect = matchers.expect }, metatable)
+
+    setfenv (examples.before, fenv)
     examples.before ()
 
     -- There is only one, otherwise we can't maintain example order.
@@ -183,19 +184,19 @@ function run_examples (examples, indent, env)
 
     if type (definition) == "table" then
       -- A nested context, revert back to run_contexts.
-      run_contexts (example, indent, env)
+      run_contexts (example, indent, fenv)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
-      local fenv = { expect = matchers.expect }
       formatter.example (indent .. description:gsub ("^%w+%s+", "", 1))
-      setfenv (definition, setmetatable (fenv, { __index = blockenv }))
 
       matchers.expectations = {} -- each example may have several expectations
+      setfenv (definition, fenv)
       definition ()
       formatter.expectations (matchers.expectations, "  " .. indent)
     end
 
+    setfenv (examples.after, fenv)
     examples.after ()
   end
 
@@ -210,7 +211,7 @@ end
 
 
 -- Run SPECS, routing output to FORMAT formatter.
-function run (specs, format)
+function run (specs, format, env)
   formatter = format or formatter
 
   -- Precompile Lua code on initial pass.
@@ -219,7 +220,7 @@ function run (specs, format)
   -- Run compiled specs, in order.
   formatter.header (matchers.stats)
   for _, contexts in ipairs (specs) do
-    run_contexts (contexts)
+    run_contexts (contexts, "", env)
   end
   formatter.footer (matchers.stats)
   return matchers.stats.fail ~= 0 and 1 or 0

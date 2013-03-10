@@ -20,8 +20,8 @@ describe environments:
 - it can find a symbol from the current before block: |
     expect (defined_outer_symbol).should_be (true)
 
-#- it cannot find symbols defined in an inner scope: |
-#    expect (defined_inner_symbol).should_be (nil)
+- it cannot find symbols defined in an inner scope: |
+    expect (defined_inner_symbol).should_be (nil)
 
 - context when looking up symbols from a nested context:
     - before: |
@@ -65,5 +65,5 @@ describe environments:
     - it cannot find a symbol in a cousin example: |
         expect (in_the_nested_example).should_be (nil)
 
-#    - it cannot find a symbol in a sibling context: |
-#        expect (defined_inner_symbol).should_be (nil)
+    - it cannot find a symbol in a sibling context: |
+        expect (defined_inner_symbol).should_be (nil)
