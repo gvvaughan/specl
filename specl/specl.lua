@@ -18,7 +18,6 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-require "std"
 
 -- Use the simple progress formatter by default.  Can be changed by run().
 local formatter  = require "formatter.progress"
@@ -62,7 +61,7 @@ local compile_specs, compile_contexts, compile_examples, compile_example
 
 
 -- These strings cannot be used for an example description.
-local reserved = set.new { "before", "after" }
+local reserved = { before = true, after = true }
 
 
 -- SPECS are compiled destructively in the specs table itself.
@@ -89,7 +88,7 @@ function compile_examples (examples)
   local compiled = {}
 
   -- Make sure we have a function for every reserved word.
-  for s in set.elems (reserved) do
+  for s in pairs (reserved) do
     -- Lua specs save ready compiled functions to examples[s] already.
     compiled[s] = examples[s] or compile_example (s)
   end
@@ -98,7 +97,7 @@ function compile_examples (examples)
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
-    if reserved:member (description) then
+    if reserved[description] then
       -- YAML specs store reserved words in the ordered example list,
       -- so we have to hoist them out where we can rerun them around
       -- each real example in the list, without digging through all the
@@ -134,7 +133,7 @@ local function nop () end
 -- then return a function that does nothing.
 -- If FILENAME is passed, it is used in error messages from loadstring().
 function compile_example (s, filename)
-  if reserved:member (s) then return nop end
+  if reserved[s] then return nop end
 
   -- Wrap the fragment into a function that we can call later.
   local f = loadstring ("return function () " .. s .. " end", filename)
