@@ -6,7 +6,7 @@ describe specl:
       while true do
         local line = f:read ()
         if line == nil then break end
-        output = output .. "\n" .. status
+        output = output .. "\n" .. (status or "")
         status = line
       end
       f:close ()

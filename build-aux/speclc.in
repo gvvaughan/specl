@@ -30,7 +30,7 @@ package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
                  ";%./%?.lua$", "")
 
 
-require "std"
+local std  = require "std"
 local yaml = require "lyaml"
 
 if select ("#", ...) ~= 1 then
@@ -42,7 +42,7 @@ local dump_specs, dump_contexts, dump_examples, dump_example
 
 
 -- These strings cannot be used for an example description.
-local reserved = set.new { "before", "after" }
+local reserved = { before = true, after = true }
 
 
 -- SPECS are compiled destructively in the specs table itself.
@@ -74,7 +74,7 @@ function dump_examples (examples, indent)
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
-    if reserved:member (description) then
+    if reserved[description] then
       -- YAML specs store reserved words in the ordered example list,
       -- so we have to hoist them out where we can rerun them around
       -- each real example in the list, without digging through all the
@@ -91,7 +91,7 @@ function dump_examples (examples, indent)
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
-    if reserved:member (description) then
+    if reserved[description] then
       -- Already handled outside of loop.
 
     elseif type (definition) == "string" then
@@ -121,7 +121,7 @@ function dump_example (description, definition, indent)
   definition = "  " .. definition:gsub (
                  "\n", "\n  " .. indent):gsub (
                  "%s*$", "")
-  if reserved:member (description) then
+  if reserved[description] then
     print (indent .. description .. " = function ()")
     print (indent .. definition)
     print (indent .. "end,\n")
@@ -134,7 +134,7 @@ end
 
 
 local filename = select (1, ...)
-local s, errmsg = io.slurp (filename)
+local s, errmsg = std.slurp (filename)
 
 local t
 if s ~= nil then

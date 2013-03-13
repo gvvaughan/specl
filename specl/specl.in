@@ -66,36 +66,16 @@ package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
                  ";%./%?.lua$", "")
 
 
-local getopt = require "std.getopt"
+local std    = require "std"   -- our own minimal stdlib
 local yaml   = require "lyaml"
 local specl  = require "specl"
-local prog   = require "version"
-
-prog = table.merge (prog, {
-  purpose     = "Behaviour Driven Development for Lua.",
-  version     = prog.program .. " " .. prog.VERSION .. "\n" ..
-    "Written by Gary V. Vaughan <gary@gnu.org>, 2013",
-  description = "Develop and run BDD specs written in Lua for RSpec " ..
-    "style workflow.\n" ..
-    "Execute specifications from FILEs or standard input, " ..
-    "reporting results on standard output.\nIf no FILE is listed, or w" ..
-    "here '-' is given as a FILE, read from standard input.",
-  notes       = prog.BUGREPORT_NOTICE,
-  copyright   = prog.COPYRIGHT_NOTICE,
-  options     = {
-    {{"help"}, "print this help, then exit"},
-    {{"version"}, "print version number, then exit"},
-    {{"verbose", "v"}, "verbose mode"},
-    {{"formatter"}, "use a custom formatter from FILE", "Req", "FILE"},
-  },
-})
 
 
 -- Called by io.processFiles() to concatenate a comma separated list of
 -- specifications in each FILENAME.
 local spec = {}
 function slurp (filename)
-  local s, errmsg = io.slurp ()
+  local s, errmsg = std.slurp ()
   if errmsg ~= nil then
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
@@ -128,19 +108,7 @@ function slurp (filename)
 end
 
 
-getopt.processArgs (prog)
+local opt = std.process_args ()
+std.process_files (slurp)
 
--- Try to load and use a custom --formatter argument.
-local formatter = getopt.opt.verbose and require "formatter.report"
-if getopt.opt.formatter then
-  local ok, file = next (getopt.opt.formatter)
-  ok, formatter = pcall (require, getopt.opt.formatter[1])
-
-  if ok == false then
-    io.stderr:write ("could not load formatter: " .. formatter .. "\n")
-    os.exit (2)
-  end
-end
-
-io.processFiles (slurp)
-os.exit (specl.run (spec, formatter, sandbox))
+os.exit (specl.run (spec, opt.formatter, sandbox))

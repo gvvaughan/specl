@@ -241,7 +241,7 @@ local M = {
 
 if _G._SPEC then
   -- Give specs access to some additional private access points.
-  M = table.merge (M, { _expect = matchers.expect })
+  M._expect = matchers.expect
 end
 
 return M

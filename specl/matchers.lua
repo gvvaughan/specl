@@ -46,7 +46,7 @@ local function q (obj)
 end
 
 
-local matchers = {
+M.matchers = {
   -- Deep comparison, matches if VALUE and EXPECTED share the same
   -- structure.
   equal = function (value, expected)
@@ -111,7 +111,7 @@ local matchers = {
 M.expectations = {}
 M.stats = { pass = 0, fail = 0, starttime = os.clock () }
 
-local function expect (target)
+function M.expect (target)
   return setmetatable ({}, {
     __index = function(_, matcher)
       local inverse = false
@@ -121,7 +121,7 @@ local function expect (target)
         matcher = matcher:sub (8)
       end
       return function(...)
-        local success, message = matchers[matcher](target, ...)
+        local success, message = M.matchers[matcher](target, ...)
 
         if inverse then
 	  success = not success
@@ -146,7 +146,4 @@ end
 --[[ ----------------- ]]--
 
 
-return table.merge (M, {
-  expect       = expect,
-  matchers     = matchers,
-})
+return M
