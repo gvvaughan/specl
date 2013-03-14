@@ -21,7 +21,7 @@
 ## Environment. ##
 ## ------------ ##
 
-SPECL_PATH  = $(abs_srcdir)/specl/?.lua
+SPECL_PATH  = $(abs_srcdir)/specl/?.lua;$(abs_srcdir)/?.lua
 SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 
@@ -31,7 +31,7 @@ SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 specl_install_edit =					\
 	$(install_edit)					\
-	-e 's|@speclpath[@]|$(luadir)/specl/?.lua|g'	\
+	-e 's|@speclpath[@]|$(luadir)/?.lua|g'		\
 	-e 's|@speclcpath[@]|$(libdir)/?$(shrext)|g'	\
 	$(NOTHING_ELSE)
 
@@ -50,13 +50,18 @@ bin_SCRIPTS += specl/specl
 
 man_MANS += docs/specl.1
 
+## Use `require "specl.std"` for implementation modules.
 nobase_dist_lua_DATA =					\
 	specl/formatter/progress.lua			\
 	specl/formatter/report.lua			\
 	specl/matchers.lua				\
-	specl/specl.lua					\
 	specl/std.lua					\
 	specl/version.lua				\
+	$(NOTHING_ELSE)
+
+## But, `require "specl"` for core module.
+dist_lua_DATA =						\
+	specl/specl.lua					\
 	$(NOTHING_ELSE)
 
 specl_specl_DEPS =					\
@@ -64,6 +69,7 @@ specl_specl_DEPS =					\
 	specl/specl.in					\
 	yaml/lyaml.la					\
 	$(nobase_dist_lua_DATA)				\
+	$(dist_lua_DATA)				\
 	$(NOTHING_ELSE)
 
 specl/specl: $(specl_specl_DEPS)

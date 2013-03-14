@@ -18,7 +18,7 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-local prog = require "version"
+local prog = require "specl.version"
 
 prog.version = prog.program .. " " .. prog.VERSION .. [[
 
@@ -73,7 +73,7 @@ local function process_args ()
 
     -- Use verbose 'report' formatter.
     elseif opt == "-v" or opt == "--verbose" then
-      opts.formatter = opts.formatter or require "formatter.report"
+      opts.formatter = opts.formatter or require "specl.formatter.report"
 
     -- Try to load and use a custom --formatter argument.
     elseif string.sub (opt, 1, 11) == "--formatter" then

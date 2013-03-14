@@ -20,8 +20,8 @@
 
 
 -- Use the simple progress formatter by default.  Can be changed by run().
-local formatter  = require "formatter.progress"
-local matchers   = require "matchers"
+local formatter  = require "specl.formatter.progress"
+local matchers   = require "specl.matchers"
 
 
 
@@ -231,7 +231,7 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
-local version = require "version"
+local version = require "specl.version"
 
 local M = {
   _VERSION  = version.VERSION,

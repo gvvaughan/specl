@@ -66,9 +66,9 @@ package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
                  ";%./%?.lua$", "")
 
 
-local std    = require "std"   -- our own minimal stdlib
-local yaml   = require "lyaml"
 local specl  = require "specl"
+local yaml   = require "lyaml"
+local std    = require "specl.std"   -- our own minimal stdlib
 
 
 -- Called by io.processFiles() to concatenate a comma separated list of
