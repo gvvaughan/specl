@@ -11,7 +11,7 @@ Write your software specifications using [YAML][] with embedded
 examples written in Lua.  A minimal "spec" file outline follows:
 
     describe spec file format:
-    - it is just a list of specifications, with example code: |
+    - it is just a list of specifications, with example code:
         print "Hello, Specl!"
 
 [YAML][] makes for a very readable specification file format, and allows
@@ -43,16 +43,22 @@ punctuation in the description:
     
 [Specl][] treats everything following the `:` (colon) as a Lua code:
 
-    - it uses a tag to force YAML to compile the code: stack = Stack {}
-    
-It's very rare to fit both the example description and associated code
-on a single line, so you will normally use the [YAML][] literal block
-marker `|' (pipe) before the actual code, from all following lines
-indented underneath that description.  So you'll end up most of your
-examples written as follows:
-
-    - it treats all following indented lines as example code: |
+    - it concatenates all following indented lines to a single line:
         Stack = require "stack"
+        stack = Stack {}
+
+By default [YAML][] removes indentation and line-breaks from the example
+code following the `:` separator, so that by the time [Lua][] receives
+the code, it's all on a single line.  More often than not, this isn't a
+problem, because the [Lua][] parser is not overly fussy about placement
+of line-breaks, but sometimes (to make sure there is a newline to
+terminate an embedded comment, for example) you'll need to prevent
+[YAML][] from giving [Lua][] everything on a single line. Use the
+literal block marker ` |' (space, pipe) after the `:' separator for
+this:
+
+    - it does not strip significant whitespace in a literal block: |
+        -- A comment on this line, followed by code
         stack = Stack {}
         ...
         
@@ -63,7 +69,7 @@ of:
   1. Indenting with TAB characters is a syntax error, because the
      [YAML][] parser uses indentation columns to infer nesting.  Easiest
      just to avoid putting TAB characters in your spec files entirely.
-  2. Indenting of the code following an example description must at
+  2. Indentation of the code following an example description must be at
      least one column further in than the first letter of the
      description text above.
   3. [YAML][] comments begin with ` #` (space, hash) and extend to the
@@ -94,10 +100,10 @@ are best written with readable names in plain English, but (unlike
 contexts) they are followed by the associated example code:
 
     describe this module:
-    - it has some functionality: |
+    - it has some functionality:
         ...EXAMPLE-CODE...
 
-    - it works properly: |
+    - it works properly:
       ...EXAMPLE-CODE...
     ...
 
@@ -116,7 +122,7 @@ described meets your expectations. [Specl][] gives you a new `expect`
 command to check that each example evaluates as it should:
 
     - describe Stack:
-        - it has no elements when empty: |
+        - it has no elements when empty:
             stack = Stack {}
             expect (#stack).should_be (0)
 
@@ -270,7 +276,7 @@ their table keys are just a bare `before` or `after` respectively:
     ...
     - before: stack = Stack {}
 
-    - it has no elements when empty: |
+    - it has no elements when empty:
         expect (#stack).should_equal (0)
     ...
 
@@ -297,7 +303,7 @@ group:
 
     ...
     - describe a Stack:
-        - before: | 
+        - before: |
             -- equivalent to before(:all)
             package.path = "src/?.lua;" .. package.path
             Stack = require "stack"
@@ -307,7 +313,7 @@ group:
                 -- equivalent to before(:each)
                 stack = Stack {}
 
-            - it has no elements when empty: |
+            - it has no elements when empty:
             ...
 
 Tricky `before` placement aside, it's always a good idea to organize

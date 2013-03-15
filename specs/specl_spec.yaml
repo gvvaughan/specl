@@ -29,17 +29,14 @@ describe specl:
   - before: |
       yaml = "describe x:\n- it passes: expect (true).should_be (true)"
 
-  - it reads a spec from standard input with no arguments: |
+  - it reads a spec from standard input with no arguments:
       output = capture_output ("printf '" .. yaml .. "'|specl/specl")
       expect (output).should_contain ("All expectations met, in ")
-
-  - "it reads a spec from standard input for '-' filename argument": |
+  - "it reads a spec from standard input for '-' filename argument":
       output = capture_output ("printf '" .. yaml .. "'|specl/specl -")
       expect (output).should_contain ("All expectations met, in ")
-
-  - it exits with zero status when there are no failing examples: |
+  - it exits with zero status when there are no failing examples:
       expect (exit_status ("printf '" .. yaml .. "'|specl/specl")).should_be (0)
-
   - "it exits with non-zero status when there are failing examples": |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
       expect (exit_status ("printf '" .. yaml .."'|specl/specl")).should_not_be (0)
@@ -60,7 +57,7 @@ describe specl:
           }]])
         f:close ()
 
-    - it formats expectations with the custom formatter: |
+    - it formats expectations with the custom formatter:
         f = tmpfile:gsub (".*/", "")
         output = capture_output ("printf '" .. yaml .. "'" ..
                                  "|env LUA_PATH='" .. path .. ";' " ..
