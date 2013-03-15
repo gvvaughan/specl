@@ -163,6 +163,22 @@ function run_contexts (contexts, indent, env)
 end
 
 
+-- Intercept functions that normally execute in the global environment,
+-- and run them in the example block environment to capture side-effects
+-- correctly.
+local function initenv (env)
+  for _, intercept in pairs { "load", "loadfile", "loadstring" } do
+    env[intercept] = function (...)
+      local fn = env._specl[intercept] (...)
+      return function ()
+        setfenv (fn, env)
+        return fn ()
+      end
+    end
+  end
+end
+
+
 -- Run each of EXAMPLES under ENV in order.
 -- INDENT is passed to the formatter, and expanded as we recurse.
 function run_examples (examples, indent, env)
@@ -187,6 +203,7 @@ function run_examples (examples, indent, env)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
+      initenv (fenv)
       formatter.example (indent .. description:gsub ("^%w+%s+", "", 1))
 
       matchers.expectations = {} -- each example may have several expectations
@@ -215,6 +232,14 @@ function run (specs, format, env)
 
   -- Precompile Lua code on initial pass.
   compile_specs (specs)
+
+  -- Environment access to core functions that we override to
+  -- run within nested function environment later.
+  env._specl = {
+    load       = load,
+    loadfile   = loadfile,
+    loadstring = loadstring,
+  }
 
   -- Run compiled specs, in order.
   formatter.header (matchers.stats)

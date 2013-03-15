@@ -2,6 +2,7 @@ describe environments:
 - before: |
     overridden_symbol = false
     defined_outer_symbol = true
+    _G.global_scope = false
 
 - it cannot find undefined symbols: |
     expect (undefined_symbol).should_be (nil)
@@ -30,6 +31,9 @@ describe environments:
 
     - it cannot find undefined symbols: |
         expect (undefined_outer_symbol).should_be (nil)
+
+    - it can find a symbol in global scope: |
+        expect (_G.global_scope).should_be (false)
 
     - it can find a symbol in an outer scope: |
         expect (defined_outer_symbol).should_be (true)
@@ -67,3 +71,98 @@ describe environments:
 
     - it cannot find a symbol in a sibling context: |
         expect (defined_inner_symbol).should_be (nil)
+
+- context when mutating a symbol value:
+    - before: |
+        _G.inner_global = nil
+        mutated_outer_symbol = false
+
+    - it can mutate a symbol in the current scope: |
+        mutated_inner_symbol = false
+        mutated_inner_symbol = true
+        expect (mutated_inner_symbol).should_be (true)
+
+    - it can mutate a symbol in an outer scope: |
+        mutated_outer_symbol = true
+        expect (mutated_outer_symbol).should_be (true)
+
+    - it can mutate a symbol in global scope: |
+        _G.inner_global = true
+        expect (_G.inner_global).should_be (true)
+
+    - it can mutate a global symbol instantiated by before block: |
+        _G.global_scope = true
+        expect (_G.global_scope).should_be (true)
+
+- context when executing a load function:
+    - before: |
+        mutated_outer_symbol = false
+
+        function doload (s)
+          return load (function ()
+                         local r = s
+                         s = nil
+                         return r
+                       end)
+        end
+
+    - it can mutate a symbol in global scope: |
+        _G.global_scope = nil
+        assert (doload "_G.global_scope = true")()
+        expect (_G.global_scope).should_be (true)
+
+    - it can mutate a symbol in an outer scope: |
+        assert (doload "mutated_outer_symbol = true")()
+        expect (mutated_outer_symbol).should_be (true)
+
+    - it can mutate a symbol in the current scope: |
+        mutated_inner_symbol = false
+        assert (doload "mutated_inner_symbol = true")()
+        expect (mutated_inner_symbol).should_be (true)
+
+- context when executing a loadfile function:
+    - before: |
+        mutated_outer_symbol = false
+
+        function doloadfile (s)
+          local f = os.tmpname ()
+          local h = io.open (f, "w")
+
+          h:write (s)
+          h:close ()
+          local r = loadfile (f)
+          os.remove (f)
+          return r
+        end
+
+    - it can mutate a symbol in global scope: |
+        _G.global_scope = nil
+        assert (doloadfile "_G.global_scope = true")()
+        expect (_G.global_scope).should_be (true)
+
+    - it can mutate a symbol in an outer scope: |
+        assert (doloadfile "mutated_outer_symbol = true")()
+        expect (mutated_outer_symbol).should_be (true)
+
+    - it can mutate a symbol in the current scope: |
+        mutated_inner_symbol = false
+        assert (doloadfile "mutated_inner_symbol = true")()
+        expect (mutated_inner_symbol).should_be (true)
+
+- context when executing a loadstring function:
+    - before: |
+        mutated_outer_symbol = false
+
+    - it can mutate a symbol in global scope: |
+        _G.global_scope = nil
+        assert (loadstring "_G.global_scope = true")()
+        expect (_G.global_scope).should_be (true)
+
+    - it can mutate a symbol in an outer scope: |
+        assert (loadstring "mutated_outer_symbol = true")()
+        expect (mutated_outer_symbol).should_be (true)
+
+    - it can mutate a symbol in the current scope: |
+        mutated_inner_symbol = false
+        assert (loadstring "mutated_inner_symbol = true")()
+        expect (mutated_inner_symbol).should_be (true)
