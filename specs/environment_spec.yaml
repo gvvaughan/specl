@@ -94,6 +94,37 @@ describe environments:
         _G.global_scope = true
         expect (_G.global_scope).should_be (true)
 
+- context when requiring a module:
+    - before: |
+        mutated_outer_symbol = false
+
+        function requirestring (s)
+          local f = os.tmpname ()
+          local d = f:gsub ("/[^/]*$", "", 1)
+          local h = io.open (f, "w")
+
+          h:write (s)
+          h:close ()
+          package.path = d .. "/?;" .. package.path
+          require (f:gsub ("^.*/", ""))
+          os.remove (f)
+        end
+
+    - it can mutate a symbol in global scope: |
+        requirestring "_G.global_scope = 'required'"
+        expect (_G.global_scope).should_be "required"
+
+    - it cannot mutate a symbol in an outer scope: |
+        requirestring "mutated_outer_symbol = true"
+        expect (mutated_outer_symbol).should_be (false)
+
+    - it cannot mutate a symbol in the current scope: |
+        requirestring "mutated_inner_symbol = true"
+        expect (mutated_inner_symbol).should_be (nil)
+        mutated_inner_symbol = false
+        requirestring "mutated_inner_symbol = true"
+        expect (mutated_inner_symbol).should_be (false)
+
 - context when executing a load function:
     - before: |
         mutated_outer_symbol = false
