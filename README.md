@@ -414,9 +414,9 @@ runs your specifications, so provided you supply the table keys that
 
     my_formatter = {
       header       = function () ... end,
-      spec         = function (description) ... end,
-      example      = function (description) ... end,
-      expectations = function (expectations, indent) ... end,
+      spec         = function (desc_table) ... end,
+      example      = function (desc_table) ... end,
+      expectations = function (expectations, desc_table) ... end,
       footer       = function (stats) ... end,
     }
 
@@ -429,15 +429,19 @@ and after all expectations, respectively.  The `stats` argument to
 You can use this to print out statistics at the end of the formatted
 output.
 
-The functions `spec` and `example` are called with the description of
-the specification or context header (the ones with descriptions that
-typically begin with either `describe` or `context`, and then the
-description of the example (the ones that typically begin with `it`),
-respectively.
+The function `spec` is called with the a table of each of the
+descriptions that the calling specification or context (the headers with
+descriptions that typically begin with either `describe` or `context`)
+is nested inside.
+
+Similarly, the function `example` is called with the equivalent table
+of descriptions that the calling example (the ones that typically begin
+with `it`) is nested inside.
 
 And finally, the function `expectations` is called after each example
 has been run, with a list of tables, one for each `expect` call in
-that example:
+that example, and a copy of the same table of nested descriptions that
+were passed to `example` immediately prior:
 
     expectations = {
       { status = (true|false), message = "error string" },
@@ -479,6 +483,11 @@ current directory, you will need to explicitly re-enable loading Lua
 code from the current directory:
 
     LUA_PATH=`pwd`'/?.lua' specl --formatter=awesome specs/*_spec.yaml
+
+Otherwise you can load a formatter from the existing `LUA_PATH` by
+name, including built in formatters, like this:
+
+    specl --formatter=tap specs/*_spec.yaml
 
 Pass the `-h` option for help and brief documentation on usage of the
 remaining available options.
