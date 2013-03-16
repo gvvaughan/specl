@@ -54,6 +54,7 @@ man_MANS += docs/specl.1
 nobase_dist_lua_DATA =					\
 	specl/formatter/progress.lua			\
 	specl/formatter/report.lua			\
+	specl/formatter/tap.lua			\
 	specl/matchers.lua				\
 	specl/std.lua					\
 	specl/version.lua				\
