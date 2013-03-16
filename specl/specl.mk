@@ -21,7 +21,10 @@
 ## Environment. ##
 ## ------------ ##
 
-SPECL_PATH  = $(abs_srcdir)/specl/?.lua;$(abs_srcdir)/?.lua
+specl_dir     = $(abs_srcdir)/specl
+formatter_dir = $(specl_dir)/formatter
+
+SPECL_PATH  = $(specl_dir)/?.lua;$(abs_srcdir)/?.lua;$(formatter_dir)/?.lua
 SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 
@@ -29,10 +32,10 @@ SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 ## Declarations. ##
 ## ------------- ##
 
-specl_install_edit =					\
-	$(install_edit)					\
-	-e 's|@speclpath[@]|$(luadir)/?.lua|g'		\
-	-e 's|@speclcpath[@]|$(libdir)/?$(shrext)|g'	\
+specl_install_edit =								\
+	$(install_edit)								\
+	-e 's|@speclpath[@]|$(luadir)/?.lua;$(luadir)/specl/formatter/?.lua|g'	\
+	-e 's|@speclcpath[@]|$(libdir)/?$(shrext)|g'				\
 	$(NOTHING_ELSE)
 
 specl_inplace_edit =					\
@@ -54,7 +57,7 @@ man_MANS += docs/specl.1
 nobase_dist_lua_DATA =					\
 	specl/formatter/progress.lua			\
 	specl/formatter/report.lua			\
-	specl/formatter/tap.lua			\
+	specl/formatter/tap.lua				\
 	specl/matchers.lua				\
 	specl/std.lua					\
 	specl/version.lua				\

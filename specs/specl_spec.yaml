@@ -40,6 +40,9 @@ describe specl:
   - "it exits with non-zero status when there are failing examples": |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
       expect (exit_status ("printf '" .. yaml .."'|specl/specl")).should_not_be (0)
+  - it outputs results from a formatter specified on the command line:
+      output = capture_output ("printf '" .. yaml .. "'|specl/specl --formatter=tap")
+      expect (output).should_contain ("1..1")
 
   - when using a custom formatter:
     - before: |
