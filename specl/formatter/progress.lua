@@ -26,15 +26,15 @@ local function header ()
 end
 
 
-local function spec (description) end
+local function spec (desc) end
 
 
-local function example (description) end
+local function example (desc) end
 
 
 -- Print '.' for passed, or 'F' for failed expectation.
 -- Update '>' position.
-local function expectations (expectations, indent)
+local function expectations (expectations, desc)
   io.write ("\08")
   for i, expectation in ipairs (expectations) do
     if expectation.status == true then

@@ -154,11 +154,12 @@ local run_contexts, run_examples, run
 
 
 -- Run each of CONTEXTS under ENV in order.
--- INDENT is passed to the formatter, and expanded as we recurse.
-function run_contexts (contexts, indent, env)
+function run_contexts (contexts, desc, env)
   for description, examples in pairs (contexts) do
-    formatter.spec (indent .. description:gsub ("^%w+%s+", "", 1))
-    run_examples (examples, indent .. "  ", env)
+    table.insert(desc, (description:gsub ("^%w+%s+", "", 1)))
+    formatter.spec (desc)
+    run_examples (examples, desc, env)
+    table.remove(desc)
   end
 end
 
@@ -180,8 +181,7 @@ end
 
 
 -- Run each of EXAMPLES under ENV in order.
--- INDENT is passed to the formatter, and expanded as we recurse.
-function run_examples (examples, indent, env)
+function run_examples (examples, desc, env)
   local block = function (example, blockenv)
     local metatable = { __index = blockenv }
     local fenv = setmetatable ({ expect = matchers.expect }, metatable)
@@ -199,17 +199,19 @@ function run_examples (examples, indent, env)
 
     if type (definition) == "table" then
       -- A nested context, revert back to run_contexts.
-      run_contexts (example, indent, fenv)
+      run_contexts (example, desc, fenv)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
       initenv (fenv)
-      formatter.example (indent .. description:gsub ("^%w+%s+", "", 1))
+      table.insert(desc, (description:gsub ("^%w+%s+", "", 1)))
+      formatter.example (desc)
 
       matchers.expectations = {} -- each example may have several expectations
       setfenv (definition, fenv)
       definition ()
-      formatter.expectations (matchers.expectations, "  " .. indent)
+      formatter.expectations (matchers.expectations, desc)
+      table.remove(desc)
     end
 
     setfenv (examples.after, fenv)
@@ -244,7 +246,7 @@ function run (specs, format, env)
   -- Run compiled specs, in order.
   formatter.header (matchers.stats)
   for _, contexts in ipairs (specs) do
-    run_contexts (contexts, "", env)
+    run_contexts (contexts, {}, env)
   end
   formatter.footer (matchers.stats)
   return matchers.stats.fail ~= 0 and 1 or 0
