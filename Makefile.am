@@ -56,7 +56,6 @@ inplace_edit = sed					\
 	$(NOTHING_ELSE)
 
 
-include yaml/yaml.mk
 include specl/specl.mk
 include specs/specs.mk
 

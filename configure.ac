@@ -32,30 +32,12 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 dnl required by automake 1.12.x, not available in 1.10.x
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
-LT_PREREQ([2.4.2])
-LT_INIT([disable-static])
-
-module=yes eval shrext=$shrext_cmds
-
-AC_SUBST([objdir])
-AC_SUBST([shrext])
-AC_SUBST(LIBTOOL_DEPS)
-
 dnl Check for programs
 AC_PROG_CC
 AX_WITH_PROG([HELP2MAN], [help2man], [false])
 AX_PROG_LUA(5.1, 5.3)
 AX_LUA_HEADERS
 
-dnl Check for header files
-AC_HEADER_STDC
-AC_CHECK_HEADERS([yaml.h])
-
-dnl Search libs
-AC_SEARCH_LIBS([yaml_document_initialize], [yaml], [], [
-    AC_MSG_ERROR([Required library 'yaml' could not be found])])
-
 dnl Generate output files
-AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile specl/version.lua])
 AC_OUTPUT

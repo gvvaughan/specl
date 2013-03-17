@@ -22,9 +22,7 @@ local default = {
   },
   dependencies = {
     "lua >= 5.1",
-  },
-  external_dependencies = {
-    YAML = { library = "yaml" }
+    "lyaml",
   },
   build = {
     type = "command",

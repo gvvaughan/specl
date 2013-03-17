@@ -25,7 +25,6 @@ specl_dir     = $(abs_srcdir)/specl
 formatter_dir = $(specl_dir)/formatter
 
 SPECL_PATH  = $(specl_dir)/?.lua;$(abs_srcdir)/?.lua;$(formatter_dir)/?.lua
-SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 
 
 ## ------------- ##
@@ -35,13 +34,11 @@ SPECL_CPATH = $(abs_builddir)/yaml/$(objdir)/?$(shrext)
 specl_install_edit =								\
 	$(install_edit)								\
 	-e 's|@speclpath[@]|$(luadir)/?.lua;$(luadir)/specl/formatter/?.lua|g'	\
-	-e 's|@speclcpath[@]|$(libdir)/?$(shrext)|g'				\
 	$(NOTHING_ELSE)
 
 specl_inplace_edit =					\
 	$(inplace_edit)					\
 	-e 's|@speclpath[@]|$(SPECL_PATH)|g'		\
-	-e 's|@speclcpath[@]|$(SPECL_CPATH)|g'		\
 	$(NOTHING_ELSE)
 
 
@@ -71,7 +68,6 @@ dist_lua_DATA =						\
 specl_specl_DEPS =					\
 	Makefile					\
 	specl/specl.in					\
-	yaml/lyaml.la					\
 	$(nobase_dist_lua_DATA)				\
 	$(dist_lua_DATA)				\
 	$(NOTHING_ELSE)
