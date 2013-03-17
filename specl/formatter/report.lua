@@ -19,30 +19,33 @@
 -- MA 02111-1301, USA.
 
 
-local function indent (desc)
-  return string.rep("  ", #desc - 1)
+local function indent (descriptions)
+  return string.rep ("  ", #descriptions - 1)
 end
 
 
 local function header () end
 
 
-local function spec (desc)
-  print (indent(desc) .. desc[#desc])
+local function spec (descriptions)
+  print (indent (descriptions) ..
+         descriptions[#descriptions]:gsub ("%w+%s*", "", 1))
 end
 
 
-local function example (desc)
-  print (indent(desc) .. desc[#desc])
+local function example (descriptions)
+  spec (descriptions)
 end
 
 
 -- Diagnose any failed expectations in situ.
-local function expectations (expectations, desc)
+local function expectations (expectations, descriptions)
+  local spaces = indent (descriptions)
+
   for i, expectation in ipairs (expectations) do
     if expectation.status ~= true then
-      print (indent(desc) .. "- FAILED expectation " .. i .. ": " ..
-      expectation.message:gsub ("\n", "%0" .. indent(desc) .. "  "))
+      print (spaces .. "- FAILED expectation " .. i .. ": " ..
+             expectation.message:gsub ("\n", "%0  " .. spaces))
     end
   end
 end

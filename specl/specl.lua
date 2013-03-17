@@ -154,12 +154,12 @@ local run_contexts, run_examples, run
 
 
 -- Run each of CONTEXTS under ENV in order.
-function run_contexts (contexts, desc, env)
+function run_contexts (contexts, descriptions, env)
   for description, examples in pairs (contexts) do
-    table.insert(desc, (description:gsub ("^%w+%s+", "", 1)))
-    formatter.spec (desc)
-    run_examples (examples, desc, env)
-    table.remove(desc)
+    table.insert (descriptions, description)
+    formatter.spec (descriptions)
+    run_examples (examples, descriptions, env)
+    table.remove (descriptions)
   end
 end
 
@@ -181,7 +181,7 @@ end
 
 
 -- Run each of EXAMPLES under ENV in order.
-function run_examples (examples, desc, env)
+function run_examples (examples, descriptions, env)
   local block = function (example, blockenv)
     local metatable = { __index = blockenv }
     local fenv = setmetatable ({ expect = matchers.expect }, metatable)
@@ -199,19 +199,19 @@ function run_examples (examples, desc, env)
 
     if type (definition) == "table" then
       -- A nested context, revert back to run_contexts.
-      run_contexts (example, desc, fenv)
+      run_contexts (example, descriptions, fenv)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
       initenv (fenv)
-      table.insert(desc, (description:gsub ("^%w+%s+", "", 1)))
-      formatter.example (desc)
+      table.insert (descriptions, description)
+      formatter.example (descriptions)
 
       matchers.expectations = {} -- each example may have several expectations
       setfenv (definition, fenv)
       definition ()
-      formatter.expectations (matchers.expectations, desc)
-      table.remove(desc)
+      formatter.expectations (matchers.expectations, descriptions)
+      table.remove (descriptions)
     end
 
     setfenv (examples.after, fenv)
