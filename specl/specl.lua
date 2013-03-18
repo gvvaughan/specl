@@ -261,7 +261,7 @@ end
 local version = require "specl.version"
 
 local M = {
-  _VERSION  = version.VERSION,
+  _VERSION  = version._VERSION,
   run       = run,
 }
 

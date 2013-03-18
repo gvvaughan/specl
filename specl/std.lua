@@ -20,33 +20,6 @@
 
 local prog = require "specl.version"
 
-prog.version = prog.program .. " " .. prog.VERSION .. [[
-
-Written by Gary V. Vaughan <gary@gnu.org>, 2013
-
-]] ..  prog.COPYRIGHT_NOTICE
-
-prog.usage   = "Usage: " .. prog.name .. [[ [OPTION]... [FILE]...
-
-Behaviour Driven Development for Lua.
-
-Develop and run BDD specs written in Lua for RSpec style workflow, by
-verifying specification expectations read from given FILEs or standard
-input, and reporting the results on standard output.
-
-If no FILE is listed, or where '-' is given as a FILE, then read from
-standard input.
-
-      --help           print this help, then exit
-      --version        print version number, then exit
-      --color=WHEN     colorize the output, if supported by the selected
-                       formatter. WHEN is 'yes' by default, or can be 'no'
-  -v, --verbose        output using verbose 'report' formatter
-      --formatter=FILE use a custom formatter from FILE
-
-]] .. prog.BUGREPORT_NOTICE
-
-
 local function warn (msg)
   io.stderr:write (prog.name .. ": error: " .. msg .. ".\n")
   io.stderr:write (prog.name .. ": Try '" .. prog.name .. " --help' for help.\n")

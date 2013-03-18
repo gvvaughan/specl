@@ -1,8 +1,7 @@
 -- Version data.
 --
 -- Copyright (c) 2013 Free Software Foundation, Inc.
---
--- This file is part of GNU Zile.
+-- Written by Gary V. Vaughan, 2013
 --
 -- This program is free software; you can redistribute it and/or modify it
 -- under the terms of the GNU General Public License as published by
@@ -17,25 +16,37 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
--- Configure constants
 local M = {
-  PACKAGE           = "@PACKAGE@",
-  PACKAGE_NAME      = "@PACKAGE_NAME@",
-  PACKAGE_BUGREPORT = "@PACKAGE_BUGREPORT@",
-  VERSION           = "@VERSION@",
+  _VERSION = "@VERSION@",
+  name     = arg[0] and arg[0]:gsub (".*/", "") or "@PACKAGE@",
+
+  version = [[@PACKAGE@ (@PACKAGE_NAME@) @VERSION@
+Written by Gary V. Vaughan <gary@gnu.org>, 2013
+
+@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
+You may redistribute copies of @PACKAGE_NAME@ under the terms of the GNU
+General Public License; either version 3, or any later version.
+For more information, see <http://www.gnu.org/licenses>.]],
+
+  usage = [[Usage: @PACKAGE@ [OPTION]... [FILE]...
+
+Behaviour Driven Development for Lua.
+
+Develop and run BDD specs written in Lua for RSpec style workflow, by
+verifying specification expectations read from given FILEs or standard
+input, and reporting the results on standard output.
+
+If no FILE is listed, or where '-' is given as a FILE, then read from
+standard input.
+
+      --help           print this help, then exit
+      --version        print version number, then exit
+      --color=WHEN     colorize the output, if supported by the selected
+                       formatter. WHEN is 'yes' by default, or can be 'no'
+  -v, --verbose        output using verbose 'report' formatter
+      --formatter=FILE use a custom formatter from FILE
+
+Report bugs to @PACKAGE_BUGREPORT@.]],
 }
-
--- Derived constants.
-M.name    = arg[0] and arg[0]:gsub (".*/", "") or M.PACKAGE
-M.Name    = string.upper (M.name:sub (1, 1)) .. M.name:sub (2)
-M.program = M.name .. " (" .. M.PACKAGE_NAME .. ")"
-
--- Copyright messages.
-M.COPYRIGHT_STRING  = "Copyright (C) 2013 Gary V. Vaughan"
-M.COPYRIGHT_NOTICE  = M.Name .. " comes with ABSOLUTELY NO WARRANTY.\n" ..
-  "You may redistribute copies of " .. M.Name .. " under the terms of the GNU\n" ..
-  "General Public License; either version 3, or any later version.\n" ..
-  "For more information, see <http://www.gnu.org/licenses>."
-M.BUGREPORT_NOTICE  = "Report bugs to " .. M.PACKAGE_BUGREPORT .. "."
 
 return M
