@@ -18,6 +18,8 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+local util = require "specl.util"
+
 local M = {}
 
 
@@ -42,7 +44,7 @@ local function q (obj)
   if type (obj) == "string" then
     return '"' .. obj:gsub ('[\\"]', "\\%0") .. '"'
   end
-  return tostring (obj)
+  return util.tostring (obj)
 end
 
 
