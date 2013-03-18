@@ -19,11 +19,10 @@
 -- MA 02111-1301, USA.
 
 
-local color = require "specl.color"
 local util  = require "specl.util"
 
-local indent, map, nop, strip1st =
-      util.indent, util.map, util.nop, util.strip1st
+local indent, map, nop, princ, strip1st =
+      util.indent, util.map, util.nop, util.princ, util.strip1st
 
 
 local colormap = {
@@ -38,8 +37,8 @@ local function spec (descriptions)
   local key  = s:gsub ("%s*(.-)%s+.*$", "%1")
   local pre  = (#descriptions > 1) and "%{yellow}-%{reset} " or ""
   local post = colormap[key] and "%{red}:" or ""
-  print (color (indent (descriptions) .. pre ..
-                (colormap[key] or "") .. s:gsub ("%w+%s*", "", 1) .. post))
+  princ (indent (descriptions) .. pre ..
+         (colormap[key] or "") .. s:gsub ("%w+%s*", "", 1) .. post)
 end
 
 
@@ -59,7 +58,7 @@ local function expectations (expectations, descriptions)
       local fail = "  %{bright white redbg}FAILED expectation " ..
 		   i .. "%{reset}: %{bright}" ..  expectation.message
 
-      print (color (spaces .. fail:gsub ("\n", "%0  " .. spaces)))
+      princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
       failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
     end
   end
@@ -82,13 +81,13 @@ local function footer (stats, failreports)
 
   print ()
   if opts.verbose and failreports ~= "" then
-    print (color "%{red}Summary of failed expectations:")
-    print (color (failreports))
+    princ "%{red}Summary of failed expectations:"
+    princ (failreports)
   end
-  print (color (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total)))
-  print (color ("%{green}" .. stats.pass .. " passed%{reset}, and " ..
-                failcolor .. stats.fail .. " failed%{reset} in " ..
-	        (os.clock () - stats.starttime) .. " seconds."))
+  princ (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total))
+  princ ("%{green}" .. stats.pass .. " passed%{reset}, and " ..
+         failcolor .. stats.fail .. " failed%{reset} in " ..
+	 (os.clock () - stats.starttime) .. " seconds.")
 end
 
 

@@ -19,6 +19,19 @@
 -- MA 02111-1301, USA.
 
 
+local color = require "specl.color"
+
+
+-- Return an appropriate indent for last element of DESCRIPTIONS.
+local function indent (descriptions)
+  return string.rep ("  ", #descriptions - 1)
+end
+
+
+-- A null operation function.
+local function nop () end
+
+
 -- Map function F over elements of T and return a table of results.
 local function map (f, t)
   local r = {}
@@ -32,20 +45,22 @@ local function map (f, t)
 end
 
 
+-- Color printing.
+local function princ (...)
+  return print (color (...))
+end
+
+
 -- Return S with the first word and following whitespace stripped.
 local function strip1st (s)
   return s:gsub ("%w+%s*", "", 1)
 end
 
 
--- Return an appropriate indent for last element of DESCRIPTIONS.
-local function indent (descriptions)
-  return string.rep ("  ", #descriptions - 1)
+-- Color writing.
+local function writc (...)
+  return io.write (color (...))
 end
-
-
--- A null operation function.
-local function nop () end
 
 
 
@@ -54,10 +69,12 @@ local function nop () end
 --[[ ----------------- ]]--
 
 local M = {
-  map      = map,
-  strip1st = strip1st,
   indent   = indent,
   nop      = nop,
+  map      = map,
+  princ    = princ,
+  strip1st = strip1st,
+  writc    = writc,
 }
 
 return M
