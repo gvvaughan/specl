@@ -58,6 +58,7 @@ nobase_dist_lua_DATA =					\
 	specl/color.lua					\
 	specl/matchers.lua				\
 	specl/std.lua					\
+	specl/util.lua					\
 	specl/version.lua				\
 	$(NOTHING_ELSE)
 
