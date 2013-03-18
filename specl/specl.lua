@@ -150,6 +150,15 @@ function compile_example (s, filename)
 end
 
 
+-- Append non-nil ARG to HOLDER.accumulated.
+-- Used to collect output from formatter calls, to be saved for footer.
+local function accumulator (holder, arg)
+  if arg ~= nil then
+    holder.accumulated = holder.accumulated .. arg
+  end
+end
+
+
 local run_contexts, run_examples, run
 
 
@@ -157,7 +166,7 @@ local run_contexts, run_examples, run
 function run_contexts (contexts, descriptions, env)
   for description, examples in pairs (contexts) do
     table.insert (descriptions, description)
-    formatter.spec (descriptions)
+    accumulator (formatter, formatter.spec (descriptions))
     run_examples (examples, descriptions, env)
     table.remove (descriptions)
   end
@@ -205,12 +214,13 @@ function run_examples (examples, descriptions, env)
       -- An example, execute it in a clean new sub-environment.
       initenv (fenv)
       table.insert (descriptions, description)
-      formatter.example (descriptions)
+      accumulator (formatter, formatter.example (descriptions))
 
       matchers.expectations = {} -- each example may have several expectations
       setfenv (definition, fenv)
       definition ()
-      formatter.expectations (matchers.expectations, descriptions)
+      accumulator (formatter,
+                   formatter.expectations (matchers.expectations, descriptions))
       table.remove (descriptions)
     end
 
@@ -231,6 +241,7 @@ end
 -- Run SPECS, according to OPTS and ENV.
 function run (specs, env)
   formatter = opts.formatter or formatter
+  formatter.accumulated = ""
 
   -- Precompile Lua code on initial pass.
   compile_specs (specs)
@@ -244,11 +255,11 @@ function run (specs, env)
   }
 
   -- Run compiled specs, in order.
-  formatter.header (matchers.stats)
+  accumulator (formatter, formatter.header (matchers.stats))
   for _, contexts in ipairs (specs) do
     run_contexts (contexts, {}, env)
   end
-  formatter.footer (matchers.stats)
+  formatter.footer (matchers.stats, formatter.accumulated)
   return matchers.stats.fail ~= 0 and 1 or 0
 end
 

@@ -437,8 +437,9 @@ more detailed summary.
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
 
-Failed expectations are reported inline, making a failing example easy
-to find within a large spec-file.
+Failed expectations are reported inline, and again in the footer with a
+long header from the associated nested descriptions, making a failing
+example easy to find within a large spec-file.
 
 ### 5.3. Custom Formatters
 
@@ -451,7 +452,7 @@ runs your specifications, so provided you supply the table keys that
       spec         = function (desc_table) ... end,
       example      = function (desc_table) ... end,
       expectations = function (expectations, desc_table) ... end,
-      footer       = function (stats) ... end,
+      footer       = function (stats, accumulated) ... end,
     }
 
 The functions `header` and `footer` are called before any expectations,
@@ -462,6 +463,11 @@ and after all expectations, respectively.  The `stats` argument to
 
 You can use this to print out statistics at the end of the formatted
 output.
+
+The `accumulated` argument to `footer` is a string made by concatenating
+all the returned strings, if any, from other calls to the formatter API
+functions.  This is useful, for example, to return failure reports from
+`expectations` and then display them as a batch from `footer`.
 
 The function `spec` is called with a table of each of the descriptions
 that the calling specification or context (the headers with descriptions
