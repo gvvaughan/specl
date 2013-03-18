@@ -3,8 +3,37 @@ SPECL
 
 Behaviour Driven Development for [Lua][].
 
+1. Installation
+---------------
 
-1. Specifications
+By far the easiest way to install Specl is with luarocks:
+
+    luarocks install specl
+
+If you need access to features not in a luarocks release yet:
+
+    git clone git@github.com:gvvaughan/specl.git
+    cd specl
+    make
+    make rockspecs
+    luarocks make specl-git-1.rockspec
+
+You can also install Specl without luarocks, but you must first check
+that you have all the dependencies installed, because `configure`
+assumes they are already available.  The latest dependencies are listed
+in the `dependencies` entry of the file `specl-rockspec.lua`.
+
+    git clone git@github.com:gvvaughan/specl.git
+    cd specl
+    ./bootstrap
+    ./configure --prefix=INSTALLATION-ROOT-DIRECTORY
+    make all check install
+
+Note that the configured installation method installs directly to the
+specified `--prefix` tree, even if you have luarocks installed too.
+
+
+2. Specifications
 -----------------
 
 Write your software specifications using [YAML][] with embedded
@@ -79,7 +108,7 @@ of:
      pick the right comment character, depending where in the hierarchy
      it will go.
 
-### 1.1. Contexts
+### 2.1. Contexts
 
 The core of your specifications are a list of contexts, described in
 plain English.   To easily keep track of what specifications go with
@@ -93,7 +122,7 @@ Traditionally, the context descriptions start with the words "describe"
 or "context", but [Lua][] doesn't mind what you call them as long as
 they're all different.
 
-### 1.2.  Examples
+### 2.2.  Examples
 
 Each context contains a nested list of one or more examples.  These too
 are best written with readable names in plain English, but (unlike
@@ -112,7 +141,7 @@ Traditionally, the example descriptions start with the words "it",
 you should just try to write a description that makes the output easy to
 understand (see [Command Line](#specl-command-line)).
 
-### 1.3. Expectations
+### 2.3. Expectations
 
 Each of your contexts lists a series of expectations that [Specl][] runs
 to determine whether the specification for that part of your project is
@@ -139,7 +168,7 @@ The next section describes the built in matchers in more detail.
 
 
 <a id="specl-matchers"></a>
-2. Matchers
+3. Matchers
 ------------
 
 When `expect` looks up a matcher to validate an expectation, the
@@ -156,7 +185,7 @@ in this case).  See [Inverting a Matcher with
 
 The matchers built in to [Specl][] are listed below.
 
-### 2.1. `be`
+### 3.1. `be`
 
 This matches only when the result of `expect` is the exact same object
 as the matcher argument. For example, [Lua][] interns strings as they
@@ -172,7 +201,7 @@ one from the source, so this expectation fails:
 While the tables look the same, and have the same contents (i.e.
 nothing!), they are still separate and distinct objects.
 
-### 2.2. `equal`
+### 3.2. `equal`
 
 To get around that problem when comparing tables, use the `equal`
 matcher, which does a recursive element by element comparison of the
@@ -182,7 +211,7 @@ expectation. The following expectations all pass:
     expect ({1, two = "three"}).should_equal ({1, two = "three"})
     expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2} {{3}, 4}})
 
-### 2.3. `contain`
+### 3.3. `contain`
 
 When comparing strings, you might not want to write out the entire
 contents of a very long expected result, when you can easily tell with
@@ -201,14 +230,14 @@ If `expect` passes anything other than a string or table to this
 matcher, [Specl][] aborts with an error; use `tostring` or similar if
 you need it.
 
-### 2.4. `match`
+### 3.4. `match`
 
 When a simple substring search is not appropriate, `match` will compare
 the expectation against a [Lua][] pattern:
 
     expect (backtrace).should_match ("\nparse.lua: [0-9]+:")
 
-### 2.5. `error`
+### 3.5. `error`
 
 Specifications for error conditions are a great idea! And this matcher
 checks both that an `error` was raised and that the subsequent error
@@ -232,7 +261,7 @@ easier to understand than the other:
             end).should_contain ("table expected")
 
 <a id="inverting-a-matcher"></a>
-### 2.6. Inverting a matcher with `not` 
+### 3.6. Inverting a matcher with `not` 
 
 Oftentimes, in your specification you need to check that an expectation
 does *not* match a particular outcome, and [Specl][] has you covered
@@ -246,7 +275,7 @@ before reporting a pass or fail:
     expect (tostring (hex)).should_not_contain ("[g-zG-Z]")
 
 
-3. Example Environments
+4. Example Environments
 -------------------------
 
 It's important that every example be evaluated from a clean slate, both
@@ -259,7 +288,7 @@ specification.
 which to execute each example, then tearing it down afterwards to build
 another clean environment for executing the next example, and so on.
 
-### 3.1. Before and After functions
+### 4.1. Before and After functions
 
 To keep examples as readable and concise as possible, it's best not to
 have too much code in each. For example, it's inefficient to repeat a
@@ -285,7 +314,7 @@ Note that, unlike normal [Lua][] code, we don't declare everything with
 state leaks out.  And, eliding all the redundant `local` keywords makes
 for more concise example code in the specification.
 
-### 3.2. Grouping Examples
+### 4.2. Grouping Examples
 
 If you have used [RSpec][], you'll already know that it supports
 `before(:each)` and `before(:all)`, and equivalents for `after`. But
@@ -326,7 +355,7 @@ contexts: 2 or 3 is very common, though you should seriously consider
 splitting up a spec if you are using more than 4 or 5 levels of nesting
 in a single file.
 
-### 3.3 Environments versus `require`
+### 4.3 Environments versus `require`
 
 The best way to organize your code to make writing the specification
 examples very straight forward is to eliminate (or at least to minimize)
@@ -364,7 +393,7 @@ possibly impact upon all subsequent tests. Try to avoid doing this if
 you can.
 
 
-4. Formatters
+5. Formatters
 --------------
 
 As [Specl][] executes examples and tests the expectations of a
@@ -374,7 +403,7 @@ specification, it can displays its progress using a formatter.
 write your own very easily if the format of the built in formatters
 doesn't suit you.
 
-### 4.1. Progress Formatter
+### 5.1. Progress Formatter
 
 The default formatter simply displays [Specl][]'s progress by writing a
 single period for every expectation that is met, or an `F` instead if an
@@ -384,7 +413,7 @@ a one line summary follows:
     ......
     All expectations met, in 0.00233 seconds.
 
-### 4.2. Report Formatter
+### 5.2. Report Formatter
 
 The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
@@ -406,7 +435,7 @@ more detailed summary.
 Failed expectations are reported inline, making the failing example easy
 to find within a large "spec" file.
 
-### 4.3. Custom Formatters
+### 5.3. Custom Formatters
 
 A formatter is just a table of functions that [Specl][] can call as it
 runs your specifications, so provided you supply the table keys that
@@ -457,7 +486,7 @@ your custom formatter.
 
 
 <a id="specl-command-line"></a>
-5. Command Line
+6. Command Line
 -----------------
 
 Given a "spec" file or two, along with the implementation of the code
@@ -493,7 +522,7 @@ Pass the `-h` option for help and brief documentation on usage of the
 remaining available options.
 
 
-6. Not Yet Implemented
+7. Not Yet Implemented
 ------------------------
     
 No support for mocks, or pending examples in the current version.
