@@ -178,7 +178,7 @@ end
 local function initenv (env)
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
-      local fn = env._specl[intercept] (...)
+      local fn = env.specl["_" .. intercept] (...)
       return function ()
         setfenv (fn, env)
         return fn ()
@@ -245,12 +245,29 @@ function run (specs, env)
   -- Precompile Lua code on initial pass.
   compile_specs (specs)
 
-  -- Environment access to core functions that we override to
-  -- run within nested function environment later.
-  env._specl = {
-    load       = load,
-    loadfile   = loadfile,
-    loadstring = loadstring,
+  env.specl = {
+    -- Environment access to core functions that we override to
+    -- run within nested function environment later.
+    _load       = load,
+    _loadfile   = loadfile,
+    _loadstring = loadstring,
+
+    -- Additional commands useful for writing command-line specs.
+    cmdpipe     = function (cmd)
+      local output, status = "", nil
+      local pipe = io.popen (cmd .. '; printf "\\n$?"')
+      while true do
+        local line = pipe:read ()
+        if line == nil then break end
+        output = output .. "\n" .. (status or "")
+        status = line
+      end
+      pipe:close ()
+      return {
+        output = output:gsub ("^\n", "", 1),
+        status = tonumber (status),
+      }
+    end,
   }
 
   -- Run compiled specs, in order.

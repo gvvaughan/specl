@@ -1,28 +1,13 @@
 describe specl:
 - before: |
-    function exit_status (cmd)
-      local output, status = "", nil
-      local f = io.popen (cmd .. "; echo $?")
-      while true do
-        local line = f:read ()
-        if line == nil then break end
-        output = output .. "\n" .. (status or "")
-        status = line
+    function run_spec (yaml, cmd)
+      cmd = cmd or ""
+      -- if CMD begins with a '-' then only options follow, otherwise
+      -- we assume the entire command was passed.
+      if cmd == "" or cmd:sub (1, 1) == "-" then
+        cmd = "specl/specl --color=no " .. cmd
       end
-      f:close ()
-      return tonumber (status)
-    end
-
-    function capture_output (cmd)
-      local output = ""
-      local f = io.popen (cmd)
-      while true do
-        local line = f:read ()
-        if line == nil then break end
-        output = output .. "\n" .. line
-      end
-      f:close ()
-      return output:gsub ("^\n", "", 1)
+      return specl.cmdpipe ("printf '" .. yaml .. "'|" .. cmd)
     end
 
 - describe command line interface:
@@ -30,42 +15,42 @@ describe specl:
       yaml = "describe x:\n- it passes: expect (true).should_be (true)"
 
   - it reads a spec from standard input with no arguments:
-      output = capture_output ("printf '" .. yaml .. "'|specl/specl --color=no")
-      expect (output).should_contain ("All expectations met, in ")
+      expect (run_spec (yaml).output).should_contain ("All expectations met, in ")
   - "it reads a spec from standard input for '-' filename argument":
-      output = capture_output ("printf '" .. yaml .. "'|specl/specl --color=no -")
-      expect (output).should_contain ("All expectations met, in ")
+      expect (run_spec (yaml, "-").output).should_contain ("All expectations met, in ")
   - it exits with zero status when there are no failing examples:
-      expect (exit_status ("printf '" .. yaml .. "'|specl/specl --color=no")).should_be (0)
+      expect (run_spec (yaml, "specl/specl").status).should_be (0)
   - "it exits with non-zero status when there are failing examples": |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
-      expect (exit_status ("printf '" .. yaml .."'|specl/specl --color=no")).should_not_be (0)
+      expect (run_spec (yaml, "specl/specl").status).should_not_be (0)
   - it outputs results from a formatter specified on the command line:
-      output = capture_output ("printf '" .. yaml .. "'|specl/specl --color=no --formatter=tap")
-      expect (output).should_contain ("1..1")
+      expect (run_spec (yaml, "--formatter=tap").output).should_contain ("1..1")
 
   - context when using a custom formatter:
     - before: |
         -- Write a very basic custom formatter to a temporary file, and add
         -- its location to the lua search path.
         tmpfile = os.tmpname ()
-        path = tmpfile:gsub ("[^/]*$", "?.specfmt;", 1)
-        f = io.open (tmpfile .. ".specfmt", "w")
+        path    = tmpfile:gsub ("/[^/]*$", "", 1)
+        name    = tmpfile:gsub (".*/", "")
+        f       = io.open (tmpfile, "w")
         f:write ([[return {
             header  = function () io.write "h" end,
-            spec    = function (d) io.write "s" end,
-            example = function (d) io.write "x" end,
-            expectations = function (x) io.write "." end,
-            footer  = function (s) io.write "f"; io.flush () end,
+            spec    = function () io.write "s" end,
+            example = function () io.write "x" end,
+            expectations = function () io.write "." end,
+            footer  = function () io.write "f"; io.flush () end,
           }]])
         f:close ()
 
     - it formats expectations with the custom formatter:
-        f = tmpfile:gsub (".*/", "")
-        output = capture_output ("printf '" .. yaml .. "'" ..
-                                 "|env LUA_PATH='" .. path .. ";' " ..
-                                 "specl/specl --formatter=" .. f .. " -")
-        expect (output).should_be ("hsx.f")
+        cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl --formatter=%s -",
+                              path, name)
+        expect (run_spec (yaml, cmd).output).should_contain ("hsx.f")
+    - "it accepts -f as an equivalent to --formatter":
+        cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl -f%s -",
+                              path, name)
+        expect (run_spec (yaml, cmd).output).should_contain ("hsx.f")
 
     - after:
         os.remove (tmpfile)
