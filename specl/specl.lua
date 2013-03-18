@@ -22,6 +22,7 @@
 -- Use the simple progress formatter by default.  Can be changed by run().
 local formatter  = require "specl.formatter.progress"
 local matchers   = require "specl.matchers"
+local util       = require "specl.util"
 
 
 
@@ -127,13 +128,11 @@ function compile_examples (examples)
 end
 
 
-local function nop () end
-
 -- Compile S into a callable function.  If S is a reserved word,
 -- then return a function that does nothing.
 -- If FILENAME is passed, it is used in error messages from loadstring().
 function compile_example (s, filename)
-  if reserved[s] then return nop end
+  if reserved[s] then return util.nop end
 
   -- Wrap the fragment into a function that we can call later.
   local f = loadstring ("return function () " .. s .. " end", filename)
