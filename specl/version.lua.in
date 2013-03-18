@@ -18,17 +18,15 @@
 
 local M = {
   _VERSION = "@VERSION@",
-  name     = arg[0] and arg[0]:gsub (".*/", "") or "@PACKAGE@",
 
-  version = [[@PACKAGE@ (@PACKAGE_NAME@) @VERSION@
-Written by Gary V. Vaughan <gary@gnu.org>, 2013
+  name = arg[0] and arg[0]:gsub (".*/", "") or "@PACKAGE@",
 
-@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
-You may redistribute copies of @PACKAGE_NAME@ under the terms of the GNU
-General Public License; either version 3, or any later version.
-For more information, see <http://www.gnu.org/licenses>.]],
+  opts = {
+    color = true,
+  },
 
-  usage = [[Usage: @PACKAGE@ [OPTION]... [FILE]...
+  ["--help"] = function ()
+    print [[Usage: @PACKAGE@ [OPTION]... [FILE]...
 
 Behaviour Driven Development for Lua.
 
@@ -46,7 +44,51 @@ standard input.
   -v, --verbose        output using verbose 'report' formatter
       --formatter=FILE use a custom formatter from FILE
 
-Report bugs to @PACKAGE_BUGREPORT@.]],
+Report bugs to @PACKAGE_BUGREPORT@.]]
+    os.exit (0)
+  end,
+
+  ["--version"] = function ()
+    print [[@PACKAGE@ (@PACKAGE_NAME@) @VERSION@
+Written by Gary V. Vaughan <gary@gnu.org>, 2013
+
+Copyright (C) 2013, Gary V. Vaughan
+@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
+You may redistribute copies of @PACKAGE_NAME@ under the terms of the GNU
+General Public License; either version 3, or any later version.
+For more information, see <http://www.gnu.org/licenses>.]]
+    os.exit (0)
+  end,
+
+  ["--color"] = function (opt, arg)
+    if arg == nil then
+      return nil, "option '" .. opt .. "' requires an argument"
+    end
+    local map = { yes = true, no = false }
+    if map[arg] == nil then
+      return nil, "invalid argument to option '" .. opt .. "'"
+    end
+    return map[arg]
+  end,
+
+  ["--verbose"] = function ()
+    -- `--verbose` is a shortcut for `--formatter=specl.formatter.report`
+    return require "specl.formatter.report", "formatter"
+  end,
+
+  ["--formatter"] = function (opt, arg)
+    if arg == nil then
+      return nil, "option '" .. opt .. "' requires an argument"
+    end
+    local ok, formatter = pcall (require, arg)
+    if ok == false then
+      return nil, "could not load formatter: " .. formatter
+    end
+    return formatter
+  end,
 }
+
+-- Option equivalents.
+M["-v"] = M["--verbose"]
 
 return M

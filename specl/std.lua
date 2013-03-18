@@ -27,73 +27,28 @@ local function warn (msg)
 end
 
 
--- Return the argument following '=' in S, or diagnose errors
--- and return a numeric status.  If T is passed, then the
--- extracted argument must match a key in T, and the associated
--- value is returned.
-local function optarg (s, t)
-  local x = s:find ("=", 1, true)
-  local opt = s:sub (1, x - 1)
-  if not x then
-    return warn ("option '" .. opt .. "' requires an argument")
-  end
-  local arg = s:sub (x + 1)
-  if t then
-    if t[arg] == nil then
-      return warn ("invalid argument to option '" .. opt .. "'")
-    end
-    return t[arg]
-  end
-  return arg
-end
-
-
 local function process_args ()
-  local opts = {
-    color = true,
-  }
   local nonopts = nil
   local status = 0
   for _, opt in ipairs (arg) do
+    local x = opt:find ("=", 1, true)
+    local arg
+    if x then
+      arg = opt:sub (x + 1)
+      opt = opt:sub (1, x -1)
+    end
+
     -- Collect non-option arguments to save back into _G.arg later.
     if type (nonopts) == "table" then
       table.insert (nonopts, opt)
 
-    -- Display help message and exit.
-    elseif opt == "--help" then
-      print (prog.usage)
-      os.exit (0)
-
-    -- Display version information and exit.
-    elseif opt == "--version" then
-      print (prog.version)
-      os.exit (0)
-
-    -- Colorize output.
-    elseif opt:sub (1,7) == "--color" then
-      local arg = optarg (opt, { yes = true, no = false })
-      if type (arg) ~= "number" then
-        opts.color = arg
+    -- Run user supplied option handler.
+    elseif opt:sub (1,1) == "-" and type (prog[opt]) == "function" then
+      local result, key = prog[opt] (opt, arg)
+      if result == nil then
+        status = warn (key)
       else
-        status = arg
-      end
-
-    -- Use verbose 'report' formatter.
-    elseif opt == "-v" or opt == "--verbose" then
-      opts.formatter = opts.formatter or require "specl.formatter.report"
-
-    -- Try to load and use a custom --formatter argument.
-    elseif opt:sub (1, 11) == "--formatter" then
-      local arg = optarg (opt)
-      if type (arg) ~= "number" then
-        local ok, formatter = pcall (require, arg)
-	if ok == false then
-	  status = warn ("could not load formatter: " .. formatter)
-	else
-          opts.formatter = formatter
-	end
-      else
-        status = arg
+        prog.opts [key or opt:gsub ("^%-*", "", 1)] = result
       end
 
     -- End of option arguments.
@@ -117,7 +72,7 @@ local function process_args ()
   nonopts[0] = arg[0]
   _G.arg = nonopts
 
-  return opts
+  return prog.opts
 end
 
 
