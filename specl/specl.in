@@ -36,8 +36,8 @@ package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
 
 
 local specl  = require "specl"
+local util   = require "specl.util"
 local yaml   = require "lyaml"
-local std    = require "specl.std"   -- our own minimal stdlib
 
 
 -- Make a shallow copy of the pristine global environment, so that the
@@ -50,7 +50,7 @@ for k, v in pairs (_G) do sandbox[k] = v end
 -- specifications in each FILENAME.
 local spec = {}
 function slurp (filename)
-  local s, errmsg = std.slurp ()
+  local s, errmsg = util.slurp ()
   if errmsg ~= nil then
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
@@ -92,7 +92,7 @@ function slurp (filename)
 end
 
 
-opts = std.process_args ()
-std.process_files (slurp)
+opts = util.process_args ()
+util.process_files (slurp)
 
 os.exit (specl.run (spec, sandbox))
