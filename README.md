@@ -511,8 +511,8 @@ usually called like this:
     specl specs/*_spec.yaml
 
 The output will display results using the default `progress` formatter.
-To use the `report` formatter instead, add the `-v` option to the
-command line above.
+To use the `report` formatter instead, add the `-freport`
+option to the command line above.
 
 If you prefer to format the results of your specification examples with
 a custom formatter, you should make sure your formatter is visible on

@@ -81,7 +81,7 @@ local function footer (stats, failreports)
   local failcolor = (stats.fail > 0) and "%{bright white redbg}" or "%{green}"
 
   print ()
-  if failreports ~= "" then
+  if opts.verbose and failreports ~= "" then
     print (color "%{red}Summary of failed expectations:")
     print (color (failreports))
   end

@@ -66,7 +66,7 @@ end
 local function footer (stats, failreports)
   io.write ("\08 \n")
 
-  if failreports ~= "" then
+  if opts.verbose and failreports ~= "" then
     print ()
     print (color "%{red}Summary of failed expectations:")
     print (color (failreports))
@@ -76,7 +76,7 @@ local function footer (stats, failreports)
     io.write (color "%{bright}All expectations met%{reset}, ")
   else
     io.write (color ("%{green}" .. stats.pass .. " passed%{reset}, " ..
-                     "and %{red}" ..  stats.fail .. " failed%{reset} "))
+                     "and %{bright white redbg}" ..  stats.fail .. " failed%{reset} "))
   end
   io.write (color ("in %{bright}" ..  (os.clock () - stats.starttime) ..
                    " seconds%{reset}.\n"))

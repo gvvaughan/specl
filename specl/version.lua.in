@@ -22,7 +22,8 @@ local M = {
   name = arg[0] and arg[0]:gsub (".*/", "") or "@PACKAGE@",
 
   opts = {
-    color = true,
+    color   = true,
+    verbose = false,
   },
 
   ["--help"] = function ()
@@ -39,10 +40,9 @@ standard input.
 
       --help           print this help, then exit
       --version        print version number, then exit
-      --color=WHEN     colorize the output, if supported by the selected
-                       formatter. WHEN is 'yes' by default, or can be 'no'
-  -v, --verbose        output using verbose 'report' formatter
-      --formatter=FILE use a custom formatter from FILE
+      --color=WHEN     request colorized formatter output [default=yes]
+  -f, --formatter=FILE use a specific formatter [default=progress]
+  -v, --verbose        request using verbose 'report' formatter
 
 Report bugs to @PACKAGE_BUGREPORT@.]]
     os.exit (0)
@@ -73,7 +73,7 @@ For more information, see <http://www.gnu.org/licenses>.]]
 
   ["--verbose"] = function ()
     -- `--verbose` is a shortcut for `--formatter=specl.formatter.report`
-    return require "specl.formatter.report", "formatter"
+    return true, "verbose"
   end,
 
   ["--formatter"] = function (opt, arg)
@@ -84,11 +84,12 @@ For more information, see <http://www.gnu.org/licenses>.]]
     if ok == false then
       return nil, "could not load formatter: " .. formatter
     end
-    return formatter
+    return formatter, "formatter"
   end,
 }
 
 -- Option equivalents.
+M["-f"] = M["--formatter"]
 M["-v"] = M["--verbose"]
 
 return M

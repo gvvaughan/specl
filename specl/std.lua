@@ -31,11 +31,16 @@ local function process_args ()
   local nonopts = nil
   local status = 0
   for _, opt in ipairs (arg) do
-    local x = opt:find ("=", 1, true)
-    local arg
-    if x then
-      arg = opt:sub (x + 1)
-      opt = opt:sub (1, x -1)
+    local x, arg
+    if opt:sub (2, 2) == "-" then
+      x = opt:find ("=", 1, true)
+      if x then
+        arg = opt:sub (x + 1)
+        opt = opt:sub (1, x -1)
+      end
+    elseif opt:sub (1, 1) == "-" and string.len (opt) > 2 then
+      arg = opt:sub (3)
+      opt = opt:sub (1,2)
     end
 
     -- Collect non-option arguments to save back into _G.arg later.
@@ -43,7 +48,7 @@ local function process_args ()
       table.insert (nonopts, opt)
 
     -- Run user supplied option handler.
-    elseif opt:sub (1,1) == "-" and type (prog[opt]) == "function" then
+    elseif opt:sub (1, 1) == "-" and type (prog[opt]) == "function" then
       local result, key = prog[opt] (opt, arg)
       if result == nil then
         status = warn (key)
