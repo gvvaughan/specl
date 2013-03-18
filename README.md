@@ -530,7 +530,7 @@ name, including built in formatters, like this:
 
     specl --formatter=tap specs/*_spec.yaml
 
-Pass the `-h` option for help and brief documentation on usage of the
+Pass the `--help` option for help and brief documentation on usage of the
 remaining available options.
 
 
