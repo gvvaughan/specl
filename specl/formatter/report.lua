@@ -20,6 +20,10 @@
 
 
 local color = require "specl.color"
+local util  = require "specl.util"
+
+local indent, map, nop, strip1st =
+      util.indent, util.map, util.nop, util.strip1st
 
 
 local colormap = {
@@ -27,33 +31,6 @@ local colormap = {
   context  = "%{cyan}",
   when     = "%{cyan}",
 }
-
-
--- Map function F over elements of T and return a table of results.
-local function map (f, t)
-  local r = {}
-  for _, v in pairs (t) do
-    local o = f (v)
-    if o then
-      table.insert (r, o)
-    end
-  end
-  return r
-end
-
-
--- Return S with the first word and following whitespace stripped.
-local function strip1st (s)
-  return s:gsub ("%w+%s*", "", 1)
-end
-
-
-local function indent (descriptions)
-  return string.rep ("  ", #descriptions - 1)
-end
-
-
-local function header () end
 
 
 local function spec (descriptions)
@@ -105,7 +82,7 @@ local function footer (stats, failreports)
 
   print ()
   if failreports ~= "" then
-    print (color ("%{red}Summary of failed expectations:"))
+    print (color "%{red}Summary of failed expectations:")
     print (color (failreports))
   end
   print (color (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total)))
@@ -122,7 +99,7 @@ end
 
 local M = {
   name         = "report",
-  header       = header,
+  header       = nop,
   spec         = spec,
   example      = example,
   expectations = expectations,

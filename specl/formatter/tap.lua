@@ -1,26 +1,11 @@
 -- Test Anything Protocol style formatter.
 --
 
+local util = require "specl.util"
+
+local map, nop, strip1st = util.map, util.nop, util.strip1st
+
 local curr_test = 0
-
-
--- Map function F over elements of T and return a table of results.
-local function map (f, t)
-  local r = {}
-  for _, v in pairs (t) do
-    local o = f (v)
-    if o then
-      table.insert (r, o)
-    end
-  end
-  return r
-end
-
-
--- Return S with the first word and following whitespace stripped.
-local function strip1st (s)
-  return s:gsub ("%w+%s*", "", 1)
-end
 
 
 -- Diagnose any failed expectations in situ.
@@ -49,7 +34,6 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
-local function nop (...) end
 
 local M = {
   name         = "tap",

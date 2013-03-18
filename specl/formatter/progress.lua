@@ -20,6 +20,9 @@
 
 
 local color = require "specl.color"
+local util  = require "specl.util"
+
+local map, nop, strip1st = util.map, util.nop, util.strip1st
 
 
 -- Use '>' as a marker for currently executing expectation.
@@ -32,22 +35,42 @@ end
 -- Print '.' for passed, or 'F' for failed expectation.
 -- Update '>' position.
 local function expectations (expectations, descriptions)
+  failreports = ""
+
   io.write ("\08")
   for i, expectation in ipairs (expectations) do
     if expectation.status == true then
       io.write (color "%{green}.")
     else
       io.write (color "%{bright white redbg}F")
+
+      local fail = "  %{bright white redbg}FAILED expectation " ..
+		   i .. "%{reset}: %{bright}" ..  expectation.message
+      failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
     end
   end
   io.write (">")
   io.flush ()
+
+  if failreports ~= "" then
+    failreports = "%{yellow}-%{reset} %{cyan}" ..
+                  table.concat (map (strip1st, descriptions), " ") ..
+                  "%{red}:%{reset}" .. failreports
+  end
+
+  return failreports
 end
 
 
 -- Report statistics.
-local function footer (stats)
+local function footer (stats, failreports)
   io.write ("\08 \n")
+
+  if failreports ~= "" then
+    print ()
+    print (color "%{red}Summary of failed expectations:")
+    print (color (failreports))
+  end
 
   if stats.fail == 0 then
     io.write (color "%{bright}All expectations met%{reset}, ")
@@ -65,8 +88,6 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
-
-local function nop (...) end
 
 local M = {
   name         = "progress",
