@@ -19,6 +19,16 @@
 -- MA 02111-1301, USA.
 
 
+local color = require "specl.color"
+
+
+local colormap = {
+  describe = "%{blue}",
+  context  = "%{cyan}",
+  when     = "%{cyan}",
+}
+
+
 local function indent (descriptions)
   return string.rep ("  ", #descriptions - 1)
 end
@@ -28,8 +38,12 @@ local function header () end
 
 
 local function spec (descriptions)
-  print (indent (descriptions) ..
-         descriptions[#descriptions]:gsub ("%w+%s*", "", 1))
+  local s    = descriptions[#descriptions]
+  local key  = s:gsub ("%s*(.-)%s+.*$", "%1")
+  local pre  = (#descriptions > 1) and "%{yellow}-%{reset} " or ""
+  local post = colormap[key] and "%{red}:" or ""
+  print (color (indent (descriptions) .. pre ..
+                (colormap[key] or "") .. s:gsub ("%w+%s*", "", 1) .. post))
 end
 
 
@@ -44,8 +58,10 @@ local function expectations (expectations, descriptions)
 
   for i, expectation in ipairs (expectations) do
     if expectation.status ~= true then
-      print (spaces .. "- FAILED expectation " .. i .. ": " ..
-             expectation.message:gsub ("\n", "%0  " .. spaces))
+      print (color (spaces ..
+                    "- %{bright white redbg}FAILED expectation " ..
+		    i .. "%{reset}: %{bright}" ..
+                    expectation.message:gsub ("\n", "%0  " .. spaces)))
     end
   end
 end
@@ -55,12 +71,13 @@ end
 local function footer (stats)
   local total   = stats.pass + stats.fail
   local percent = 100 * stats.pass / total
+  local failcolor = (stats.fail > 0) and "%{bright white redbg}" or "%{green}"
 
   print ()
-  print (string.format ("Met %.2f%% of %d expectations.", percent, total))
-  print (stats.pass .. " passed, and " ..
-         stats.fail .. " failed in " ..
-	 (os.clock () - stats.starttime) .. " seconds.")
+  print (color (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total)))
+  print (color ("%{green}" .. stats.pass .. " passed%{reset}, and " ..
+                failcolor .. stats.fail .. " failed%{reset} in " ..
+	        (os.clock () - stats.starttime) .. " seconds."))
 end
 
 
@@ -70,6 +87,7 @@ end
 --[[ ----------------- ]]--
 
 local M = {
+  name         = "report",
   header       = header,
   spec         = spec,
   example      = example,

@@ -92,7 +92,7 @@ function slurp (filename)
 end
 
 
-local opt = std.process_args ()
+opts = std.process_args ()
 std.process_files (slurp)
 
-os.exit (specl.run (spec, opt.formatter, sandbox))
+os.exit (specl.run (spec, sandbox))

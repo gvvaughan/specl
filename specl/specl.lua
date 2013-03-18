@@ -228,9 +228,9 @@ function run_examples (examples, descriptions, env)
 end
 
 
--- Run SPECS, routing output to FORMAT formatter.
-function run (specs, format, env)
-  formatter = format or formatter
+-- Run SPECS, according to OPTS and ENV.
+function run (specs, env)
+  formatter = opts.formatter or formatter
 
   -- Precompile Lua code on initial pass.
   compile_specs (specs)

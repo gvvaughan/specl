@@ -52,6 +52,7 @@ end
 local function nop (...) end
 
 local M = {
+  name         = "tap",
   header       = nop,
   spec         = nop,
   example      = nop,

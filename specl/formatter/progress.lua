@@ -19,6 +19,9 @@
 -- MA 02111-1301, USA.
 
 
+local color = require "specl.color"
+
+
 -- Use '>' as a marker for currently executing expectation.
 local function header ()
   io.write (">")
@@ -32,9 +35,9 @@ local function expectations (expectations, descriptions)
   io.write ("\08")
   for i, expectation in ipairs (expectations) do
     if expectation.status == true then
-      io.write (".")
+      io.write (color "%{green}.")
     else
-      io.write ("F")
+      io.write (color "%{bright white redbg}F")
     end
   end
   io.write (">")
@@ -47,11 +50,13 @@ local function footer (stats)
   io.write ("\08 \n")
 
   if stats.fail == 0 then
-    io.write ("All expectations met, ")
+    io.write (color "%{bright}All expectations met%{reset}, ")
   else
-    io.write (stats.pass .. " passed, and " ..  stats.fail .. " failed ")
+    io.write (color ("%{green}" .. stats.pass .. " passed%{reset}, " ..
+                     "and %{red}" ..  stats.fail .. " failed%{reset} "))
   end
-  io.write ("in " ..  (os.clock () - stats.starttime) .. " seconds.\n")
+  io.write (color ("in %{bright}" ..  (os.clock () - stats.starttime) ..
+                   " seconds%{reset}.\n"))
 end
 
 
@@ -64,6 +69,7 @@ end
 local function nop (...) end
 
 local M = {
+  name         = "progress",
   header       = header,
   spec         = nop,
   example      = nop,

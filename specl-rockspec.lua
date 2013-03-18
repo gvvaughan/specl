@@ -21,6 +21,7 @@ local default = {
     license = "GPLv3+",
   },
   dependencies = {
+    "ansicolor",
     "lua >= 5.1",
     "lyaml",
   },
