@@ -64,8 +64,8 @@ starting in the first column with `- ` (dash, space).  By default, the
 [YAML][] parser will assume that each description, up to the first `:`
 (colon), and the associated example code are both vanilla strings.
 Punctuation is not allowed in an unquoted [YAML][] string, however, so
-you will need to force the parser to read a the description as a string
-by surrounding in `"` (double-quote mark) if you want to write
+you will need to force the parser to read the description as a string
+by surrounding it with `"` (double-quote mark) if you want to write
 punctuation in the description:
 
     - "it requires double-quote marks, but only when using punctuation":
@@ -83,7 +83,7 @@ problem, because the [Lua][] parser is not overly fussy about placement
 of line-breaks, but sometimes (to make sure there is a newline to
 terminate an embedded comment, for example) you'll need to prevent
 [YAML][] from giving [Lua][] everything on a single line. Use the
-literal block marker ` |' (space, pipe) after the `:' separator for
+literal block marker ` |` (space, pipe) after the `:` separator for
 this:
 
     - it does not strip significant whitespace in a literal block: |
@@ -96,11 +96,13 @@ minimizing punctuation as syntax, all of which you need to be careful
 of:
 
   1. Indenting with TAB characters is a syntax error, because the
-     [YAML][] parser uses indentation columns to infer nesting.  Easiest
-     just to avoid putting TAB characters in your spec files entirely.
+     [YAML][] parser uses indentation columns to infer nesting.  It's
+     easiest just to avoid putting TAB characters in your spec files
+     entirely.
   2. Indentation of the code following an example description must be at
-     least one column further in than the first letter of the
-     description text above.
+     least one column further in than the first **letter** of the
+     description text above, because [YAML][] counts the leading `- `
+     as part of the indentation.
   3. [YAML][] comments begin with ` #` (space, hash) and extend to the
      end of the line.  You can use these anywhere outside of a Lua code
      block.  [Lua][] comments don't work outside of a lua block, and
@@ -126,7 +128,8 @@ they're all different.
 
 Each context contains a nested list of one or more examples.  These too
 are best written with readable names in plain English, but (unlike
-contexts) they are followed by the associated example code:
+contexts) they are followed by the associated example code, rather than
+more nested descriptions:
 
     describe this module:
     - it has some functionality:
@@ -145,10 +148,10 @@ understand (see [Command Line](#specl-command-line)).
 
 Each of your contexts lists a series of expectations that [Specl][] runs
 to determine whether the specification for that part of your project is
-being met. Inside the `function` part of each example element, you
-should write a small block of code that checks that the example being
-described meets your expectations. [Specl][] gives you a new `expect`
-command to check that each example evaluates as it should:
+being met. Inside the [Lua][] part of each example, you should write a
+small block of code that checks that the example being described meets
+your expectations. [Specl][] gives you a new `expect` command to check
+that each example evaluates as it should:
 
     - describe Stack:
         - it has no elements when empty:
@@ -156,7 +159,7 @@ command to check that each example evaluates as it should:
             expect (#stack).should_be (0)
 
 The call to expect is almost like English: "Expect size of stack should
-be should be zero."
+be zero."
 
 Behind the scenes, when you evaluate a Lua expression with expect, it's
 passed to a *matcher* method (`.should_be` in this example), which is
@@ -176,8 +179,8 @@ When `expect` looks up a matcher to validate an expectation, the
 clearly when you say it out loud.  The idea is that the code for the
 specification should be self-documenting, and easily understood by
 reading the code itself, rather than having half of the lines in the
-"spec" file be comments explaining what is going on, and needing to be
-kept in synch with the code being described.
+spec-file be comments explaining what is going on, and needing to be
+kept in sync with the code being described.
 
 The matchers themselves are stored by just the root of their name (`be`
 in this case).  See [Inverting a Matcher with
@@ -196,10 +199,10 @@ are compiled, so this expectation passes:
 Conversely, [Lua][] constructs a new table object every time it reads
 one from the source, so this expectation fails:
 
-    expect ({}).should_be ({})
+    expect ({"a table"}).should_be ({"a table"})
 
-While the tables look the same, and have the same contents (i.e.
-nothing!), they are still separate and distinct objects.
+While the tables look the same, and have the same contents, they are
+still separate and distinct objects.
 
 ### 3.2. `equal`
 
@@ -209,7 +212,7 @@ expectation. The following expectations all pass:
 
     expect ({}).should_equal ({})
     expect ({1, two = "three"}).should_equal ({1, two = "three"})
-    expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2} {{3}, 4}})
+    expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2}, {{3}, 4}})
 
 ### 3.3. `contain`
 
@@ -244,11 +247,11 @@ checks both that an `error` was raised and that the subsequent error
 message contains the supplied substring.
 
 Because [Lua][] evaluates the argument to `expect` before `expect`
-receives it, you would have to manual evaluate the expression using
+receives it, you would have to manually evaluate the expression using
 `pcall` to prevent the error it raises from propagating up the stack
-past the `expect`. The `error` matcher is a syntactic sugar to save
-writing the `pcall`, but in order to do that requires the parameters to
-be in the opposite order of the other matchers.
+past `expect`. The `error` matcher is a syntactic sugar to save writing
+the `pcall`, but in order to do that requires the parameters to be in
+the opposite order of the other matchers.
 
 Nonetheless, the following are broadly equivalent, though one is *much*
 easier to understand than the other:
@@ -346,9 +349,9 @@ group:
             ...
 
 Tricky `before` placement aside, it's always a good idea to organize
-large spec files in example groups, and the traditional way to do that
-is with a nested context (and write the description starting with the
-word "context" rather than "describe" if you are a traditionalist!).
+large spec files in example groups, and the best way to do that is with
+a nested context (and write the description starting with the word
+"context" rather than "describe" if you are a traditionalist!).
 
 [Specl][] doesn't place any restrictions on how deeply you nest your
 contexts: 2 or 3 is very common, though you should seriously consider
@@ -357,7 +360,7 @@ in a single file.
 
 ### 4.3 Environments versus `require`
 
-The best way to organize your code to make writing the specification
+The ideal way to organize your code to make writing the specification
 examples very straight forward is to eliminate (or at least to minimize)
 side-effects, so that the behaviour of each API call in every example
 is obvious from the parameters and return values alone.
@@ -368,16 +371,18 @@ chunk in the example will only affect the environment of that example
 and not leak out into any following examples.  However, `require`
 defeats these precautions for two reasons:
 
-  1. Non-local symbols in a required module always refer to _G (or _ENV
-     in Lua 5.2), which, by definition will leak out into following
-     examples.  Avoid this by ensuring everything in the module is
-     either marked as `local` or returned from the module, where the
-     caller can decide whether to corrupt the global environment.
+  1. Non-local symbols in a required module always refer to `_G` (or
+     `_ENV` in Lua 5.2), which, by definition will leak out into
+     following examples.  Avoid this by ensuring everything in the
+     module is either marked as `local` or returned from the module,
+     where the caller can decide whether to corrupt the global
+     environment or not.
   2. The returned result of requiring a module is cached, so any code
      executed as a side-effect of the `require` call only takes effect
      on the first call.  Requiring the same module again, even from a
      different example environment, returns the cached result.  Avoid
-     this returning any initial state.
+     this by returning any initial state from the module rather than
+     executing arbitrary code on first load.
 
 With good module hygiene, you'll probably never even need to be aware of
 the above.  But, if you are writing specifications for an existing
@@ -419,21 +424,21 @@ The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
 more detailed summary.
 
-    a stack
-      is empty to start with
-      when pushing items
-         raises an error if the stack is full
-         adds items to the top
-      when popping items off the top
-         raises an error if the stack is empty
-         returns the top item
-         removes the popped item
+    a stack:
+      - is empty to start with
+      - when pushing items:
+         - raises an error if the stack is full
+         - adds items to the top
+      - when popping items off the top:
+         - raises an error if the stack is empty
+         - returns the top item
+         - removes the popped item
     
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
 
-Failed expectations are reported inline, making the failing example easy
-to find within a large "spec" file.
+Failed expectations are reported inline, making a failing example easy
+to find within a large spec-file.
 
 ### 5.3. Custom Formatters
 
@@ -458,28 +463,29 @@ and after all expectations, respectively.  The `stats` argument to
 You can use this to print out statistics at the end of the formatted
 output.
 
-The function `spec` is called with the a table of each of the
-descriptions that the calling specification or context (the headers with
-descriptions that typically begin with either `describe` or `context`)
-is nested inside.
+The function `spec` is called with a table of each of the descriptions
+that the calling specification or context (the headers with descriptions
+that typically begin with either `describe` or `context`) is nested
+inside.
 
 Similarly, the function `example` is called with the equivalent table
 of descriptions that the calling example (the ones that typically begin
-with `it`) is nested inside.
+with `it`, `example` or `specify`) is nested inside.
 
 And finally, the function `expectations` is called after each example
-has been run, with a list of tables, one for each `expect` call in
-that example, and a copy of the same table of nested descriptions that
-were passed to `example` immediately prior:
+has been run, passing in a list of tables with the format shown below,
+one entry for each `expect` call in that example, and a copy of the same
+table of nested descriptions that were passed to `example` immediately
+prior:
 
     expectations = {
       { status = (true|false), message = "error string" },
       ...
     }
 
-The standard Specl formatters in the `specl/formatters/` sub-directory
-of your installation show how these functions can be used to display
-progress in a format of your choice.
+The standard [Specl][] formatters in the `specl/formatters/` sub-
+directory of your installation show how these functions can be used to
+display progress using an output format of your choice.
 
 See the next section for details of how to get [Specl][] to load
 your custom formatter.
@@ -489,7 +495,7 @@ your custom formatter.
 6. Command Line
 -----------------
 
-Given a "spec" file or two, along with the implementation of the code
+Given a spec-file or two, along with the implementation of the code
 being checked against those specifications, you run [Specl][] inside the
 project directory using the provided `specl` command.
 
