@@ -102,7 +102,7 @@ local function footer (stats, failreports)
 
   print ()
   if opts.verbose and failreports ~= "" then
-    princ "%{red}Summary of failed expectations:"
+    princ "%{blue}Summary of failed expectations%{red}:"
     princ (failreports)
   end
   princ (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total))
