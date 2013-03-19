@@ -65,7 +65,7 @@ specl_LUASPECS =					\
 # Make Lua specs from YAML specs.
 .yaml.lua:
 	@test -d specs || mkdir specs
-	$(AM_V_GEN)$(SPECLC) '$<' > '$@'
+	$(AM_V_GEN)$(SPECLC) '$<' | sed 's,^{\["describe ,&(Lua spec) ,'> '$@'
 
 # Lua specs require speclc compiler.
 $(specl_LUASPECS): $(SPECLC)
