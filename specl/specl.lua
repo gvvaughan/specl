@@ -192,8 +192,9 @@ end
 function run_examples (examples, descriptions, env)
   local block = function (example, blockenv)
     local metatable = { __index = blockenv }
-    local fenv = setmetatable ({ expect = matchers.expect }, metatable)
+    local fenv = { expect = matchers.expect, pending = matchers.pending }
 
+    setmetatable (fenv, metatable)
     setfenv (examples.before, fenv)
     examples.before ()
 
@@ -213,13 +214,13 @@ function run_examples (examples, descriptions, env)
       -- An example, execute it in a clean new sub-environment.
       initenv (fenv)
       table.insert (descriptions, description)
-      accumulator (formatter, formatter.example (descriptions))
 
-      matchers.expectations = {} -- each example may have several expectations
+      matchers.init ()
+
       setfenv (definition, fenv)
       definition ()
       accumulator (formatter,
-                   formatter.expectations (matchers.expectations, descriptions))
+                   formatter.expectations (matchers.status (), descriptions))
       table.remove (descriptions)
     end
 

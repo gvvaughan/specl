@@ -103,6 +103,19 @@ M.matchers = {
 }
 
 
+-- Called at the start of each example block.
+function M.init ()
+  M.expectations = {}
+  M.ispending = nil
+end
+
+
+-- Return status since last init.
+function M.status ()
+  return { expectations = M.expectations, ispending = M.ispending }
+end
+
+
 -- Wrap TARGET in metatable that dynamically looks up an appropriate
 -- matcher from the table above for comparison with the following
 -- parameter. Matcher names containing '_not_' invert their results
@@ -110,8 +123,7 @@ M.matchers = {
 --
 -- For example:                  expect ({}).should_not_be {}
 
-M.expectations = {}
-M.stats = { pass = 0, fail = 0, starttime = os.clock () }
+M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.clock () }
 
 function M.expect (target)
   return setmetatable ({}, {
@@ -130,17 +142,27 @@ function M.expect (target)
 	  message = message and ("not " .. message)
 	end
 
-        if success ~= true then
+	if M.ispending then
+	  success = "pending"
+	elseif success ~= true then
 	  M.stats.fail = M.stats.fail + 1
 	else
 	  M.stats.pass = M.stats.pass + 1
 	end
-        table.insert (M.expectations, { status = success, message = message })
+        table.insert (M.expectations, {
+	  message = message,
+	  status = success,
+        })
       end
     end
   })
 end
 
+
+function M.pending ()
+  M.stats.pend = M.stats.pend + 1
+  M.ispending  = true
+end
 
 
 --[[ ----------------- ]]--

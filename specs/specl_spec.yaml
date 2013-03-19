@@ -10,21 +10,40 @@ describe specl:
       return specl.cmdpipe ("printf '" .. yaml .. "'|" .. cmd)
     end
 
+- "describe spec-file format":
+  - before: |
+      yaml = "describe x:\n- it works:"
+
+  - context with empty examples:
+    - it treats it as a pending example:
+        pending ()
+    - it exits with zero status:
+        pending ()
+        expect (run_spec (yaml).status).should_be (0)
+
+  - context with pending call from example:
+    - before:
+        yaml = yaml .. " pending ()"
+    - it reports pending expectations:
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+    - it exits with zero status:
+        expect (run_spec (yaml).status).should_be (0)
+
 - describe command line interface:
   - before: |
       yaml = "describe x:\n- it passes: expect (true).should_be (true)"
 
   - it reads a spec from standard input with no arguments:
-      expect (run_spec (yaml).output).should_contain ("All expectations met, in ")
+      expect (run_spec (yaml).output).should_contain "All expectations met in "
   - "it reads a spec from standard input for '-' filename argument":
-      expect (run_spec (yaml, "-").output).should_contain ("All expectations met, in ")
+      expect (run_spec (yaml, "-").output).should_contain "All expectations met in "
   - it exits with zero status when there are no failing examples:
       expect (run_spec (yaml, "specl/specl").status).should_be (0)
   - "it exits with non-zero status when there are failing examples": |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
       expect (run_spec (yaml, "specl/specl").status).should_not_be (0)
   - it outputs results from a formatter specified on the command line:
-      expect (run_spec (yaml, "--formatter=tap").output).should_contain ("1..1")
+      expect (run_spec (yaml, "--formatter=tap").output).should_contain "1..1"
 
   - context when using a custom formatter:
     - before: |
@@ -37,7 +56,6 @@ describe specl:
         f:write ([[return {
             header  = function () io.write "h" end,
             spec    = function () io.write "s" end,
-            example = function () io.write "x" end,
             expectations = function () io.write "." end,
             footer  = function () io.write "f"; io.flush () end,
           }]])
@@ -46,11 +64,11 @@ describe specl:
     - it formats expectations with the custom formatter:
         cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl --formatter=%s -",
                               path, name)
-        expect (run_spec (yaml, cmd).output).should_contain ("hsx.f")
+        expect (run_spec (yaml, cmd).output).should_contain "hs.f"
     - "it accepts -f as an equivalent to --formatter":
         cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl -f%s -",
                               path, name)
-        expect (run_spec (yaml, cmd).output).should_contain ("hsx.f")
+        expect (run_spec (yaml, cmd).output).should_contain "hs.f"
 
     - after:
         os.remove (tmpfile)

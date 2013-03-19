@@ -32,35 +32,56 @@ local colormap = {
 }
 
 
-local function spec (descriptions)
-  local s    = descriptions[#descriptions]
-  local key  = s:gsub ("%s*(.-)%s+.*$", "%1")
-  local pre  = (#descriptions > 1) and "%{yellow}-%{reset} " or ""
-  local post = colormap[key] and "%{red}:" or ""
-  princ (indent (descriptions) .. pre ..
-         (colormap[key] or "") .. s:gsub ("%w+%s*", "", 1) .. post)
+local function tabulate (descriptions)
+  local t   = {}
+  local s   = descriptions[#descriptions]
+  local key = s:gsub ("%s*(.-)%s+.*$", "%1")
+
+  if #descriptions > 1 then
+    table.insert (t, "%{yellow}-%{reset} ")
+  end
+  if colormap[key] then
+    table.insert (t, colormap[key])
+  end
+  s = s:gsub ("%w+%s*", "", 1)
+  table.insert (t, s)
+  if colormap[key] then
+    table.insert (t, "%{red}:")
+  end
+  return t
 end
 
 
-local function example (descriptions)
-  spec (descriptions)
+local function spec (descriptions)
+  princ (indent (descriptions) .. table.concat (tabulate (descriptions)))
 end
 
 
 -- Diagnose any failed expectations in situ, and return failure messages
 -- for display at the end.
-local function expectations (expectations, descriptions)
+local function expectations (status, descriptions)
   local spaces = indent (descriptions)
   local failreports = ""
 
-  for i, expectation in ipairs (expectations) do
-    if expectation.status ~= true then
-      local fail = "  %{bright white redbg}FAILED expectation " ..
-		   i .. "%{reset}: %{bright}" ..  expectation.message
+  if next (status.expectations) then
+    spec (descriptions)
 
-      princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
-      failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
+    for i, expectation in ipairs (status.expectations) do
+      if expectation.status == "pending" then
+        princ (spaces .. "  %{yellow}PENDING expectation " ..
+	       i .. "%{reset}: %{bright}Not Yet Implemented")
+
+      elseif expectation.status == false then
+        local fail = "  %{bright white redbg}FAILED expectation " ..
+		     i .. "%{reset}: %{bright}" ..  expectation.message
+
+        princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
+        failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
+      end
     end
+  elseif status.ispending then
+    princ (indent (descriptions) .. table.concat (tabulate (descriptions)) ..
+           " (%{yellow}PENDING example%{reset}: %{bright}Not Yet Implemented%{reset})")
   end
 
   if failreports ~= "" then
@@ -85,7 +106,8 @@ local function footer (stats, failreports)
     princ (failreports)
   end
   princ (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total))
-  princ ("%{green}" .. stats.pass .. " passed%{reset}, and " ..
+  princ ("%{green}" .. stats.pass .. " passed%{reset}, " ..
+         "%{yellow}" .. stats.pend .. " pending%{reset} and " ..
          failcolor .. stats.fail .. " failed%{reset} in " ..
 	 (os.clock () - stats.starttime) .. " seconds.")
 end
@@ -100,7 +122,6 @@ local M = {
   name         = "report",
   header       = nop,
   spec         = spec,
-  example      = example,
   expectations = expectations,
   footer       = footer,
 }

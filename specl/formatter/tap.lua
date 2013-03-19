@@ -9,22 +9,33 @@ local curr_test = 0
 
 
 -- Diagnose any failed expectations in situ.
-local function expectations (expectations, descriptions)
+local function expectations (status, descriptions)
   local name = table.concat (map (strip1st, descriptions), " ")
-  for _, expectation in ipairs (expectations) do
-    local fail = expectation.status ~= true
-    curr_test = curr_test + 1
-    print ((fail and "not " or "") .. "ok " .. curr_test .. " " .. name)
-    if fail then
-      print ("# " .. expectation.message:gsub ("\n", "\n# "))
+
+  if next (status.expectations) then
+    for _, expectation in ipairs (status.expectations) do
+      local fail = (expectation.status == false)
+      curr_test = curr_test + 1
+      if fail then io.write "not " end
+      io.write ("ok " .. curr_test .. " " .. name)
+      if expectation.status == "pending" then
+	io.write " (Pending: Not Implemented Yet)"
+      end
+      io.write "\n"
+      if fail then
+        print ("# " .. expectation.message:gsub ("\n", "\n# "))
+      end
     end
+  elseif status.ispending then
+    curr_test = curr_test + 1
+    print ("ok " .. curr_test .. " " .. name .. " (Pending: Not Implemented Yet)")
   end
 end
 
 
 -- Report statistics.
 local function footer (stats)
-  assert(curr_test == stats.pass + stats.fail)
+  assert(curr_test == stats.pass + stats.pend + stats.fail)
   print("1.." .. curr_test)
 end
 
@@ -39,7 +50,6 @@ local M = {
   name         = "tap",
   header       = nop,
   spec         = nop,
-  example      = nop,
   expectations = expectations,
   footer       = footer,
 }

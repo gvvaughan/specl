@@ -162,11 +162,7 @@ contexts: 2 or 3 is very common, though you should seriously consider
 splitting up a spec if you are using more than 4 or 5 levels of nesting
 in a single file.
 
-### 2.3. Pending Examples
-
-PENDING documentation (Not Yet Implemented).
-
-### 2.4. Examples
+### 2.3. Examples
 
 At the innermost nesting of all those _context_ and _example group_
 entries, you will ultimately want to include one or more actual
@@ -175,11 +171,19 @@ plain-English, as shown in the sample from the previous section, but
 (unlike contexts) they are followed by the associated example code in
 [Lua][], rather than containing more nested contexts.
 
+    describe a stack:
+    - it is empty to start with:
+        ...EXAMPLE-LUA-CODE...
+    - context when pushing items:
+      - it raises an error if the stack is full:
+          ...EXAMPLE-LUA-CODE...
+    ...
+
 Traditionally, the example descriptions start with the words "it",
 "example" or "specify", but again, [Lua][] really doesn't mind what you
 call them.
 
-### 2.5. Expectations
+### 2.4. Expectations
 
 Each of your examples lists a series of expectations that [Specl][] runs
 to determine whether the specification for that part of your project is
@@ -188,21 +192,53 @@ small block of code that checks that the example being described meets
 your expectations. [Specl][] gives you a new `expect` command to check
 that each example evaluates as it should:
 
-    - describe Stack:
-        - it has no elements when empty:
-            stack = Stack {}
-            expect (#stack).should_be (0)
+    - describe a stack:
+      - it has no elements when empty:
+          stack = Stack {}
+          expect (#stack).should_be (0)
 
 The call to expect is almost like English: "Expect size of stack should
 be zero."
 
 Behind the scenes, when you evaluate a Lua expression with expect, it's
-passed to a *matcher* method (`.should_be` in this example), which is
+passed to a _matcher_ method (`.should_be` in this example), which is
 used to check whether that expression matched its expected evaluation.
 There are quite a few matchers already implemented in [Specl], and you
 can easily add new ones if they make your expectations more expressive.
 
-The next section describes the built in matchers in more detail.
+The [next section](#specl-matchers) describes the built in matchers in
+more detail.
+
+### 2.5. Pending Examples
+
+Often, you'll think of a useful expectation or behaviour that you don't
+have time to implement right now.  Noting it offline somewher, or even
+adding a commented out example is likely to lead to it being forgotten.
+Better to add it to your spec-files while it is on your mind as a
+_pending example_ so that [Specl][] can remind you that it needs
+finishing, but without contributing a full-blown failing expectation or
+specification.
+
+The simplest kind of pending example has a call to [Specl][]'s
+`pending ()` function as the Lua example code:
+
+    - it raises an error if the stack is full: pending ()
+
+The built in formatters will show this as a non-failing unimplemented
+(**pending!**) specification when the spec-files is run, so you can keep
+track of specifications you have yet to write.
+
+Alternatively, if you have written a suitable specification, only to
+realise that you are specifying an unimplemented behaviour, just add
+the call to `pending ()` somewhere near the beginning of the example
+to disable following _expectations_, without removing or commenting out
+the `expect` calls:
+
+    - describe a stack:
+      - it has no elements when empty:
+          pending ()
+          stack = Stack {}
+          expect (#stack).should_be (0)
 
 
 <a id="specl-matchers"></a>

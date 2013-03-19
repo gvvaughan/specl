@@ -34,20 +34,30 @@ end
 
 -- Print '.' for passed, or 'F' for failed expectation.
 -- Update '>' position.
-local function expectations (expectations, descriptions)
+local function expectations (status, descriptions)
   failreports = ""
 
   io.write ("\08")
-  for i, expectation in ipairs (expectations) do
-    if expectation.status == true then
-      writc "%{green}."
-    else
-      writc "%{bright white redbg}F"
 
-      local fail = "  %{bright white redbg}FAILED expectation " ..
-		   i .. "%{reset}: %{bright}" ..  expectation.message
-      failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
+  -- If we have expectations, display the result of each.
+  if next (status.expectations) then
+    for i, expectation in ipairs (status.expectations) do
+      if expectation.status == "pending" then
+        writc "%{yellow}*"
+      elseif expectation.status == true then
+        writc "%{green}."
+      else
+        writc "%{bright white redbg}F"
+
+        local fail = "  %{bright white redbg}FAILED expectation " ..
+	             i .. "%{reset}: %{bright}" ..  expectation.message
+        failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
+      end
     end
+
+  -- Otherwise, display only pending examples.
+  elseif status.ispending then
+    writc "%{yellow}*"
   end
   io.write (">")
   io.flush ()
@@ -73,9 +83,13 @@ local function footer (stats, failreports)
   end
 
   if stats.fail == 0 then
-    writc "%{bright}All expectations met%{reset}, "
+    writc "%{bright}All expectations met%{reset} "
+    if stats.pend ~= 0 then
+      writc ("with %{yellow}" .. stats.pend .. " still pending%{reset}, ")
+    end
   else
     writc ("%{green}" .. stats.pass .. " passed%{reset}, " ..
+            "%{yellow}" .. stats.pend .. " pending%{reset}, " ..
             "and %{bright white redbg}" ..  stats.fail .. " failed%{reset} ")
   end
   princ ("in %{bright}" ..  (os.clock () - stats.starttime) ..
@@ -93,7 +107,6 @@ local M = {
   name         = "progress",
   header       = header,
   spec         = nop,
-  example      = nop,
   expectations = expectations,
   footer       = footer,
 }
