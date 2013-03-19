@@ -52,12 +52,14 @@ specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
 	$(srcdir)/specs/specl_spec.yaml			\
+	$(srcdir)/specs/speclc_spec.yaml		\
 	$(NOTHING_ELSE)
 
 specl_LUASPECS =					\
 	specs/environment_spec.lua			\
 	specs/matchers_spec.lua				\
 	specs/specl_spec.lua				\
+	specs/speclc_spec.lua				\
 	$(NOTHING_ELSE)
 
 # Make Lua specs from YAML specs.

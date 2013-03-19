@@ -111,6 +111,7 @@ function compile_examples (examples)
 
     elseif type (definition) == "string" then
       -- Uncompiled Lua code.
+      if definition == "" then definition = "pending ()" end
       table.insert (compiled, { [description] = compile_example (definition) })
 
     elseif type (definition) == "table" then

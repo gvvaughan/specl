@@ -16,9 +16,8 @@ describe specl:
 
   - context with empty examples:
     - it treats it as a pending example:
-        pending ()
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
     - it exits with zero status:
-        pending ()
         expect (run_spec (yaml).status).should_be (0)
 
   - context with pending call from example:

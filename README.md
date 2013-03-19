@@ -212,20 +212,20 @@ more detail.
 ### 2.5. Pending Examples
 
 Often, you'll think of a useful expectation or behaviour that you don't
-have time to implement right now.  Noting it offline somewher, or even
+have time to implement right now.  Noting it off-line somewhere, or even
 adding a commented out example is likely to lead to it being forgotten.
-Better to add it to your spec-files while it is on your mind as a
-_pending example_ so that [Specl][] can remind you that it needs
-finishing, but without contributing a full-blown failing expectation or
-specification.
+Better to add it to your spec-file as a _pending example_ while it is
+still on your mind, so that [Specl][] can remind you that it needs
+finishing -- but without contributing a full-blown failing expectation
+or specification.
 
-The simplest kind of pending example has a call to [Specl][]'s
-`pending ()` function as the Lua example code:
+The simplest kind of pending example is an example description with no
+associated Lua example code:
 
-    - it raises an error if the stack is full: pending ()
+    - it raises an error if the stack is full:
 
 The built in formatters will show this as a non-failing unimplemented
-(**pending!**) specification when the spec-files is run, so you can keep
+(**pending!**) example when the spec-files is run, so you can keep
 track of specifications you have yet to write.
 
 Alternatively, if you have written a suitable specification, only to

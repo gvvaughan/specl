@@ -118,6 +118,11 @@ end
 
 
 function dump_example (description, definition, indent)
+  if definition == "" then
+    -- Empty definitions denote a pending example.
+    definition = "pending ()"
+  end
+
   definition = "  " .. definition:gsub (
                  "\n", "\n  " .. indent):gsub (
                  "%s*$", "")
