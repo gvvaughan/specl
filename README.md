@@ -534,6 +534,20 @@ all the returned strings, if any, from other calls to the formatter API
 functions.  This is useful, for example, to return failure reports from
 `expectations` and then display them as a batch from `footer`.
 
+Alternatively, a table of named strings can be returned, in which case
+the accumulation of those keys is passed back to `footer`.  For example,
+if each call to `expectations` returns a table with these two keys:
+
+    {
+      failreport = "description of failed expectation\n",
+      pendreport = "description of pending expectation\n",
+    }
+
+Then `footer` will be passed a similar table, but with each entry being
+the accumulation of every non-empty value returned with that key prior
+to `footer` being called.  See the built in formatters for more
+detailed examples.
+
 The function `spec` is called with a table of each of the descriptions
 that the calling specification or context (the headers with descriptions
 that typically begin with either `describe` or `context`) is nested

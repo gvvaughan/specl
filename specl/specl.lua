@@ -151,10 +151,19 @@ end
 
 
 -- Append non-nil ARG to HOLDER.accumulated.
+-- If ARG is a table, values for all keys in ARG are accumulated in
+-- equivalent HOLDER keys.
 -- Used to collect output from formatter calls, to be saved for footer.
 local function accumulator (holder, arg)
   if arg ~= nil then
-    holder.accumulated = holder.accumulated .. arg
+    if type (arg) == "table" then
+      holder.accumulated = holder.accumulated or {}
+      for k, v in pairs (arg) do
+        holder.accumulated[k] = (holder.accumulated[k] or "") .. tostring(v)
+      end
+    else
+      holder.accumulated = (holder.accumulated or "") .. arg
+    end
   end
 end
 
@@ -242,7 +251,6 @@ end
 -- Run SPECS, according to OPTS and ENV.
 function run (specs, env)
   formatter = opts.formatter or formatter
-  formatter.accumulated = ""
 
   -- Precompile Lua code on initial pass.
   compile_specs (specs)
