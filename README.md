@@ -36,40 +36,74 @@ specified `--prefix` tree, even if you have luarocks installed too.
 2. Specifications
 -----------------
 
-Write your software specifications using [YAML][] with embedded
-examples written in Lua.  A minimal "spec" file outline follows:
+The `specl` command verifies that the behaviour of your software meets
+the specifications encoded in one or more _spec-files_. A spec-file is
+a [YAML][] structured file, laid out as groups of nested plain-English
+descriptions of specifications, with associated snippets of [Lua][]
+code that verify whether the software behaves as described.
 
-    describe spec file format:
-    - it is just a list of specifications, with example code:
-        print "Hello, Specl!"
+A tiny spec-file outline follows:
 
-[YAML][] makes for a very readable specification file format, and allows
-embedded [Lua][] code within the standard.  For the first week of its
-existence, [Specl][] used nested Lua lists of function dictionaries,
-which may have been extremely easy to parse and load for the computer,
-but the swathe of brackets, braces and commas were a bit of an eyesore
-for the programmer.  [Specl][] still loads the new [YAML][] spec-files
-into the same nested function-dictionary-tables before using them, so
-you can still write them that way if you prefer.
+    describe specification file format:
+    - it is just a list of examples with descriptions:
+        with_Lua_code ("to verify described behaviours")
+    - it is followed by additional specifications:
+        print "Lua example code demonstrates this specification"
+        print "on several (indented) lines, if necessary."
 
-After any header comments and whitespace, the first significant line of
-a specification file is the description of the first example group,
-followed by `:\n` (colon, newline):
+The first significant line of any specification is the plain-English
+description of the first example group, ending with a `:` (colon).
 
-    description of the following example group in plain English:
+Underneath that are two examples, each starting with `- ` (minus, space)
+and separated by a `:` (colon) into a _description_ of some desired
+behaviour, and the associated [Lua][] code to demonstrate it.
 
-More group descriptions can follow later, but before that the list of
-example descriptions for that group are all indented beneath, usually
-starting in the first column with `- ` (dash, space).  By default, the
-[YAML][] parser will assume that each description, up to the first `:`
-(colon), and the associated example code are both vanilla strings.
-Punctuation is not allowed in an unquoted [YAML][] string, however, so
-you will need to force the parser to read the description as a string
-by surrounding it with `"` (double-quote mark) if you want to write
-punctuation in the description:
+The descriptions above follow the [RSpec][] convention of using
+_describe_ as the first word of a group description, and _it_ as the
+first word of an example description.  [Specl][] doesn't enforce them,
+they are conventions after all, but `specl` output tends to look much
+better if you follow them.  There are more conventions regarding the
+choice of first word in a description under various other circumstances,
+which we'll cover shortly.
+
+A fuller spec-file will contain several example groups, similar to the
+one above, each typically followed by dozens of individual examples.
+To easily keep track of what specifications go with what parts of your
+implementation, it's good practice to put all your specs in a
+subdirectory, with one spec named after each file being specified. For
+example, your application might have a `src/stack.lua` class, along
+with a `specs/stack_spec.yaml` file that contains all the matching
+specifications.
+
+All of those specifications eventually boil down to lists of behaviour
+descriptions and example code, all indented as prescribed by the
+[YAML][] file-format.
+
+
+### 2.1 YAML
+
+[YAML][] makes for a very readable specification file-format, and allows
+embedded [Lua][] code right within the standard, as you saw in the last
+section.  However, there are some rules to follow as you write your
+spec-files in order to maintain valid [YAML][] format that [Specl][] can
+load correctly.
+
+Indenting with TAB characters is a syntax error, because the [YAML][]
+parser uses indentation columns to infer nesting.  It's easiest just to
+avoid putting TAB characters in your spec files entirely.
+
+Punctuation is not allowed in an unquoted [YAML][] string, so you will
+need to force the parser to read the description as a string by
+surrounding it with `"` (double-quote mark) if you want to put any
+punctuation in the description text:
 
     - "it requires double-quote marks, but only when using punctuation":
-    
+
+Indentation of the code following an example description must be at
+least one column further in than the first **letter** of the description
+text above, because [YAML][] counts the leading `- ` (minus, space) as
+part of the indentation whitespace.
+
 [Specl][] treats everything following the `:` (colon) as a Lua code:
 
     - it concatenates all following indented lines to a single line:
@@ -90,63 +124,64 @@ this:
         -- A comment on this line, followed by code
         stack = Stack {}
         ...
-        
-All that aside, the [YAML][] format has a few quirks as a result of
-minimizing punctuation as syntax, all of which you need to be careful
-of:
 
-  1. Indenting with TAB characters is a syntax error, because the
-     [YAML][] parser uses indentation columns to infer nesting.  It's
-     easiest just to avoid putting TAB characters in your spec files
-     entirely.
-  2. Indentation of the code following an example description must be at
-     least one column further in than the first **letter** of the
-     description text above, because [YAML][] counts the leading `- `
-     as part of the indentation.
-  3. [YAML][] comments begin with ` #` (space, hash) and extend to the
-     end of the line.  You can use these anywhere outside of a Lua code
-     block.  [Lua][] comments don't work outside of a lua block, and
-     [YAML][] comments don't work inside a Lua block, so you have to
-     pick the right comment character, depending where in the hierarchy
-     it will go.
+You also have to be careful about commenting within a spec-file. [YAML][]
+comments begin with ` #` (space, hash) and extend to the end of the line.
+You can use these anywhere outside of a Lua code block. [Lua][] comments
+don't work outside of a lua block, and [YAML][] comments don't work
+inside a Lua block, so you have to pick the right comment character,
+depending where in the hierarchy it will go.
 
-### 2.1. Contexts
+### 2.2. Contexts
 
-The core of your specifications are a list of contexts, described in
-plain English.   To easily keep track of what specifications go with
-what parts of your implementation, it's good practice to put all your
-specs in a subdirectory, with one spec named after each file being
-specified.  For example, your application might have a `src/stack.lua`
-class, along with a `specs/stack_spec.yaml` file that contains all the
-matching specifications.
+You can further sub-divide your example groups by _context_. In addition
+to listing examples in each group, list items can also be contexts,
+which in turn list more examples of their own:
 
-Traditionally, the context descriptions start with the words "describe"
-or "context", but [Lua][] doesn't mind what you call them as long as
-they're all different.
+    describe a stack:
+    - it is empty to start with:
+    - context when pushing items:
+      - it raises an error if the stack is full:
+      - it adds items to the top:
+    - context when popping items off the top:
+      - it raises an error if the stack is empty:
+      - it returns the top item:
+      - it removes the popped item:
 
-### 2.2.  Examples
+By convention, the context descriptions start with the word "context",
+but [Specl][] doesn't enforce that tradition, so you should just try to
+write a description that makes the output easy to understand (see
+[Command Line](#specl-command-line)).
 
-Each context contains a nested list of one or more examples.  These too
-are best written with readable names in plain English, but (unlike
-contexts) they are followed by the associated example code, rather than
-more nested descriptions:
+Actually, description naming conventions aside, there is no difference
+between an example group and a context: Each serves to describe a group
+of following examples, or nested contexts.
 
-    describe this module:
-    - it has some functionality:
-        ...EXAMPLE-CODE...
+[Specl][] doesn't place any restrictions on how deeply you nest your
+contexts: 2 or 3 is very common, though you should seriously consider
+splitting up a spec if you are using more than 4 or 5 levels of nesting
+in a single file.
 
-    - it works properly:
-      ...EXAMPLE-CODE...
-    ...
+### 2.3. Pending Examples
+
+PENDING documentation (Not Yet Implemented).
+
+### 2.4. Examples
+
+At the innermost nesting of all those _context_ and _example group_
+entries, you will ultimately want to include one or more actual
+_examples_. These too are best written with readable names in
+plain-English, as shown in the sample from the previous section, but
+(unlike contexts) they are followed by the associated example code in
+[Lua][], rather than containing more nested contexts.
 
 Traditionally, the example descriptions start with the words "it",
-"example" or "specify", but [Specl][] doesn't enforce that tradition, so
-you should just try to write a description that makes the output easy to
-understand (see [Command Line](#specl-command-line)).
+"example" or "specify", but again, [Lua][] really doesn't mind what you
+call them.
 
-### 2.3. Expectations
+### 2.5. Expectations
 
-Each of your contexts lists a series of expectations that [Specl][] runs
+Each of your examples lists a series of expectations that [Specl][] runs
 to determine whether the specification for that part of your project is
 being met. Inside the [Lua][] part of each example, you should write a
 small block of code that checks that the example being described meets
@@ -264,7 +299,7 @@ easier to understand than the other:
             end).should_contain ("table expected")
 
 <a id="inverting-a-matcher"></a>
-### 3.6. Inverting a matcher with `not` 
+### 3.6. Inverting a matcher with `not`
 
 Oftentimes, in your specification you need to check that an expectation
 does *not* match a particular outcome, and [Specl][] has you covered
@@ -353,11 +388,6 @@ large spec files in example groups, and the best way to do that is with
 a nested context (and write the description starting with the word
 "context" rather than "describe" if you are a traditionalist!).
 
-[Specl][] doesn't place any restrictions on how deeply you nest your
-contexts: 2 or 3 is very common, though you should seriously consider
-splitting up a spec if you are using more than 4 or 5 levels of nesting
-in a single file.
-
 ### 4.3 Environments versus `require`
 
 The ideal way to organize your code to make writing the specification
@@ -433,7 +463,7 @@ more detailed summary.
          - raises an error if the stack is empty
          - returns the top item
          - removes the popped item
-    
+
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
 
@@ -450,8 +480,7 @@ runs your specifications, so provided you supply the table keys that
     my_formatter = {
       header       = function () ... end,
       spec         = function (desc_table) ... end,
-      example      = function (desc_table) ... end,
-      expectations = function (expectations, desc_table) ... end,
+      expectations = function (status, desc_table) ... end,
       footer       = function (stats, accumulated) ... end,
     }
 
@@ -474,19 +503,17 @@ that the calling specification or context (the headers with descriptions
 that typically begin with either `describe` or `context`) is nested
 inside.
 
-Similarly, the function `example` is called with the equivalent table
-of descriptions that the calling example (the ones that typically begin
-with `it`, `example` or `specify`) is nested inside.
-
 And finally, the function `expectations` is called after each example
-has been run, passing in a list of tables with the format shown below,
-one entry for each `expect` call in that example, and a copy of the same
-table of nested descriptions that were passed to `example` immediately
-prior:
+has been run, passing in a tables with the format shown below, with
+one expectation entry for each `expect` call in that example, along with
+a similar table of nested descriptions as were passed to `spec`:
 
-    expectations = {
-      { status = (true|false), message = "error string" },
-      ...
+    status = {
+      expectations = {
+        { status = (true|false|"pending"), message = "error string" },
+        ...
+      },
+      ispending = (nil|true),
     }
 
 The standard [Specl][] formatters in the `specl/formatters/` sub-
@@ -505,7 +532,7 @@ Given a spec-file or two, along with the implementation of the code
 being checked against those specifications, you run [Specl][] inside the
 project directory using the provided `specl` command.
 
-The `specl` command expects a list of "spec" files to follow, and is
+The `specl` command expects a list of spec-files to follow, and is
 usually called like this:
 
     specl specs/*_spec.yaml
@@ -536,8 +563,8 @@ remaining available options.
 
 7. Not Yet Implemented
 ------------------------
-    
-No support for mocks, or pending examples in the current version.
+
+No support for mocks in the current version.
 
 The APIs for adding your own `matchers` are not yet documented.
 Please read the code for now.
