@@ -136,7 +136,7 @@ function compile_example (s, filename)
   if reserved[s] then return util.nop end
 
   -- Wrap the fragment into a function that we can call later.
-  local f = loadstring ("return function () " .. s .. " end", filename)
+  local f, errmsg = loadstring ("return function ()\n" .. s .. "\nend", filename)
 
   -- Execute the function from 'loadstring' or report an error right away.
   if f ~= nil then

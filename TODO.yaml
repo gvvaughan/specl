@@ -1,5 +1,4 @@
 TODO:
-- make sure empty before/after do not get compiled to nil
 - pending support:
     - expect calls in a pending example should report that
       a previously pending example is now passing.
