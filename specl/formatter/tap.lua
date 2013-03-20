@@ -18,17 +18,17 @@ local function expectations (status, descriptions)
       curr_test = curr_test + 1
       if fail then io.write "not " end
       io.write ("ok " .. curr_test .. " " .. name)
-      if expectation.status == "pending" then
-	io.write " (Pending: Not Implemented Yet)"
-      end
       io.write "\n"
+      if expectation.status == "pending" then
+	print "# PENDING expectation: Not Implemented Yet"
+      end
       if fail then
         print ("# " .. expectation.message:gsub ("\n", "\n# "))
       end
     end
   elseif status.ispending then
-    curr_test = curr_test + 1
-    print ("ok " .. curr_test .. " " .. name .. " (Pending: Not Implemented Yet)")
+    print ("#   " .. tostring (curr_test):gsub (".", "-") .. " " ..
+           name .. "\n#    PENDING example: Not Implemented Yet")
   end
 end
 
@@ -47,7 +47,6 @@ end
 
 
 local M = {
-  name         = "tap",
   header       = nop,
   spec         = nop,
   expectations = expectations,

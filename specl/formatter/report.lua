@@ -61,49 +61,69 @@ end
 -- for display at the end.
 local function expectations (status, descriptions)
   local spaces = indent (descriptions)
-  local failreports = ""
+  local reports = { fail = "", pend = "" }
 
   if next (status.expectations) then
+    -- If we have expectations, display the result of each.
     spec (descriptions)
 
     for i, expectation in ipairs (status.expectations) do
       if expectation.status == "pending" then
-        princ (spaces .. "  %{yellow}PENDING expectation " ..
-	       i .. "%{reset}: %{bright}Not Yet Implemented")
+        local pend = "  %{yellow}PENDING expectation " ..
+	             i .. "%{reset}: %{bright}Not Yet Implemented"
+
+        princ (spaces .. pend)
+	reports.pend = reports.pend .. "\n" .. pend
 
       elseif expectation.status == false then
         local fail = "  %{bright white redbg}FAILED expectation " ..
 		     i .. "%{reset}: %{bright}" ..  expectation.message
 
         princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
-        failreports = failreports .. "\n" .. fail:gsub ("\n", "%0  ") .. "\n"
+        reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
       end
     end
+
   elseif status.ispending then
-    princ (indent (descriptions) .. table.concat (tabulate (descriptions)) ..
-           " (%{yellow}PENDING example%{reset}: %{bright}Not Yet Implemented%{reset})")
+    -- Otherwise, display only pending examples.
+    local pend = " (%{yellow}PENDING example%{reset}: " ..
+		   "%{bright}Not Yet Implemented%{reset})"
+    princ (spaces ..  table.concat (tabulate (descriptions)) ..  pend)
+    reports.pend = reports.pend .. pend
   end
 
-  if failreports ~= "" then
-    failreports = "%{yellow}-%{reset} %{cyan}" ..
-                  table.concat (map (strip1st, descriptions), " ") ..
-                  "%{red}:%{reset}" .. failreports
+  -- Add description titles.
+  if reports.pend ~= "" then
+    reports.pend = "%{yellow}-%{reset} %{cyan}" ..
+                   table.concat (map (strip1st, descriptions), " ") ..
+		   "%{red}:%{reset}" .. reports.pend .. "\n"
+  end
+  if reports.fail ~= "" then
+    reports.fail = "%{yellow}-%{reset} %{cyan}" ..
+                   table.concat (map (strip1st, descriptions), " ") ..
+                   "%{red}:%{reset}" .. reports.fail .. "\n"
   end
 
-  return failreports
+  return reports
 end
 
 
 -- Report statistics.
-local function footer (stats, failreports)
+local function footer (stats, reports)
   local total   = stats.pass + stats.fail
   local percent = 100 * stats.pass / total
   local failcolor = (stats.fail > 0) and "%{bright white redbg}" or "%{green}"
 
   print ()
-  if opts.verbose and failreports ~= "" then
-    princ "%{blue}Summary of failed expectations%{red}:"
-    princ (failreports)
+  if opts.verbose then
+    if reports.pend ~= "" then
+      princ "%{blue}Summary of pending expectations%{red}:"
+      princ (reports.pend)
+    end
+    if reports.fail ~= "" then
+      princ "%{blue}Summary of failed expectations%{red}:"
+      princ (reports.fail)
+    end
   end
   princ (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total))
   princ ("%{green}" .. stats.pass .. " passed%{reset}, " ..
@@ -118,8 +138,8 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
+
 local M = {
-  name         = "report",
   header       = nop,
   spec         = spec,
   expectations = expectations,
