@@ -1,3 +1,558 @@
+2013-03-20  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: report YAML compilation failures.
+	* specl/specl.lua (compile_example): Report loadstring error
+	messages.
+	Add newline before function closing `end` incase the previous line
+	ends in a comment.
+	* TODO.yaml: Remove fixed item.
+
+	refactor: move color selection to specl/color.lua.
+	To provide a more uniform use of color between built in formatters,
+	factor out hard-coded colors and look them up by content type.
+	* specl/color (colormap): Tabulate names of some useful colors, and
+	return it, defaulting to underlining unknown color lookups.
+	* specl/formatters/progress.lua, specl/formatters/report.lua: Use
+	it.
+
+	formatters: always show fail summary, use verbose for inline.
+	You shouldn't need to specify `--verbose` on the command line to
+	get a summary of failing and pending examples, show them all the
+	time by default.  The `--verbose` switch now enables additional
+	inline reporting, where that makes sense.
+	* specl/formatter/progress.lua (footer): Always show summaries.
+	* specl/formatter/report.lua (footer): LIkewise.
+	(expectations): Show additional inline pending and failing reports
+	in verbose mode.
+	* GNUmakefile (specl_verbose_0): With V=1 use report formatter in
+	verbose mode, otherwise default formatter.
+
+	formatters: use table accumulators to collect pending reports.
+	* specl/formatter/progress.lua (expectations): Split returned
+	value into a `pend` and `fail` reports.
+	(footer): Display `pend` and `fail` summaries in verbose mode.
+	* specl/formatter/report.lua (expectations, footer): Likewise.
+	* specl/formatter/tap.lua (expectations): Display pending reports
+	inline as TAP comments.
+
+	formatters: provide a richer accumulator API for custom formatters.
+	* README.md (Custom Formatters): Document the richer API.
+	* specs/formatters_spec.yaml: New file. Specify accumulator API
+	behaviour.
+	* specs/specs.mk (specl_SPECS): Add specs/formatters_spec.yaml.
+	(specl_LUASPECS): Add specs/formatters_spec.lua.
+	* specl/specl.lua (accumulator): Implement it.
+
+2013-03-19  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: adjust output from compiled Lua spec files.
+	Since we effectively run every specification twice to make sure
+	support for Lua specs isn't broken, tweak the descriptions of
+	compiled specs so we can tell them apart in failure summaries.
+	* specs/specs.mk (.yaml.lua): Inject '(Lua spec)' into top-level
+	describe entries as compiled specs are written to disk.
+
+	formatters: tweak color output for report formatter.
+	* specl/formatter/report.lua (footer): Use blue instead of red
+	for the failing report header output.
+
+	maint: remove completed TODO items.
+	* TODO.yaml: Remove completed TODO items.
+
+	matchers: report an empty example definition as a pending example.
+	* README.md (Pending Examples): Update to document empty example
+	definitions as denoting a pending example.
+	* specs/specl_spec.yaml: Remove pending status for empty example
+	definition specifications.
+	* specl/specl.lua (compile_examples): Replace any empty definition
+	with a call to `pending` before compiling.
+	* specs/speclc_spec.lua: New file. Specify that the compiler must
+	produce a Lua format spec file with a call to `pending` injected
+	into otherwise empty example definitions.
+	* specs/specs.mk (specl_SPECS): Add specs/speclc_spec.yaml.
+	(specl_LUASPECS): Add specs/speclc_spec.lua.
+	* build-aux/speclc.in (dump_example): Replace otherwise empty
+	example definitions with a call to `pending`.
+
+	matchers: preliminary support for pending expectations.
+	* README.md: Document required behaviour of pending examples.
+	Edit the surrounding text so that the new section fits in to
+	the narrative logically.
+	* specs/specl_spec.yaml: New examples to show how pending
+	examples should work.  Some are still pending!
+	* specl/specl.lua (run_examples): Change the formatters API
+	slightly, because we don't want to have already displayed an
+	example description on the previous line before we know whether
+	the description is for a still pending example.
+	* specl/formatter/progress.lua (expectations): Decode the new
+	status parameter table to display pending examples as '*'.
+	* specl/formatter/report.lua (tabulate): Make a suitably
+	colorful output table element.  Factored out of spec.
+	(spec): Adjust.
+	(example): Remove.
+	(expectations): Decode the new status pararameter table to show
+	whether the whole example is pending, or that the expectations
+	are specifying currently unimplemented behaviour.
+	* spelc/formatter/tap.lua (expectations): Likewise.
+	* specl/formatter/progress.lua (footer): Show pending examples
+	in statistics.
+	(M): Remove unused example entry point.
+	* specl/formatter/report.lua, specl/formatter/tap.lua (footer)
+	(M): Likewise.
+	* specl/matchers.lua (M.init): New entry point to prepare for
+	a new block of expectations, that keep track of pending status.
+	(M.status): New entry point. Return results after a block of
+	expectations have run.
+	* specl/specl.lua (run_examples): Use them instead of hard-
+	coding.
+	* specl/matchers.lua (M.stats): Add pend counter.
+	(M.expect): Don't try to match an expectation for a pending
+	example, or count it's status.
+	(M.pending): New entry point, put the current expectation block
+	in pending mode, and increment pend counter.
+
+	docs: re-organise and edit README.md to make way for pending docs.
+	* README.md (YAML): Split out from the Specifications section.
+	Don't list the quirks at the end, explain them in the main text
+	of this section.
+	Renumber following sections accordingly.
+	(Contexts): Introduce an example right away.
+	(Pending Examples): Pending.
+	(Custom Formatters): Describe API changes necessary to support
+	display of pending expectations and examples.
+
+	refactor: move command pipe managment into environment sandbox.
+	Generalize the output and exit status capturing functions into
+	the outermost environment sandbox, where it can be used by any
+	spec-files.
+	* specs/specl_spec.yaml (exit_status, capture_output): Refactored
+	from here...
+	* specl/specl.lua (env.spec.cmdpipe): ...to here.
+	* specs/specl_spec.yaml (run_spec): New helper function, wrapping
+	spec.cmdpipe.
+	Adjust all callers.
+
+	matchers: use util.tostring to display tables for diagnostics.
+	* specl/matchers.lua: Import specl.util.
+	(q): Use util.tostring so that tables output by failed expectations
+	are legible.
+
+	refactor: move non-lua-stdlib functions out of specl.std.
+	* AUTHORS: Credit Reuben Thomas for the contents of
+	specl/std.lua.
+	* specl/std.lua: Change copyright header to refrect the correct
+	copyright and license terms of the code in this file.
+	(prog, warn, process_args): Move from here...
+	* specl/util.lua (prog, warn, process_args): ...to here.
+	* specl/std.lua (metatable, strbuf,clone, metamethod, render)
+	(tostring): New functions.  Copied from, or trivial reworkings of
+	code from lua-stdlib.
+	(M): Update accordingly.
+	* specl/util.lua: Import specl.std.
+	(M.process_files, M.slurp, M.tostring): Re-export functions from
+	specl.std.
+	* specl/specl.in: Import those APIs from specl.util instead of
+	specl.std.
+
+2013-03-18  Gary V. Vaughan  <gary@gnu.org>
+
+	refactor: use canonical util.nop everywhere.
+	* specl/specl.lua (nop): Remove.
+	(compile_example): Use util.nop.
+
+	specl: improve --help output.
+	* specl/version.lua.in (M["--help"]): Improve --help output
+	formatting, and correct an inaccuracy in --verbose description.
+
+	docs: recommend --help for more info, -h was a typo.
+	* README.md (Command Line): Fix a typo.
+
+	refactor: encapsulate coloring into util.princ.
+	* specl/util.lua: Require "specl.color".
+	(M.princ, M.writc): Wrap ansicolor printing with princ, and
+	io.stdout:write with writc.
+	* specl/formatter/progress.lua, specl/formatter/report.lua:
+	Require "specl.util" instead of "specl.color".
+	Use princ and writc wrappers.
+
+	specl: -v doesn't change formatter, support -f for that.
+	* README.md (Command Line): Document change of meaning for
+	`--verbose`.
+	* specl/version.lua.in (M.opts): Default verbose to false.
+	(M["--help"]): Document changes to command line interface.
+	(M["--verbose"]): Don't change formatter, set verbose mode.
+	(M["-f"]): An alias for `--formatter`.
+	* specl/formatter/progress.lua, specl/formatter/report.lua
+	(footer): Only show the failure summary in verbose mode.
+	* GNUmakefile (specl_verbose_0): Pass `--verbose` to get failure
+	summary.
+	* specl/std.lua (process_args): Support short option arguments.
+	(specl_verbose_1): Additionally, switch to the report formatter.
+
+	rockspecs: fix a typo, and remove unused configure flags.
+	* specl-rockspec.lua (dependencies): spell ansicolors correctly.
+	(build.build_command): Remove unused YAML flags.
+
+	configury: distribute specl/util.lua.
+	* specl/specl.mk (nobase_dist_lua_DATA): Add specl/util.lua.
+
+	refactor: move common formatter helpers into specl.util module.
+	* specl/util.lua (map, strip1st, indent, nop): New file.
+	* specl/formatter/progress.lua, specl/formatter/report.lua,
+	specl/formatter/tap.lua: Import those functions from specl.util
+	and remove local copies.
+	* specl/formatter/progress.lua (expectations, footer): Display
+	a failed expectation summary in the footer output.
+
+	formatters: redisplay failed test reports in output footer.
+	* README.md (Custom Formatters): Document accumulator feature of
+	new custom formatter API.
+	* specl/formatter/report.lua (map, strip1st): New functions,
+	copied from tap.lua.
+	(expectations): Return a separate but unindented concatenated
+	string of all failure reports.
+	(footer): Summarize failure reports.
+	* specl/specl.lua (accumulator): New function to accumulate a
+	string from pieces.
+	(run_contexts, run_examples): Pass returned strings from formatter
+	API calls to accumulator.
+	(run): Initialise the formatter accumulated string, and then pass
+	the result to formatter.footer.
+
+	docs: many fine improvements to README.md.
+	* README.md: Proof read the file carefully, and make corrections
+	for grammar, spelling and clarity.
+
+	docs: improve installation instructions.
+	* README.md (Installation): New section.  Describe installation
+	options.  Renumber following sections.
+
+	refactor: generalize std.lua, move Specl specifics to version.lua.
+	* specl/std.lua (optarg): Remove.
+	(process_args): Remove Specl specific option processing, in favor
+	of tabulated general option processor.
+	* specl/version.lua.in (M): Tabulate option processing in terms
+	of handler functions.
+	(M.opts): Default option settings.
+
+	refactor: simplify option processing.
+	* specl/version.lua.in (M.PACKAGE, M.PACKAGE_NAME)
+	(M.PACKAGE_BUGREPORT, M.VERSION, M.Name, M.program)
+	(M.COPYRIGHT_STRING, M.COPYRIGHT_NOTICE, M.BUGREPORT_NOTICE):
+	Remove.
+	* specl/std.lua (prog.version, prog.usage): Move from here...
+	* specl/version.lua.in (M.version, M.usage): ...to here, and
+	simplify.
+
+	formatters: color output on ANSI terminals.
+	* specl-rockspec.lua (dependencies): Add ansicolor.
+	* specl/std.lua (prog.usage): Describe new --color option.
+	(optarg): Factor out extraction of argument options after '='.
+	(process_args): Use it for --formatter processing.
+	Add support for --color option.
+	* specl/specl.in (opts): Make global, for visibility in color.lua.
+	* specl/color.lua (color): New file.  Enable or disable colored
+	output according to opts.color setting.
+	* specl/specl.mk (nobase_dist_lua_DATA): Add color.lua.
+	* specs/specl_spec.yaml: Add `--color=no` to specl invocations for
+	saner output comparison checks.
+	* specl/formatter/progress.lua: Color output when --color=no was
+	not specified.
+	* specl/formatter/report.lua: Likewise.
+
+2013-03-17  Gary V. Vaughan  <gary@gnu.org>
+
+	yaml: spun off into a separate project.
+	Rather than ship and build our own yaml binding, spin it off to
+	http://github.com/gvvaughan/lyaml and depend on a new luarock
+	built from that.
+	* yaml/yaml.mk: Remove.
+	* Makefile.am: Adjust.
+	* specl/specl.mk (SPECL_CPATH): Remove.
+	(specl_install_edit, specl_inplace_edit): Adjust.
+	(specl_specl_DEPS): Remove yaml/lyaml.la.
+	* yaml/lua52compat.h, yaml/lyaml.c: Remove.
+	* configure.ac (LT_INIT): Remove, along with supporting configury.
+	(AC_CONFIG_HEADERS): Remove.
+	* specl-rockspec.lua (external_dependencies.YAML): Remove.
+	(dependencies): Add lyaml.
+
+	rockspecs: remove debug line.
+	* build-aux/mkrockspecs.lua: Remove left-over debug line.
+
+	maint: add AUTHORS file.
+	* AUTHORS: New file.
+
+	formatters: strip 1st word from descriptions in formatters.
+	* specl/specl.lua (run_contexts, run_examples): Don't strip 1st
+	words, just pass full description tables to formatters.
+	* specl/formatters/progress.lua (spec, example): Remove.
+	* specl/formatters/tap.lua (header, spec, example): Remove.
+	(map, strip1st): Strip 1st word from each element of a table.
+	* specl/formatters/progress.lua (expectations): Rename `desc`
+	parameter to `descriptions`.
+	* specl/formatters/report.lua (indent, spec, example)
+	(expectations): Likewise.
+	* specl/formatters/tap.lua (expectations): Likewise.
+	* specl/formatters/report.lua (spec, example): Strip 1st word
+	from descriptions before printing.
+	* specl/formatters/tap.lua (expectations): Likewise.
+	* specl/formatters/progress.lua (nop): Null operation function.
+	(M): Use nop as appropriate.
+	* specl/formatters/tap.lua (nop, M): Likewise.
+
+	specl: don't inject a Lua return keyword into a YAML spec.
+	Assume specs are written in YAML, and only fallback to legacy
+	Lua format if that fails.
+	* specl/specl.in (slurp): Try yaml.load first, and loadstring
+	with an injected return keyword only if yaml.load failed.
+	Reported by François Perrad.
+
+2013-03-16  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: document improved custom formatter API.
+	* README.md (Custom Formatters): Document improved custom formatter
+	API from François Perrad.
+
+	formatters: support loading builtin formatters by basename.
+	* specs/specl_spec.yaml: New specification for using a custom
+	formatter by basename on the command line.
+	* specl/specl.mk (specl_install_edit): Do as the documentation
+	states, and allow loading of builtin formatters with a simple
+	`--formatter=tap` command line option.
+
+2013-03-16  Gary V. Vaughan  <gary@vaughan.pe>
+
+	Merge pull request #3 from fperrad/tap
+	TAP formatter
+
+2013-03-16  Francois Perrad  <francois.perrad@gadz.org>
+
+	add TAP formatter
+
+	refactor formatter
+	replace the string 'indent' by the array 'desc'
+
+2013-03-15  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: be more relaxed about literal block markers.
+	* README.md: Improve description of when `|' is necessary, and
+	remove them from embedded examples.
+	* specs/environment_spec.yaml, specs/matchers_spec.yaml,
+	specs/specl_spec.yaml: Remove unnecessary `|' markers and use
+	fewer new-lines.
+
+	specs: specify behaviour of require calls in examples.
+	* specs/environment_spec.yaml (when requiring a module): New
+	specifications for use of require.
+	* README.md (Environments versus `require`): Document that extra
+	care is required when testing behaviour of required modules.
+
+	environments: intercept load* calls in spec-files.
+	Make sure that side-effects from executing a load* function
+	variant in a spec-file example occur in the example environment.
+	* specl/specl.in (clone): Remove.
+	(sandbox): No need for a deep clone, because Specl is hygienic
+	and puts everything in locals or the global specl table *after*
+	the sandbox is created.
+	* specl/specl.lua (run): Save references to the unwrapped core
+	load* functions...
+	(initenv): ...so they can be intercepted and wrapped specifically
+	for each environment table.
+	(run_examples): Call initenv() before running an example.
+	* specs/environment_spec.yaml: A slew of examples to verify
+	correct symbol access with load* variants.
+
+2013-03-14  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: isolate specl modules into their own namespace.
+	To avoid potential clashes with modules along the load-path of a
+	specl client, refer to specl's own modules using the specl name-
+	space.
+	* specl/specl.in: Use `require "specl.std"`.  specl.lua is
+	already in the specl namespace, so no need to prefix that one.
+	* specl/specl.lua: Likewise for specl modules required here.
+	* specl/std.lua: Likewise.
+	* specl/specl.mk (SPECL_PATH): Support prefixed requires in the
+	build tree.
+	(specl_install_edit): Likewise, for the install tree.
+	(nobase_dist_lua_DATA): Move specl/specl.lua from here...
+	(dist_lua_DATA): ...to here, so that specl.lua is not installed
+	into the specl subdirectory, and `require "specl"` works
+	correctly.
+
+2013-03-13  Gary V. Vaughan  <gary@gnu.org>
+
+	specs: make sure Lua specs are compiled correctly.
+	Using '$^' passes all dependencies as a single non-existent
+	filename - garbage in, garbage out.
+	* specs/specs.mk (.yaml.lua): Use '$<', which passes the correct
+	yaml input for compilation to Lua.
+
+	configury: move gmake-only SPECL_OPTS rules to GNUmakefile.
+	* specs/specs.mk (SPECL_OPTS, specl_verbose_, specl_verbose_0)
+	(specl_verbose_1): Move from here...
+	* GNUmakefile: ..to here.
+
+	specl: implement our own getopt with no dependencies.
+	Lua stdlib getopt.lua ends up pulling in several more stdlib
+	modules, which we don't want if specl is to be useful as the
+	BDD tool for stdlib itself.  And after removing getopt, it turns
+	out we still had a handful of hidden dependencies on stdlib
+	ext module behaviours.
+	* specl/std/getopt.lua: Remove.
+	* specl/std.lua: Implement our own slurp, warn, process_args and
+	process_files functions.
+	* specl/specl.in (prog): Move from here...
+	* specl/std.lua (prog): ...to here.
+	* specl/specl.in: Simplify with the help of bespoke std.lua.
+	* specl/specl.mk (nobase_dist_lua_DATA): Adjust.
+	* build-aux/speclc.in: Use our mini std.lua.
+	(reserved): Use a table with true valued keys. instead of a std
+	set. Adjust all callers.
+	* specl/matchers.lua (M): Inject public APIs as we go, rather
+	than relying on stdlib table.merge to assemble the M table.
+	* specl/spel.lua (M): Likewise.
+	* specs/specl_spec.yaml (specl): Don't rely on stdlib nil concat
+	behaviour.
+
+2013-03-12  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: break dependency on std sets.
+	Being intertwined with lua-stdlib makes it hard to use specl for
+	the std specs.
+	* specl/specl.lua (reserved): Use a table with true valued keys,
+	instead of a std set.
+
+2013-03-10  Gary V. Vaughan  <gary@gnu.org>
+
+	environments: make runner environments more robust.
+	Make sure each nested example block uses the same environment
+	for before, definition and after calls, and passes the correctly
+	initialised environment (after befores have run) to nested
+	contexts.
+	* specs/environment_spec.yaml: Uncomment previously failing
+	examples.
+	* specl/specl.in (clone): New function, copied from stdlib
+	tree.lua.
+	(sandbox): Before loading anything, make a deep copy of the
+	pristine global environment to use as a sandbox for running
+	examples.
+	* specl/specl.lua (run): Add an env parameter, and pass that to
+	run_contexts.
+	(run_contexts): Remove dead code.
+	(run_examples): Set up the sandbox for the current example group
+	from the env parameter, and use it for each example before,
+	definition and after block.
+	Fix a bug that passed the wrong environment to recursive
+	run_context calls.
+
+2013-03-10  Reuben Thomas  <rrt@sc3d.org>
+
+	configury: ensure lua includes match lua binary version.
+	* configure.ac (AX_LUA_HEADERS): Invoke this macro.
+
+	configury: AC_CONFIG_MACRO_DIRS is not released yet!
+	* configure.ac (AC_CONFIG_MACRO_DIRS): Replace this...
+	(AC_CONFIG_MACRO_DIR): ...with the buggy old API call.
+
+	specl: factor away getopt.Option constructor.
+	* specl/std/getopt.lua: Update to latest upstream.
+	* specl/specl.in (prog.options): Use bare tables, per stdlib-34
+	API.
+
+2013-03-09  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: document current dir removal for custom formatters.
+	* README.md (Command Line): Make note of the fact that loading
+	custom formatters from the current directory requires a little
+	extra path munging in the environment.
+
+	specl: break dependency on lua-stdlib.
+	* specl/matchers.lua: Do not require std.
+	* specl/std/getopt.lua: A copy of stdlib-33 getopt.lua.
+	* specl/specl.in: Require local copy of getopt instead of all of
+	stdlib.
+	* specl/specl.mk (nobase_dist_lua_DATA): Add specl/std/getopt.lua.
+	* specl-rockspec.lua (dependencies): Remove std dependency.
+	* TODO.yaml: Remove completed TODO item.
+
+	TODO: more TODO items.
+	* TODO.yaml: Put some new pressing TODO items at the top of the list.
+
+	specl: support --formatter=FILE option.
+	* specl/specl.in (prog): Add new formatter option.
+	If formatter was passed, try to load the passed formatter.
+	Pass the eventual formatter to specl.run.
+	* specs/specl_spec.yaml (when using a custom formatter): Check
+	that custom formatters are called correctly.
+	* README.md (Custom Formatters): New section describing how to
+	write a custom formatter.
+
+	maint: support 'make check V=1' and 'SPECL_OPTS=-v make check'
+	* specs/specs.mk (SPECL_OPTS): Unless set in the environment already,
+	pass -v to specl according to whether or not V=1 was given to make.
+	(check-local): Use it.
+
+	formatters: factor out into separate modules.
+	For Automake to install subdirectories correctly with a _DATA
+	primary, the nobase_ prefix only works when the source and
+	destination directories have the same name, so we have to rename
+	'src' to 'specl' in order that the new specl/formatters/*.lua
+	sources are installed correctly.
+	* specl/specl.mk (dist_pkglua_DATA): Rename from this...
+	(nobase_dist_lua_DATA): ...to this.
+	* src/.gitignore, src/matchers.lua, src/specl.in, src/specl.lua,
+	src/specl.mk, src/version.lua.in: Move from here...
+	* specl/.gitignore, specl/matchers.lua, specl/specl.in,
+	specl/specl.lua, specl/specl.mk, specl/version.lua.in: ...to here.
+	* Makefile.am, configure.ac, specl/specl.mk, specs/specs.mk,
+	specs/specl_spec.yaml: Adjust.
+	* specl/specl.lua (M): Remove progress and report.
+	(progress): Move from here...
+	* specl/formatter/progress.lua: New file.  ...to here.
+	* specl/specl.lua (report): Move from here...
+	* specl/formatter/report.lua: New file.  ...to here.
+	* specl/matchers.lua (expectations, stats): Initialise inside the
+	module table.
+	(expect): Update inside the module table.
+	(M): Adjust.
+	* specl/specl.in: Load and pass report formatter to specl.run()
+	on demand.
+	* specl/specl.mk (nobase_dist_lua_DATA): Add
+	specl/formatter/progress.lua and specl/formatter/report.lua.
+	(specl_specl_DEPS): Adjust.
+
+	matchers: factor out into a separate module.
+	Get rid of ugly global stats and expectations place holders, and
+	factor matchers out into their own module.
+	* src/specl.lua (objcmp, q, matchers, expect, expectations)
+	(stats): Move from here...
+	* src/matchers.lua (objcmp, q, M.matchers, M.expect, M.expectations)
+	(M.stats): ...to here.
+	* src/specl.lua (run_examples, run): Adjust.
+	(M): Remove matchers.
+	* src/specl.mk (dist_pkglua_DATA): Add src/matchers.lua.
+
+	specl: set specl._VERSION correctly.
+	* src/specl.lua (version): require version.lua.
+	(M._VERSION): Set from version table.
+
+	maint: ignore .DS_Store files.
+	* .gitignore: Add .DS_Store.
+
+	specl: ensure lyaml is built before running specl.
+	Parallel make gets carried away without a full and complete
+	dependency graph, so be sure to specify that specl doesn't work
+	until lyaml.la is built.
+	* src/specl.mk (src_specl_DEPS): Add yaml/lyaml.la.
+	Reported by Reuben Thomas at https://github.com/gvvaughan/specl/issues/1.
+
+2013-03-07  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: bump version to 3.
+	* configure.ac (AC_INIT): Bump version number to 3.
+
 2013-03-06  Gary V. Vaughan  <gary@gnu.org>
 
 	rockspecs: correct source.url and source.dir for github.

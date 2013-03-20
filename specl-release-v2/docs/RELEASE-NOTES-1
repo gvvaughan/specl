@@ -1,5 +1,0 @@
-Initial proof-of concept for an RSpec inspired framework
-for and in Lua.
-
-The spec file syntax is a bit horrid in pure Lua, but
-the next release uses YAML and is much nicer!

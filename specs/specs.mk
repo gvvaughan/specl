@@ -44,32 +44,36 @@ DISTCLEANFILES += build-aux/speclc
 ## Specs. ##
 ## ------ ##
 
-SPECL  = src/specl
+SPECL  = specl/specl
 SPECLC = build-aux/speclc
 
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
+	$(srcdir)/specs/formatters_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
 	$(srcdir)/specs/specl_spec.yaml			\
+	$(srcdir)/specs/speclc_spec.yaml		\
 	$(NOTHING_ELSE)
 
 specl_LUASPECS =					\
 	specs/environment_spec.lua			\
+	specs/formatters_spec.lua			\
 	specs/matchers_spec.lua				\
 	specs/specl_spec.lua				\
+	specs/speclc_spec.lua				\
 	$(NOTHING_ELSE)
 
 # Make Lua specs from YAML specs.
 .yaml.lua:
 	@test -d specs || mkdir specs
-	$(AM_V_GEN)$(SPECLC) '$^' > '$@'
+	$(AM_V_GEN)$(SPECLC) '$<' | sed 's,^{\["describe ,&(Lua spec) ,'> '$@'
 
 # Lua specs require speclc compiler.
 $(specl_LUASPECS): $(SPECLC)
 
 check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
-	$(AM_V_at)$(LUA) $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
+	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS) $(specl_LUASPECS)
 
 
 ## ------------- ##

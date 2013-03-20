@@ -1,7 +1,7 @@
-version = "git-1"
+version = "3-1"
 source = {
-  dir = "specl-release-vgit",
-  url = "http://github.com/gvvaughan/specl/archive/release-vgit.zip",
+  dir = "specl-release-v3",
+  url = "http://github.com/gvvaughan/specl/archive/release-v3.zip",
 }
 package = "specl"
 dependencies = {
@@ -17,7 +17,7 @@ description = {
      ",
 }
 build = {
-  build_command = "./bootstrap && LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
+  build_command = "LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
   type = "command",
   copy_directories = {
   },

@@ -1,69 +1,173 @@
 describe environments:
-- before: |
+- before:
     overridden_symbol = false
     defined_outer_symbol = true
+    _G.global_scope = false
 
-- it cannot find undefined symbols: |
+- it cannot find undefined symbols:
     expect (undefined_symbol).should_be (nil)
-
-- it can find a symbol in the current scope: |
+- it can find a symbol in the current scope:
     in_the_same_example = true
     overridden_symbol = true
     expect (in_the_same_example).should_be (true)
-
-- it cannot find a symbol from a sibling example: |
+- it cannot find a symbol from a sibling example:
     expect (in_the_same_example).should_be (nil)
-
-- it gets a clean environment for each example: |
+- it gets a clean environment for each example:
     expect (overridden_symbol).should_be (false)
-
-- it can find a symbol from the current before block: |
+- it can find a symbol from the current before block:
     expect (defined_outer_symbol).should_be (true)
-
-#- it cannot find symbols defined in an inner scope: |
-#    expect (defined_inner_symbol).should_be (nil)
+- it cannot find symbols defined in an inner scope:
+    expect (defined_inner_symbol).should_be (nil)
 
 - context when looking up symbols from a nested context:
-    - before: |
+    - before:
         overridden_symbol = "overridden"
         defined_inner_symbol = true
 
-    - it cannot find undefined symbols: |
+    - it cannot find undefined symbols:
         expect (undefined_outer_symbol).should_be (nil)
-
-    - it can find a symbol in an outer scope: |
+    - it can find a symbol in global scope:
+        expect (_G.global_scope).should_be (false)
+    - it can find a symbol in an outer scope:
         expect (defined_outer_symbol).should_be (true)
-
-    - it can find a symbol in the current scope: |
+    - it can find a symbol in the current scope:
         in_the_nested_example = true
         define_inner_symbol = false
         expect (defined_inner_symbol).should_be (true)
-
-    - it cannot find a symbol from a sibling example: |
+    - it cannot find a symbol from a sibling example:
         expect (in_the_nested_example).should_be (nil)
-
-    - it cannot find a symbol from a parent example: |
+    - it cannot find a symbol from a parent example:
         expect (in_the_same_example).should_be (nil)
-
-    - it gets a clean environment for each example: |
+    - it gets a clean environment for each example:
         expect (overridden_symbol).should_be ("overridden")
-
-    - it can find a symbol from the current before block: |
+    - it can find a symbol from the current before block:
         expect (defined_inner_symbol).should_be (true)
-
-    - it can find a symbol from the parent before block: |
+    - it can find a symbol from the parent before block:
         expect (defined_outer_symbol).should_be (true)
 
 - context when looking up symbols from a nested before block:
-    - before: |
+    - before:
         defined_outer_symbol_reference = defined_outer_symbol
         undefined_outer_symbol_reference = undefined_outer_symbol
 
-    - it can find a symbol in an outer scope: |
+    - it can find a symbol in an outer scope:
         expect (defined_outer_symbol_reference).should_be (true)
-
-    - it cannot find a symbol in a cousin example: |
+    - it cannot find a symbol in a cousin example:
         expect (in_the_nested_example).should_be (nil)
+    - it cannot find a symbol in a sibling context:
+        expect (defined_inner_symbol).should_be (nil)
 
-#    - it cannot find a symbol in a sibling context: |
-#        expect (defined_inner_symbol).should_be (nil)
+- context when mutating a symbol value:
+    - before:
+        _G.inner_global = nil
+        mutated_outer_symbol = false
+
+    - it can mutate a symbol in the current scope:
+        mutated_inner_symbol = false
+        mutated_inner_symbol = true
+        expect (mutated_inner_symbol).should_be (true)
+    - it can mutate a symbol in an outer scope:
+        mutated_outer_symbol = true
+        expect (mutated_outer_symbol).should_be (true)
+    - it can mutate a symbol in global scope:
+        _G.inner_global = true
+        expect (_G.inner_global).should_be (true)
+    - it can mutate a global symbol instantiated by before block:
+        _G.global_scope = true
+        expect (_G.global_scope).should_be (true)
+
+- context when requiring a module:
+    - before: |
+        mutated_outer_symbol = false
+
+        function requirestring (s)
+          local f = os.tmpname ()
+          local d = f:gsub ("/[^/]*$", "", 1)
+          local h = io.open (f, "w")
+
+          h:write (s)
+          h:close ()
+          package.path = d .. "/?;" .. package.path
+          require (f:gsub ("^.*/", ""))
+          os.remove (f)
+        end
+
+    - it can mutate a symbol in global scope:
+        requirestring "_G.global_scope = 'required'"
+        expect (_G.global_scope).should_be "required"
+    - it cannot mutate a symbol in an outer scope:
+        requirestring "mutated_outer_symbol = true"
+        expect (mutated_outer_symbol).should_be (false)
+    - it cannot mutate a symbol in the current scope:
+        requirestring "mutated_inner_symbol = true"
+        expect (mutated_inner_symbol).should_be (nil)
+        mutated_inner_symbol = false
+        requirestring "mutated_inner_symbol = true"
+        expect (mutated_inner_symbol).should_be (false)
+
+- context when executing a load function:
+    - before: |
+        mutated_outer_symbol = false
+
+        function doload (s)
+          return load (function ()
+                         local r = s
+                         s = nil
+                         return r
+                       end)
+        end
+
+    - it can mutate a symbol in global scope:
+        _G.global_scope = nil
+        assert (doload "_G.global_scope = true")()
+        expect (_G.global_scope).should_be (true)
+    - it can mutate a symbol in an outer scope:
+        assert (doload "mutated_outer_symbol = true")()
+        expect (mutated_outer_symbol).should_be (true)
+    - it can mutate a symbol in the current scope:
+        mutated_inner_symbol = false
+        assert (doload "mutated_inner_symbol = true")()
+        expect (mutated_inner_symbol).should_be (true)
+
+- context when executing a loadfile function:
+    - before: |
+        mutated_outer_symbol = false
+
+        function doloadfile (s)
+          local f = os.tmpname ()
+          local h = io.open (f, "w")
+
+          h:write (s)
+          h:close ()
+          local r = loadfile (f)
+          os.remove (f)
+          return r
+        end
+
+    - it can mutate a symbol in global scope:
+        _G.global_scope = nil
+        assert (doloadfile "_G.global_scope = true")()
+        expect (_G.global_scope).should_be (true)
+    - it can mutate a symbol in an outer scope:
+        assert (doloadfile "mutated_outer_symbol = true")()
+        expect (mutated_outer_symbol).should_be (true)
+    - it can mutate a symbol in the current scope:
+        mutated_inner_symbol = false
+        assert (doloadfile "mutated_inner_symbol = true")()
+        expect (mutated_inner_symbol).should_be (true)
+
+- context when executing a loadstring function:
+    - before:
+        mutated_outer_symbol = false
+
+    - it can mutate a symbol in global scope:
+        _G.global_scope = nil
+        assert (loadstring "_G.global_scope = true")()
+        expect (_G.global_scope).should_be (true)
+    - it can mutate a symbol in an outer scope:
+        assert (loadstring "mutated_outer_symbol = true")()
+        expect (mutated_outer_symbol).should_be (true)
+    - it can mutate a symbol in the current scope:
+        mutated_inner_symbol = false
+        assert (loadstring "mutated_inner_symbol = true")()
+        expect (mutated_inner_symbol).should_be (true)
