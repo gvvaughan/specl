@@ -19,6 +19,7 @@
 -- MA 02111-1301, USA.
 
 
+local color = require "specl.color"
 local util  = require "specl.util"
 
 local map, nop, princ, strip1st, writc =
@@ -43,41 +44,42 @@ local function expectations (status, descriptions)
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
       if expectation.status == "pending" then
-        writc "%{yellow}*"
-        reports.pend = reports.pend .. "\n  %{yellow}PENDING expectation " ..
-                       i .. "%{reset}: %{bright}Not Yet Implemented"
+        writc (color.pend .. "*")
+        reports.pend = reports.pend .. "\n  " .. 
+	               color.pend .. "PENDING expectation " ..  i .. "%{reset}" ..
+		       ": Not Yet Implemented"
 
       elseif expectation.status == true then
-        writc "%{green}."
+        writc (color.good .. ".")
 
       else
-        writc "%{bright white redbg}F"
+        writc (color.bad .. "F")
 
-        local fail = "  %{bright white redbg}FAILED expectation " ..
-                     i .. "%{reset}: %{bright}" ..  expectation.message
+        local fail = "  " .. color.fail .. "FAILED expectation " ..
+                     i .. "%{reset}: " ..  expectation.message
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
       end
     end
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
-    writc "%{yellow}*"
-    reports.pend = reports.pend .. " (%{yellow}PENDING example%{reset}: " ..
-                   "%{bright}Not Yet Implemented%{reset})"
+    writc (color.pend .. "*")
+    reports.pend = reports.pend .. " (" .. color.pend .. "PENDING example%{reset}" ..
+                   ": Not Yet Implemented)"
   end
   io.write (">")
   io.flush ()
 
   -- Add description titles.
   if reports.pend ~= "" then
-    reports.pend = "%{yellow}-%{reset} %{cyan}" ..
+    reports.pend = color.listpre .. color.subhead ..
                    table.concat (map (strip1st, descriptions), " ") ..
-                   "%{red}:%{reset}" .. reports.pend .. "\n"
+                   color.listpost .. reports.pend .. "\n"
   end
   if reports.fail ~= "" then
-    reports.fail = "%{yellow}-%{reset} %{cyan}" ..
+    reports.fail = color.listpre .. color.subhead ..
                    table.concat (map (strip1st, descriptions), " ") ..
-                   "%{red}:%{reset}" .. reports.fail .. "\n"
+                   color.listpost .. reports.fail .. "\n"
   end
 
   return reports
@@ -90,25 +92,30 @@ local function footer (stats, reports)
 
   print ()
   if reports.pend ~= "" then
-    princ "%{blue}Summary of pending expectations%{red}:"
+    princ (color.summary .. "Summary of pending expectations" ..
+           color.summarypost)
     princ (reports.pend)
   end
   if reports.fail ~= "" then
-    princ "%{blue}Summary of failed expectations%{red}:"
+    princ (color.summary .. "Summary of failed expectations" ..
+           color.summarypost)
     princ (reports.fail)
   end
 
+  local passcolor = (stats.pass > 0) and color.good or color.bad
+  local failcolor = (stats.fail > 0) and color.bad or ""
+  local pendcolor = (stats.pend > 0) and color.bad or ""
   if stats.fail == 0 then
-    writc "%{bright}All expectations met%{reset} "
+    writc (color.allpass .. "All expectations met%{reset} ")
     if stats.pend ~= 0 then
-      writc ("with %{yellow}" .. stats.pend .. " still pending%{reset}, ")
+      writc ("with " .. color.bad .. stats.pend .. " still pending%{reset}, ")
     end
   else
-    writc ("%{green}" .. stats.pass .. " passed%{reset}, " ..
-            "%{yellow}" .. stats.pend .. " pending%{reset}, " ..
-            "and %{bright white redbg}" ..  stats.fail .. " failed%{reset} ")
+    writc (passcolor .. stats.pass .. " passed%{reset}, " ..
+           pendcolor .. stats.pend .. " pending%{reset}, " ..
+           "and " .. failcolor .. stats.fail .. " failed%{reset} ")
   end
-  princ ("in %{bright}" ..  (os.clock () - stats.starttime) ..
+  princ ("in " .. color.clock ..  (os.clock () - stats.starttime) ..
          " seconds%{reset}.")
 end
 

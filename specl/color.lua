@@ -21,6 +21,42 @@
 
 local ansicolors = require "ansicolors"
 
+local h1      = "%{blue}"
+local h2      = "%{cyan}"
+local default = ""
+local good    = "%{green}"
+local warn    = "%{bright white magentabg}"
+local bad     = "%{bright white redbg}"
+
+local colormap = {
+  describe = h1,
+  context  = h2,
+  when     = h2,
+  with     = h2,
+  it       = default,
+  specify  = default,
+  example  = default,
+
+  head     = h1,
+  subhead  = h2,
+  entry    = default,
+  summary  = h1,
+
+  fail     = bad,
+  pend     = "%{yellow}",
+  pass     = "",
+  good     = good,
+  bad      = bad,
+
+  listpre     = "%{yellow}-%{reset} ",
+  listpost    = "%{red}:%{reset}",
+  allpass     = "",
+  notallpass  = "%{reverse}",
+  summarypost = "%{red}:%{reset}",
+  clock       = "",
+}
+
+
 local function color (s)
   if opts.color then
     s = ansicolors (s)
@@ -30,4 +66,10 @@ local function color (s)
   return s
 end
 
-return setmetatable ({}, { __call = function (_, s) return color (s) end })
+
+return setmetatable (colormap, {
+	 __call  = function (_, s) return color (s) end,
+         __index = function (_, k)
+                     return "%{underline}"
+                   end,
+       })

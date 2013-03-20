@@ -19,17 +19,11 @@
 -- MA 02111-1301, USA.
 
 
+local color = require "specl.color"
 local util  = require "specl.util"
 
 local indent, map, nop, princ, strip1st =
       util.indent, util.map, util.nop, util.princ, util.strip1st
-
-
-local colormap = {
-  describe = "%{blue}",
-  context  = "%{cyan}",
-  when     = "%{cyan}",
-}
 
 
 local function tabulate (descriptions)
@@ -37,23 +31,17 @@ local function tabulate (descriptions)
   local s   = descriptions[#descriptions]
   local key = s:gsub ("%s*(.-)%s+.*$", "%1")
 
-  if #descriptions > 1 then
-    table.insert (t, "%{yellow}-%{reset} ")
-  end
-  if colormap[key] then
-    table.insert (t, colormap[key])
+  if color[key] then
+    table.insert (t, color[key])
   end
   s = s:gsub ("%w+%s*", "", 1)
   table.insert (t, s)
-  if colormap[key] then
-    table.insert (t, "%{red}:")
-  end
-  return t
+  return table.concat (t)
 end
 
 
 local function spec (descriptions)
-  princ (indent (descriptions) .. table.concat (tabulate (descriptions)))
+  princ (indent (descriptions) .. tabulate (descriptions))
 end
 
 
@@ -69,8 +57,8 @@ local function expectations (status, descriptions)
 
     for i, expectation in ipairs (status.expectations) do
       if expectation.status == "pending" then
-        local pend = "  %{yellow}PENDING expectation " ..
-                     i .. "%{reset}: %{bright}Not Yet Implemented"
+        local pend = "  " .. color.pend .. "PENDING expectation " ..
+                     i .. "%{reset}: Not Yet Implemented"
 
         reports.pend = reports.pend .. "\n" .. pend
         if opts.verbose then
@@ -78,8 +66,8 @@ local function expectations (status, descriptions)
         end
 
       elseif expectation.status == false then
-        local fail = "  %{bright white redbg}FAILED expectation " ..
-                     i .. "%{reset}: %{bright}" ..  expectation.message
+        local fail = "  " .. color.fail .. "FAILED expectation " ..
+                     i .. "%{reset}: " ..  expectation.message
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
 
         if opts.verbose then
@@ -90,23 +78,23 @@ local function expectations (status, descriptions)
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
-    local pend = " (%{yellow}PENDING example%{reset}: " ..
-                   "%{bright}Not Yet Implemented%{reset})"
+    local pend = " (" .. color.pend .. "PENDING example%{reset}: " ..
+                   "Not Yet Implemented)"
     reports.pend = reports.pend .. pend
 
-    princ (spaces ..  table.concat (tabulate (descriptions)) ..  pend)
+    princ (spaces ..  tabulate (descriptions) ..  pend)
   end
 
   -- Add description titles.
   if reports.pend ~= "" then
-    reports.pend = "%{yellow}-%{reset} %{cyan}" ..
+    reports.pend = color.listpre .. color.subhead ..
                    table.concat (map (strip1st, descriptions), " ") ..
-                   "%{red}:%{reset}" .. reports.pend .. "\n"
+                   color.listpost .. reports.pend .. "\n"
   end
   if reports.fail ~= "" then
-    reports.fail = "%{yellow}-%{reset} %{cyan}" ..
+    reports.fail = color.listpre .. color.subhead ..
                    table.concat (map (strip1st, descriptions), " ") ..
-                   "%{red}:%{reset}" .. reports.fail .. "\n"
+                   color.listpost .. reports.fail .. "\n"
   end
 
   return reports
@@ -116,24 +104,31 @@ end
 -- Report statistics.
 local function footer (stats, reports)
   local total   = stats.pass + stats.fail
-  local percent = 100 * stats.pass / total
-  local failcolor = (stats.fail > 0) and "%{bright white redbg}" or "%{green}"
+  local percent = string.format ("%.2f%%", 100 * stats.pass / total)
 
   print ()
   if reports.pend ~= "" then
-    princ "%{blue}Summary of pending expectations%{red}:"
+    princ (color.summary .. "Summary of pending expectations" ..
+           color.summarypost)
     princ (reports.pend)
   end
   if reports.fail ~= "" then
-    princ "%{blue}Summary of failed expectations%{red}:"
+    princ (color.summary .. "Summary of failed expectations" ..
+           color.summarypost)
     princ (reports.fail)
   end
 
-  princ (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total))
-  princ ("%{green}" .. stats.pass .. " passed%{reset}, " ..
-         "%{yellow}" .. stats.pend .. " pending%{reset} and " ..
-         failcolor .. stats.fail .. " failed%{reset} in " ..
-         (os.clock () - stats.starttime) .. " seconds.")
+  local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
+  princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
+         " expectations.")
+
+  local passcolor = (stats.pass > 0) and color.good or color.bad
+  local failcolor = (stats.fail > 0) and color.bad or ""
+  local pendcolor = (stats.pend > 0) and color.bad or ""
+  princ (passcolor   .. stats.pass .. " passed%{reset}, " ..
+         pendcolor   .. stats.pend .. " pending%{reset} and " ..
+         failcolor   .. stats.fail .. " failed%{reset} in " ..
+         color.clock .. (os.clock () - stats.starttime) .. " seconds%{reset}.")
 end
 
 
