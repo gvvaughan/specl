@@ -17,3 +17,4 @@
 /specl/version.lua
 /specl-*.tar.gz
 /specl-release-v*
+/specs/*_spec.lua
