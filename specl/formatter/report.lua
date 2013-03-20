@@ -70,33 +70,38 @@ local function expectations (status, descriptions)
     for i, expectation in ipairs (status.expectations) do
       if expectation.status == "pending" then
         local pend = "  %{yellow}PENDING expectation " ..
-	             i .. "%{reset}: %{bright}Not Yet Implemented"
+                     i .. "%{reset}: %{bright}Not Yet Implemented"
 
-        princ (spaces .. pend)
-	reports.pend = reports.pend .. "\n" .. pend
+        reports.pend = reports.pend .. "\n" .. pend
+        if opts.verbose then
+          princ (spaces .. pend)
+        end
 
       elseif expectation.status == false then
         local fail = "  %{bright white redbg}FAILED expectation " ..
-		     i .. "%{reset}: %{bright}" ..  expectation.message
-
-        princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
+                     i .. "%{reset}: %{bright}" ..  expectation.message
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
+
+        if opts.verbose then
+          princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
+        end
       end
     end
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
     local pend = " (%{yellow}PENDING example%{reset}: " ..
-		   "%{bright}Not Yet Implemented%{reset})"
-    princ (spaces ..  table.concat (tabulate (descriptions)) ..  pend)
+                   "%{bright}Not Yet Implemented%{reset})"
     reports.pend = reports.pend .. pend
+
+    princ (spaces ..  table.concat (tabulate (descriptions)) ..  pend)
   end
 
   -- Add description titles.
   if reports.pend ~= "" then
     reports.pend = "%{yellow}-%{reset} %{cyan}" ..
                    table.concat (map (strip1st, descriptions), " ") ..
-		   "%{red}:%{reset}" .. reports.pend .. "\n"
+                   "%{red}:%{reset}" .. reports.pend .. "\n"
   end
   if reports.fail ~= "" then
     reports.fail = "%{yellow}-%{reset} %{cyan}" ..
@@ -115,21 +120,20 @@ local function footer (stats, reports)
   local failcolor = (stats.fail > 0) and "%{bright white redbg}" or "%{green}"
 
   print ()
-  if opts.verbose then
-    if reports.pend ~= "" then
-      princ "%{blue}Summary of pending expectations%{red}:"
-      princ (reports.pend)
-    end
-    if reports.fail ~= "" then
-      princ "%{blue}Summary of failed expectations%{red}:"
-      princ (reports.fail)
-    end
+  if reports.pend ~= "" then
+    princ "%{blue}Summary of pending expectations%{red}:"
+    princ (reports.pend)
   end
+  if reports.fail ~= "" then
+    princ "%{blue}Summary of failed expectations%{red}:"
+    princ (reports.fail)
+  end
+
   princ (string.format ("Met %%{bright}%.2f%%%%{reset} of %d expectations.", percent, total))
   princ ("%{green}" .. stats.pass .. " passed%{reset}, " ..
          "%{yellow}" .. stats.pend .. " pending%{reset} and " ..
          failcolor .. stats.fail .. " failed%{reset} in " ..
-	 (os.clock () - stats.starttime) .. " seconds.")
+         (os.clock () - stats.starttime) .. " seconds.")
 end
 
 

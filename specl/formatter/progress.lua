@@ -89,15 +89,13 @@ local function footer (stats, reports)
   print "\08 "
 
   print ()
-  if opts.verbose then
-    if reports.pend ~= "" then
-      princ "%{blue}Summary of pending expectations%{red}:"
-      princ (reports.pend)
-    end
-    if reports.fail ~= "" then
-      princ "%{blue}Summary of failed expectations%{red}:"
-      princ (reports.fail)
-    end
+  if reports.pend ~= "" then
+    princ "%{blue}Summary of pending expectations%{red}:"
+    princ (reports.pend)
+  end
+  if reports.fail ~= "" then
+    princ "%{blue}Summary of failed expectations%{red}:"
+    princ (reports.fail)
   end
 
   if stats.fail == 0 then
