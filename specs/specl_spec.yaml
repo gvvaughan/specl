@@ -22,6 +22,19 @@ describe specl:
         expect (run_spec (yaml).output).should_contain "No expectations met, "
     - it treats it as a pending example:
         expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+    - it is pending with a lone before: |
+        pending ()
+        yaml = yaml .. "\n  - before: nothing = 0"
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+    - it is pending with a lone after: |
+        pending ()
+        yaml = yaml .. "\n  - after: nothing = 0"
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+    - it is pending with before and after: |
+        pending ()
+        yaml = yaml .. "\n  - before: x = true\n  - after: x = nil"
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+
 
   - context with pending call from example:
     - it exits with zero status:
@@ -34,6 +47,11 @@ describe specl:
         yaml = yaml .. "\n    pending ()\n    expect (1).should_be (1)"
         expect (run_spec (yaml).output).
           should_match "%?.*PENDING expectation 1: Passed Unexpectedly"
+    - it uses pending argument for pending passes: |
+        pending ()
+        yaml = yaml .. " |\n    pending 'issue #23'\n    expect (1).should_be (1)"
+        expect (run_spec (yaml).output).
+          should_match "%?.*issue #23*PENDING expectation 1: Passed Unexpectedly"
 
 - describe command line interface:
   - before: |
