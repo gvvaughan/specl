@@ -56,11 +56,19 @@ local function expectations (status, descriptions)
     spec (descriptions)
 
     for i, expectation in ipairs (status.expectations) do
-      if expectation.status == "pending" then
-        local pend = "  " .. color.pend .. "PENDING expectation " ..
-                     i .. "%{reset}: Not Yet Implemented"
+      if expectation.pending == true then
+        local pend = "  " .. color.pend ..
+              "PENDING expectation " ..  i .. "%{reset}: "
+	if expectation.status == true then
+          pend = pend .. color.warn .. "Passed Unexpectedly!%{reset}"
+          reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
+	      "  " .. color.strong ..
+	      "You can safely remove the 'pending ()' call from this example.%{reset}"
+        else
+          pend = pend .. "Not Yet Implemented"
+          reports.pend = reports.pend .. "\n" .. pend
+	end
 
-        reports.pend = reports.pend .. "\n" .. pend
         if opts.verbose then
           princ (spaces .. pend)
         end

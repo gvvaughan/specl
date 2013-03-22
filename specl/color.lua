@@ -25,7 +25,6 @@ local h1      = "%{blue}"
 local h2      = "%{cyan}"
 local default = ""
 local good    = "%{green}"
-local warn    = "%{bright white magentabg}"
 local bad     = "%{bright white redbg}"
 
 local colormap = {
@@ -47,6 +46,8 @@ local colormap = {
   pass     = "",
   good     = good,
   bad      = bad,
+  warn     = "%{red}",
+  strong   = "%{bright white}",
 
   listpre     = "%{yellow}-%{reset} ",
   listpost    = "%{red}:%{reset}",

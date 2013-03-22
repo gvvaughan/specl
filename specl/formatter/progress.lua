@@ -43,11 +43,19 @@ local function expectations (status, descriptions)
   if next (status.expectations) then
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
-      if expectation.status == "pending" then
-        writc (color.pend .. "*")
-        reports.pend = reports.pend .. "\n  " .. 
-	               color.pend .. "PENDING expectation " ..  i .. "%{reset}" ..
-		       ": Not Yet Implemented"
+      if expectation.pending ~= nil then
+        reports.pend = reports.pend .. "\n  " ..
+	      color.pend .. "PENDING expectation " ..  i .. "%{reset}: "
+        if expectation.status == true then
+	  writc (color.strong .. "?")
+	  reports.pend = reports.pend ..
+                color.warn .. "Passed Unexpectedly!%{reset}\n" ..
+		"  " .. color.strong ..
+		"You can safely remove the 'pending ()' call from this example.%{reset}"
+        else
+          writc (color.pend .. "*")
+          reports.pend = reports.pend .. "Not Yet Implemented"
+        end
 
       elseif expectation.status == true then
         writc (color.good .. ".")
@@ -110,22 +118,22 @@ local function footer (stats, reports)
   local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
 
   if stats.fail == 0 then
-    writc (prefix .. " expectations met%{reset} ")
+    writc (prefix .. " expectations met%{reset}")
 
     if stats.pend ~= 0 then
-      writc ("with " .. color.bad .. stats.pend .. " still pending%{reset}, ")
+      writc (", but " .. color.bad .. stats.pend .. " still pending%{reset},")
     end
   else
     writc (passcolor .. stats.pass .. " passed%{reset}, " ..
            pendcolor .. stats.pend .. " pending%{reset}, " ..
-           "and " .. failcolor .. stats.fail .. " failed%{reset} ")
+           "and " .. failcolor .. stats.fail .. " failed%{reset}")
   end
-  princ ("in " .. color.clock ..  (os.clock () - stats.starttime) ..
+  princ (" in " .. color.clock ..  (os.clock () - stats.starttime) ..
          " seconds%{reset}.")
 end
 
 
-  
+
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--

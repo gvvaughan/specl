@@ -240,6 +240,20 @@ the `expect` calls:
           stack = Stack {}
           expect (#stack).should_be (0)
 
+This prevents [Specl][] from counting the `expect` result as a failure,
+but crucially also allows [Specl][] to inform you when the expectation
+begins passing to remind you to remove stale `pending ()` calls from
+your specifications.
+
+    ?.....
+ 
+    Summary of pending expectations:
+    - a stack has no elements when empty:
+      PENDING expectation 1: Passed Unexpectedly!
+      You can safely remove the 'pending ()' call from this example
+
+    All expectations met, but 1 still pending, in 0.00366 seconds.
+
 
 <a id="specl-matchers"></a>
 3. Matchers
@@ -482,7 +496,7 @@ expectation is not met.  Once all the expectations have been evaluated,
 a one line summary follows:
 
     ......
-    All expectations met, in 0.00233 seconds.
+    All expectations met in 0.00233 seconds.
 
 ### 5.2. Report Formatter
 
@@ -490,15 +504,15 @@ The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
 more detailed summary.
 
-    a stack:
-      - is empty to start with
-      - when pushing items:
-         - raises an error if the stack is full
-         - adds items to the top
-      - when popping items off the top:
-         - raises an error if the stack is empty
-         - returns the top item
-         - removes the popped item
+    a stack
+      is empty to start with
+      when pushing items
+         raises an error if the stack is full
+         adds items to the top
+      when popping items off the top
+         raises an error if the stack is empty
+         returns the top item
+         removes the popped item
 
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
@@ -560,11 +574,20 @@ a similar table of nested descriptions as were passed to `spec`:
 
     status = {
       expectations = {
-        { status = (true|false|"pending"), message = "error string" },
+        { pending = (nil|true), status = (true|false), message = "error string" },
         ...
       },
       ispending = (nil|true),
     }
+
+The outer `ispending` field will be set to `true` if the entire example
+is pending - that is, if it has no example code, save for a call to the
+`pending ()` function.
+
+If the `pending` field in one of the `expectations` elements is true, then
+a call was made to `expect ()` from a pending example.  The two are
+necessary so that formatters can diagnose an unexpected `status == true`
+in a pending example, among other things.
 
 The standard [Specl][] formatters in the `specl/formatters/` sub-
 directory of your installation show how these functions can be used to
