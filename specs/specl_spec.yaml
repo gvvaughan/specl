@@ -15,10 +15,12 @@ describe specl:
       yaml = "describe x:\n- it works:"
 
   - context with empty examples:
-    - it treats it as a pending example:
-        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
     - it exits with zero status:
         expect (run_spec (yaml).status).should_be (0)
+    - it treats it as a pending example:
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+    - it complains with no expectations:
+        expect (run_spec (yaml).output).should_contain "No expectations met "
 
   - context with pending call from example:
     - before:

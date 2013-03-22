@@ -107,12 +107,12 @@ local function footer (stats, reports)
   local percent = string.format ("%.2f%%", 100 * stats.pass / total)
 
   print ()
-  if reports.pend ~= "" then
+  if reports and reports.pend ~= "" then
     princ (color.summary .. "Summary of pending expectations" ..
            color.summarypost)
     princ (reports.pend)
   end
-  if reports.fail ~= "" then
+  if reports and reports.fail ~= "" then
     princ (color.summary .. "Summary of failed expectations" ..
            color.summarypost)
     princ (reports.fail)

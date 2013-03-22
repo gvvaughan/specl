@@ -88,15 +88,17 @@ end
 
 -- Report statistics.
 local function footer (stats, reports)
+  local total = stats.pass + stats.fail
+
   print "\08 "
 
   print ()
-  if reports.pend ~= "" then
+  if reports and reports.pend ~= "" then
     princ (color.summary .. "Summary of pending expectations" ..
            color.summarypost)
     princ (reports.pend)
   end
-  if reports.fail ~= "" then
+  if reports and reports.fail ~= "" then
     princ (color.summary .. "Summary of failed expectations" ..
            color.summarypost)
     princ (reports.fail)
@@ -105,8 +107,11 @@ local function footer (stats, reports)
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""
   local pendcolor = (stats.pend > 0) and color.bad or ""
+  local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
+
   if stats.fail == 0 then
-    writc (color.allpass .. "All expectations met%{reset} ")
+    writc (prefix .. " expectations met%{reset} ")
+
     if stats.pend ~= 0 then
       writc ("with " .. color.bad .. stats.pend .. " still pending%{reset}, ")
     end
