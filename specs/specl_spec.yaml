@@ -46,12 +46,11 @@ describe specl:
     - it reports unexpected pending passes: |
         yaml = yaml .. "\n    pending ()\n    expect (1).should_be (1)"
         expect (run_spec (yaml).output).
-          should_match "%?.*PENDING expectation 1: Passed Unexpectedly"
+          should_match "%?.*PENDING expectation 1: passed unexpectedly"
     - it uses pending argument for pending passes: |
-        pending ()
         yaml = yaml .. " |\n    pending 'issue #23'\n    expect (1).should_be (1)"
         expect (run_spec (yaml).output).
-          should_match "%?.*issue #23*PENDING expectation 1: Passed Unexpectedly"
+          should_match "%?.*PENDING expectation 1.*issue #23.*passed unexpectedly"
 
 - describe command line interface:
   - before: |

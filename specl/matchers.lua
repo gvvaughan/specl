@@ -143,10 +143,10 @@ function M.expect (target)
 	  message = message and ("not " .. message)
 	end
 
-	if M.ispending then
+	if M.ispending ~= nil then
 	  -- stats.pend is updated by M.pending ()
 	  -- +1 per pending example, not per expectation in pending examples
-	  pending = true
+	  pending = M.ispending
 	elseif success ~= true then
 	  M.stats.fail = M.stats.fail + 1
 	else
@@ -163,9 +163,9 @@ function M.expect (target)
 end
 
 
-function M.pending ()
+function M.pending (s)
   M.stats.pend = M.stats.pend + 1
-  M.ispending  = true
+  M.ispending  = s or true
 end
 
 

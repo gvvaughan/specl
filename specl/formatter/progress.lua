@@ -46,15 +46,18 @@ local function expectations (status, descriptions)
       if expectation.pending ~= nil then
         reports.pend = reports.pend .. "\n  " ..
 	      color.pend .. "PENDING expectation " ..  i .. "%{reset}: "
+	if type (expectation.pending) == "string" then
+          reports.pend = reports.pend .. color.warn .. expectation.pending .. ", "
+	end
         if expectation.status == true then
 	  writc (color.strong .. "?")
 	  reports.pend = reports.pend ..
-                color.warn .. "Passed Unexpectedly!%{reset}\n" ..
+                color.warn .. "passed unexpectedly!%{reset}\n" ..
 		"  " .. color.strong ..
 		"You can safely remove the 'pending ()' call from this example.%{reset}"
         else
           writc (color.pend .. "*")
-          reports.pend = reports.pend .. "Not Yet Implemented"
+          reports.pend = reports.pend .. "not yet implemented"
         end
 
       elseif expectation.status == true then
@@ -73,7 +76,7 @@ local function expectations (status, descriptions)
     -- Otherwise, display only pending examples.
     writc (color.pend .. "*")
     reports.pend = reports.pend .. " (" .. color.pend .. "PENDING example%{reset}" ..
-                   ": Not Yet Implemented)"
+                   ": not yet implemented)"
   end
   io.write (">")
   io.flush ()
