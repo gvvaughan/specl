@@ -254,6 +254,26 @@ your specifications.
 
     All expectations met, but 1 still pending, in 0.00366 seconds.
 
+Sometimes, it's useful to add some metadata to a pending example that
+you want to see in the summary report.  Pass a single string parameter
+to the `pending` function call like this:
+
+    - describe a stack:
+      - it cannot remove an element when empty:
+          pending "issue #26"
+          stack = Stack {}
+          expect ("underflow").should_error (stack.pop ())
+
+Running [Specl][] now shows the string in the pending summary report:
+
+    ?.....
+
+    Summary of pending expectations:
+    - a stack cannot remove an element when empty:
+      PENDING expectation 1: issue #26, not yet implemented
+
+    All expectations met, but 1 still pending, in 0.00332 seconds.
+
 
 <a id="specl-matchers"></a>
 3. Matchers
