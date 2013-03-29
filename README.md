@@ -558,7 +558,12 @@ The functions `header` and `footer` are called before any expectations,
 and after all expectations, respectively.  The `stats` argument to
 `footer` is a table containing:
 
-    stats = { pass = <PASSED>, fail = <FAILED>, starttime = <CLOCK> }
+    stats = {
+      pass      = <PASSED>,
+      pend      = <PENDING>,
+      fail      = <FAILED>,
+      starttime = <CLOCK>,
+    }
 
 You can use this to print out statistics at the end of the formatted
 output.
@@ -566,11 +571,15 @@ output.
 The `accumulated` argument to `footer` is a string made by concatenating
 all the returned strings, if any, from other calls to the formatter API
 functions.  This is useful, for example, to return failure reports from
-`expectations` and then display them as a batch from `footer`.
+`expectations` and then display a summary report from `footer`, like the
+built in formatters.
 
-Alternatively, a table of named strings can be returned, in which case
-the accumulation of those keys is passed back to `footer`.  For example,
-if each call to `expectations` returns a table with these two keys:
+Instead of accumulating string returns and concatentating them into a
+single long string to pass back into `footer`, a table of named strings
+can be returned by your `spec` and `expectations` functions, in which
+case the accumulation of those keys is passed back to `footer`.  For
+example, if each call to `expectations` returns a table with these two
+keys:
 
     {
       failreport = "description of failed expectation\n",
@@ -594,15 +603,19 @@ a similar table of nested descriptions as were passed to `spec`:
 
     status = {
       expectations = {
-        { pending = (nil|true), status = (true|false), message = "error string" },
+        {
+          pending = (nil|true),
+          status  = (true|false),
+          message = "error string",
+        },
         ...
       },
       ispending = (nil|true),
     }
 
 The outer `ispending` field will be set to `true` if the entire example
-is pending - that is, if it has no example code, save for a call to the
-`pending ()` function.
+is pending - that is, if it has no example code, save perhaps a call to
+the `pending ()` function.
 
 If the `pending` field in one of the `expectations` elements is true, then
 a call was made to `expect ()` from a pending example.  The two are
