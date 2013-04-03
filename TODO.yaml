@@ -1,7 +1,4 @@
 TODO:
-- pending support:
-    - expect calls in a pending example should report that
-      a previously pending example is now passing.
 - add a have matcher, with support for items etc
     expect (set).should_have (10).members
     expect (coven).should_have (13).witches
@@ -18,4 +15,6 @@ TODO:
 - add support for automatic require: |
     module:
       [[implied -> before: module = require "module"]]
+- report line numbers of pending and failed examples:
+    it is quite likely libyaml will need patching to make this happen
 - LuaCov coverage reporting?
