@@ -16,6 +16,8 @@ install:
 
 # Configure and build.
 script:
+  - sudo luarocks install ansicolors
+  - sudo luarocks install lyaml
   - ./bootstrap
   - ./configure
   - make
