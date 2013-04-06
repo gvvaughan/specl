@@ -35,9 +35,12 @@ script:
   - $LUAROCKS install ansicolors
   - $LUAROCKS install lyaml
   - $LUAROCKS install stdlib
-  - eval `$LUAROCKS path`; make rockspecs
+  - eval `$LUAROCKS path`; make LUA="$LUA" rockspecs
   - $LUAROCKS make specl-git-1.rockspec
 
 # Run specs.
 after_script:
-  - eval `$LUAROCKS path`; make check V=1
+  - $LUAROCKS path
+  - cat Makefile
+  - cat specl/specl
+  - eval `$LUAROCKS path`; make LUA="$LUA" check V=1
