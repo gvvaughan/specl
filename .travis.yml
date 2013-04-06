@@ -40,4 +40,4 @@ script:
 
 # Run specs.
 after_script:
-  - make check
+  - eval `$LUAROCKS path`; make check
