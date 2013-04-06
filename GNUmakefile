@@ -25,11 +25,20 @@ include Makefile
 MKROCKSPECS = $(ROCKSPEC_ENV) $(LUA) $(srcdir)/build-aux/mkrockspecs.lua
 ROCKSPEC_TEMPLATE = $(srcdir)/specl-rockspec.lua
 
+LUA        ?= lua
+LUA_BINDIR ?= $(shell which $(LUA) |sed 's|/[^/]*$$||')
+LUA_INCDIR ?= `cd $(LUA_BINDIR)/../include && pwd`
+LUA_LIBDIR ?= `cd $(LUA_BINDIR)/../lib && pwd`
+
 luarocks-config.lua:
-	$(AM_V_GEN){				\
-	  echo 'rocks_trees = {';		\
-	  echo '  "$(abs_srcdir)/luarocks"';	\
-	  echo '}';				\
+	$(AM_V_GEN){						\
+	  echo 'rocks_trees = { "$(abs_srcdir)/luarocks" }';	\
+	  echo 'variables = {';					\
+	  echo '  LUA = "$(LUA)",';				\
+	  echo '  LUA_BINDIR = "$(LUA_BINDIR)",';		\
+	  echo '  LUA_INCDIR = "$(LUA_INCDIR)",';		\
+	  echo '  LUA_LIBDIR = "$(LUA_LIBDIR)",';		\
+	  echo '}';						\
 	} > '$@'
 
 rockspecs: luarocks-config.lua

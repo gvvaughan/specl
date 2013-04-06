@@ -1,6 +1,8 @@
 SPECL
 =====
 
+[![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png)](http://travis-ci.org/gvvaughan/specl/builds)
+
 Behaviour Driven Development for [Lua][].
 
 1. Installation
