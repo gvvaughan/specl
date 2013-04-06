@@ -27,7 +27,7 @@ install:
   - make all install
   - cd ..
 
-# Configure and build.
+# Configure, build and test.
 script:
   - ./bootstrap
   - ./configure LUA="$LUA"
@@ -37,10 +37,4 @@ script:
   - $LUAROCKS install stdlib
   - eval `$LUAROCKS path`; make LUA="$LUA" rockspecs
   - $LUAROCKS make specl-git-1.rockspec
-
-# Run specs.
-after_script:
-  - $LUAROCKS path
-  - cat Makefile
-  - cat specl/specl
   - eval `$LUAROCKS path`; make LUA="$LUA" check V=1
