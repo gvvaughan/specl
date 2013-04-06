@@ -36,8 +36,8 @@ luarocks-config.lua: GNUmakefile
 	  echo 'variables = {';					\
 	  echo '  LUA = "$(LUA)",';				\
 	  echo '  LUA_BINDIR = "$(LUA_BINDIR)",';		\
-	  echo '  LUA_INCDIR = "$(LUA_INCDIR)",';		\
-	  echo '  LUA_LIBDIR = "$(LUA_LIBDIR)",';		\
+	  echo '  LUA_INCDIR = "'$(LUA_INCDIR)'",';		\
+	  echo '  LUA_LIBDIR = "'$(LUA_LIBDIR)'",';		\
 	  echo '}';						\
 	} > '$@'
 
