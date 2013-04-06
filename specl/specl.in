@@ -30,9 +30,6 @@ _G._SPEC = true
 package.path  = ("@speclpath@;" .. package.path):gsub (
                  ";%./%?.lua;", ";"):gsub (
                  ";%./%?.lua$", "")
-package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
-                 ";%./%?.lua;", ";"):gsub (
-                 ";%./%?.lua$", "")
 
 
 local specl  = require "specl"
