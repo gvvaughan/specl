@@ -6,7 +6,7 @@ describe specl:
       -- if CMD begins with a '-' then only options follow, otherwise
       -- we assume the entire command was passed.
       if cmd == "" or cmd:sub (1, 1) == "-" then
-        cmd = "specl/specl --color=no " .. cmd
+        cmd = "env LUA_PATH='" .. package.path .. "' specl/specl --color=no " .. cmd
       end
       return specl.cmdpipe ("printf '%s\\n' '" .. yaml .. "'|" .. cmd)
     end
@@ -72,12 +72,12 @@ describe specl:
         f:close ()
 
     - it formats expectations with the custom formatter:
-        cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl --formatter=%s -",
-                              path, name)
+        cmd  = string.format ("env LUA_PATH='%s/?;%s' specl/specl --formatter=%s -",
+                              path, package.path, name)
         expect (run_spec (yaml, cmd).output).should_contain "hs.f"
     - "it accepts -f as an equivalent to --formatter":
-        cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl -f%s -",
-                              path, name)
+        cmd  = string.format ("env LUA_PATH='%s/?;%s' specl/specl -f%s -",
+                              path, package.path, name)
         expect (run_spec (yaml, cmd).output).should_contain "hs.f"
 
     - after:
