@@ -1,7 +1,7 @@
 SPECL
 =====
 
-[![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png)](http://travis-ci.org/gvvaughan/specl/builds)
+[![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png?branch=master)](http://travis-ci.org/gvvaughan/specl/builds)
 
 Behaviour Driven Development for [Lua][].
 
