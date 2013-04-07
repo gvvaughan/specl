@@ -16,10 +16,10 @@ dnl
 dnl You should have received a copy of the GNU General Public License
 dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.68])
 
 dnl Initialise autoconf and automake
-AC_INIT([Specl], [3], [http://github.com/gvvaughan/specl/issues])
+AC_INIT([Specl], [4], [http://github.com/gvvaughan/specl/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 

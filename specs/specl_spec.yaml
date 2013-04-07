@@ -1,32 +1,43 @@
 describe specl:
 - before: |
     function run_spec (yaml, cmd)
-      cmd = cmd or ""
+      yaml = yaml:gsub ("'", "'\\''")
+      cmd  = cmd or ""
       -- if CMD begins with a '-' then only options follow, otherwise
       -- we assume the entire command was passed.
       if cmd == "" or cmd:sub (1, 1) == "-" then
-        cmd = "specl/specl --color=no " .. cmd
+        cmd = "env LUA_PATH='" .. package.path .. "' specl/specl --color=no " .. cmd
       end
-      return specl.cmdpipe ("printf '" .. yaml .. "'|" .. cmd)
+      return specl.cmdpipe ("printf '%s\\n' '" .. yaml .. "'|" .. cmd)
     end
 
 - "describe spec-file format":
   - before: |
-      yaml = "describe x:\n- it works:"
+      yaml = "describe x:\n- it is pending:"
 
   - context with empty examples:
+    - it exits with zero status:
+        expect (run_spec (yaml).status).should_be (0)
+    - it complains with no expectations:
+        expect (run_spec (yaml).output).should_contain "No expectations met, "
     - it treats it as a pending example:
         expect (run_spec (yaml).output).should_match "%*.*1 still pending"
-    - it exits with zero status:
-        expect (run_spec (yaml).status).should_be (0)
 
   - context with pending call from example:
-    - before:
-        yaml = yaml .. " pending ()"
-    - it reports pending expectations:
-        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
     - it exits with zero status:
+        yaml = yaml .. " pending ()"
         expect (run_spec (yaml).status).should_be (0)
+    - it reports pending expectations:
+        yaml = yaml .. " pending ()"
+        expect (run_spec (yaml).output).should_match "%*.*1 still pending"
+    - it reports unexpected pending passes: |
+        yaml = yaml .. "\n    pending ()\n    expect (1).should_be (1)"
+        expect (run_spec (yaml).output).
+          should_match "%?.*PENDING expectation 1: passed unexpectedly"
+    - it uses pending argument for pending passes: |
+        yaml = yaml .. " |\n    pending 'issue #23'\n    expect (1).should_be (1)"
+        expect (run_spec (yaml).output).
+          should_match "%?.*PENDING expectation 1.*issue #23.*passed unexpectedly"
 
 - describe command line interface:
   - before: |
@@ -61,12 +72,12 @@ describe specl:
         f:close ()
 
     - it formats expectations with the custom formatter:
-        cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl --formatter=%s -",
-                              path, name)
+        cmd  = string.format ("env LUA_PATH='%s/?;%s' specl/specl --formatter=%s -",
+                              path, package.path, name)
         expect (run_spec (yaml, cmd).output).should_contain "hs.f"
     - "it accepts -f as an equivalent to --formatter":
-        cmd  = string.format ("env LUA_PATH='%s/?;;' specl/specl -f%s -",
-                              path, name)
+        cmd  = string.format ("env LUA_PATH='%s/?;%s' specl/specl -f%s -",
+                              path, package.path, name)
         expect (run_spec (yaml, cmd).output).should_contain "hs.f"
 
     - after:

@@ -136,14 +136,17 @@ function M.expect (target)
       end
       return function(...)
         local success, message = M.matchers[matcher](target, ...)
+	local pending
 
         if inverse then
 	  success = not success
 	  message = message and ("not " .. message)
 	end
 
-	if M.ispending then
-	  success = "pending"
+	if M.ispending ~= nil then
+	  -- stats.pend is updated by M.pending ()
+	  -- +1 per pending example, not per expectation in pending examples
+	  pending = M.ispending
 	elseif success ~= true then
 	  M.stats.fail = M.stats.fail + 1
 	else
@@ -152,6 +155,7 @@ function M.expect (target)
         table.insert (M.expectations, {
 	  message = message,
 	  status = success,
+	  pending = pending,
         })
       end
     end
@@ -159,9 +163,9 @@ function M.expect (target)
 end
 
 
-function M.pending ()
+function M.pending (s)
   M.stats.pend = M.stats.pend + 1
-  M.ispending  = true
+  M.ispending  = s or true
 end
 
 

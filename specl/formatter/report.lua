@@ -56,11 +56,22 @@ local function expectations (status, descriptions)
     spec (descriptions)
 
     for i, expectation in ipairs (status.expectations) do
-      if expectation.status == "pending" then
-        local pend = "  " .. color.pend .. "PENDING expectation " ..
-                     i .. "%{reset}: Not Yet Implemented"
+      if expectation.pending ~= nil then
+        local pend = "  " .. color.pend ..
+              "PENDING expectation " ..  i .. "%{reset}: "
+        if type (expectation.pending) == "string" then
+          pend = pend .. color.warn .. expectation.pending .. ", "
+        end
+	if expectation.status == true then
+          pend = pend .. color.warn .. "passed unexpectedly!%{reset}"
+          reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
+	      "  " .. color.strong ..
+	      "You can safely remove the 'pending ()' call from this example.%{reset}"
+        else
+          pend = pend .. "not yet implemented"
+          reports.pend = reports.pend .. "\n" .. pend
+	end
 
-        reports.pend = reports.pend .. "\n" .. pend
         if opts.verbose then
           princ (spaces .. pend)
         end
@@ -79,7 +90,7 @@ local function expectations (status, descriptions)
   elseif status.ispending then
     -- Otherwise, display only pending examples.
     local pend = " (" .. color.pend .. "PENDING example%{reset}: " ..
-                   "Not Yet Implemented)"
+                   "not yet implemented)"
     reports.pend = reports.pend .. pend
 
     princ (spaces ..  tabulate (descriptions) ..  pend)
@@ -107,12 +118,12 @@ local function footer (stats, reports)
   local percent = string.format ("%.2f%%", 100 * stats.pass / total)
 
   print ()
-  if reports.pend ~= "" then
+  if reports and reports.pend ~= "" then
     princ (color.summary .. "Summary of pending expectations" ..
            color.summarypost)
     princ (reports.pend)
   end
-  if reports.fail ~= "" then
+  if reports and reports.fail ~= "" then
     princ (color.summary .. "Summary of failed expectations" ..
            color.summarypost)
     princ (reports.fail)

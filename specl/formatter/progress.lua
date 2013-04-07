@@ -43,11 +43,22 @@ local function expectations (status, descriptions)
   if next (status.expectations) then
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
-      if expectation.status == "pending" then
-        writc (color.pend .. "*")
-        reports.pend = reports.pend .. "\n  " .. 
-	               color.pend .. "PENDING expectation " ..  i .. "%{reset}" ..
-		       ": Not Yet Implemented"
+      if expectation.pending ~= nil then
+        reports.pend = reports.pend .. "\n  " ..
+	      color.pend .. "PENDING expectation " ..  i .. "%{reset}: "
+	if type (expectation.pending) == "string" then
+          reports.pend = reports.pend .. color.warn .. expectation.pending .. ", "
+	end
+        if expectation.status == true then
+	  writc (color.strong .. "?")
+	  reports.pend = reports.pend ..
+                color.warn .. "passed unexpectedly!%{reset}\n" ..
+		"  " .. color.strong ..
+		"You can safely remove the 'pending ()' call from this example.%{reset}"
+        else
+          writc (color.pend .. "*")
+          reports.pend = reports.pend .. "not yet implemented"
+        end
 
       elseif expectation.status == true then
         writc (color.good .. ".")
@@ -65,7 +76,7 @@ local function expectations (status, descriptions)
     -- Otherwise, display only pending examples.
     writc (color.pend .. "*")
     reports.pend = reports.pend .. " (" .. color.pend .. "PENDING example%{reset}" ..
-                   ": Not Yet Implemented)"
+                   ": not yet implemented)"
   end
   io.write (">")
   io.flush ()
@@ -88,15 +99,17 @@ end
 
 -- Report statistics.
 local function footer (stats, reports)
+  local total = stats.pass + stats.fail
+
   print "\08 "
 
   print ()
-  if reports.pend ~= "" then
+  if reports and reports.pend ~= "" then
     princ (color.summary .. "Summary of pending expectations" ..
            color.summarypost)
     princ (reports.pend)
   end
-  if reports.fail ~= "" then
+  if reports and reports.fail ~= "" then
     princ (color.summary .. "Summary of failed expectations" ..
            color.summarypost)
     princ (reports.fail)
@@ -105,22 +118,25 @@ local function footer (stats, reports)
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""
   local pendcolor = (stats.pend > 0) and color.bad or ""
+  local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
+
   if stats.fail == 0 then
-    writc (color.allpass .. "All expectations met%{reset} ")
+    writc (prefix .. " expectations met%{reset}")
+
     if stats.pend ~= 0 then
-      writc ("with " .. color.bad .. stats.pend .. " still pending%{reset}, ")
+      writc (", but " .. color.bad .. stats.pend .. " still pending%{reset},")
     end
   else
     writc (passcolor .. stats.pass .. " passed%{reset}, " ..
            pendcolor .. stats.pend .. " pending%{reset}, " ..
-           "and " .. failcolor .. stats.fail .. " failed%{reset} ")
+           "and " .. failcolor .. stats.fail .. " failed%{reset}")
   end
-  princ ("in " .. color.clock ..  (os.clock () - stats.starttime) ..
+  princ (" in " .. color.clock ..  (os.clock () - stats.starttime) ..
          " seconds%{reset}.")
 end
 
 
-  
+
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--

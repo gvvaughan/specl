@@ -1,6 +1,8 @@
 SPECL
 =====
 
+[![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png)](http://travis-ci.org/gvvaughan/specl/builds)
+
 Behaviour Driven Development for [Lua][].
 
 1. Installation
@@ -239,6 +241,40 @@ the `expect` calls:
           pending ()
           stack = Stack {}
           expect (#stack).should_be (0)
+
+This prevents [Specl][] from counting the `expect` result as a failure,
+but crucially also allows [Specl][] to inform you when the expectation
+begins passing to remind you to remove stale `pending ()` calls from
+your specifications.
+
+    ?.....
+ 
+    Summary of pending expectations:
+    - a stack has no elements when empty:
+      PENDING expectation 1: Passed Unexpectedly!
+      You can safely remove the 'pending ()' call from this example
+
+    All expectations met, but 1 still pending, in 0.00366 seconds.
+
+Sometimes, it's useful to add some metadata to a pending example that
+you want to see in the summary report.  Pass a single string parameter
+to the `pending` function call like this:
+
+    - describe a stack:
+      - it cannot remove an element when empty:
+          pending "issue #26"
+          stack = Stack {}
+          expect ("underflow").should_error (stack.pop ())
+
+Running [Specl][] now shows the string in the pending summary report:
+
+    ?.....
+
+    Summary of pending expectations:
+    - a stack cannot remove an element when empty:
+      PENDING expectation 1: issue #26, not yet implemented
+
+    All expectations met, but 1 still pending, in 0.00332 seconds.
 
 
 <a id="specl-matchers"></a>
@@ -482,7 +518,7 @@ expectation is not met.  Once all the expectations have been evaluated,
 a one line summary follows:
 
     ......
-    All expectations met, in 0.00233 seconds.
+    All expectations met in 0.00233 seconds.
 
 ### 5.2. Report Formatter
 
@@ -490,15 +526,15 @@ The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
 more detailed summary.
 
-    a stack:
-      - is empty to start with
-      - when pushing items:
-         - raises an error if the stack is full
-         - adds items to the top
-      - when popping items off the top:
-         - raises an error if the stack is empty
-         - returns the top item
-         - removes the popped item
+    a stack
+      is empty to start with
+      when pushing items
+         raises an error if the stack is full
+         adds items to the top
+      when popping items off the top
+         raises an error if the stack is empty
+         returns the top item
+         removes the popped item
 
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
@@ -524,7 +560,12 @@ The functions `header` and `footer` are called before any expectations,
 and after all expectations, respectively.  The `stats` argument to
 `footer` is a table containing:
 
-    stats = { pass = <PASSED>, fail = <FAILED>, starttime = <CLOCK> }
+    stats = {
+      pass      = <PASSED>,
+      pend      = <PENDING>,
+      fail      = <FAILED>,
+      starttime = <CLOCK>,
+    }
 
 You can use this to print out statistics at the end of the formatted
 output.
@@ -532,11 +573,15 @@ output.
 The `accumulated` argument to `footer` is a string made by concatenating
 all the returned strings, if any, from other calls to the formatter API
 functions.  This is useful, for example, to return failure reports from
-`expectations` and then display them as a batch from `footer`.
+`expectations` and then display a summary report from `footer`, like the
+built in formatters.
 
-Alternatively, a table of named strings can be returned, in which case
-the accumulation of those keys is passed back to `footer`.  For example,
-if each call to `expectations` returns a table with these two keys:
+Instead of accumulating string returns and concatentating them into a
+single long string to pass back into `footer`, a table of named strings
+can be returned by your `spec` and `expectations` functions, in which
+case the accumulation of those keys is passed back to `footer`.  For
+example, if each call to `expectations` returns a table with these two
+keys:
 
     {
       failreport = "description of failed expectation\n",
@@ -560,11 +605,24 @@ a similar table of nested descriptions as were passed to `spec`:
 
     status = {
       expectations = {
-        { status = (true|false|"pending"), message = "error string" },
+        {
+          pending = (nil|true),
+          status  = (true|false),
+          message = "error string",
+        },
         ...
       },
       ispending = (nil|true),
     }
+
+The outer `ispending` field will be set to `true` if the entire example
+is pending - that is, if it has no example code, save perhaps a call to
+the `pending ()` function.
+
+If the `pending` field in one of the `expectations` elements is true, then
+a call was made to `expect ()` from a pending example.  The two are
+necessary so that formatters can diagnose an unexpected `status == true`
+in a pending example, among other things.
 
 The standard [Specl][] formatters in the `specl/formatters/` sub-
 directory of your installation show how these functions can be used to

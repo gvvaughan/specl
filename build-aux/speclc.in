@@ -25,9 +25,6 @@ A=--[[ exec @LUA@ "$0" "$@"  # -*- mode: lua; -*- ]]A
 package.path  = ("@speclpath@;" .. package.path):gsub (
                  ";%./%?.lua;", ";"):gsub (
                  ";%./%?.lua$", "")
-package.cpath = ("@speclcpath@;" .. package.cpath):gsub (
-                 ";%./%?.lua;", ";"):gsub (
-                 ";%./%?.lua$", "")
 
 
 local std  = require "std"

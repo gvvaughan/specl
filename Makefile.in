@@ -308,7 +308,7 @@ EXTRA_DIST = build-aux/mkrockspecs.lua docs/specl.1.in specl/specl.in \
 MAINTAINERCLEANFILES = 
 NOTHING_ELSE = 
 bin_SCRIPTS = specl/specl
-check_local = 
+check_local = specs-check-local
 doc_DATA = 
 install_exec_hooks = install-specl-hook
 man_MANS = docs/specl.1
@@ -915,8 +915,7 @@ build-aux/speclc: $(build_aux_speclc_DEPS)
 
 # Lua specs require speclc compiler.
 $(specl_LUASPECS): $(SPECLC)
-
-check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
+specs-check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
 	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS) $(specl_LUASPECS)
 
 check-local: $(check_local)

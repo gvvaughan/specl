@@ -17,7 +17,7 @@ description = {
      ",
 }
 build = {
-  build_command = "./bootstrap && LUA=$(LUA) LUA_INCLUDE=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
+  build_command = "./bootstrap && LUA_INCLUDE=-I$(LUA_INCDIR) ./configure LUA=$(LUA) --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
   type = "command",
   copy_directories = {
   },

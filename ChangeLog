@@ -1,4 +1,155 @@
+2013-04-06  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: failing tests now causes Travis CI to fail the whole build.
+	* .travis.yml (after_script): Exit status here has no effect on
+	failure or otherwise.  Moved from here...
+	(script): ...to here, where failing tests will be reported as a
+	failing build.
+
+	specs: propagate package.path to specl subprocesses.
+	* specs/specl_spec.yaml (specl.before::run_spec): Add the package.
+	path to forked specl command so that it has access to ansicolors
+	et.al. from the parent LUA_PATH, which may have been carefully set
+	to match the interpreter by the caller.
+	* specs/formatters_spec.yaml (formatters.before::run_spec): Ditto.
+	Also, escape single quotes in yaml before passing to printf.
+
+	maint: pass LUA to all make invocations for Travis CI.
+	* .travis.yml (script): Pass LUA to all make invocations.
+
+	rockspecs: fix a typo in mkrockspecs.lua script.
+	* build-aux/mkrockspecs.lua: LUAROCKS has only one R in it!
+
+	configury: fix a typo in luarocks-config.lua rule.
+	* GNUmakefile (luarocks-config.lua): Come out of single-quotes to
+	allow expansion of LUA_INCDIR and LUA_BINDIR.
+
+	maint: remove remaining references to removed speclcpath.
+	* build-aux/speclc.in (package.cpath): Remove.
+	* specl/specl.in (package.cpath): Remove.
+
+	configury: use check_local to pass back specs local rule.
+	* specs/specs.mk (check-local): Rename from this...
+	(specs-check-local): ...to this.
+	(check_local): Append specs-check-local.
+
+	maint: show verbose make check output in Travis CI logs.
+	* .travis.yml (after_script): Set V=1 for verbose make output.
+
+	maint: set local luarocks path before make check in Travis CI.
+	* .travis.yml (after_script): Set local luarocks path before
+	running make check.
+
+	maint: use proven Travis CI build recipes from lyaml.
+	* .travis.yml: Overhaul according to lyaml recipes.
+	* GNUmakefile (luarocks-config.lua): In order to work correctly
+	with a given lua interpreter for a particular luarcoks tree, make
+	sure to set the appropriate luarocks variables when writing a
+	luarcoks-config.lua. Also, take care to honour environment
+	values for those variables at make-time, because the user probably
+	knows better how their environment is set up than the generic
+	make rules can!
+	* README.md: Add travis build status badge markup.
+	* build-aux/mkrockspecs.lua: Use the user selected luarocks
+	invocation to execute luarocks lint.
+	* specl-rockspec.lua (build.build_command): Pass $(LUA) as a
+	configure precious variable so that latest ax-lua.m4 uses it as
+	passed instead of running the hardcoded search for a lua binary.
+
+2013-04-05  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: install correct libyaml package for Travis CI.
+	* .travis.yal (install): spell libyaml with a -dev on the end!
+
+	maint: install libyaml for Travis CI.
+	* .travis.yml (install): libyaml is a build requirement.
+
+	maint: install requisite luarocks for Travis CI.
+	* .travis.yml (script): Install ansicolors and lyaml.
+
+	maint: install help2man for travis.
+	* .travis.yml (install): help2man is a build requirement.
+
+	maint: relax autoconf requirement to v2.68.
+	* configure.ac (AC_INIT): 2.68 is new enough, and is the newest
+	version available by default on Travis CI server.
+
+	maint: use travis CI server.
+	* .travis.yml: New file. Travis CI directives.
+
+2013-04-03  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: update TODO.
+	* TODO.yaml (pending support): Remove.  Pending is fully
+	implemented now.
+	(report line numbers of pending and failed examples): New entry.
+
+	specs: remove nonsense pending with before examples.
+	A spec that contains before/after actions is not empty, so it
+	is non-sensical to expect that non-empty specification to be
+	pending by default, even though it has no non-reserved word
+	examples.
+	* specs/specl_spec.yaml (it is pending with a lone before)
+	(it is pending with a lone after, it is pending with before and)
+	(after): Remove.
+
+2013-03-29  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: clarify documentation of custom formatters.
+	* README.md (Custom Formatters): Edit for clarity and accuracy.
+
+	docs: document string argument to pending call.
+	* README.md (Pending Examples): Document string argument to
+	pending call.
+
+2013-03-24  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: report pending argument for pending passes.
+	* specl/matchers.lua (M.pending): Accept and store an optional
+	argument.
+	(M.expect): Copy pending argument to expectations status table.
+	* specs/specl_spec.yaml: Remove pending call from newly passing
+	example.
+	* specl/formatters/progress.lua (expectations): If a value was
+	stored in the pending field, display it in the pending report.
+	* specl/formatters/report.lua (expectations): Likewise.
+
+2013-03-22  Gary V. Vaughan  <gary@gnu.org>
+
+	formatters: new TODO items for pending behaviour as pending specs.
+	* specs/specl_spec.yaml: New TODO items for pending behaviour as
+	pending specs.
+
+	matchers: diagnose passing expectations in pending examples.
+	* specs/specl_spec.yaml: Rearrange slightly to make room for a
+	new specification for unexpected passes in pending examples.
+	* README.md (Pending Examples): Document reporting of unexpected
+	passes with the built in formatters.
+	(Custom Formatters): Document changes to the expectations API
+	needed to support this.
+	* specl/colors.lua (colormap.warn, colormap.strong): New colors
+	for unexpected pass reporting.
+	* specl/formatter/progress.lua (expectations): Return unexpected
+	pass report strings, and display a `?` in the progress bar.
+	(footer): Report unexpected passes in the summaries.
+	* specl/formatter/report.lua (expectations, footer): Likewise,
+	except of course there is no progress bar with this formatter,
+	so display the unexpected pass report in the main output when
+	verbose is set.
+
+	formatters: handle 0 expectations gracefully.
+	* specs/specl_spec.yaml: Specify "No expectations" behaviour.
+	* specl/formatter/report.lua (footer): If expectations was never
+	called, then report will be nil; so guard report dereferencing to
+	avoid a crash.
+	* specl/formatter/progress.lua (footer): Likewise.
+	Also, change summary to say "No expectations met" when none were
+	given.
+
 2013-03-20  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: bump version to 4.
+	* configure.ac (AC_INIT): Bump version number to 4.
 
 	specl: report YAML compilation failures.
 	* specl/specl.lua (compile_example): Report loadstring error
