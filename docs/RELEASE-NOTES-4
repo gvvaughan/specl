@@ -1,0 +1,10 @@
+This release is a minor update to release 3:
+
+- Now tested against Lua 5.1, Lua 5.2 and luajit-2.0 on every commit,
+  thanks to travis-ci.org.
+- Specs propagate user LUA_PATH settings to specl forks in Specls
+  own specifications.
+- Pending specifications are now fully implemented and documented.
+- Unexpected passing of pending specifications is reported by progress
+  and report formatters.
+- API for custom formatters is richer and clearer.
