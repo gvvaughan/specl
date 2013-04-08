@@ -41,9 +41,15 @@
       <section>
         <h1>SPECL</h1>
 
-<p><a href="http://en.wikipedia.org/wiki/Behavior-driven_development">Behaviour Driven Development</a> for <a href="http://www.lua.org">Lua</a>.</p>
+<p><a href="http://github.com/gvvaughan/specl">Specl</a> is testing tool for <a href="http://www.lua.org">Lua</a>, providing a
+<a href="http://en.wikipedia.org/wiki/Behavior-driven_development">Behaviour Driven Development</a> framework in the vein of <a href="http://github.com/rspec/rspec">RSpec</a>.</p>
 
-<h2>1. Installation</h2>
+<ul>
+<li>a rich command line program (the <code>specl</code> command)</li>
+<li>textual descriptions of examples and groups (spec files use <a href="http//yaml.org">YAML</a>)</li>
+<li>flexible and customizable reporting (formatters)</li>
+<li>extensible expectation language (matchers)</li>
+</ul><h2>1. Installation</h2>
 
 <p>By far the easiest way to install Specl is with <a href="http://www.luarocks.org">LuaRocks</a>:</p>
 
@@ -52,13 +58,11 @@
 
 <p>To install current git master (for testing):</p>
 
-<pre><code>luarocks install https://raw.github.com/gvvaughan/specl/release/specl-git-1.rockspec
+<pre><code>luarocks install http://raw.github.com/gvvaughan/specl/release/specl-git-1.rockspec
 </code></pre>
 
 <p>To install without <a href="http://www.luarocks.org">LuaRocks</a>, check out the sources from the
-<a href="http://github.com/gvvaughan/specl">repository</a>, and then run the following commands: the
-dependencies are listed in the dependencies entry of the file
-<a href="https://github.com/gvvaughan/specl/blob/master/specl-rockspec.lua#L23">specl-rockspec.lua</a>. You will also need autoconf and automake.</p>
+<a href="http://github.com/gvvaughan/specl">repository</a>, and then run the following commands:</p>
 
 <pre><code>cd specl
 autoreconf --force --version --install
@@ -66,7 +70,10 @@ autoreconf --force --version --install
 make all check install
 </code></pre>
 
-<p>See <a href="https://raw.github.com/gvvaughan/specl/master/INSTALL">INSTALL</a> for instructions for <code>configure</code>.</p>
+<p>The dependencies are listed in the dependencies entry of the file
+<a href="http://github.com/gvvaughan/specl/blob/master/specl-rockspec.lua#L23">specl-rockspec.lua</a>. You will also need autoconf and automake.</p>
+
+<p>See <a href="http://raw.github.com/gvvaughan/specl/master/INSTALL">INSTALL</a> for instructions for <code>configure</code>.</p>
 
 <h2>2. Specifications</h2>
 
