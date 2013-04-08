@@ -27,8 +27,9 @@ package.path  = ("@speclpath@;" .. package.path):gsub (
                  ";%./%?.lua$", "")
 
 
-local std  = require "std"
-local yaml = require "lyaml"
+local macro = require "macro"
+local std   = require "std"
+local yaml  = require "lyaml"
 
 if select ("#", ...) ~= 1 then
   io.stderr:write "Usage: lua specc.lua SPEC.yaml > SPEC.lua\n"
@@ -114,11 +115,16 @@ function dump_examples (examples, indent)
 end
 
 
+-- Capture errors thrown by expectations.
+macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
+
 function dump_example (description, definition, indent)
   if definition == "" then
     -- Empty definitions denote a pending example.
     definition = "pending ()"
   end
+
+  definition = macro.substitute_tostring (definition)
 
   definition = "  " .. definition:gsub (
                  "\n", "\n  " .. indent):gsub (

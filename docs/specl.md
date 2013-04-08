@@ -326,30 +326,15 @@ the expectation against a [Lua][] pattern:
 
 Specifications for error conditions are a great idea! And this matcher
 checks both that an `error` was raised and that the subsequent error
-message contains the supplied substring.
+message contains the supplied substring, if any.
 
-Because [Lua][] evaluates the argument to `expect` before `expect`
-receives it, you would have to manually evaluate the expression using
-`pcall` to prevent the error it raises from propagating up the stack
-past `expect`. The `error` matcher is a syntactic sugar to save writing
-the `pcall`, but in order to do that requires the parameters to be in
-the opposite order of the other matchers.
-
-Nonetheless, the following are broadly equivalent, though one is *much*
-easier to understand than the other:
-
-    expect ("table expected").should_error (next, nil)
-    expect (function ()
-              ok, msg = pcall (next, nil)
-              if ok then return false end
-              return msg
-            end).should_contain ("table expected")
+    expect (next (nil)).should_error ("table expected")
 
 <a id="inverting-a-matcher"></a>
 ### 2.6. Inverting a matcher with `not`
 
 Oftentimes, in your specification you need to check that an expectation
-does *not* match a particular outcome, and [Specl][] has you covered
+does **no*t* match a particular outcome, and [Specl][] has you covered
 there too. Rather than implement another set of matchers to do that
 though, you can just insert `not_` right in the matcher method name.
 [Specl][] will still call the matcher according to the root name (see
@@ -358,6 +343,11 @@ before reporting a pass or fail:
 
     expect ({}).should_not_be ({})
     expect (tostring (hex)).should_not_contain ("[g-zG-Z]")
+    expect (next {}).should_not_error ()
+
+Note that the last `should_not_error` example doesn't pass the error
+message substring that _should not_ match, because it is never checked, but
+you can pass the string if it makes an expectation clearer.
 
 
 3. Environments

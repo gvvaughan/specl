@@ -63,13 +63,18 @@ M.matchers = {
   end,
 
   -- Matches if FUNC raises any error.
-  ["error"] = function (expected, ...)
-    local ok, err = pcall (...)
-    if not ok then -- "not ok" means an error occurred
-      local pattern = ".*" .. expected:gsub ("%W", "%%%0") .. ".*"
-      ok = not err:match (pattern)
+  ["error"] = function (value, expected, ok)
+    local m = ""
+
+    if expected ~= nil then
+      if not ok then -- "not ok" means an error occurred
+        local pattern = ".*" .. expected:gsub ("%W", "%%%0") .. ".*"
+        ok = not value:match (pattern)
+      end
+      m = " containing " .. q(expected)
     end
-    return not ok, "expecting an error containing " .. q(expected) .. ", and got\n" .. q(err)
+
+    return not ok, "expecting an error" .. m .. ", but got\n" .. q(value)
   end,
 
   -- Matches if VALUE matches regular expression PATTERN.
@@ -125,17 +130,17 @@ end
 
 M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.clock () }
 
-function M.expect (target)
+function M.expect (ok, target)
   return setmetatable ({}, {
-    __index = function(_, matcher)
+    __index = function (_, matcher)
       local inverse = false
       if matcher:match ("^should_not_") then
         inverse, matcher = true, matcher:sub (12)
       else
         matcher = matcher:sub (8)
       end
-      return function(...)
-        local success, message = M.matchers[matcher](target, ...)
+      return function (expected)
+        local success, message = M.matchers[matcher](target, expected, ok)
 	local pending
 
         if inverse then

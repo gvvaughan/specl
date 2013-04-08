@@ -1,33 +1,176 @@
 describe matchers:
-- before:
-    specl = require "specl"
+- before: |
+    preamble = "describe x:\n- it matches something: expect "
+
+    function run_spec (yaml, cmd)
+      yaml = (preamble .. yaml):gsub ("'", "'\\''")
+      cmd  = cmd or ""
+      -- if CMD begins with a '-' then only options follow, otherwise
+      -- we assume the entire command was passed.
+      if cmd == "" or cmd:sub (1, 1) == "-" then
+        cmd = "env LUA_PATH='" .. package.path .. "' specl/specl --color=no " .. cmd
+      end
+      return (specl.cmdpipe ("printf '%s\\n' '" .. yaml .. "'|" .. cmd)).output
+    end
+
+    deep = "({{ 'subtable 1', {'sub-subtable'} }, { 'subtable 2' }})"
+
+
+- describe be matcher:
+  - context when called normally:
+    - it succeeds when comparing identical objects:
+        expect (run_spec ("(1).should_be (1)")).
+          should_contain "\nAll expectations met"
+    - it fails when comparing different objects:
+        expect (run_spec ("(1).should_be 'one'")).
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+  - context when called with not_ prefix:
+    - it succeeds when comparing different objects:
+        expect (run_spec ("(1).should_not_be 'one'")).
+          should_contain "\nAll expectations met"
+    - it fails when comparing identical objects:
+        expect (run_spec ("(1).should_not_be (1)")).
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+
+
+- describe equal matcher:
+  - context when called normally:
+    - it succeeds when comparing equal objects:
+        expect (run_spec ("({}).should_equal {}")).
+          should_contain "\nAll expectations met"
+    - "it makes a deep comparison of non-string elements":
+        expect (run_spec (deep .. ".should_equal " .. deep)).
+          should_contain "\nAll expectations met"
+    - it fails when comparing unequal objects:
+        expect (run_spec ("('str').should_equal {'table'}")).
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+  - context when called with not_ prefix:
+    - it succeeds when comparing unequal objects:
+        expect (run_spec ("('str').should_not_equal {'table'}")).
+          should_contain "\nAll expectations met"
+    - it fails when comparing equal objects:
+        expect (run_spec ("({1, {2}}).should_not_equal {1, {2}}")).
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+
 
 - describe contain matcher:
   - it diagnoses incompatible arguments:
-      expect ("string or table expected").should_error (function ()
-                specl._expect (function () end).should_contain "nothing"
-              end)
+      specl = require "specl"
+      expect (specl._expect (function () end).should_contain "nothing").
+        should_error "string or table expected"
 
-  - context when expect receives a string:
-    - it compares against the expectation:
-        expect ("English Language").should_contain "e"
-        expect ("English Language").should_not_contain "~"
+  - context when receiving a string:
+    - context while called normally:
+      - it succeeds if the substring is present:
+          expect (run_spec ("('English Language').should_contain 'e'")).
+            should_contain "\nAll expectations met"
+      - it fails if the substring is absent:
+          expect (run_spec ("('English Language').should_contain '~'")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+    - context while called with not_ prefix:
+      - it succeeds if the substring is absent:
+          expect (run_spec ("('English Language').should_not_contain '~'")).
+            should_contain "\nAll expectations met"
+      - it fails if the substring is present:
+          expect (run_spec ("('English Language').should_not_contain 'e'")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
 
-  - context when expect receives a table:
-    - it compares elements against the expectation:
-        expect ({ "one", "two", "five" }).should_contain "five"
-        expect ({ "one", "two", "five" }).should_not_contain "three"
-    - it compares keys against the expectation:
-        object = { one = true, two = true, five = true }
-        expect (object).should_contain "five"
-        expect (object).should_not_contain "three"
-    - "it makes a deep comparison of non-string elements":
-        object = {{ "subtable one" }, { "subtable two" }}
-        expect (object).should_contain { "subtable one" }
-        expect (object).should_not_contain "subtable one"
+  - context when receiving a table:
+    - before:
+        vals = "({ 'one', 'two', 'five' })"
+        keys = "({ one = true, two = true, five = true })"
+    - context while called normally:
+      - it succeeds if the element is a table value:
+          expect (run_spec (vals .. ".should_contain 'five'")).
+            should_contain "\nAll expectations met"
+      - it succeeds if the element is a table key:
+          expect (run_spec (keys .. ".should_contain 'five'")).
+            should_contain "\nAll expectations met"
+      - "it succeeds with a one-deep match of a table element":
+          expect (run_spec (deep .. ".should_contain { 'subtable 2' }")).
+            should_contain "\nAll expectations met"
+      - it fails if the element is not a table value:
+          expect (run_spec (vals .. ".should_contain 'three'")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+      - it fails if the element is not a table key:
+          expect (run_spec (keys .. ".should_contain 'three'")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+      - "it fails with no one-deep match of a table element":
+          expect (run_spec (deep .. ".should_contain { 'subtable 1' }")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+    - context while called with not_ prefix:
+      - it succeeds if the element is not a table value:
+          expect (run_spec (vals .. ".should_not_contain 'three'")).
+            should_contain "\nAll expectations met"
+      - it succeeds if the element is not a table key:
+          expect (run_spec (keys .. ".should_not_contain 'three'")).
+            should_contain "\nAll expectations met"
+      - "it succeeds with no one-deep match of a table element":
+          expect (run_spec (deep .. ".should_not_contain { 'subtable 1' }")).
+            should_contain "\nAll expectations met"
+      - it fails if the element is a table value:
+          expect (run_spec (vals .. ".should_not_contain 'five'")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+      - it fails if the element is a table key:
+          expect (run_spec (keys .. ".should_not_contain 'five'")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+      - "it fails with a one-deep match of a table element":
+          expect (run_spec (deep .. ".should_not_contain { 'subtable 2' }")).
+            should_contain "\n0 passed, 0 pending, and 1 failed"
+
 
 - describe match matcher:
-  - it diagnoses non-string arguments:
-      expect ("string expected").should_error (function ()
-                specl._expect ({"a table"}).should_match {}
-              end)
+  - "it diagnoses non-string arguments":
+      specl = require "specl"
+      expect (specl._expect ({"a table"}).should_match {}).
+        should_error "string expected"
+
+  - context when called normally:
+    - it succeeds if the pattern matches:
+        expect (run_spec ("('English Language').should_match '^%w+%s'")).
+          should_contain "\nAll expectations met"
+    - it fails if the pattern does not match:
+        expect (run_spec ("('English Language').should_match '%d+'")).
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+  - context when called with not_ prefix:
+    - it succeeds if the pattern does not match:
+        expect (run_spec ("('English Language').should_not_match '%d+'")).
+          should_contain "\nAll expectations met"
+    - it fails if the pattern matches:
+        expect (run_spec ("('English Language').should_not_match '^%w+%s'")).
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+
+
+- describe error matcher:
+  - context when called normally:
+    - it succeeds if there is an error that contains the message:
+        expect (run_spec "(error 'error message').should_error 'error'").
+          should_contain "\nAll expectations met"
+    - it succeeds if there is any error with no message argument:
+        expect (run_spec "(error 'error message').should_error ()").
+          should_contain "\nAll expectations met"
+    - it fails if there is an error that does not contains the message:
+        expect (run_spec "(error 'error message').should_error 'failed'").
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+    - it fails if there is no error nor any message argument:
+        expect (run_spec "('not an error').should_error ()").
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+    - it fails if there is no error:
+        expect (run_spec "('not an error').should_error 'error'").
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+  - context when called with not_ prefix:
+    - it succeeds if there is no error:
+        expect (run_spec "('not an error').should_not_error 'error'").
+          should_contain "\nAll expectations met"
+    - it succeeds if there is no error nor any message argument:
+        expect (run_spec "('not an error').should_not_error ()").
+          should_contain "\nAll expectations met"
+    - it succeeds if there is an error that does not contains the message:
+        expect (run_spec "(error 'error message').should_not_error 'failed'").
+          should_contain "\nAll expectations met"
+    - it fails if there is any error with no message argument:
+        expect (run_spec "(error 'error message').should_not_error ()").
+          should_contain "\n0 passed, 0 pending, and 1 failed"
+    - it fails if there is an error that contains the message:
+        expect (run_spec "(error 'error message').should_not_error 'error'").
+          should_contain "\n0 passed, 0 pending, and 1 failed"

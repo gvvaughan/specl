@@ -22,6 +22,7 @@ local default = {
   },
   dependencies = {
     "ansicolors",
+    "luamacro >= 2.0",
     "lua >= 5.1",
     "lyaml",
   },

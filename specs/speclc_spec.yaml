@@ -1,11 +1,12 @@
 describe speclc:
 - before: |
+    yaml = "describe x:\n- it is an example: "
     tmpfile = os.tmpname ()
 
     function compile_spec (yaml, opts)
       opts = opts or ""
       f    = io.open (tmpfile, "w")
-      f:write (yaml)
+      f:write (yaml .. "\n")
       f:close ()
       return specl.cmdpipe ("build-aux/speclc " .. opts .. " " .. tmpfile)
     end
@@ -14,9 +15,12 @@ describe speclc:
     os.remove (tmpfile)
 
 - context with an empty YAML example:
-  - before: |
-      yaml = "describe x:\n- it is pending:"
   - it compiles to a pending Lua example:
       expect (compile_spec (yaml).output).should_contain "pending ()"
   - it completes without error:
       expect (compile_spec (yaml).status).should_be (0)
+
+- context with an expectation:
+  - it expands the expect macro:
+      expect (compile_spec (yaml .. "expect (1).should_be (1)").output).
+        should_contain "expect (pcall (function () return 1 end)).should_be (1)"
