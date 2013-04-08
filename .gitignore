@@ -1,4 +1,6 @@
 *~
+*.1
+*.1.in
 *.o
 *.lo
 *.la
@@ -17,7 +19,6 @@
 /autom4te.cache
 /config.h.in
 /configure
-/docs
 /config.h
 /config.log
 /config.lt
