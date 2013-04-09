@@ -3,7 +3,7 @@ SPECL
 
 [![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png?branch=master)](http://travis-ci.org/gvvaughan/specl/builds)
 
-[Specl][] is testing tool for [Lua][], providing a
+[Specl][] is a testing tool for [Lua][], providing a
 [Behaviour Driven Development][BDD] framework in the vein of [RSpec][].
 
  * a rich command line program (the `specl` command)
@@ -26,7 +26,7 @@ To install without [LuaRocks][], check out the sources from the
 [repository][specl], and then run the following commands:
 
     cd specl
-    autoreconf --force --version --install
+    ./bootstrap
     ./configure --prefix=INSTALLATION-ROOT-DIRECTORY
     make all check install
 
