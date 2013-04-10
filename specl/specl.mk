@@ -119,7 +119,7 @@ install-specl-hook:
 ## ------------- ##
 
 EXTRA_DIST +=						\
-	build-aux/mkrockspecs.lua			\
+	build-aux/mkrockspecs				\
 	docs/specl.1.in					\
 	specl/specl.in					\
 	$(NOTHING_ELSE)

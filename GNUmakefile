@@ -22,7 +22,7 @@ specl_verbose_1 = --verbose --formatter=report
 
 include Makefile
 
-MKROCKSPECS = $(LUA) $(srcdir)/build-aux/mkrockspecs.lua
+MKROCKSPECS = $(LUA) $(srcdir)/build-aux/mkrockspecs
 ROCKSPEC_TEMPLATE = $(srcdir)/rockspecs.lua
 
 LUA_BINDIR ?= $(shell which $(LUA) |sed 's|/[^/]*$$||')
