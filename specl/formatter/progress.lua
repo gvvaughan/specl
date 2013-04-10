@@ -131,7 +131,7 @@ local function footer (stats, reports)
            pendcolor .. stats.pend .. " pending%{reset}, " ..
            "and " .. failcolor .. stats.fail .. " failed%{reset}")
   end
-  princ (" in " .. color.clock ..  (os.clock () - stats.starttime) ..
+  princ (" in " .. color.clock ..  (os.time () - stats.starttime) ..
          " seconds%{reset}.")
 end
 

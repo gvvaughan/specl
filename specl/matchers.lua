@@ -128,7 +128,7 @@ end
 --
 -- For example:                  expect ({}).should_not_be {}
 
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.clock () }
+M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.time () }
 
 function M.expect (ok, target)
   return setmetatable ({}, {
