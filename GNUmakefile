@@ -9,7 +9,7 @@ Makefile: Makefile.in
 	$(MAKE)
 
 Makefile.in:
-	./bootstrap --force --verbose -Wall --skip-git
+	./bootstrap
 
 else
 
