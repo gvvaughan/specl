@@ -1,8 +1,11 @@
+#!/bin/sh
+A=--[[ exec lua "$0" "$@" # -* mode: lua; -*s ]]A
+--
 -- Generate rockspecs from a prototype with variants
 
 require "std"
 
-if select ("#", ...) < 2 then
+if select ("#", ...) < 3 then
   io.stderr:write "Usage: mkrockspecs PACKAGE VERSION TEMPLATE\n"
   os.exit ()
 end

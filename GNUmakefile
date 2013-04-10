@@ -23,9 +23,8 @@ specl_verbose_1 = --verbose --formatter=report
 include Makefile
 
 MKROCKSPECS = $(LUA) $(srcdir)/build-aux/mkrockspecs.lua
-ROCKSPEC_TEMPLATE = $(srcdir)/specl-rockspec.lua
+ROCKSPEC_TEMPLATE = $(srcdir)/rockspecs.lua
 
-LUA        ?= lua
 LUA_BINDIR ?= $(shell which $(LUA) |sed 's|/[^/]*$$||')
 LUA_INCDIR ?= `cd $(LUA_BINDIR)/../include && pwd`
 LUA_LIBDIR ?= `cd $(LUA_BINDIR)/../lib && pwd`
@@ -41,10 +40,12 @@ luarocks-config.lua: GNUmakefile
 	  echo '}';						\
 	} > '$@'
 
-rockspecs: luarocks-config.lua
-	rm -f *.rockspec
-	$(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE)
-	$(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE)
+rockspecs: luarocks-config.lua $(srcdir)/build-aux/mkrockspecs $(ROCKSPEC_TEMPLATE)
+	$(AM_V_at)rm -f *.rockspec
+	@echo "  GEN      $(PACKAGE)-$(VERSION)-1.rockspec"
+	$(AM_V_at)$(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE)
+	@echo "  GEN      $(PACKAGE)-git-1.rockspec"
+	$(AM_V_at)$(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE)
 
 GIT ?= git
 
