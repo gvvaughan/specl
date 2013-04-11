@@ -51,6 +51,7 @@ dist_lua_DATA =						\
 	$(NOTHING_ELSE)
 
 src/specl: Makefile src/specl.in
+	@test -d src || mkdir src
 	@rm -f '$@' '$@.tmp'
 	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
 	$(AM_V_at)mv '$@.tmp' '$@'
