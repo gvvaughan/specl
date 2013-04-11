@@ -28,15 +28,18 @@ local default = {
   },
   build = {
     type = "command",
-    build_command = "LUA_INCLUDE=-I$(LUA_INCDIR) ./configure " ..
-      "LUA=$(LUA) --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) " ..
-      "&& make clean && make",
-    install_command = "make install",
+    build_command = "./configure " ..
+      "LUA_INCLUDE=$(LUA_INCDIR) LUA=$(LUA) " ..
+      "--prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) " ..
+      "&& make clean all",
+    install_command = "make install luadir=$(LUADIR)",
     copy_directories = {},
   },
 }
 
-if version == "git" then
+if version ~= "git" then
+  default.source.branch = "release-v"..version_dashed
+else
   default.build.build_command = "./bootstrap && " .. default.build.build_command
 end
 

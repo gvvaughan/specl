@@ -56,6 +56,7 @@ inplace_edit = sed					\
 	$(NOTHING_ELSE)
 
 
+include src/src.mk
 include specl/specl.mk
 include specs/specs.mk
 

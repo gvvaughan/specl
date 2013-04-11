@@ -21,7 +21,7 @@
 ## Specs. ##
 ## ------ ##
 
-SPECL  = specl/specl
+SPECL  = src/specl
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
