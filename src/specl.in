@@ -53,38 +53,9 @@ function slurp (filename)
     os.exit (1)
   end
 
-  local ok, t = pcall (yaml.load, s)
+  t = yaml.load (s)
 
-  -- If loading as YAML didn't work, try again as Lua.
-  if not ok then
-    local f
-
-    -- Remove leading comment lines, carefully preserving line numbers for
-    -- error messages from 'load', and then inject the 'return' keyword at
-    -- the start of the first non-blank line.
-    s = s:gsub ("^%s*%-%-[^\r\n]+(\r*\n)%s*", "%1"
-        ):gsub (",%s*$", ""
-        ):gsub ("[^\r\n]", "return %0", 1)
-    f, errmsg = loadstring (s, filename)
-
-    if f ~= nil then
-      t, errmsg = f ()
-    else
-      -- To get here, `ok` was false because `yaml.load` failed *and*
-      -- loadstring failed too, so `pcall (yaml.load)` saved an error
-      -- message in `t`.  And we want to report the YAML load error if
-      -- both `yaml.load` and `loadstring` failed:
-      errmsg = t
-    end
-  end
- 
-  -- Execute the newly loaded function, and save the value returned, or
-  -- report any error right away.
-  if errmsg ~= nil then
-    error (errmsg)
-  end
-
-  -- Append to the specification list, which specl will run on completion.
+  -- Append to the specification list, which specl will run presently.
   table.insert (spec, t)
 end
 
