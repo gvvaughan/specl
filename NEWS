@@ -1,0 +1,131 @@
+Specl NEWS - User visible changes.
+
+* Noteworthy changes in release ?.? (????-??-??) [?]
+
+** This release is a significant upgrade.
+
+** New features:
+
+  - Documentation reorganisation.  README.md is much simplified, with
+    full documentation still in markdown at docs/specl.md.  The html
+    documentation at http://gvvaughan.github.io/specl will be updated
+    with every release from now on.
+
+** Bug fixes:
+
+  - './bootstrap' runs quickly with 4800 lines of code removed.
+
+  - './configure' runs quickly with the remaining C macros removed.
+
+  - 'progress' and 'report' formatters now report elapsed time rather
+    than cpu time in their footer output.
+
+  - The 'specl' LUA_PATH no longer picks up its own 'specl.std' module
+    by mistake when a spec file requires the lua-stdlib 'std' module.
+
+** Incompatible changes:
+
+  - The 'should_error' matcher now takes arguments in the same order
+    as the other matchers. LuaMacro injects a 'pcall' into every
+    'expect' invocation, so the specifications are written
+    intuitively:
+
+        expect (error "failed").should_error "failed"
+
+  - The Specl-1 Lua format for spec files is no longer supported, in
+    part to clean up a lot of otherwise unused code, but also because
+    Lua specs were accumulating too much magic to be easy to write by
+    hand.
+
+  - 'build-aux' speclc and the bundled generated 'specs/*_spec.lua'
+    specs have been removed.
+
+
+* Noteworthy changes in release 4 (2013-04-07) [beta]
+
+** This release is a minor update.
+
+** New features:
+
+  - Now tested against Lua 5.1, Lua 5.2 and luajit-2.0 on every commit,
+    thanks to travis-ci.org.
+
+  - Pending specifications are now fully implemented and documented.
+
+  - Unexpected passing of pending specifications is reported by progress
+    and report formatters.
+
+  - API for custom formatters is richer and clearer.
+
+** Bug fixes:
+
+  - Specs propagate user LUA_PATH settings to specl forks in Specls own
+    own specifications.
+
+
+* Noteworthy changes in release 3 (2013-03-20) [beta]
+
+** This release is a significant upgrade.
+
+** New features:
+
+  - lyaml was spun out to a separate luarock, now required.
+
+  - Initial support for pending examples, either using the new
+    'pending ()' function, or having an example description with an
+    empty definition.
+
+  - pending and failed expectations are now summarized in the footer of
+    default (progress) and report formatters.
+
+  - Formatters display in color on supported TERM types, ansicolors is
+    now required.
+
+  - Color can be disabled with `--color=no` command line option.
+
+  - Custom formatters are now supported, using the new command line
+    option `--formatter=tap`.
+
+  - The custom formatters API is documented in README.md.
+
+  - A new TAP formatter was contributed by François Perrad.
+
+  - Many more specifications for Specl were added, now that specl is
+    featureful enough to support BDD development of itself.
+
+** Bug fixes:
+
+  - Error message from invalid Lua in example definitions are now
+    reported correctly.
+
+  - Runner environments are more robust, see README.md for details.
+
+  - Specl no longer uses lua-stdlib (to break a cyclic dependency
+    when using specl to run lua-stdlib spec-files).
+
+** Incompatible changes:
+
+  - `-v` now behaves differently, and simply requests more verbose
+    output from the selected formatter, use `-freport` to select the
+    report formatter like `-v` did in release 2 and earlier.
+
+
+* Noteworthy changes in release 2 (2013-03-07) [beta]
+
+  - Now compatible with Lua 5.2 *and* Lua 5.1.
+
+  - Primary format for spec files is now YAML (specl-1 format spec files
+    are still supported).
+
+  - Requires libyaml-0.1.4 to be installed before building.
+
+  - Includes some YAML specifications for Specl.
+
+
+* Noteworthy changes in release 1 (2013-02-26) [alpha]
+
+** Initial proof-of concept for an RSpec inspired framework for and in
+   Lua.
+
+** The spec file syntax is a bit horrid in pure Lua, but the next
+   release uses YAML and is much nicer!
