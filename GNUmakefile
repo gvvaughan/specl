@@ -47,52 +47,64 @@ rockspecs: luarocks-config.lua $(srcdir)/build-aux/mkrockspecs $(ROCKSPEC_TEMPLA
 	@echo "  GEN      $(PACKAGE)-git-1.rockspec"
 	$(AM_V_at)$(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE)
 
-GIT ?= git
 
-tag-release:
-	$(GIT) diff --exit-code && \
-	$(GIT) tag -f -a -m "Release tag" v$(VERSION)
-
-define unpack-distcheck-release
-	rm -rf $(PACKAGE)-$(VERSION)/ && \
-	tar zxf $(PACKAGE)-$(VERSION).tar.gz && \
-	cp -a -f $(PACKAGE)-$(VERSION)/* . && \
-	rm -rf $(PACKAGE)-$(VERSION)/ && \
-	echo "unpacked $(PACKAGE)-$(VERSION).tar.gz over current directory" && \
-	echo './configure && make all rockspecs' && \
-	./configure --version && ./configure && \
-	$(MAKE) all rockspecs
-endef
-
-check-in-release: distcheck
-	current_branch=`$(GIT) symbolic-ref HEAD`; \
-	{ $(GIT) checkout -b release 2>/dev/null || $(GIT) checkout release; } && \
-	{ $(GIT) pull origin release || true; } && \
-	$(unpack-distcheck-release) && \
-	$(GIT) add . && \
-	$(GIT) commit -a -m "Release v$(VERSION)" && \
-	$(GIT) tag -a -m "Full source release tag" release-v$(VERSION); \
-	$(GIT) checkout `echo "$$current_branch" | sed 's,.*/,,g'`
-
+## -------- ##
+## Release. ##
+## -------- ##
 
 ## To test the release process without publishing upstream, use:
 ##   make release WOGER=: GIT_PUBLISH=:
-GIT_PUBLISH ?= $(GIT)
-WOGER ?= woger
+GIT		?= git
+GIT_PUBLISH	?= $(GIT)
+WOGER		?= woger
 
-WOGER_ENV = LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
-WOGER_OUT = $(WOGER_ENV) $(LUA) -l$(PACKAGE) -e
+WOGER_ENV	 = LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
+WOGER_OUT	 = $(WOGER_ENV) $(LUA) -l$(PACKAGE) -e
+
+pkgver		 = $(PACKAGE)-$(VERSION)
+release-tarball	 = $(pkgver).tar.gz
+
+# Anything in $(_save-files) is not removed after switching to the
+# release branch, and is thus "in the release". For example:
+#     save_release_files = |RELEASE-NOTES-
+_save-files = (.travis.yml|$(tarball)$(save_release_files))
+
+git-clean-files = $(GIT) ls-files |grep -E -v '$(_save-files)'
+
+define unpack-distcheck-release
+	$(GIT) clean -dfx -e '$(release-tarball)' &&			\
+	rm -f `$(git-unreleased-files)` &&				\
+	ln -s . '$(pkgver)' &&						\
+	tar zxf '$(release-tarball)' &&					\
+	rm -f '$(pkgver)' '$(release-tarball)' &&			\
+	echo "unpacked $(release-tarball) into release branch" &&	\
+	$(GIT) add .
+endef
+
+tag-release:
+	$(GIT) diff --exit-code &&					\
+	$(GIT) tag -f -a -m "Release tag" v$(VERSION)
+
+check-in-release: distcheck
+	current_branch=`$(GIT) symbolic-ref HEAD`;			\
+	{ $(GIT) checkout -b release 2>/dev/null || $(GIT) checkout release; } && \
+	{ $(GIT) pull origin release || true; } &&			\
+	$(unpack-distcheck-release) &&					\
+	$(GIT) commit -a -m "Release v$(VERSION)" &&			\
+	$(GIT_PUBLISH) push &&						\
+	$(GIT) tag -f -a -m "Full source release tag" release-v$(VERSION); \
+	$(GIT) checkout `echo "$$current_branch" | sed 's,.*/,,g'`
 
 release:
-	$(MAKE) tag-release && \
-	$(MAKE) check-in-release && \
-	$(GIT_PUBLISH) push && $(GIT_PUBLISH) push --tags && \
-	$(WOGER) lua \
-	  package=$(PACKAGE) \
-	  package_name=$(PACKAGE_NAME) \
-	  version=$(VERSION) \
-	  notes=docs/RELEASE-NOTES-$(VERSION) \
-	  home="`$(WOGER_OUT) 'print (description.homepage)'`" \
+	$(MAKE) tag-release &&						\
+	$(MAKE) check-in-release &&					\
+	$(GIT_PUBLISH) push && $(GIT_PUBLISH) push --tags &&		\
+	$(WOGER) lua							\
+	  package=$(PACKAGE)						\
+	  package_name=$(PACKAGE_NAME)					\
+	  version=$(VERSION)						\
+	  notes=docs/RELEASE-NOTES-$(VERSION)				\
+	  home="`$(WOGER_OUT) 'print (description.homepage)'`"		\
 	  description="`$(WOGER_OUT) 'print (description.summary)'`"
 
 endif
