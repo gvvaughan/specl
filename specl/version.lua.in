@@ -82,6 +82,9 @@ For more information, see <http://www.gnu.org/licenses>.]]
     end
     local ok, formatter = pcall (require, arg)
     if ok == false then
+      ok, formatter = pcall (require, "specl.formatter." .. arg)
+    end
+    if ok == false then
       return nil, "could not load formatter: " .. formatter
     end
     return formatter, "formatter"

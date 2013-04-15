@@ -21,7 +21,7 @@
 ## Declarations. ##
 ## ------------- ##
 
-INSTALL_PATH  = $(luadir)/?.lua;$(luadir)/specl/formatter/?.lua
+INSTALL_PATH  = $(luadir)/?.lua
 
 specl_install_edit =					\
 	$(install_edit)					\
@@ -29,7 +29,7 @@ specl_install_edit =					\
 	$(NOTHING_ELSE)
 
 
-INPLACE_PATH  = $(abs_srcdir)/src/?.lua;$(abs_srcdir)/?.lua;$(abs_srcdir)/specl/formatter/?.lua
+INPLACE_PATH  = $(abs_srcdir)/src/?.lua;$(abs_srcdir)/?.lua
 
 specl_inplace_edit =					\
 	$(inplace_edit)					\
