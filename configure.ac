@@ -32,6 +32,8 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 dnl Check for programs
 AX_WITH_PROG([HELP2MAN], [help2man], [false])
 AX_PROG_LUA(5.1, 5.3)
+AC_PROG_EGREP
+AC_PROG_SED
 
 dnl Generate output files
 AC_CONFIG_FILES([Makefile specl/version.lua])

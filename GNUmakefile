@@ -49,10 +49,8 @@ include Makefile
 ## Defaults. ##
 ## --------- ##
 
-EGREP	?= grep -E
 GIT	?= git
 LUA	?= lua
-SED	?= sed
 TAR	?= tar
 WOGER	?= woger
 
