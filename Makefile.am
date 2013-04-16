@@ -72,7 +72,8 @@ check-local: $(check_local)
 ## LuaRocks. ##
 ## --------- ##
 
-MKROCKSPECS = $(LUA) $(srcdir)/build-aux/mkrockspecs
+LUAROCKS	 ?= luarocks
+MKROCKSPECS	  = $(LUA) $(srcdir)/build-aux/mkrockspecs
 ROCKSPEC_TEMPLATE = $(srcdir)/rockspecs.lua
 RELEASE_ROCKSPEC  = $(srcdir)/$(PACKAGE)-$(VERSION)-1.rockspec
 GIT_ROCKSPEC      = $(PACKAGE)-git-1.rockspec
@@ -100,10 +101,17 @@ luarocks-config.lua: Makefile.am
 	} > '$@'
 
 $(RELEASE_ROCKSPEC): $(ROCKSPECS_DEPS)
-	$(AM_V_GEN)$(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE)
+	$(AM_V_at)rm -f '$@' 2>/dev/null || :
+	$(AM_V_GEN)test -f '$@' ||				\
+	  $(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE) > '$@'
+	$(AM_V_at)$(LUAROCKS) lint '$@'
+
 
 $(GIT_ROCKSPEC): $(ROCKSPECS_DEPS)
-	$(AM_V_GEN)$(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE)
+	$(AM_V_at)rm '$@' 2>/dev/null || :
+	$(AM_V_GEN)test -f '$@' ||				\
+	  $(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE) > '$@'
+	$(AM_V_at)$(LUAROCKS) lint '$@'
 
 .PHONY: rockspecs
 rockspecs: $(RELEASE_ROCKSPEC) $(GIT_ROCKSPEC)

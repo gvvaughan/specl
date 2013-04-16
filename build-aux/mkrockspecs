@@ -38,9 +38,6 @@ local settings = loadfile (template) ()
 local qualified_version = settings.default.version
 for f, spec in pairs (settings) do
   if f ~= "default" then
-    local specfile = package_name.."-"..(f ~= "" and f:lower ().."-" or "")..qualified_version..".rockspec"
-    h = io.open (specfile, "w")
-    assert (h)
     flavour = f -- a global, visible in loadfile
     local specs = loadfile (template) () -- reload to get current flavour interpolated
     local spec = tree.merge (tree.new (specs.default), tree.new (specs[f]))
@@ -48,8 +45,6 @@ for f, spec in pairs (settings) do
     for i, v in pairs (spec) do
       s = s..i.." = "..format (v, "  ").."\n"
     end
-    h:write (s)
-    h:close ()
-    os.execute ("${LUAROCKS-luarocks} lint " .. specfile)
+    io.stdout:write (s)
   end
 end
