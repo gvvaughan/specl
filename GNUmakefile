@@ -83,10 +83,6 @@ specl_verbose_1 = --verbose --formatter=report
 ## Release. ##
 ## -------- ##
 
-## To test the release process without publishing upstream, use:
-##   make release WOGER=: GIT_PUBLISH=:
-GIT_PUBLISH	?= $(GIT)
-
 WOGER_ENV	 = LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
 WOGER_OUT	 = $(WOGER_ENV) $(LUA) -l$(PACKAGE) -e
 
@@ -126,7 +122,6 @@ check-in-release-branch: distcheck rockspecs
 	{ $(GIT) pull origin release || true; } &&			\
 	$(unpack-distcheck-release) &&					\
 	$(GIT) commit -a -m "Release v$(VERSION)" &&			\
-	$(GIT_PUBLISH) push &&						\
 	$(GIT) tag -f -a -m "Full source release tag" release-v$(VERSION); \
 	$(GIT) checkout `echo "$$current_branch" | $(SED) 's,.*/,,g'`
 
@@ -180,7 +175,10 @@ alpha beta stable:
 .PHONY: release
 release:
 	$(AM_V_GEN)$(MAKE) $(release-type) &&				\
-	$(GIT_PUBLISH) push && $(GIT_PUBLISH) push --tags &&		\
+	$(GIT) push origin master &&					\
+	$(GIT) push origin release &&					\
+	$(GIT) push origin v$(VERSION) &&				\
+	$(GIT) push origin release-v$(VERSION) &&			\
 	$(WOGER) lua							\
 	  package=$(PACKAGE)						\
 	  package_name=$(PACKAGE_NAME)					\
