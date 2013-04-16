@@ -132,6 +132,7 @@ ChangeLog: FORCE
 EXTRA_DIST +=						\
 	GNUmakefile					\
 	README.md					\
+	build-aux/do-release-commit-and-tag		\
 	rockspecs.lua					\
 	$(RELEASE_ROCKSPEC)				\
 	$(NOTHING_ELSE)
