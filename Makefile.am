@@ -68,13 +68,52 @@ include specs/specs.mk
 check-local: $(check_local)
 
 
+## --------- ##
+## LuaRocks. ##
+## --------- ##
+
+MKROCKSPECS = $(LUA) $(srcdir)/build-aux/mkrockspecs
+ROCKSPEC_TEMPLATE = $(srcdir)/rockspecs.lua
+RELEASE_ROCKSPEC  = $(srcdir)/$(PACKAGE)-$(VERSION)-1.rockspec
+GIT_ROCKSPEC      = $(PACKAGE)-git-1.rockspec
+
+ROCKSPECS_DEPS =				\
+	luarocks-config.lua			\
+	$(srcdir)/build-aux/mkrockspecs		\
+	$(ROCKSPEC_TEMPLATE)			\
+	$(NOTHING_ELSE)
+
+set_LUA_BINDIR ?= LUA_BINDIR=`which $(LUA) |$(SED) 's|/[^/]*$$||'`
+LUA_INCDIR ?= `cd $$LUA_BINDIR/../include && pwd`
+LUA_LIBDIR ?= `cd $$LUA_BINDIR/../lib && pwd`
+
+luarocks-config.lua: Makefile.am
+	$(AM_V_GEN){						\
+	  $(set_LUA_BINDIR);					\
+	  echo 'rocks_trees = { "$(abs_srcdir)/luarocks" }';	\
+	  echo 'variables = {';					\
+	  echo '  LUA = "$(LUA)",';				\
+	  echo '  LUA_BINDIR = "'$$LUA_BINDIR'",';		\
+	  echo '  LUA_INCDIR = "'$(LUA_INCDIR)'",';		\
+	  echo '  LUA_LIBDIR = "'$(LUA_LIBDIR)'",';		\
+	  echo '}';						\
+	} > '$@'
+
+$(RELEASE_ROCKSPEC): $(ROCKSPECS_DEPS)
+	$(AM_V_GEN)$(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE)
+
+$(GIT_ROCKSPEC): $(ROCKSPECS_DEPS)
+	$(AM_V_GEN)$(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE)
+
+.PHONY: rockspecs
+rockspecs: $(RELEASE_ROCKSPEC) $(GIT_ROCKSPEC)
+
 
 ## ------------- ##
 ## Installation. ##
 ## ------------- ##
 
 install-exec-hook: $(install_exec_hooks)
-
 
 
 ## ------------- ##
@@ -94,11 +133,14 @@ EXTRA_DIST +=						\
 	GNUmakefile					\
 	README.md					\
 	rockspecs.lua					\
+	$(RELEASE_ROCKSPEC)				\
 	$(NOTHING_ELSE)
 
 
 ## ------------ ##
 ## Maintenance. ##
 ## ------------ ##
+
+DISTCLEANFILES += luarocks-config.lua
 
 FORCE:
