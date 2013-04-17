@@ -37,10 +37,10 @@
 #   include build-aux/luarocks.mk
 
 luarocks_config   = build-aux/luarocks-config.lua
-scm_rockspec      = $(PACKAGE)-git-$(rockspec_revision).rockspec
+rockspec_conf	  = $(srcdir)/rockspec.conf
 mkrockspecs	  = $(srcdir)/build-aux/mkrockspecs
-rockspec_template = $(srcdir)/build-aux/rockspec-template.lua
 package_rockspec  = $(srcdir)/$(PACKAGE)-$(VERSION)-$(rockspec_revision).rockspec
+scm_rockspec      = $(PACKAGE)-git-$(rockspec_revision).rockspec
 
 # If you need a different rockspec revision, override this on the make
 # command line:
@@ -54,7 +54,7 @@ MKROCKSPECS	  = $(LUA) $(mkrockspecs)
 ROCKSPECS_DEPS =				\
 	$(luarocks_config)			\
 	$(mkrockspecs)				\
-	$(rockspec_template)			\
+	$(rockspec_conf)			\
 	$(NOTHING_ELSE)
 
 set_LUA_BINDIR = LUA_BINDIR=`which $(LUA) |$(SED) 's|/[^/]*$$||'`
@@ -77,15 +77,13 @@ $(luarocks_config): Makefile.am
 $(package_rockspec): $(ROCKSPECS_DEPS)
 	$(AM_V_at)rm -f '$@' 2>/dev/null || :
 	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) $(VERSION) 			\
-	    $(rockspec_revision) $(rockspec_template) > '$@'
+	  $(MKROCKSPECS) $(PACKAGE) $(VERSION) $(rockspec_revision) > '$@'
 	$(AM_V_at)$(LUAROCKS) lint '$@'
 
 $(scm_rockspec): $(ROCKSPECS_DEPS)
 	$(AM_V_at)rm '$@' 2>/dev/null || :
 	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) git				\
-	    $(rockspec_revision) $(rockspec_template) > '$@'
+	  $(MKROCKSPECS) $(PACKAGE) git $(rockspec_revision) > '$@'
 	$(AM_V_at)$(LUAROCKS) lint '$@'
 
 .PHONY: rockspecs

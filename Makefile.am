@@ -61,7 +61,7 @@ inplace_edit = sed					\
 include src/src.mk
 include specl/specl.mk
 include specs/specs.mk
-include build-aux/luarocks.mk
+include build-aux/rockspecs.mk
 
 
 ## ------------ ##
