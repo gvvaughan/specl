@@ -56,15 +56,23 @@ WOGER	?= woger
 
 # Override this in cfg.mk if you are using a different format in your
 # NEWS file.
-today		   ?= $(shell date +%Y-%m-%d)
+today ?= $(shell date +%Y-%m-%d)
+
+# Old releases are stored here.
+release_archive_dir ?= ../release
+
+# Override this in cfg.mk if you follow different procedures.
+release-prep-hook  ?= release-prep
 
 _build-aux         ?= build-aux
 prev_version_file  ?= $(srcdir)/.prev-version
+old_NEWS_hash-file ?= $(srcdir)/Makefile.am
+gl_noteworthy_news_ = * Noteworthy changes in release ?.? (????-??-??) [?]
 
+my_distdir	    = $(PACKAGE)-$(VERSION)
 PREV_VERSION        = $(shell cat $(prev_version_file) 2>/dev/null)
 VERSION_REGEXP      = $(subst .,\.,$(VERSION))
 PREV_VERSION_REGEXP = $(subst .,\.,$(PREV_VERSION))
-
 
 
 ## ------ ##
@@ -111,7 +119,7 @@ release:
 	  package=$(PACKAGE)						\
 	  package_name=$(PACKAGE_NAME)					\
 	  version=$(VERSION)						\
-	  notes=docs/RELEASE-NOTES-$(VERSION)				\
+	  notes=~/announce-$(my_distdir)				\
 	  home="`$(WOGER_OUT) 'print (description.homepage)'`"		\
 	  description="`$(WOGER_OUT) 'print (description.summary)'`"
 
@@ -127,10 +135,11 @@ alpha beta stable:
 	    || { echo "invalid version string: $(VERSION)" 1>&2; exit 1;};}\
 	  || :
 	$(AM_V_at)$(MAKE) vc-diff-check
+	$(AM_V_at)$(MAKE) release-commit RELEASE_TYPE=$@
 	$(AM_V_at)$(MAKE) news-check
 	$(AM_V_at)$(MAKE) distcheck
 	$(AM_V_at)$(MAKE) check
-	$(AM_V_at)$(MAKE) release-commit RELEASE_TYPE=$@
+	$(AM_V_at)$(MAKE) $(release-prep-hook) RELEASE_TYPE=$@
 	$(AM_V_at)$(MAKE) check-in-release-branch
 
 # Abort the release if there are unchecked in changes remaining.
@@ -138,7 +147,6 @@ vc-diff-check:
 	$(AM_V_at)if ! $(GIT) diff --exit-code; then		\
 	  $(GIT) diff >/dev/null;				\
 	  echo "error: Some files are locally modified" >&2;	\
-	  rm vc-diffs;						\
 	  exit 1;						\
 	fi
 
@@ -165,11 +173,61 @@ release-commit:
 	  && $(_build-aux)/do-release-commit-and-tag			\
 	       -C $(abs_builddir) $(VERSION) $(RELEASE_TYPE)
 
+define emit-commit-log
+  printf '%s\n' 'maint: post-release administrivia.' ''			\
+    '* NEWS: Add header line for next release.'				\
+    '* .prev-version: Record previous version.'				\
+    '* $(old_NEWS_hash-file) (old_NEWS_hash): Auto-update.'
+endef
+
+.PHONY: release-prep
+release-prep:
+	$(AM_V_GEN)$(MAKE) --no-print-directory -s announcement		\
+	  > ~/announce-$(my_distdir)
+	$(AM_V_at)if test -d $(release_archive_dir); then		\
+	  ln $(rel-files) $(release_archive_dir);			\
+	  chmod a-w $(rel-files);					\
+	fi
+	$(AM_V_at)echo $(VERSION) > $(prev_version_file)
+	$(AM_V_at)$(MAKE) update-old-NEWS-hash
+	$(AM_V_at)perl -pi						\
+	  -e '$$. == 3 and print "$(gl_noteworthy_news_)\n\n\n"'	\
+	  $(srcdir)/NEWS
+	$(AM_V_at)msg=$$($(emit-commit-log)) || exit 1;			\
+	cd $(srcdir) && $(GIT) commit -m "$$msg" -a
+
+# Strip out copyright messages with years, so that changing those (e.g.
+# with 'make update-copyight') doesn't change the old_NEWS_hash.
+NEWS_hash =								\
+  $$(sed -n '/^\*.* $(PREV_VERSION_REGEXP) ([0-9-]*)/,$$p'		\
+       $(srcdir)/NEWS							\
+     | perl -0777 -pe 's/^Copyright.+?[12][0-9]{3}.+?\n//ms'		\
+     | md5sum -								\
+     | sed 's/ .*//')
+
+# Update the hash stored above.  Do this after each release and
+# for any corrections to old entries.
+
+old-NEWS-regexp = '^old_NEWS_hash[ \t]+?=[ \t]+'
+update-old-NEWS-hash: NEWS
+	$(AM_V_GEN)if $(EGREP) $(old-NEWS-regexp) $(old_NEWS_hash-file); then \
+	  perl -pi -e 's/^(old_NEWS_hash[ \t]+:?=[ \t]+).*/$${1}'"$(NEWS_hash)/" \
+	    $(old_NEWS_hash-file);					\
+	else								\
+	  printf '%s\n' '' "old_NEWS_hash = $(NEWS_hash)"		\
+	    >> $(old_NEWS_hash-file); \
+	fi
+
+announcement: NEWS
+# Not $(AM_V_GEN) since the output of this command serves as
+# announcement message: else, it would start with " GEN announcement".
+	$(AM_V_at)$(SED) -n						\
+	    -e '/^\* Noteworthy changes in release $(PREV_VERSION)/q'	\
+	    -e p NEWS |$(SED) -e 1,2d 
 
 branch		 = $(shell $(GIT) branch |$(SED) -ne '/^\* /{s///;p;q;}')
 GCO		 = $(GIT) checkout
-pkgver		 = $(PACKAGE)-$(VERSION)
-release-tarball	 = $(pkgver).tar.gz
+release-tarball	 = $(my_distdir).tar.gz
 
 # Anything in $(_save-files) is not removed after switching to the
 # release branch, and is thus "in the release". Add addtional partial
@@ -199,12 +257,12 @@ check-in-release-branch:
 	$(AM_V_at)$(GIT) clean -dfx $(git-clean-files)
 	$(AM_V_at)remove_re=$(grep-clean-files);			\
 	    $(GIT) rm -f `$(GIT) ls-files |$(EGREP) -v "$$remove_re"`
-	$(AM_V_at)ln -s . '$(pkgver)'
+	$(AM_V_at)ln -s . '$(my_distdir)'
 	$(AM_V_at)$(TAR) zxf '$(release-tarball)'
-	$(AM_V_at)rm -f '$(pkgver)' '$(release-tarball)'
+	$(AM_V_at)rm -f '$(my_distdir)' '$(release-tarball)'
 	$(AM_V_at)$(GIT) add .
 	$(AM_V_at)$(GIT) commit -a -m "Release v$(VERSION)"
-	${AM_V_at)$(GIT) tag -s -a -m "Full source release tag" release-v$(VERSION)
+	$(AM_V_at)$(GIT) tag -s -a -m "Full source release tag" release-v$(VERSION)
 	$(AM_V_at)$(GCO) $(branch)
 
 endif
