@@ -125,6 +125,14 @@ check-in-release-branch: distcheck rockspecs
 	$(GIT) tag -f -a -m "Full source release tag" release-v$(VERSION); \
 	$(GIT) checkout `echo "$$current_branch" | $(SED) 's,.*/,,g'`
 
+vc-diff-check:
+	$(AM_V_at)if ! $(GIT) diff --exit-code; then		\
+	  $(GIT) diff >/dev/null;				\
+	  echo "error: Some files are locally modified" >&2;	\
+	  rm vc-diffs;						\
+	  exit 1;						\
+	fi
+
 # Select which lines of NEWS are searched for $(news-check-regexp).
 # This is a sed line number spec.  The default says that we search
 # only line 3 of NEWS for $(news-check-regexp), to match the behaviour
@@ -163,9 +171,9 @@ alpha beta stable:
 	  { echo $(VERSION) |$(EGREP) '^[0-9]+(\.[0-9]+)*$$' >/dev/null	\
 	    || { echo "invalid version string: $(VERSION)" 1>&2; exit 1;};}\
 	  || :
-	$(AM_V_at)$(GIT) diff --exit-code &&				\
-	$(MAKE) release-commit RELEASE_TYPE=$@ &&			\
+	$(AM_V_at)$(MAKE) vc-diff-check
 	$(MAKE) news-check &&						\
+	$(MAKE) release-commit RELEASE_TYPE=$@ &&			\
 	$(MAKE) check-in-release-branch
 
 # This will actually make the release, including sending release
