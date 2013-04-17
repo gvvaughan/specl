@@ -12,7 +12,8 @@ end
 
 package_name = select (1, ...)
 version = select (2, ...)
-template = select (3, ...)
+revision = select (3, ...)
+template = select (4, ...)
 
 function format (x, indent)
   indent = indent or ""

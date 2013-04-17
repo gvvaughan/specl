@@ -35,6 +35,8 @@ ACLOCAL_AMFLAGS = -I m4
 ## Declarations. ##
 ## ------------- ##
 
+auxdir = build-aux
+
 CLEANFILES		=
 DISTCLEANFILES		=
 EXTRA_DIST		=
@@ -59,6 +61,7 @@ inplace_edit = sed					\
 include src/src.mk
 include specl/specl.mk
 include specs/specs.mk
+include build-aux/luarocks.mk
 
 
 ## ------------ ##
@@ -66,55 +69,6 @@ include specs/specs.mk
 ## ------------ ##
 
 check-local: $(check_local)
-
-
-## --------- ##
-## LuaRocks. ##
-## --------- ##
-
-LUAROCKS	 ?= luarocks
-MKROCKSPECS	  = $(LUA) $(srcdir)/build-aux/mkrockspecs
-ROCKSPEC_TEMPLATE = $(srcdir)/rockspecs.lua
-RELEASE_ROCKSPEC  = $(srcdir)/$(PACKAGE)-$(VERSION)-1.rockspec
-GIT_ROCKSPEC      = $(PACKAGE)-git-1.rockspec
-
-ROCKSPECS_DEPS =				\
-	luarocks-config.lua			\
-	$(srcdir)/build-aux/mkrockspecs		\
-	$(ROCKSPEC_TEMPLATE)			\
-	$(NOTHING_ELSE)
-
-set_LUA_BINDIR ?= LUA_BINDIR=`which $(LUA) |$(SED) 's|/[^/]*$$||'`
-LUA_INCDIR ?= `cd $$LUA_BINDIR/../include && pwd`
-LUA_LIBDIR ?= `cd $$LUA_BINDIR/../lib && pwd`
-
-luarocks-config.lua: Makefile.am
-	$(AM_V_GEN){						\
-	  $(set_LUA_BINDIR);					\
-	  echo 'rocks_trees = { "$(abs_srcdir)/luarocks" }';	\
-	  echo 'variables = {';					\
-	  echo '  LUA = "$(LUA)",';				\
-	  echo '  LUA_BINDIR = "'$$LUA_BINDIR'",';		\
-	  echo '  LUA_INCDIR = "'$(LUA_INCDIR)'",';		\
-	  echo '  LUA_LIBDIR = "'$(LUA_LIBDIR)'",';		\
-	  echo '}';						\
-	} > '$@'
-
-$(RELEASE_ROCKSPEC): $(ROCKSPECS_DEPS)
-	$(AM_V_at)rm -f '$@' 2>/dev/null || :
-	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) $(VERSION) $(ROCKSPEC_TEMPLATE) > '$@'
-	$(AM_V_at)$(LUAROCKS) lint '$@'
-
-
-$(GIT_ROCKSPEC): $(ROCKSPECS_DEPS)
-	$(AM_V_at)rm '$@' 2>/dev/null || :
-	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) git $(ROCKSPEC_TEMPLATE) > '$@'
-	$(AM_V_at)$(LUAROCKS) lint '$@'
-
-.PHONY: rockspecs
-rockspecs: $(RELEASE_ROCKSPEC) $(GIT_ROCKSPEC)
 
 
 ## ------------- ##
@@ -128,7 +82,7 @@ install-exec-hook: $(install_exec_hooks)
 ## Distribution. ##
 ## ------------- ##
 
-gitlog_to_changelog	= $(srcdir)/build-aux/gitlog-to-changelog
+gitlog_to_changelog	= $(srcdir)/$(auxdir)/gitlog-to-changelog
 
 dist-hook: ChangeLog
 ChangeLog: FORCE
@@ -140,16 +94,12 @@ ChangeLog: FORCE
 EXTRA_DIST +=						\
 	GNUmakefile					\
 	README.md					\
-	build-aux/do-release-commit-and-tag		\
-	rockspecs.lua					\
-	$(RELEASE_ROCKSPEC)				\
+	$(auxdir)/do-release-commit-and-tag		\
 	$(NOTHING_ELSE)
 
 
 ## ------------ ##
 ## Maintenance. ##
 ## ------------ ##
-
-DISTCLEANFILES += luarocks-config.lua
 
 FORCE:

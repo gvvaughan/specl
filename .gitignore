@@ -23,7 +23,6 @@
 /config.lt
 /config.status
 /libtool
-/luarocks-config.lua
 /specl-*.rockspec
 /specl-*.tar.gz
 /stamp-h1

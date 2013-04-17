@@ -2,12 +2,13 @@
 
 -- Variables to be interpolated:
 --
--- package
+-- package_name
 -- version
+-- revision
 
 local default = {
   package = package_name,
-  version = version.."-1",
+  version = version .. "-" .. revision,
   source = {
     url = "http://github.com/gvvaughan/"..package_name.."/archive/release-v"..version..".zip",
     dir = package_name.."-release-v"..version,

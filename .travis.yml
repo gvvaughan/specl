@@ -7,7 +7,7 @@ env:
     - LUA=lua5.2             LUA_INCDIR=/usr/include/lua5.2
     - LUA=luajit-2.0.0-beta9 LUA_INCDIR=/usr/include/luajit-2.0
   global:
-    - LUAROCKS_CONFIG=luarocks-config.lua
+    - LUAROCKS_CONFIG=build-aux/luarocks-config.lua
     - LUAROCKS_BASE=luarocks-2.0.12
     - LUAROCKS="$LUA $HOME/bin/luarocks"
 
