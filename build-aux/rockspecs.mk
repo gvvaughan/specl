@@ -1,6 +1,6 @@
-# Moonlaunch rockspec rules for make.
+# Slingshot rockspec rules for make.
 
-# This file is distributed with Moonlaunch, and licensed under the
+# This file is distributed with Slingshot, and licensed under the
 # terms of the MIT license reproduced below.
 
 # ==================================================================== #
@@ -31,10 +31,10 @@
 ## LuaRocks. ##
 ## --------- ##
 
-# This file is suitable for use from a portable Makeflie, you might
+# This file is suitable for use from a portable Makefile, you might
 # include it into the top-level Makefile.am with:
 #
-#   include build-aux/luarocks.mk
+#   include build-aux/rockspecs.mk
 
 luarocks_config   = build-aux/luarocks-config.lua
 rockspec_conf	  = $(srcdir)/rockspec.conf
@@ -49,7 +49,7 @@ scm_rockspec      = $(PACKAGE)-git-$(rockspec_revision).rockspec
 rockspec_revision = 1
 
 LUAROCKS	  = luarocks
-MKROCKSPECS	  = $(LUA) $(mkrockspecs)
+MKROCKSPECS	  = $(MKROCKSPECS_ENV) $(LUA) $(mkrockspecs)
 
 ROCKSPECS_DEPS =				\
 	$(luarocks_config)			\
@@ -62,7 +62,7 @@ LUA_INCDIR = `cd $$LUA_BINDIR/../include && pwd`
 LUA_LIBDIR = `cd $$LUA_BINDIR/../lib && pwd`
 
 $(luarocks_config): Makefile.am
-	@test -d $(auxdir) || mkdir $(auxdir)
+	@test -d build-aux || mkdir build-aux
 	$(AM_V_GEN){						\
 	  $(set_LUA_BINDIR);					\
 	  echo 'rocks_trees = { "$(abs_srcdir)/luarocks" }';	\
@@ -83,7 +83,7 @@ $(package_rockspec): $(ROCKSPECS_DEPS)
 $(scm_rockspec): $(ROCKSPECS_DEPS)
 	$(AM_V_at)rm '$@' 2>/dev/null || :
 	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) git $(rockspec_revision) > '$@'
+	  $(MKROCKSPECS) $(PACKAGE) git 1 > '$@'
 	$(AM_V_at)$(LUAROCKS) lint '$@'
 
 .PHONY: rockspecs
@@ -97,8 +97,9 @@ rockspecs:
 ## ------------- ##
 
 EXTRA_DIST +=						\
-	$(rockspec_template)				\
+	$(mkrockspecs)					\
 	$(package_rockspec)				\
+	$(rockspec_conf)				\
 	$(NOTHING_ELSE)
 
 

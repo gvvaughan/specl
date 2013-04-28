@@ -1,0 +1,68 @@
+#! /bin/sh
+# POSIX mail compliant wrapper for mutt.
+#
+# Copyright (C) 2013 Gary V. Vaughan
+# Written by Gary V. Vaughan, 2013
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+: ${MUTT=mutt}
+: ${SED=sed}
+
+func_esc ()
+{
+   echo "$*" | $SED "s|'|'\\\\''|"
+}
+
+func_hdr ()
+{
+    echo "$body" | $SED -n -e '/^$/q' -e "/^$1:/ { s|$1: *||; p; }"
+}
+
+
+opt_t=false
+while test $# -gt 0; do
+  opt=$1
+  shift
+  case $opt in
+    -a)		attach="${attach--a} '`func_esc $1`'"; shift ;;
+    -b|-c|-s)	hdrs="${hdrs+$hdrs }$opt '`func_esc $1`'"; shift ;;
+    -t)		opt_t=true ;;
+    --)		break ;;
+    *)		to="${to+$to }'`func_esc $opt`'" ;;
+  esac
+done
+
+# Anything after -- is a to address
+while test $# -gt 0; do
+  to="${to+$to }'`func_esc $1`'"; shift
+done
+
+body=`cat -`
+
+if $opt_t; then
+  hdrs=
+  bcc=`func_hdr Bcc`;	test -n "$bcc" && hdrs="-b '`func_esc $bcc`'"
+  cc=`func_hdr Cc`;	test -n "$cc" && hdrs="$hdrs -c '`func_esc $cc`'"
+  s=`func_hdr Subject`;	test -n "$s" && hdrs="$hdrs -s '`func_esc $s`'"
+  x=`func_hdr To`;	test -n "$x" && to="$x '`func_esc $to`'"
+fi
+
+echo "$body" | eval $MUTT -nx \
+  -e "'set from = gary@vaughan.pe'" \
+  -e "'set use_from = yes'" \
+  -e "'set smtp_pass = `security find-internet-password -s mail.vaughan.pe -w`'" \
+  $hdrs ${attach+$attach --} $to
+
+exit $?

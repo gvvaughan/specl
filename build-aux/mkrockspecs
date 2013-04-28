@@ -1,9 +1,9 @@
 #!/bin/sh
 A=--[[ exec lua "$0" "$@" # -* mode: lua; -*s ]]A
 --
--- Moonlaunch rockspec generator.
+-- Slingshot rockspec generator.
 --
--- This file is distributed with Moonlaunch, and licensed under the
+-- This file is distributed with Slingshot, and licensed under the
 -- terms of the MIT license reproduced below.
 
 --[[
@@ -60,16 +60,16 @@ rockspec if the default "-1" revision was released with errors.
       --help      print this help, then exit
       --version   print version number, then exit
 
-      Report bugs to http://github.com/gvvaughan/moonlaunch/issues.]])
+Report bugs to http://github.com/gvvaughan/slingshot/issues.]])
     os.exit (0)
   end,
 
   ["--version"] = function ()
-    print [[mkrockspecs (MoonLaunch) 1
+    print [[mkrockspecs (slingshot) 2
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2013, Gary V. Vaughan
-MoonLaunch comes with ABSOLUTELY NO WARRANTY.
+Slingshot comes with ABSOLUTELY NO WARRANTY.
 See source files for individual license conditions.]]
     os.exit (0)
   end,
@@ -118,7 +118,7 @@ nonopts = nonopts or {}
 nonopts[0] = arg[0]
 _G.arg = nonopts
 
-if select ("#", ...) < 3 then
+if select ("#", ...) < 2 then
   io.stderr:write "Usage: mkrockspecs PACKAGE VERSION [REVISION]\n"
   os.exit ()
 end
@@ -157,24 +157,48 @@ local spec = yaml.load (slurp ())
 local default = { source = {} }
 
 -- url needn't be given if it is identical to homepage.
-local url = spec.source.url or spec.decription.homepage
+local url
+if spec.source ~= nil then
+  url = spec.source.url
+elseif spec.description ~= nil then
+  url = spec.description.homepage
+end
 url = url:gsub ("^[a-z]*://", "")
 
 -- Interpolate default values.
 default.package = package
 default.version = version .. "-" .. revision
 
+configure_flags = ""
+if type (spec.external_dependencies) == "table" then
+  CPPFLAGS, LDFLAGS = "", ""
+  for name, vars in pairs (spec.external_dependencies) do
+    if vars.library then
+      CPPFLAGS = CPPFLAGS .. " -I$(" .. name .. "_INCDIR)"
+      LDFLAGS  = LDFLAGS  .. " -L$(" .. name .. "_LIBDIR)"
+    end
+  end
+
+  if string.len (CPPFLAGS) > 0 then
+    configure_flags = configure_flags ..
+        "CPPFLAGS='" .. CPPFLAGS:gsub ("^%s", "") .. "'" ..
+        " LDFLAGS='" ..  LDFLAGS:gsub ("^%s", "") .. "'" ..
+	" "
+  end
+end
+
 default.build = {
   type = "command",
   build_command = "./configure " ..
-    "LUA_INCLUDE=$(LUA_INCDIR) LUA=$(LUA) " ..
-    "--prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) " ..
+    "LUA='$(LUA)' LUA_INCLUDE='-I$(LUA_INCDIR)' " .. configure_flags ..
+    "--prefix='$(PREFIX)' --libdir='$(LIBDIR)' --datadir='$(LUADIR)' " ..
     "&& make clean all",
-  install_command = "make install luadir=$(LUADIR)",
+  install_command = "make install luadir='$(LUADIR)'",
   copy_directories = {},
 }
 
 -- Additional spec-type dependenent values.
+spec.source = spec.source or {}
 if version ~= "scm" and version ~= "git" then
   spec.source.url = "http://" .. url .. "/archive/release-v" .. version .. ".zip"
   spec.source.dir = package .. "-release-v" .. version
@@ -235,6 +259,7 @@ for _, k in ipairs {
   "description",
   "source",
   "dependencies",
+  "external_dependencies",
   "build",
 } do
   print (k .. " = " .. format (spec[k], "  "))

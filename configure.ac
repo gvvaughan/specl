@@ -37,4 +37,5 @@ AC_PROG_SED
 
 dnl Generate output files
 AC_CONFIG_FILES([Makefile specl/version.lua])
+AC_CONFIG_FILES([.travis.yml:travis.yml.in])
 AC_OUTPUT

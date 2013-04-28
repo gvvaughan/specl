@@ -58,24 +58,17 @@ src/specl: Makefile src/specl.in
 	$(AM_V_at)chmod +x '$@'
 	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
 
-docs/specl.1: docs/specl.1.in Makefile config.status
-	@test -d docs || mkdir docs
-	$(AM_V_at)rm -f $@ $@.tmp
-	$(AM_V_GEN)$(specl_install_edit) '$(srcdir)/$@.in' >'$@.tmp'
-	$(AM_V_at)mv '$@.tmp' '$@'
-
-docs/specl.1.in: src/specl specl/version.lua
+docs/specl.1: src/specl specl/version.lua
 	@test -d docs || mkdir docs
 ## Exit gracefully if specl.1.in is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
 	  builddir='$(builddir)'			\
-	  $(srcdir)/build-aux/missing --run		\
-	    $(HELP2MAN)					\
-	      '--output=$@'				\
-	      '--no-info'				\
-	      '--name=Specl'				\
-	      src/specl;				\
+	  $(HELP2MAN)					\
+	    '--output=$@'				\
+	    '--no-info'					\
+	    '--name=Specl'				\
+	    src/specl;					\
 	fi
 
 
@@ -96,8 +89,7 @@ install-specl-hook:
 ## ------------- ##
 
 EXTRA_DIST +=						\
-	build-aux/mkrockspecs				\
-	docs/specl.1.in					\
+	docs/specl.1					\
 	src/specl.in					\
 	$(NOTHING_ELSE)
 
@@ -107,10 +99,9 @@ EXTRA_DIST +=						\
 ## ------------ ##
 
 CLEANFILES +=						\
-	docs/specl.1					\
 	src/specl					\
 	$(NOTHING_ELSE)
 
 DISTCLEANFILES +=					\
-	docs/specl.1.in					\
+	docs/specl.1					\
 	$(NOTHING_ELSE)

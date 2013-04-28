@@ -223,7 +223,7 @@ begins passing to remind you to remove stale `pending ()` calls from
 your specifications.
 
     ?.....
- 
+
     Summary of pending expectations:
     - a stack has no elements when empty:
       PENDING expectation 1: Passed Unexpectedly!

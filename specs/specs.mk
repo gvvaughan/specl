@@ -31,7 +31,7 @@ specl_SPECS =						\
 	$(NOTHING_ELSE)
 
 check_local += specs-check-local
-specs-check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
+specs-check-local: $(SPECL) $(specl_SPECS)
 	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS)
 
 
@@ -41,13 +41,4 @@ specs-check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
 
 EXTRA_DIST +=						\
 	$(specl_SPECS)					\
-	$(NOTHING_ELSE)
-
-
-## ------------ ##
-## Maintenance. ##
-## ------------ ##
-
-DISTCLEANFILES +=					\
-	$(specl_LUASPECS)				\
 	$(NOTHING_ELSE)

@@ -1,6 +1,6 @@
 ## maintainer rules.
 
-ME = GNUmakeflie
+ME = GNUmakefile
 
 # If the user runs GNU make but didn't ./configure yet, do it for them.
 dont-forget-to-bootstrap = $(wildcard Makefile.in)
@@ -17,6 +17,10 @@ else
 
 
 include build-aux/release.mk
+include build-aux/sanity.mk
+
+# Run sanity checks as part of distcheck.
+distcheck: $(local-check)
 
 
 ## ------ ##
