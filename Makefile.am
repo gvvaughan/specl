@@ -84,4 +84,4 @@ check-local: $(check_local)
 
 install-exec-hook: $(install_exec_hooks)
 
-old_NEWS_hash = 78ee07b4964d6dc9e0658d71b55e2f5d
+old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
