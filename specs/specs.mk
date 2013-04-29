@@ -18,63 +18,21 @@
 
 
 ## ------ ##
-## Tools. ##
-## ------ ##
-
-check_SCRIPTS = build-aux/speclc
-
-build_aux_speclc_DEPS =					\
-	Makefile					\
-	build-aux/speclc.in				\
-	$(NOTHING_ELSE)
-
-build-aux/speclc: $(build_aux_speclc_DEPS)
-	@test -d build-aux || mkdir build-aux
-	@rm -f '$@' '$@.tmp'
-	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
-	$(AM_V_at)mv '$@.tmp' '$@'
-	$(AM_V_at)chmod +x '$@'
-
-EXTRA_DIST += build-aux/speclc.in
-
-DISTCLEANFILES += build-aux/speclc
-
-
-## ------ ##
 ## Specs. ##
 ## ------ ##
 
-SPECL  = specl/specl
-SPECLC = build-aux/speclc
-
+SPECL  = src/specl
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/formatters_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
 	$(srcdir)/specs/specl_spec.yaml			\
-	$(srcdir)/specs/speclc_spec.yaml		\
 	$(NOTHING_ELSE)
-
-specl_LUASPECS =					\
-	specs/environment_spec.lua			\
-	specs/formatters_spec.lua			\
-	specs/matchers_spec.lua				\
-	specs/specl_spec.lua				\
-	specs/speclc_spec.lua				\
-	$(NOTHING_ELSE)
-
-# Make Lua specs from YAML specs.
-.yaml.lua:
-	@test -d specs || mkdir specs
-	$(AM_V_GEN)$(SPECLC) '$<' | sed 's,^{\["describe ,&(Lua spec) ,'> '$@'
-
-# Lua specs require speclc compiler.
-$(specl_LUASPECS): $(SPECLC)
 
 check_local += specs-check-local
-specs-check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
-	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS) $(specl_LUASPECS)
+specs-check-local: $(SPECL) $(specl_SPECS)
+	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS)
 
 
 ## ------------- ##
@@ -83,13 +41,4 @@ specs-check-local: $(SPECL) $(specl_SPECS) $(specl_LUASPECS)
 
 EXTRA_DIST +=						\
 	$(specl_SPECS)					\
-	$(NOTHING_ELSE)
-
-
-## ------------ ##
-## Maintenance. ##
-## ------------ ##
-
-DISTCLEANFILES +=					\
-	$(specl_LUASPECS)				\
 	$(NOTHING_ELSE)

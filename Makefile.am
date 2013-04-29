@@ -35,6 +35,8 @@ ACLOCAL_AMFLAGS = -I m4
 ## Declarations. ##
 ## ------------- ##
 
+auxdir = build-aux
+
 CLEANFILES		=
 DISTCLEANFILES		=
 EXTRA_DIST		=
@@ -55,9 +57,18 @@ inplace_edit = sed					\
 	-e 's|@LUA[@]|$(LUA)|g'				\
 	$(NOTHING_ELSE)
 
+release_extra_dist	=				\
+	.autom4te.cfg					\
+	.travis.yml					\
+	GNUmakefile					\
+	bootstrap					\
+	travis.yml.in					\
+	$(NOTHING_ELSE)
 
+include src/src.mk
 include specl/specl.mk
 include specs/specs.mk
+include build-aux/rockspecs.mk
 
 
 ## ------------ ##
@@ -67,37 +78,10 @@ include specs/specs.mk
 check-local: $(check_local)
 
 
-
 ## ------------- ##
 ## Installation. ##
 ## ------------- ##
 
 install-exec-hook: $(install_exec_hooks)
 
-
-
-## ------------- ##
-## Distribution. ##
-## ------------- ##
-
-gitlog_to_changelog	= $(srcdir)/build-aux/gitlog-to-changelog
-
-dist-hook: ChangeLog
-ChangeLog: FORCE
-	$(AM_V_GEN)if test -d '$(srcdir)/.git'; then	\
-	  $(gitlog_to_changelog) > '$@T';		\
-	  rm -f '$@'; mv '$@T' '$@';			\
-	fi
-
-EXTRA_DIST +=						\
-	GNUmakefile					\
-	README.md					\
-	specl-rockspec.lua				\
-	$(NOTHING_ELSE)
-
-
-## ------------ ##
-## Maintenance. ##
-## ------------ ##
-
-FORCE:
+old_NEWS_hash = 78ee07b4964d6dc9e0658d71b55e2f5d

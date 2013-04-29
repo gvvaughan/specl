@@ -1,3 +1,250 @@
+2013-04-29  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 5
+	* NEWS: Record release date.
+
+	specs: remove speclc_spec.yaml.
+	* specs/speclc_spec.yaml: Remove. speclc was removed already.
+
+	maint: move to slingshot release framework.
+	* .autom4te.cfg: Turn off auto4mte.cache directories.
+	* travis.yml.in: Continuous Integration configuration.
+	* .travis.yml: Regenerate.
+	* configure.ac (AC_CONFIG_FILES): Generate .travis.yml.
+	* build-aux/mkrockspecs: Upgrade from Slingshot.
+	* build-aux/mail, build-aux/release.mk, build-aux/rockspecs.mk,
+	build-aux/sanity.mk: Slingshot release and rockspec rules.
+	* specs/specs.mk, src/src.mk: Adjust.
+	* GNUmakefile: Adjust, and correct typo found by sanity checks.
+	* Makefile.am (release_extra_dist): Override this, because we're
+	not using the huge rewritten gnulib bootstrap (there's no need
+	since we don't compile anything, and only use Automake and Auto-
+	conf).
+	* docs/specl.md: Remove trailing whitespace.
+
+2013-04-28  Gary V. Vaughan  <gary@gnu.org>
+
+	AUTHORS: Fix a typo.
+
+	mkrockspecs: rewritten to load a yaml conf.
+	* rockspec.conf: New file. Specl specific rockspec configuration.
+	* build-aux/mkrockspecs: Rewritten.  Works like a real program
+	now, processing options and loading configuration from a
+	standard './rockspec.conf' in YAML format, otherwise stdin.
+	* build-aux/rockspec-template.lua: Remove. Baked into mkrockspecs
+	now, instead.
+	* build-aux/luarocks.mk: Move from here...
+	* build-aux/rockspecs.mk: ...to here.
+	($(package_rockspec), $(scm_rockspec)): Adjust for lack of
+	template.
+	* Makefile.am: Adjust includes for new file location.
+
+	maint: factor out useful common make rules.
+	* build-aux/luarocks.mk: New file. Factored out of...
+	* Makefile.am: ...here.
+	* build-aux/release.mk: New file. Factored out of...
+	* GNUmakeflie: ...here.
+	* build-aux/mkrockspecs: Adjust parameters to include a rockspec
+	revision number as parameter 3.
+	* rockspecs.lua: Move from here...
+	* build-aux/rockspec-template.lua: ...to here. Interpolate new
+	revision argument.
+	* .travis.yml: Adjust for new location of luarocks-config.lua.
+	* .gitignore, build-aux/.git-ignore: Adjust.
+
+	maint: use NEWS based release notes for woger.
+	* GNUmakeflie (release-prep-hook): Set to default release-prep
+	rule.
+	(announcement): New rule. Output the relevant section of NEWS.
+	(release-prep): New rule. Generate a release announcement, plus
+	assorted post-release book-keeping.
+	(release): Use it.
+
+	maint: refactor maintainer release rules.
+	* GNUmakefile: Re-order so that the main 'release' and then 'alpha
+	beta stable' rules are at the top, with everything else following
+	in normal execution order.
+	(release, alpha beta stable, check-in-release-branch): No need
+	to tie rule commands together with '&& \' suffixes, just to
+	make sure the rule aborts on the first error... make does that
+	anyway!
+	(news-today): Rename from this...
+	(today): ...to this.
+	(PREV_VERSION): No need to assign with :=, calling $(shell) runs
+	immediately anyway.
+	(unpack-distcheck-release): Inline to only caller.
+
+	maint: abort release with uncommitted changes.
+	* GNUmakefile (vc-diff-check): Git optimised version of the
+	vc-diff-check rule from gnulib/maint.mk.
+	(alpha beta stable): Use it.
+
+	maint: only push new refspecs on release.
+	* GNUmakefile (GIT_PUBLISH): Remove.
+	(release): Explicitly push master, release and the new release
+	tag from each.
+
+	maint: fix VPATH builds of rockspecs.
+	Now that we ship the release rockspec, it needs to work with a
+	VPATH build otherwise distcheck doesn't complete.
+	* build-aux/mkrockspecs: make already knows where it wants the
+	output file, so just write to stdout...
+	* Makefile.am: ...which is redirected to the correct location at
+	make time.
+	* build-aux/mkrockspecs: Move rockspec lint call from here...
+	* Makefile.am: ...to here.
+
+	configury: use configure to find sed and egrep.
+	* GNUmakefile (EGREP, SED): Remove.
+	* configure.ac (AC_PROG_EGREP, AC_PROG_SED): Add.
+
+	maint: remove GNUisms from do-release-commit-and-tag.
+	* build-aux/do-release-commit-and-tag: Allow non-dot version
+	numbers.
+	Use a nicer commit message: 'Release version vNNN'.
+	(func_sort_ver): New function.  Use it instead of GNU only
+	'sort -V'.
+	* Makefile.am (EXTRA_DIST): Add do-release-commit-and-tag.
+
+	maint: adopt do-release-commit-and-tag plus Make rules from gnulib.
+	* build-aux/do-release-commit-and-tag: New file, from gnulib.
+	* .prev-version: New file.  Previous release version number,
+	required by do-release-commit-and-tag.
+	* GNUmakefile: Add associated rules from gnulib GNUmakefile and
+	maint.mk to improve make automated releases.
+	(rockspecs): Move rockspec rules from here...
+	* Makeflie.am (rockspecs): ...to here.
+	(EXTRA_DIST): Add release rockspec.
+
+	maint: use a NEWS file for user visible changes.
+	* NEWS: New file.  Import RELEASE-NOTES from earlier releases.
+	* .gitignore: Update.
+
+	maint: improve the release rules for single directory process.
+	* GNUmakefile: Tidy up formatting, and then simplify and fix
+	release rules to always add only released files to the release
+	branch.
+
+	formatters: load unprefixed formatters from LuaRocks install.
+	Now that we correctly install Specl lua files with LuaRocks, they
+	are actually moved into the standard LUA_PATH automatically.  So,
+	the long $(luadir)/specl/formatter/?.lua won't find them, and we
+	have to augment the --formatter optarg on load failure to look in
+	the right directory under the standard LUA_PATH.
+	* src/src.mk (INSTALL_PATH): Remove useless formatter segment.
+	* specl/version.lua.in (M["--formatter"]): If straight formatter
+	load fails, try again with "specl.formatter." prefixed.
+
+	specl: remove loadstring fallback for failed yaml load.
+	* src/specl.in (slurp): Go straight to setting an error messaage
+	if the yaml.load fails.
+
+2013-04-11  Gary V. Vaughan  <gary@gnu.org>
+
+	configury: make sure we have a src subdir in VPATH builds.
+	* src/src.mk (src/specl): Make a `src` sub-directory if we don't
+	already have one.
+
+	maint: move specl and specl.lua to a new src directory.
+	Previously, when setting the path to .../specl/?.lua so that
+	`require "specl"` works, it also means that `require "std"` will
+	find `.../specl/std.lua` instead of lua-stdlib's installed version.
+	* specl/specl.in, specl/specl.lua: Move from here...
+	* src/specl.in, src/specl.lua: ...to here.
+	* specl/specl.mk: Move all but nobase_dist_lua_DATA from here...
+	* src/src.mk: New file. ...to here.
+	* specl/.gitignore: Move /specl from here...
+	* src/.gitignore: New file. ...to here.
+	* Makefile.am: Include new src.mk makeflie fragment.
+	* specs/formatters_spec.yaml, specs/matcher_spec.yaml,
+	specs/specl_spec.yaml: Adjust for new location of specl program.
+	* rockspecs.lua: Make sure we install to the directory LuaRocks
+	knows about.
+
+2013-04-10  Gary V. Vaughan  <gary@gnu.org>
+
+	configury: fix 'make distcheck'.
+	* GNUmakefile (MKROCKSPECS): Spell mkrockspecs without .lua suffix.
+	* specl/specl.mk (EXTRA_DIST): Likewise.
+	* Makefile.am (EXTRA_DIST): Spell specl-rockspec.lua as
+	rockspecs.lua.
+
+	formatters: display elapsed wall clock time in summary.
+	* specl/matchers.lua (M.stats.starttime): Call os.time instead of
+	os.clock, to get wall clock time instead of CPU seconds burned.
+	* specl/formatter/progress.lua (footer): Likewies when calculating
+	the elapsed time to display.
+	* specl/formatter/report.lua (footer): Likewise.
+
+	specs: remove speclc and lua spec compatibility.
+	There is too much magic involved in hand-writing a compatible
+	Lua format specfile now.  Remove support and simplify accordingly.
+	* build-aux/speclc.in: Remove.
+	* specs/specs.mk: Remove speclc creation and all invocations.
+	(.yaml.lua, specl_LUASPECS): Remove.
+
+	configury: move to updated lua-stdlib machinery.
+	* build-aux/mkrockspecs.lua: Remove...
+	* build-aux/mkrockspecs: ...and replace with lua-stdlib master
+	version.
+	* specl-rockspec.lua: Move from here...
+	* rockspecs.lua: ...to here.
+	* GNUmakefile: Adjust accordingly.
+
+	configury: simplify bootstrap a little.
+	* bootstrap.conf: Remove.
+	* bootstrap: Create ChangeLog stub. Call autoreconf. Nothing more.
+	* GNUmakefile (Makefile.in): Remove unused bootstrap arguments.
+
+	configury: remove spurious ROCKSPEC_ENV reference.
+	* GNUmakefile (MKROCKSPECS): Remove unused $(ROCKSPEC_ENV).
+
+2013-04-09  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: correct some small mistakes in README.md.
+	* README.md (SPECL): Add missing 'a'.
+	(Installation): Specl uses bootstrap, not autoreconf.
+
+	configury: remove checks for C compilation.
+	* configure.ac (AM_PROG_AR, AC_PROG_CC, AX_LUA_HEADERS): Remove.
+	None of these are used unless we have C code to compile.
+
+	maint: bump version to 5.
+	* configure.ac (AC_INIT): Bump version number to 5.
+
+	matchers: error matcher no longer requires reversed arguments.
+	* specs/matchers_spec.yaml (error matcher): Specify all the
+	behaviours of a normal argument order `should_error` based
+	expectation.
+	* specs/speclc_spec.yaml (it expands the expect macro): Specify
+	the format of expanded expect calls.
+	* build-aux/speclc.in (dump_example): Implement it.  Use a
+	LuaMacro to inject a pcall into the expect expression.
+	* specl-rockspec.lua (dependencies): Add luamacro >= 2.2.0.
+	* specl/specl.lua (compile_example): Use the same LuaMacro to
+	inject a pcall into compiled YAML chunks.
+	(run_examples): Rename expect to _expect in the sandbox env to
+	match the name in the expanded expect pcall.
+	* specl/matchers.c (expect): New `ok` parameter to capture the
+	pcall status.  Pass `ok` to the selected matcher handler.
+	(matchers.error): Require arguments in the same order as the
+	other matchers, plus a new `ok` parameter.
+	* specs/matchers_spec.yaml: Fill in the remaining specifications
+	for all currently implemnted matchers.
+
+2013-04-08  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: reorganise and simplify.
+	* README.md: Move usage documentation from here...
+	* docs/specl.md: ...to here.
+	* .gitignore: Adjust.
+
+2013-04-07  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: display build badge for master branch only.
+	* README.md: Don't show failing builds from experimental/release
+	branch commits.
+
 2013-04-06  Gary V. Vaughan  <gary@gnu.org>
 
 	maint: failing tests now causes Travis CI to fail the whole build.

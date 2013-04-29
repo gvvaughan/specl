@@ -6,7 +6,7 @@ describe formatters:
       name = arg:gsub (".*/", "")
       return specl.cmdpipe ("printf '%s\\n' '" .. yaml .. "'| env " ..
         "LUA_PATH='" .. path .. "/?;" .. package.path .. "' " ..
-        "specl/specl --color=no -f" .. name)
+        "src/specl --color=no -f" .. name)
     end
 
 - context when using a custom formatter:

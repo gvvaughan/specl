@@ -19,6 +19,8 @@
 -- MA 02111-1301, USA.
 
 
+local macro      = require "macro"
+
 -- Use the simple progress formatter by default.  Can be changed by run().
 local formatter  = require "specl.formatter.progress"
 local matchers   = require "specl.matchers"
@@ -129,6 +131,9 @@ function compile_examples (examples)
 end
 
 
+-- Capture errors thrown by expectations.
+macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
+
 -- Compile S into a callable function.  If S is a reserved word,
 -- then return a function that does nothing.
 -- If FILENAME is passed, it is used in error messages from loadstring().
@@ -136,7 +141,8 @@ function compile_example (s, filename)
   if reserved[s] then return util.nop end
 
   -- Wrap the fragment into a function that we can call later.
-  local f, errmsg = loadstring ("return function ()\n" .. s .. "\nend", filename)
+  local f, errmsg = loadstring ("return function ()\n" ..
+	              macro.substitute_tostring (s) .. "\nend", filename)
 
   -- Execute the function from 'loadstring' or report an error right away.
   if f ~= nil then
@@ -202,7 +208,7 @@ end
 function run_examples (examples, descriptions, env)
   local block = function (example, blockenv)
     local metatable = { __index = blockenv }
-    local fenv = { expect = matchers.expect, pending = matchers.pending }
+    local fenv = { _expect = matchers.expect, pending = matchers.pending }
 
     setmetatable (fenv, metatable)
     setfenv (examples.before, fenv)

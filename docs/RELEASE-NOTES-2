@@ -1,5 +1,0 @@
-- Now compatible with Lua 5.2 *and* Lua 5.1.
-- Primary format for spec files is now YAML (specl-1 format spec files
-  are still supported).
-- Requires libyaml-0.1.4 to be installed before building.
-- Includes some YAML specifications for Specl.

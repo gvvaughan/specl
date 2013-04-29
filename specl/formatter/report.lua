@@ -139,7 +139,7 @@ local function footer (stats, reports)
   princ (passcolor   .. stats.pass .. " passed%{reset}, " ..
          pendcolor   .. stats.pend .. " pending%{reset} and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
-         color.clock .. (os.clock () - stats.starttime) .. " seconds%{reset}.")
+         color.clock .. (os.time () - stats.starttime) .. " seconds%{reset}.")
 end
 
 

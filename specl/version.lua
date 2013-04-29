@@ -17,9 +17,9 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 local M = {
-  _VERSION = "@VERSION@",
+  _VERSION = "5",
 
-  name = arg[0] and arg[0]:gsub (".*/", "") or "@PACKAGE@",
+  name = arg[0] and arg[0]:gsub (".*/", "") or "specl",
 
   opts = {
     color   = true,
@@ -27,7 +27,7 @@ local M = {
   },
 
   ["--help"] = function ()
-    print [[Usage: @PACKAGE@ [OPTION]... [FILE]...
+    print [[Usage: specl [OPTION]... [FILE]...
 
 Behaviour Driven Development for Lua.
 
@@ -44,17 +44,17 @@ standard input.
   -f, --formatter=FILE  use a specific formatter [default=progress]
   -v, --verbose         request verbose formatter output
 
-Report bugs to @PACKAGE_BUGREPORT@.]]
+Report bugs to http://github.com/gvvaughan/specl/issues.]]
     os.exit (0)
   end,
 
   ["--version"] = function ()
-    print [[@PACKAGE@ (@PACKAGE_NAME@) @VERSION@
+    print [[specl (Specl) 5
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2013, Gary V. Vaughan
-@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
-You may redistribute copies of @PACKAGE_NAME@ under the terms of the GNU
+Specl comes with ABSOLUTELY NO WARRANTY.
+You may redistribute copies of Specl under the terms of the GNU
 General Public License; either version 3, or any later version.
 For more information, see <http://www.gnu.org/licenses>.]]
     os.exit (0)
