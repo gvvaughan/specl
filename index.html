@@ -49,33 +49,7 @@
 <li>textual descriptions of examples and groups (spec files use <a href="http//yaml.org">YAML</a>)</li>
 <li>flexible and customizable reporting (formatters)</li>
 <li>extensible expectation language (matchers)</li>
-</ul><h2>1. Installation</h2>
-
-<p>By far the easiest way to install Specl is with <a href="http://www.luarocks.org">LuaRocks</a>:</p>
-
-<pre><code>luarocks install specl
-</code></pre>
-
-<p>To install current git master (for testing):</p>
-
-<pre><code>luarocks install http://raw.github.com/gvvaughan/specl/release/specl-git-1.rockspec
-</code></pre>
-
-<p>To install without <a href="http://www.luarocks.org">LuaRocks</a>, check out the sources from the
-<a href="http://github.com/gvvaughan/specl">repository</a>, and then run the following commands:</p>
-
-<pre><code>cd specl
-autoreconf --force --version --install
-./configure --prefix=INSTALLATION-ROOT-DIRECTORY
-make all check install
-</code></pre>
-
-<p>The dependencies are listed in the dependencies entry of the file
-<a href="http://github.com/gvvaughan/specl/blob/master/specl-rockspec.lua#L23">specl-rockspec.lua</a>. You will also need autoconf and automake.</p>
-
-<p>See <a href="http://raw.github.com/gvvaughan/specl/master/INSTALL">INSTALL</a> for instructions for <code>configure</code>.</p>
-
-<h2>2. Specifications</h2>
+</ul><h2>1. Specifications</h2>
 
 <p>The <code>specl</code> command verifies that the behaviour of your software meets
 the specifications encoded in one or more <em>spec-files</em>. A spec-file is
@@ -121,7 +95,7 @@ specifications.</p>
 descriptions and example code, all indented as prescribed by the
 <a href="http//yaml.org">YAML</a> file-format.</p>
 
-<h3>2.1 YAML</h3>
+<h3>1.1 YAML</h3>
 
 <p><a href="http//yaml.org">YAML</a> makes for a very readable specification file-format, and allows
 embedded <a href="http://www.lua.org">Lua</a> code right within the standard, as you saw in the last
@@ -176,7 +150,7 @@ don't work outside of a lua block, and <a href="http//yaml.org">YAML</a> comment
 inside a Lua block, so you have to pick the right comment character,
 depending where in the hierarchy it will go.</p>
 
-<h3>2.2. Contexts</h3>
+<h3>1.2. Contexts</h3>
 
 <p>You can further sub-divide your example groups by <em>context</em>. In addition
 to listing examples in each group, list items can also be contexts,
@@ -207,7 +181,7 @@ contexts: 2 or 3 is very common, though you should seriously consider
 splitting up a spec if you are using more than 4 or 5 levels of nesting
 in a single file.</p>
 
-<h3>2.3. Examples</h3>
+<h3>1.3. Examples</h3>
 
 <p>At the innermost nesting of all those <em>context</em> and <em>example group</em>
 entries, you will ultimately want to include one or more actual
@@ -229,7 +203,7 @@ plain-English, as shown in the sample from the previous section, but
 "example" or "specify", but again, <a href="http://www.lua.org">Lua</a> really doesn't mind what you
 call them.</p>
 
-<h3>2.4. Expectations</h3>
+<h3>1.4. Expectations</h3>
 
 <p>Each of your examples lists a series of expectations that <a href="http://github.com/gvvaughan/specl">Specl</a> runs
 to determine whether the specification for that part of your project is
@@ -256,7 +230,7 @@ can easily add new ones if they make your expectations more expressive.</p>
 <p>The <a href="#specl-matchers">next section</a> describes the built in matchers in
 more detail.</p>
 
-<h3>2.5. Pending Examples</h3>
+<h3>1.5. Pending Examples</h3>
 
 <p>Often, you'll think of a useful expectation or behaviour that you don't
 have time to implement right now.  Noting it off-line somewhere, or even
@@ -328,7 +302,7 @@ All expectations met, but 1 still pending, in 0.00332 seconds.
 
 <p><a></a></p>
 
-<h2>3. Matchers</h2>
+<h2>2. Matchers</h2>
 
 <p>When <code>expect</code> looks up a matcher to validate an expectation, the
 <code>should_</code> part is just syntactic sugar to make the whole line read more
@@ -344,7 +318,7 @@ in this case).  See <a href="#inverting-a-matcher">Inverting a Matcher with
 
 <p>The matchers built in to <a href="http://github.com/gvvaughan/specl">Specl</a> are listed below.</p>
 
-<h3>3.1. <code>be</code>
+<h3>2.1. <code>be</code>
 </h3>
 
 <p>This matches only when the result of <code>expect</code> is the exact same object
@@ -363,7 +337,7 @@ one from the source, so this expectation fails:</p>
 <p>While the tables look the same, and have the same contents, they are
 still separate and distinct objects.</p>
 
-<h3>3.2. <code>equal</code>
+<h3>2.2. <code>equal</code>
 </h3>
 
 <p>To get around that problem when comparing tables, use the <code>equal</code>
@@ -375,7 +349,7 @@ expect ({1, two = "three"}).should_equal ({1, two = "three"})
 expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2}, {{3}, 4}})
 </code></pre>
 
-<h3>3.3. <code>contain</code>
+<h3>2.3. <code>contain</code>
 </h3>
 
 <p>When comparing strings, you might not want to write out the entire
@@ -397,7 +371,7 @@ keys can be of any type.</p>
 matcher, <a href="http://github.com/gvvaughan/specl">Specl</a> aborts with an error; use <code>tostring</code> or similar if
 you need it.</p>
 
-<h3>3.4. <code>match</code>
+<h3>2.4. <code>match</code>
 </h3>
 
 <p>When a simple substring search is not appropriate, <code>match</code> will compare
@@ -406,38 +380,23 @@ the expectation against a <a href="http://www.lua.org">Lua</a> pattern:</p>
 <pre><code>expect (backtrace).should_match ("\nparse.lua: [0-9]+:")
 </code></pre>
 
-<h3>3.5. <code>error</code>
+<h3>2.5. <code>error</code>
 </h3>
 
 <p>Specifications for error conditions are a great idea! And this matcher
 checks both that an <code>error</code> was raised and that the subsequent error
-message contains the supplied substring.</p>
+message contains the supplied substring, if any.</p>
 
-<p>Because <a href="http://www.lua.org">Lua</a> evaluates the argument to <code>expect</code> before <code>expect</code>
-receives it, you would have to manually evaluate the expression using
-<code>pcall</code> to prevent the error it raises from propagating up the stack
-past <code>expect</code>. The <code>error</code> matcher is a syntactic sugar to save writing
-the <code>pcall</code>, but in order to do that requires the parameters to be in
-the opposite order of the other matchers.</p>
-
-<p>Nonetheless, the following are broadly equivalent, though one is <em>much</em>
-easier to understand than the other:</p>
-
-<pre><code>expect ("table expected").should_error (next, nil)
-expect (function ()
-          ok, msg = pcall (next, nil)
-          if ok then return false end
-          return msg
-        end).should_contain ("table expected")
+<pre><code>expect (next (nil)).should_error ("table expected")
 </code></pre>
 
 <p><a></a></p>
 
-<h3>3.6. Inverting a matcher with <code>not</code>
+<h3>2.6. Inverting a matcher with <code>not</code>
 </h3>
 
 <p>Oftentimes, in your specification you need to check that an expectation
-does <em>not</em> match a particular outcome, and <a href="http://github.com/gvvaughan/specl">Specl</a> has you covered
+does **no*t* match a particular outcome, and <a href="http://github.com/gvvaughan/specl">Specl</a> has you covered
 there too. Rather than implement another set of matchers to do that
 though, you can just insert <code>not_</code> right in the matcher method name.
 <a href="http://github.com/gvvaughan/specl">Specl</a> will still call the matcher according to the root name (see
@@ -446,9 +405,14 @@ before reporting a pass or fail:</p>
 
 <pre><code>expect ({}).should_not_be ({})
 expect (tostring (hex)).should_not_contain ("[g-zG-Z]")
+expect (next {}).should_not_error ()
 </code></pre>
 
-<h2>4. Example Environments</h2>
+<p>Note that the last <code>should_not_error</code> example doesn't pass the error
+message substring that <em>should not</em> match, because it is never checked, but
+you can pass the string if it makes an expectation clearer.</p>
+
+<h2>3. Environments</h2>
 
 <p>It's important that every example be evaluated from a clean slate, both
 to prevent the side effects of one example affecting the start
@@ -460,7 +424,7 @@ specification.</p>
 which to execute each example, then tearing it down afterwards to build
 another clean environment for executing the next example, and so on.</p>
 
-<h3>4.1. Before and After functions</h3>
+<h3>3.1. Before and After functions</h3>
 
 <p>To keep examples as readable and concise as possible, it's best not to
 have too much code in each. For example, it's inefficient to repeat a
@@ -487,7 +451,7 @@ their table keys are just a bare <code>before</code> or <code>after</code> respe
 state leaks out.  And, eliding all the redundant <code>local</code> keywords makes
 for more concise example code in the specification.</p>
 
-<h3>4.2. Grouping Examples</h3>
+<h3>3.2. Grouping Examples</h3>
 
 <p>If you have used <a href="http://github.com/rspec/rspec">RSpec</a>, you'll already know that it supports
 <code>before(:each)</code> and <code>before(:all)</code>, and equivalents for <code>after</code>. But
@@ -524,7 +488,7 @@ large spec files in example groups, and the best way to do that is with
 a nested context (and write the description starting with the word
 "context" rather than "describe" if you are a traditionalist!).</p>
 
-<h3>4.3 Environments versus <code>require</code>
+<h3>3.3 Environments versus <code>require</code>
 </h3>
 
 <p>The ideal way to organize your code to make writing the specification
@@ -564,7 +528,7 @@ run from a code example, then those changes will be visible to, and
 possibly impact upon all subsequent tests. Try to avoid doing this if
 you can.</p>
 
-<h2>5. Formatters</h2>
+<h2>4. Formatters</h2>
 
 <p>As <a href="http://github.com/gvvaughan/specl">Specl</a> executes examples and tests the expectations of a
 specification, it can displays its progress using a formatter.</p>
@@ -573,7 +537,7 @@ specification, it can displays its progress using a formatter.</p>
 write your own very easily if the format of the built in formatters
 doesn't suit you.</p>
 
-<h3>5.1. Progress Formatter</h3>
+<h3>4.1. Progress Formatter</h3>
 
 <p>The default formatter simply displays <a href="http://github.com/gvvaughan/specl">Specl</a>'s progress by writing a
 single period for every expectation that is met, or an <code>F</code> instead if an
@@ -584,7 +548,7 @@ a one line summary follows:</p>
 All expectations met in 0.00233 seconds.
 </code></pre>
 
-<h3>5.2. Report Formatter</h3>
+<h3>4.2. Report Formatter</h3>
 
 <p>The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
@@ -608,7 +572,7 @@ Met 100.00% of 6 expectations.
 long header from the associated nested descriptions, making a failing
 example easy to find within a large spec-file.</p>
 
-<h3>5.3. Custom Formatters</h3>
+<h3>4.3. Custom Formatters</h3>
 
 <p>A formatter is just a table of functions that <a href="http://github.com/gvvaughan/specl">Specl</a> can call as it
 runs your specifications, so provided you supply the table keys that
@@ -702,7 +666,7 @@ your custom formatter.</p>
 
 <p><a></a></p>
 
-<h2>6. Command Line</h2>
+<h2>5. Command Line</h2>
 
 <p>Given a spec-file or two, along with the implementation of the code
 being checked against those specifications, you run <a href="http://github.com/gvvaughan/specl">Specl</a> inside the
@@ -739,7 +703,7 @@ name, including built in formatters, like this:</p>
 <p>Pass the <code>--help</code> option for help and brief documentation on usage of the
 remaining available options.</p>
 
-<h2>7. Not Yet Implemented</h2>
+<h2>6. Not Yet Implemented</h2>
 
 <p>No support for mocks in the current version.</p>
 
