@@ -37,8 +37,6 @@ old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
 ## Declarations. ##
 ## ------------- ##
 
-auxdir = build-aux
-
 EXTRA_DIST		= README.md
 CLEANFILES		=
 DISTCLEANFILES		=
