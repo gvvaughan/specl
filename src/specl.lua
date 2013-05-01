@@ -234,6 +234,7 @@ function run_examples (examples, descriptions, env)
     local fenv = { _expect = matchers.expect, pending = matchers.pending }
 
     setmetatable (fenv, metatable)
+    initenv (fenv)
     setfenv (examples.before, fenv)
     examples.before ()
 
@@ -251,7 +252,6 @@ function run_examples (examples, descriptions, env)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
-      initenv (fenv)
       table.insert (descriptions, description)
 
       matchers.init ()
