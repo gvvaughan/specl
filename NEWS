@@ -14,6 +14,9 @@ Specl NEWS - User visible changes.
     stream separators are no longer ignored; now treated as additional
     unnamed documents.
 
+  - Report formatter displays inline expectation summaries for each
+    example when not in verbose mode.
+
 ** Incompatible changes:
 
   - Calling require in a spec file now runs in the local environment,
