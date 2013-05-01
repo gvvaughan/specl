@@ -30,6 +30,8 @@ LUA_PATH ?= ;
 
 ACLOCAL_AMFLAGS = -I m4
 
+old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
+
 
 ## ------------- ##
 ## Declarations. ##
@@ -37,9 +39,9 @@ ACLOCAL_AMFLAGS = -I m4
 
 auxdir = build-aux
 
+EXTRA_DIST		= README.md
 CLEANFILES		=
 DISTCLEANFILES		=
-EXTRA_DIST		=
 MAINTAINERCLEANFILES	=
 NOTHING_ELSE		=
 
@@ -83,5 +85,3 @@ check-local: $(check_local)
 ## ------------- ##
 
 install-exec-hook: $(install_exec_hooks)
-
-old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
