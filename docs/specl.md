@@ -425,45 +425,6 @@ large spec files in example groups, and the best way to do that is with
 a nested context (and write the description starting with the word
 "context" rather than "describe" if you are a traditionalist!).
 
-### 3.3 Environments versus `require`
-
-The ideal way to organize your code to make writing the specification
-examples very straight forward is to eliminate (or at least to minimize)
-side-effects, so that the behaviour of each API call in every example
-is obvious from the parameters and return values alone.
-
-[Specl][] takes pains to isolate examples from one another; making
-sure, among other things, that running a function compiled from a string
-chunk in the example will only affect the environment of that example
-and not leak out into any following examples.  However, `require`
-defeats these precautions for two reasons:
-
-  1. Non-local symbols in a required module always refer to `_G` (or
-     `_ENV` in Lua 5.2), which, by definition will leak out into
-     following examples.  Avoid this by ensuring everything in the
-     module is either marked as `local` or returned from the module,
-     where the caller can decide whether to corrupt the global
-     environment or not.
-  2. The returned result of requiring a module is cached, so any code
-     executed as a side-effect of the `require` call only takes effect
-     on the first call.  Requiring the same module again, even from a
-     different example environment, returns the cached result.  Avoid
-     this by returning any initial state from the module rather than
-     executing arbitrary code on first load.
-
-With good module hygiene, you'll probably never even need to be aware of
-the above.  But, if you are writing specifications for an existing
-module that has side-effects and/or writes in the global environment the
-first time it is required, then you'll need to construct and order the
-related code examples carefully not to trip up over either of these two
-issues.
-
-Of course, if you do _anything_ at all to change the global environment
-(available as `_G` inside example environments) in code you write or
-run from a code example, then those changes will be visible to, and
-possibly impact upon all subsequent tests. Try to avoid doing this if
-you can.
-
 
 4. Formatters
 -------------

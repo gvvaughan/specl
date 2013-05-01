@@ -8,6 +8,13 @@ Specl NEWS - User visible changes.
     stream separators are no longer ignored; now treated as additional
     unnamed documents.
 
+** Incompatible changes:
+
+  - Calling require in a spec file now runs in the local environment,
+    giving access to 'global' symbols from the newly loaded file from
+    the local namespace.  Conversely, access to those same symbols is
+    no longer available from "_G", the global environment table.
+
 
 * Noteworthy changes in release 5 (2013-04-29) [stable]
 

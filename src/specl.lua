@@ -201,6 +201,29 @@ local function initenv (env)
       end
     end
   end
+
+  env.require = function (f)
+    local h, filename
+
+    for path in string.gmatch (package.path .. ";", "([^;]*);") do
+      filename = path:gsub ("%?", f)
+      h = io.open (filename, "rb")
+      if h then break end
+    end
+
+    -- Defer to the system loaders if we couldn't find anything to load.
+    if h == nil then
+      return env.specl._require (f)
+    end
+
+    local fn, errmsg = loadstring (h:read "*a", filename)
+    h:close ()
+
+    if fn == nil then error (errmsg) end
+
+    setfenv (fn, env)
+    return fn ()
+  end
 end
 
 
@@ -267,6 +290,7 @@ function run (specs, env)
     _load       = load,
     _loadfile   = loadfile,
     _loadstring = loadstring,
+    _require    = require,
 
     -- Additional commands useful for writing command-line specs.
     cmdpipe     = function (cmd)

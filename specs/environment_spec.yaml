@@ -95,15 +95,15 @@ describe environments:
     - it can mutate a symbol in global scope:
         requirestring "_G.global_scope = 'required'"
         expect (_G.global_scope).should_be "required"
-    - it cannot mutate a symbol in an outer scope:
+    - it can shadow a symbol in an outer scope:
         requirestring "mutated_outer_symbol = true"
-        expect (mutated_outer_symbol).should_be (false)
-    - it cannot mutate a symbol in the current scope:
+        expect (mutated_outer_symbol).should_be (true)
+    - it can mutate a symbol in the current scope:
         requirestring "mutated_inner_symbol = true"
-        expect (mutated_inner_symbol).should_be (nil)
+        expect (mutated_inner_symbol).should_be (true)
         mutated_inner_symbol = false
         requirestring "mutated_inner_symbol = true"
-        expect (mutated_inner_symbol).should_be (false)
+        expect (mutated_inner_symbol).should_be (true)
 
 - context when executing a load function:
     - before: |
