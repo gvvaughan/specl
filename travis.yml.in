@@ -38,10 +38,12 @@ script:
   - make $LUAROCKS_CONFIG
     LUA="$LUA" LUA_INCDIR="$LUA_INCDIR" V=1
     || cat $LUAROCKS_CONFIG config.log
-  - $LUAROCKS install ansicolors
-  - $LUAROCKS install luamacro
+  # lyaml is needed to run the slingshot mkrockspecs script.
   - $LUAROCKS install lyaml
   - eval `$LUAROCKS path`;
     make rockspecs LUAROCKS="$LUAROCKS" V=1
     || { $LUAROCKS path; cat $ROCKSPEC; }
+  # LuaRocks make will fail if dependcies are missing.
   - $LUAROCKS make $ROCKSPEC
+  # The self tests must pass.
+  - make check V=1
