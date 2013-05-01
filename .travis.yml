@@ -46,4 +46,4 @@ script:
   # LuaRocks make will fail if dependcies are missing.
   - $LUAROCKS make $ROCKSPEC
   # The self tests must pass.
-  - make check
+  - make check V=1
