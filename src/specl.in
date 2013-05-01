@@ -53,10 +53,12 @@ function slurp (filename)
     os.exit (1)
   end
 
-  t = yaml.load (s)
+  t = table.pack (yaml.load (s))
 
   -- Append to the specification list, which specl will run presently.
-  table.insert (spec, t)
+  for _, document in ipairs (t) do
+    table.insert (spec, document)
+  end
 end
 
 
