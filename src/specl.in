@@ -53,7 +53,7 @@ function slurp (filename)
     os.exit (1)
   end
 
-  t = table.pack (yaml.load (s))
+  t = {yaml.load (s)}
 
   -- Prepend the spec file location to the package load path, so that
   -- requiring unqualified names from that directory works right away.
