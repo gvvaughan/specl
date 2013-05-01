@@ -22,7 +22,6 @@ include build-aux/sanity.mk
 # Run sanity checks as part of distcheck.
 distcheck: $(local-check)
 
-
 ## ------ ##
 ## Specl. ##
 ## ------ ##

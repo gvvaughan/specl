@@ -1,6 +1,6 @@
-# Specl make rules.
+# Local Make rules.
 #
-# Copyright (c) 2013 Gary V. Vaughan
+# Copyright (C) 2013 Gary V. Vaughan
 # Written by Gary V. Vaughan, 2013
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -16,23 +16,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
 
-## ------ ##
-## Specs. ##
-## ------ ##
+doc_DATA	=
 
-# Override Slingshot SPECL.
-SPECL = bin/specl
-
-specl_SPECS =						\
-	$(srcdir)/specs/environment_spec.yaml		\
-	$(srcdir)/specs/formatters_spec.yaml		\
-	$(srcdir)/specs/matchers_spec.yaml		\
-	$(srcdir)/specs/specl_spec.yaml			\
+install_edit	= sed					\
+	-e 's|@LUA[@]|$(LUA)|g'				\
 	$(NOTHING_ELSE)
 
-EXTRA_DIST +=						\
-	specs/spec_helper.lua				\
+inplace_edit	= sed					\
+	-e 's|@LUA[@]|$(LUA)|g'				\
 	$(NOTHING_ELSE)
 
-include build-aux/specl.mk
+release_extra_dist =					\
+	.autom4te.cfg					\
+	.travis.yml					\
+	GNUmakefile					\
+	bootstrap					\
+	local.mk					\
+	travis.yml.in					\
+	$(NOTHING_ELSE)
+
+include specl/specl.mk

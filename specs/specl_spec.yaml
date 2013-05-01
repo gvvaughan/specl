@@ -39,10 +39,10 @@ describe specl:
   - "it reads a spec from standard input for '-' filename argument":
       expect (run_spec (yaml, "-").output).should_contain "All expectations met in "
   - it exits with zero status when there are no failing examples:
-      expect (run_spec (yaml, "src/specl").status).should_be (0)
+      expect (run_spec (yaml, "bin/specl").status).should_be (0)
   - "it exits with non-zero status when there are failing examples": |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
-      expect (run_spec (yaml, "src/specl").status).should_not_be (0)
+      expect (run_spec (yaml, "bin/specl").status).should_not_be (0)
   - it outputs results from a formatter specified on the command line:
       expect (run_spec (yaml, "--formatter=tap").output).should_contain "1..1"
 
@@ -63,11 +63,11 @@ describe specl:
         f:close ()
 
     - it formats expectations with the custom formatter:
-        cmd  = string.format ("env LUA_PATH='%s/?;%s' src/specl --formatter=%s -",
+        cmd  = string.format ("env LUA_PATH='%s/?;%s' bin/specl --formatter=%s -",
                               path, package.path, name)
         expect (run_spec (yaml, cmd).output).should_contain "hs.f"
     - "it accepts -f as an equivalent to --formatter":
-        cmd  = string.format ("env LUA_PATH='%s/?;%s' src/specl -f%s -",
+        cmd  = string.format ("env LUA_PATH='%s/?;%s' bin/specl -f%s -",
                               path, package.path, name)
         expect (run_spec (yaml, cmd).output).should_contain "hs.f"
 

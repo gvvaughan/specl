@@ -41,7 +41,7 @@ specl_inplace_edit =					\
 ## Build. ##
 ## ------ ##
 
-bin_SCRIPTS += src/specl
+bin_SCRIPTS += bin/specl
 
 man_MANS += docs/specl.1
 
@@ -50,17 +50,17 @@ dist_lua_DATA =						\
 	src/specl.lua					\
 	$(NOTHING_ELSE)
 
-src/specl: Makefile src/specl.in
-	@test -d src || mkdir src
+bin/specl: Makefile src/specl.in
+	@test -d bin || mkdir bin
 	@rm -f '$@' '$@.tmp'
-	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
+	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/src/specl.in' >'$@.tmp'
 	$(AM_V_at)mv '$@.tmp' '$@'
 	$(AM_V_at)chmod +x '$@'
 	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
 
-docs/specl.1: src/specl specl/version.lua
+docs/specl.1: bin/specl specl/version.lua
 	@test -d docs || mkdir docs
-## Exit gracefully if specl.1.in is not writeable, such as during distcheck!
+## Exit gracefully if specl.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
 	  builddir='$(builddir)'			\
@@ -68,7 +68,7 @@ docs/specl.1: src/specl specl/version.lua
 	    '--output=$@'				\
 	    '--no-info'					\
 	    '--name=Specl'				\
-	    src/specl;					\
+	    bin/specl;					\
 	fi
 
 
@@ -79,7 +79,7 @@ docs/specl.1: src/specl specl/version.lua
 install_exec_hooks += install-specl-hook
 install-specl-hook:
 	@$(specl_install_edit) $(srcdir)/src/specl.in >'$@.tmp'
-	@echo $(INSTALL_SCRIPT) src/specl $(DESTDIR)$(bindir)/specl
+	@echo $(INSTALL_SCRIPT) bin/specl $(DESTDIR)$(bindir)/specl
 	@$(INSTALL_SCRIPT) $@.tmp $(DESTDIR)$(bindir)/specl
 	@rm -f $@.tmp
 
@@ -99,7 +99,7 @@ EXTRA_DIST +=						\
 ## ------------ ##
 
 CLEANFILES +=						\
-	src/specl					\
+	bin/specl					\
 	$(NOTHING_ELSE)
 
 DISTCLEANFILES +=					\

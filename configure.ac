@@ -30,12 +30,17 @@ AM_INIT_AUTOMAKE([-Wall foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Check for programs
-AX_WITH_PROG([HELP2MAN], [help2man], [false])
+AC_PATH_PROG([HELP2MAN], [help2man], [false])
+AC_PATH_PROG([SPECL], [specl], [false])
 AX_PROG_LUA(5.1, 5.3)
 AC_PROG_EGREP
 AC_PROG_SED
 
 dnl Generate output files
-AC_CONFIG_FILES([Makefile specl/version.lua])
+SPECL_FALSE=
+AS_IF([test -f src/specl.in], [SPECL_FALSE='#'])
+AC_SUBST([SPECL_FALSE])
+
 AC_CONFIG_FILES([.travis.yml:travis.yml.in])
+AC_CONFIG_FILES([Makefile specl/version.lua])
 AC_OUTPUT
