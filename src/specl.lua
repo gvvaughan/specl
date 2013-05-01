@@ -92,8 +92,7 @@ function compile_examples (examples)
 
   -- Make sure we have a function for every reserved word.
   for s in pairs (reserved) do
-    -- Lua specs save ready compiled functions to examples[s] already.
-    compiled[s] = examples[s] or compile_example (s)
+    compiled[s] = compile_example (examples[s])
   end
 
   for _, example in ipairs (examples) do
@@ -106,10 +105,6 @@ function compile_examples (examples)
       -- each real example in the list, without digging through all the
       -- entries each time.
       compiled[description] = compile_example (definition)
-
-    elseif type (definition) == "function" then
-      -- Compiled Lua code.
-      table.insert (compiled, { [description] = definition })
 
     elseif type (definition) == "string" then
       -- Uncompiled Lua code.
@@ -138,7 +133,7 @@ macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
 -- then return a function that does nothing.
 -- If FILENAME is passed, it is used in error messages from loadstring().
 function compile_example (s, filename)
-  if reserved[s] then return util.nop end
+  if s == nil then return util.nop end
 
   -- Wrap the fragment into a function that we can call later.
   local f, errmsg = loadstring ("return function ()\n" ..
