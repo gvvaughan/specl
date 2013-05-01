@@ -75,15 +75,6 @@ function compile_specs (specs)
 end
 
 
--- CONTEXTS are also compiled destructively in place.
-function compile_contexts (contexts)
-  for description, examples in pairs (contexts) do
-    contexts[description] = compile_examples (examples)
-  end
-  return contexts
-end
-
-
 -- Return EXAMPLES table with all of the lua fragments compiled into
 -- callable functions.
 function compile_examples (examples)
@@ -122,6 +113,15 @@ function compile_examples (examples)
   end
 
   return compiled
+end
+
+
+-- CONTEXTS are also compiled destructively in place.
+function compile_contexts (contexts)
+  for description, examples in pairs (contexts) do
+    contexts[description] = compile_examples (examples)
+  end
+  return contexts
 end
 
 
@@ -168,20 +168,6 @@ local function accumulator (holder, arg)
 end
 
 
-local run_contexts, run_examples, run
-
-
--- Run each of CONTEXTS under ENV in order.
-function run_contexts (contexts, descriptions, env)
-  for description, examples in pairs (contexts) do
-    table.insert (descriptions, description)
-    accumulator (formatter, formatter.spec (descriptions))
-    run_examples (examples, descriptions, env)
-    table.remove (descriptions)
-  end
-end
-
-
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
@@ -219,6 +205,9 @@ local function initenv (env)
     return fn ()
   end
 end
+
+
+local run_examples, run_contexts, run
 
 
 -- Run each of EXAMPLES under ENV in order.
@@ -267,6 +256,17 @@ function run_examples (examples, descriptions, env)
     local fenv = setmetatable ({}, { __index = env })
     setfenv (block, fenv)
     block (example, fenv)
+  end
+end
+
+
+-- Run each of CONTEXTS under ENV in order.
+function run_contexts (contexts, descriptions, env)
+  for description, examples in pairs (contexts) do
+    table.insert (descriptions, description)
+    accumulator (formatter, formatter.spec (descriptions))
+    run_examples (examples, descriptions, env)
+    table.remove (descriptions)
   end
 end
 
