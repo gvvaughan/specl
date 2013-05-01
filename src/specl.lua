@@ -69,9 +69,8 @@ local reserved = { before = true, after = true }
 
 -- SPECS are compiled destructively in the specs table itself.
 function compile_specs (specs)
-  for i, contexts in ipairs (specs) do
-    -- Compile every top-level context specification.
-    specs[i] = compile_contexts (contexts)
+  for i, spec in ipairs (specs) do
+    specs[i] = compile_examples (spec)
   end
 end
 
@@ -307,8 +306,8 @@ function run (specs, env)
 
   -- Run compiled specs, in order.
   accumulator (formatter, formatter.header (matchers.stats))
-  for _, contexts in ipairs (specs) do
-    run_contexts (contexts, {}, env)
+  for _, spec in ipairs (specs) do
+    run_examples (spec, {}, env)
   end
   formatter.footer (matchers.stats, formatter.accumulated)
   return matchers.stats.fail ~= 0 and 1 or 0

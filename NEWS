@@ -4,6 +4,12 @@ Specl NEWS - User visible changes.
 
 ** New features:
 
+  - Top level 'before' and 'after' functions are supported.
+
+  - `package.path` is augmented, for the duration of each spec file,
+    so that `require` can find and load other Lua files in the same
+    directory.
+
   - Additional YAML "documents" from a spec file with '---' and '...'
     stream separators are no longer ignored; now treated as additional
     unnamed documents.

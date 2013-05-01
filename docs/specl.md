@@ -425,6 +425,21 @@ large spec files in example groups, and the best way to do that is with
 a nested context (and write the description starting with the word
 "context" rather than "describe" if you are a traditionalist!).
 
+### 3.3. Separating Helper Functions
+
+Oftentimes, spec files can become crowded with so much setup code that
+the actual specifications can get lost in the noise.  In this case, it
+helps the clarity of the specification files, and the helper code too,
+if you move as much of it as appropriate into a separate file, usually
+called `spec_helper.lua`, and require that from the top-level `before`
+function:
+
+    before:
+      require "spec_helper"
+
+    describe module behaviour:
+    ...
+
 
 4. Formatters
 -------------
