@@ -26,7 +26,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AS_BOX([Configuring AC_PACKAGE_TARNAME AC_PACKAGE_VERSION])
 echo
 
-AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
+AM_INIT_AUTOMAKE([-Wall foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Check for programs
