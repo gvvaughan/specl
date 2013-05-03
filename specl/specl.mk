@@ -24,6 +24,7 @@ nobase_dist_lua_DATA =					\
 	specl/formatter/tap.lua				\
 	specl/color.lua					\
 	specl/matchers.lua				\
+	specl/shell.lua					\
 	specl/std.lua					\
 	specl/util.lua					\
 	specl/version.lua				\

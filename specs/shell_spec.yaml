@@ -1,0 +1,119 @@
+before: |
+  require "specl.shell"
+  require "spec_helper"
+
+  preamble = "before: require 'specl.shell'\nit fails: "
+  fail_1   = "\n0 passed, 0 pending, and 1 failed"
+
+# For speed, run most of the expectations in specl's process.  Forking
+# another Lua to restart an out-of-process specl, and having it load a
+# and report on a test specification file is an order of magnitude
+# slower (maybe two orders!).
+
+describe specl:
+- describe Command instance:
+  - it diagnoses incompatible arguments:
+      expect (Command ()).should_error "string or table expected, got no value"
+      expect (Command (function () end)).
+        should_error "string or table expected, got function"
+
+  - it is a command factory:
+      expect (Command "echo").should_instantiate_a "command"
+      expect (Command {"echo"}).should_instantiate_a "command"
+
+
+- describe spawn:
+  - it diagnoses incompatible arguments:
+      expect (spawn ()).should_error "string, table or command expected"
+
+  - it is a process factory:
+      expect (spawn (Command "echo")).should_instantiate_a "process"
+      expect (spawn {"echo"}).should_instantiate_a "process"
+      expect (spawn "echo").should_instantiate_a "process"
+
+
+- describe exit matcher:
+  # There's also a few ugly, but considerably faster than a full fork,
+  # cases where we can tickle a Lua error in-process, and wrap it in a
+  # `should_error` to check the behaviour of an expectation or matcher.
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_exit (0)).
+        should_error "process expected"
+
+  # The other exceptions are where we want to test that an expectation
+  # fails correctly, which involves using the shell extensions to fork
+  # a whole other bin/specl, where we then compare it's output with what
+  # we'd expect from the failure we're tickling.
+  - context when called normally:
+    - it succeeds when process exit status matches:
+        expect (spawn "exit 0").should_exit (0)
+    - it fails when process exit status is unexpected:
+        yaml = preamble .. "expect (spawn 'exit 3').should_exit (7)"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when proces exit status is unexpected:
+        expect (spawn "exit 3").should_not_exit (7)
+    - it fails when process exit status matches:
+        yaml = preamble .. "expect (spawn 'exit 0').should_not_exit (0)"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+
+- describe output matcher:
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_output "meh").
+        should_error "process expected"
+
+  - context when called normally:
+    - it succeeds when the output matches exactly:
+        expect (spawn "printf hello").should_output "hello"
+    - it fails when the output mismatches:
+        yaml = preamble .. "expect (spawn 'printf hello').should_output 'hell'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when the output mismatches:
+        expect (spawn "printf hello").should_not_output "hell"
+    - it fails when the output matches:
+        yaml = preamble .. "expect (spawn 'printf hello').should_not_output 'hello'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+
+- describe match_output matcher:
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_match_output "meh").
+        should_error "process expected"
+
+  - context when called normally:
+    - it succeeds when the output matches:
+        expect (spawn "printf hello").should_match_output "%S+"
+    - it fails when the output mismatches:
+        yaml = preamble .. "expect (spawn 'printf hello').should_match_output '%s+'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when the output mismatches:
+        expect (spawn "printf hello").should_not_match_output "%s+"
+    - it fails when the output matches:
+        yaml = preamble .. "expect (spawn 'printf hello').should_not_match_output '%S+'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+
+- describe contain_output matcher:
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_output "meh").
+        should_error "process expected"
+
+  - context when called normally:
+    - it succeeds when the output matches exactly:
+        expect (spawn "printf hello").should_contain_output "e"
+    - it fails when the output mismatches:
+        yaml = preamble .. "expect (spawn 'printf hello').should_contain_output '~'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when the output mismatches:
+        expect (spawn "printf hello").should_not_contain_output "~"
+    - it fails when the output matches:
+        yaml = preamble .. "expect (spawn 'printf hello').should_not_contain_output 'e'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)

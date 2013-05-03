@@ -2,16 +2,24 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** This release is a significant upgrade, with many new features,
+   and, no doubt, some new bugs.
+
 ** New features:
 
   - Top level 'before' and 'after' functions are supported.
+
+  - You can `require "specl.shell"` from a spec file (usually in the
+    initial top-level `before`) to get access to a shell Command
+    constructor, a `spawn` executor function and several new matchers
+    for querying the status of a shell command.
 
   - `package.path` is augmented, for the duration of each spec file,
     so that `require` can find and load other Lua files in the same
     directory.
 
   - Additional YAML "documents" from a spec file with '---' and '...'
-    stream separators are no longer ignored; now treated as additional
+    stream separators are no longer ignored; but treated as additional
     unnamed documents.
 
   - Report formatter displays inline expectation summaries for each

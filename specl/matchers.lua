@@ -178,5 +178,7 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
+M.q = q
+
 
 return M

@@ -303,23 +303,6 @@ function run (specs, env)
     _loadfile   = loadfile,
     _loadstring = loadstring,
     _require    = require,
-
-    -- Additional commands useful for writing command-line specs.
-    cmdpipe     = function (cmd)
-      local output, status = "", nil
-      local pipe = io.popen (cmd .. '; printf "\\n$?"')
-      while true do
-        local line = pipe:read ()
-        if line == nil then break end
-        output = output .. "\n" .. (status or "")
-        status = line
-      end
-      pipe:close ()
-      return {
-        output = output:gsub ("^\n", "", 1),
-        status = tonumber (status),
-      }
-    end,
   }
 
   -- Run compiled specs, in order.
