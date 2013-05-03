@@ -55,8 +55,7 @@ describe matchers:
 
 - describe contain matcher:
   - it diagnoses incompatible arguments:
-      specl = require "specl"
-      expect (specl._expect (function () end).should_contain "nothing").
+      expect (expect (function () end).should_contain "nothing").
         should_error "string or table expected"
 
   - context when receiving a string:
@@ -121,8 +120,7 @@ describe matchers:
 
 - describe match matcher:
   - "it diagnoses non-string arguments":
-      specl = require "specl"
-      expect (specl._expect ({"a table"}).should_match {}).
+      expect (expect ({"a table"}).should_match {}).
         should_error "string expected"
 
   - context when called normally:
