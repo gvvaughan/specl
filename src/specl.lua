@@ -182,27 +182,45 @@ local function initenv (env)
     end
   end
 
+  -- This is gross :(  There must be a cleaner way to do it?!?
+  -- Manually walk the package path, and `loadstring(f)` what we fird...
+  --   * setfenv prior to running loadstring returned function, which
+  --     imports any global symbols from <f> into the local env;
+  --   * manually copy symbols out of a table returned by the loadstring
+  --     function (if any) into the local env;
+  --   * (re)load the module with the system loader so that specl itself
+  --     can find all the symbols it needs without digging through nested
+  --     sandbox environments.
   env.require = function (f)
     local h, filename
 
     for path in string.gmatch (package.path .. ";", "([^;]*);") do
-      filename = path:gsub ("%?", f)
+      filename = path:gsub ("%?", (f:gsub ("%.", "/")))
       h = io.open (filename, "rb")
       if h then break end
     end
 
-    -- Defer to the system loaders if we couldn't find anything to load.
-    if h == nil then
-      return env.specl._require (f)
+    -- Manually load into the local environment if we found it.
+    if h ~= nil then
+      local fn, errmsg = loadstring (h:read "*a", filename)
+      h:close ()
+
+      if fn == nil then error (errmsg) end
+
+      -- Ensure any global symbols arrive in <env>.
+      setfenv (fn, env)
+      local import = fn ()
+
+      -- Copy any returned access points into <env>
+      if type (import) == "table" then
+        for k, v in pairs (import) do
+          env[k] = v
+        end
+      end
     end
 
-    local fn, errmsg = loadstring (h:read "*a", filename)
-    h:close ()
-
-    if fn == nil then error (errmsg) end
-
-    setfenv (fn, env)
-    return fn ()
+    -- Return the package.loaded result.
+    return env.specl._require (f)
   end
 end
 
