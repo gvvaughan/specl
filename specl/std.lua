@@ -62,6 +62,26 @@ local function clone (t, nometa)
 end
 
 
+-- Clone a table, renaming some keys.
+local function clone_rename (map, t)
+  local r = clone (t)
+  for i, v in pairs (map) do
+    r[v] = t[i]
+    r[i] = nil
+  end
+  return r
+end
+
+
+-- Merge one table into another. Merge t into u.
+local function merge (t, u)
+  for i, v in pairs (u) do
+    t[i] = v
+  end
+  return t
+end
+
+
 -- Return given metamethod, if any, or nil.
 local function metamethod (x, n)
   local _, m = pcall (function (x)
@@ -73,6 +93,27 @@ local function metamethod (x, n)
   end
   return m
 end
+
+
+-- Root object.
+local Object = {
+  _init = {},
+
+  _clone = function (self, ...)
+    local object = clone (self)
+    if type (self._init) == "table" then
+      merge (object, clone_rename (self._init, ...))
+    else
+      object = self._init (object, ...)
+    end
+    return setmetatable (object, object)
+  end,
+
+  __call = function (...)
+    return (...)._clone (...)
+  end,
+}
+setmetatable (Object, Object)
 
 
 -- Process files specified on the command-line.
@@ -156,7 +197,10 @@ end
 
 local M = {
   clone        = clone,
+  clone_rename = clone_rename,
+  merge        = merge,
   metamethod   = metamethod,
+  Object       = Object,
   processFiles = processFiles,
   render       = render,
   slurp        = slurp,
