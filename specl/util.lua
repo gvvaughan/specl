@@ -24,6 +24,65 @@ local prog  = require "specl.version"
 local std   = require "specl.std"
 
 
+local Object = std.Object {_init = {"type"}, type = "object"}
+
+local function typeof (object)
+  if type (object) == "table" and object.type ~= nil then
+    return object.type
+  end
+  return type (object)
+end
+
+
+-- Write a function call type error similar to how Lua core does it.
+local function type_error (name, i, arglist, typelist)
+  local types = typelist[i]
+  local actual = "no value"
+
+  if arglist[i] then actual = typeof (arglist[i]) end
+
+  if typeof (typelist[i]) == "table" then
+    -- format as, eg: "number, string or table"
+    expected = table.concat (typelist[i], ", "):gsub (",( [^,]+)$", " or%1")
+  end
+
+  error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
+         expected .. " expected, got " .. actual .. ")", 3)
+end
+
+
+-- Check that every parameter in <arglist> matches one of the types
+-- from the corresponding slot in <typelist>. Raise a parameter type
+-- error if there are any mismatches.
+-- Rather than leave gaps in <typelist> (which breaks ipairs), use
+-- the string "any" to accept any type from the corresponding <arglist>
+-- slot.
+local function type_check (name, arglist, typelist)
+  for i, v in ipairs (typelist) do
+    if i > #arglist then
+      type_error (name, i, arglist, typelist)
+    end
+    local a = typeof (arglist[i])
+
+    if v ~= "any" then
+      if typeof (v) ~= "table" then v = {v} end
+
+      -- check that argument at `i` has one of the types at typelist[i].
+      local ok = false
+      for _, check in ipairs (v) do
+        if a == check then
+          ok = true
+          break
+        end
+      end
+
+      if not ok then
+        type_error (name, i, arglist, typelist)
+      end
+    end
+  end
+end
+
 -- Return an appropriate indent for last element of DESCRIPTIONS.
 local function indent (descriptions)
   return string.rep ("  ", #descriptions - 1)
@@ -134,6 +193,10 @@ end
 --[[ ----------------- ]]--
 
 local M = {
+  -- Prototypes
+  Object        = Object,
+
+  -- Functions
   indent        = indent,
   nop           = nop,
   map           = map,
@@ -143,6 +206,8 @@ local M = {
   slurp         = std.slurp,
   strip1st      = strip1st,
   tostring      = std.tostring,
+  type_check    = type_check,
+  typeof        = typeof,
   warn          = warn,
   writc         = writc,
 }
