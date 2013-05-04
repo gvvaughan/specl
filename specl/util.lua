@@ -59,13 +59,13 @@ end
 -- slot.
 local function type_check (name, arglist, typelist)
   for i, v in ipairs (typelist) do
-    if i > #arglist then
-      type_error (name, i, arglist, typelist)
-    end
-    local a = typeof (arglist[i])
-
     if v ~= "any" then
       if typeof (v) ~= "table" then v = {v} end
+
+      if i > #arglist then
+        type_error (name, i, arglist, typelist)
+      end
+      local a = typeof (arglist[i])
 
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
@@ -200,6 +200,7 @@ local M = {
   indent        = indent,
   nop           = nop,
   map           = map,
+  merge         = std.merge,
   princ         = princ,
   process_args  = process_args,
   process_files = std.processFiles,
