@@ -36,7 +36,7 @@ end
 
 -- Write a function call type error similar to how Lua core does it.
 local function type_error (name, i, arglist, typelist)
-  local types = typelist[i]
+  local expected = typelist[i]
   local actual = "no value"
 
   if arglist[i] then actual = typeof (arglist[i]) end
