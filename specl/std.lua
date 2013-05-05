@@ -73,10 +73,10 @@ local function clone_rename (map, t)
 end
 
 
--- Merge one table into another. Merge t into u.
+-- Merge one table into another. Merge <u> into <t>.
 local function merge (t, u)
-  for i, v in pairs (u) do
-    t[i] = v
+  for k, v in pairs (u) do
+    t[k] = v
   end
   return t
 end

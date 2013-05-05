@@ -32,11 +32,24 @@ end
 --[[ ==================== ]]--
 
 
-local matchers = require "specl.matchers"
+do
+  local matchers = require "specl.matchers"
 
-local q = matchers.q
+  local Matcher, matchers, q =
+        matchers.Matcher, matchers.matchers, matchers.stringify
 
-matchers.matchers.instantiate_a = function (value, expected)
-  local m = "expecting a " .. q(expected) .. ", but got a " .. q(util.typeof (value))
-  return (util.typeof (value) == expected), m
+  -- Matches if the type of <actual> is <expect>.
+  matchers.instantiate_a = Matcher {
+    function (actual, expect)
+      return (util.typeof (actual) == expect)
+    end,
+
+    format_actual = function (actual)
+      return "a " .. util.typeof (actual)
+    end,
+
+    format_expect = function (expect)
+      return "a " .. expect
+    end,
+  }
 end

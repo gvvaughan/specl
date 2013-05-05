@@ -346,8 +346,105 @@ before reporting a pass or fail:
     expect (next {}).should_not_error ()
 
 Note that the last `should_not_error` example doesn't pass the error
-message substring that _should not_ match, because it is never checked, but
-you can pass the string if it makes an expectation clearer.
+message substring that _should not_ match, because it is never checked,
+but you can pass the string if it makes an expectation clearer.
+
+### 2.7. Custom Matchers.
+
+Just like the built in matchers described above, you can use the
+`Matcher` factory object from `specl.matchers` to register additional
+custom matchers to make your spec files easier to understand. The
+minimum required is a handler function, which is then called by
+[Specl][] to determine whether the result of the `expect` matches the
+contents of the `should_` argument:
+
+    ...
+    Matcher {
+      function (actual, expected)
+        return (actual == expected)
+      end,
+    }
+    ...
+
+This is exactly how the `be` matcher is implemented, where [Specl][]
+passes the `actual` result from the expectation and the `expected`
+value from the `should_` argument -- and considers the expectation as
+a whole to have passed if they are both the same according to a [Lua][]
+`==` comparison.
+
+Of course, our custom `be` matcher reimplementation is not available
+to spec files until it has been registered in [Specl][]s matcher table.
+You can do this in a `before` block, or your `spec_helper.lua` (see
+[Separating Helper Functions](#separating-helper-functions)).
+
+    ...
+    require "specl.matcher"
+
+    matcher.be_again = Matcher {
+      function (actual, expected)
+    ...
+
+Note that the `matcher` table needs to do some work to fully install
+the new `be_again`, and so checks that the assignment is the result
+of a `Matcher` factory call.  Trying to assign anthing else won't
+work.
+
+If you try to use `be_again` as it stands, you'll discover that it
+doesn't display the results from failed expectations as nicely as the
+real `be` matcher - missing the defining *exactly* from the output.
+To implement additional formatting around the `expected` message, add
+an implementation for the optional `format_expect` key to the `Matcher`
+constructor:
+
+    ...
+    matcher.be_again = Matcher {
+      function (actual, expected)
+        return (actual == expected)
+      end,
+
+      format_expect = function (expected)
+        return "exactly " .. matcher.stringify (expected)
+      end,
+    }
+    ...
+
+Notice the use of `matcher.stringify` to coerce the `expected`
+parameter to a nicely formatted and quoted string.  `stringify` is
+less useful here than it is in the other formatting function slot,
+`format_actual`.
+
+Both of these functions are passed all of the arguments that are
+generated in the code wrapped in `expect` that eventually leads to
+the custom matcher, though they are not useful here, the full
+prototypes are:
+
+    function format_expect (expected, actual, ...)
+    function format_actual (actual, expected, ...)
+
+The `specl.shell` custom matchers use this feature if you want to see
+an example of how it can be useful.
+
+One final feature of the `Matcher` constructor is that you can have it
+enforce a particular type (or types) for the `actual` parameter, by
+setting `actual_types` to a list of acceptable types.  For example,
+the built in `contain` matcher handles matching against both Lua string
+types and Lua tables:
+
+    matcher.contain = Matcher {
+      ...
+      actual_type = {"string", "table"},
+    ...
+
+Valid values for this list include any of the core Lua types as
+returned by the Lua `type` function, but also any extended types
+implemented as a table with a `type` field, such as the `process` and
+`command` objects defined by the `specl.shell` extensions, or anything
+else you care to build using the `specl.util.Object` base type (such
+as the `Matcher` factory object used throughout this section of the
+manual).
+
+Adding custom matcher with this API automatically handles lookups
+with `should_` and inverting matchers with the `not_` string.
 
 
 3. Environments
@@ -425,6 +522,7 @@ large spec files in example groups, and the best way to do that is with
 a nested context (and write the description starting with the word
 "context" rather than "describe" if you are a traditionalist!).
 
+<a id="separating-helper-functions"></a>
 ### 3.3. Separating Helper Functions
 
 Oftentimes, spec files can become crowded with so much setup code that
@@ -614,9 +712,6 @@ remaining available options.
 ----------------------
 
 No support for mocks in the current version.
-
-The APIs for adding your own `matchers` are not yet documented.
-Please read the code for now.
 
 
 [bdd]:   http://en.wikipedia.org/wiki/Behavior-driven_development

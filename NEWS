@@ -9,6 +9,8 @@ Specl NEWS - User visible changes.
 
   - Top level 'before' and 'after' functions are supported.
 
+  - A proper, documented, API for adding custom matchers.
+
   - You can `require "specl.shell"` from a spec file (usually in the
     initial top-level `before`) to get access to a shell Command
     constructor, a `spawn` executor function and several new matchers

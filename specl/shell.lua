@@ -116,50 +116,88 @@ end
 --[[ ========= ]]--
 
 
-local function with_errout (process)
-  if process.errout ~= nil and process.errout ~= "" then
-    return ' and error:"\n' .. process.errout .. '"'
+-- Register some additional matchers for dealing with the results from
+-- a completed process in an expectation.
+do
+  local Matcher, matchers, q =
+        matchers.Matcher, matchers.matchers, matchers.stringify
+
+  -- If a shell command fails to meet an expectation, show anything output
+  -- to standard error along with the Specl failure message.
+  local function process_errout (process)
+    local m = q(process.output)
+    if process.errout ~= nil and process.errout ~= "" then
+      return m .. ' and error:"\n' .. process.errout .. '"'
+    end
+    return m
   end
-  return ""
-end
 
 
-matchers.matchers.exit = function (value, expected)
-  if type (value) ~= "process" then
-    error ("'exit' matcher: process expected, but got " .. type (value))
-  end
-  local m = "expecting exit status " .. q(expected) .. ", but got " .. q(value.status)
-  return (value.status == expected), m .. with_errout (value)
-end
+  -- Matches if the exit status of a process is <expect>.
+  matchers.exit = Matcher {
+    function (actual, expect)
+      return (actual.status == expect)
+    end,
+
+    actual_type   = "process",
+
+    format_actual = function (process)
+      local m = q(process.status)
+      if process.errout ~= nil and process.errout ~= "" then
+        return m .. ' and error:"\n' .. process.errout .. '"'
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return "exit status " .. q(expect)
+    end,
+  }
 
 
-matchers.matchers.output = function (value, expected)
-  if type (value) ~= "process" then
-    error ("'output' matcher: process expected, but got " .. type (value))
-  end
-  m = "expecting output " .. q(expected) .. ", but got ".. q(value.output)
-  return (value.output == expected), m .. with_errout (value)
-end
+  -- Matches if the output of a process is exactly <expect>.
+  matchers.output = Matcher {
+    function (actual, expect)
+      return (actual.output == expect)
+    end,
+
+    actual_type   = "process",
+    format_actual = process_errout,
+
+    format_expect = function (expect)
+      return "output " .. q(expect)
+    end,
+  }
 
 
-matchers.matchers.match_output = function (value, pattern)
-  if type (value) ~= "process" then
-    error ("'match_output' matcher: process expected, but got " .. type (value))
-  end
-  local m = "expecting output matching " .. q(pattern) .. ", but got " ..
-            q(value.output)
-  return (string.match (value.output, pattern) ~= nil), m .. with_errout (value)
-end
+  -- Matches if the output of a process matches <pattern>.
+  matchers.match_output = Matcher {
+    function (actual, pattern)
+      return (string.match (actual.output, pattern) ~= nil)
+    end,
 
+    actual_type   = "process",
+    format_actual = process_errout,
 
-matchers.matchers.contain_output = function (value, expected)
-  if type (value) ~= "process" then
-    error ("'contain_output' matcher: process expected, but got " .. type (value))
-  end
-  local pattern = expected:gsub ("%W", "%%%0")
-  local m = "expecting output containing " .. q(expected) .. ", but got " ..
-            q(value.output)
-  return (string.match (value.output, pattern) ~= nil), m .. with_errout (value)
+    format_expect = function (expect)
+      return "output matching " .. q(pattern)
+    end,
+  }
+
+  -- Matches if the output of a process contains <expect>.
+  matchers.contain_output = Matcher {
+    function (actual, expect)
+      local pattern = expect:gsub ("%W", "%%%0")
+      return (string.match (actual.output, pattern) ~= nil)
+    end,
+
+    actual_type   = "process",
+    format_actual = process_errout,
+
+    format_expect = function (expect)
+      return "output containing " .. q(pattern)
+    end,
+  }
 end
 
 
