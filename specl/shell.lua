@@ -20,11 +20,11 @@
 
 -- Additional commands useful for writing command-line specs.
 
-local util     = require "specl.util"
+local color    = require "specl.color"
 local matchers = require "specl.matchers"
+local util     = require "specl.util"
 
 local type = util.typeof
-local q    = matchers.q
 
 local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"
@@ -122,14 +122,37 @@ do
   local Matcher, matchers, q =
         matchers.Matcher, matchers.matchers, matchers.stringify
 
+  -- color sequences escaped for use as literal strings in Lua patterns.
+  local escape = {
+	  reset = color.reset:gsub ("%W", "%%%0"),
+	  shell = color.shell:gsub ("%W", "%%%0"),
+	}
+
+  -- Reformat text into ":
+  -- | %{shell}first line of <text>%{reset}
+  -- | %{shell}next line of <text>%{reset}i
+  -- " etc.
+  local function colon (text)
+    return ":\n| " .. color.shell ..
+           util.chomp (text):gsub ("\n", escape.reset .. "\n| " .. escape.shell) ..
+           color.reset
+  end
+
+
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
   local function process_errout (process)
-    local m = q(process.output)
+    local m = colon (process.output)
     if process.errout ~= nil and process.errout ~= "" then
-      return m .. ' and error:"\n' .. process.errout .. '"'
+      return m .. "\nand error" .. colon(process.errout)
     end
     return m
+  end
+
+
+  -- Reformat process error output with the colon() function above.
+  local function colon_err (process)
+    return colon (process.errout)
   end
 
 
@@ -144,13 +167,13 @@ do
     format_actual = function (process)
       local m = q(process.status)
       if process.errout ~= nil and process.errout ~= "" then
-        return m .. ' and error:"\n' .. process.errout .. '"'
+        return m .. "\nand error" .. colon (process.errout)
       end
       return m
     end,
 
     format_expect = function (expect)
-      return "exit status " .. q(expect)
+      return " exit status " .. q(expect) .. ", "
     end,
   }
 
@@ -165,14 +188,9 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return "output " .. q(expect)
+      return " output" .. colon (expect) .. "\n"
     end,
   }
-
-
-  local function q_errout (process)
-    return q(process.errout)
-  end
 
 
   -- Matches if the error output of a process is exactly <expect>.
@@ -182,10 +200,10 @@ do
     end,
 
     actual_type   = "process",
-    format_actual = q_errout,
+    format_actual = colon_err,
 
     format_expect = function (expect)
-      return "error output " .. q(expect)
+      return " error output" .. colon (expect) .. "\n"
     end,
   }
 
@@ -200,7 +218,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return "output matching " .. q(expect)
+      return " output matching" .. colon (expect) .. "\n"
     end,
   }
 
@@ -212,10 +230,10 @@ do
     end,
 
     actual_type   = "process",
-    format_actual = q_errout,
+    format_actual = colon_err,
 
     format_expect = function (expect)
-      return "error output " .. q(expect)
+      return " error output" .. colon (expect) .. "\n"
     end,
   }
 
@@ -231,7 +249,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return "output containing " .. q(expect)
+      return " output containing" .. colon (expect) .. "\n"
     end,
   }
 
@@ -244,10 +262,10 @@ do
     end,
 
     actual_type   = "process",
-    format_actual = q_errout,
+    format_actual = colon_err,
 
     format_expect = function (expect)
-      return "error output containing " .. q(expect)
+      return " error output containing" .. colon (expect) .. "\n"
     end,
   }
 end

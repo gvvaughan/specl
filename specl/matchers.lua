@@ -60,8 +60,8 @@ local Matcher = util.Object {"matcher";
       util.type_check (self.name, {actual}, {self.actual_type})
 
       -- Pass all parameters to both formatters!
-      local m = "expecting " .. self.format_expect (expect, actual, ...) ..
-                ", but got " .. self.format_actual (actual, expect, ...)
+      local m = "expecting" .. self.format_expect (expect, actual, ...) ..
+                "but got" .. self.format_actual (actual, expect, ...)
       return matchp (actual, expect, ...), m
     end
 
@@ -69,9 +69,9 @@ local Matcher = util.Object {"matcher";
   end,
 
   -- Defaults:
+  format_expect = function (expect) return " " .. q(expect) .. ", " end,
+  format_actual = function (actual) return " " .. q(actual) end,
   actual_type   = "any",
-  format_actual = q,
-  format_expect = q,
 }
 
 
@@ -122,7 +122,9 @@ matchers.be = Matcher {
     return (actual == expect)
   end,
 
-  format_expect = function (expect) return "exactly " .. q(expect) end,
+  format_expect = function (expect)
+    return " exactly " .. q(expect) .. ", "
+  end,
 }
 
 
@@ -140,7 +142,7 @@ matchers.error = Matcher {
 
   format_expect = function (expect)
     if expect ~= nil then
-      return "an error containing " .. q(expect)
+      return " an error containing " .. q(expect) .. ", "
     else
       return "an error"
     end
@@ -162,7 +164,7 @@ matchers.match = Matcher {
   actual_type   = "string",
 
   format_expect = function (pattern)
-    return "string matching " .. q(pattern)
+    return " string matching " .. q(pattern) .. ", "
   end,
 }
 
@@ -189,9 +191,9 @@ matchers.contain = Matcher {
 
   format_expect = function (expect, actual)
     if type (actual) == "string" and type (expect) == "string" then
-      return "string containing " .. q(expect)
+      return " string containing " .. q(expect) .. ", "
     else
-      return "table containing " .. q(expect)
+      return " table containing " .. q(expect) .. ", "
     end
   end,
 }

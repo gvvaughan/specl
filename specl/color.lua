@@ -50,6 +50,7 @@ local colormap = {
   strong   = "%{bright white}",
 
   reset    = "%{reset}",
+  shell    = "%{green}",
 
   listpre     = "%{yellow}-%{reset} ",
   listpost    = "%{red}:%{reset}",
