@@ -30,6 +30,12 @@ describe specl:
         expect (run_spec (yaml)).
           should_match_output "%?.*PENDING expectation 1.*issue #23.*passed unexpectedly"
 
+  - context with Lua error in example:
+    - it reports line of error: |
+        yaml = yaml .. "\n    print garbage"
+        expect (run_spec (yaml)).
+          should_contain_error "it is pending:1: '=' expected near 'garbage'"
+
 - describe command line interface:
   - before: |
       yaml = "describe x:\n- it passes: expect (true).should_be (true)"

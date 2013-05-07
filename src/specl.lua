@@ -82,7 +82,7 @@ function compile_examples (examples)
 
   -- Make sure we have a function for every reserved word.
   for s in pairs (reserved) do
-    compiled[s] = compile_example (examples[s])
+    compiled[s] = compile_example (s, examples[s])
   end
 
   for _, example in ipairs (examples) do
@@ -94,12 +94,12 @@ function compile_examples (examples)
       -- so we have to hoist them out where we can rerun them around
       -- each real example in the list, without digging through all the
       -- entries each time.
-      compiled[description] = compile_example (definition)
+      compiled[description] = compile_example (description, definition)
 
     elseif type (definition) == "string" then
       -- Uncompiled Lua code.
       if definition == "" then definition = "pending ()" end
-      table.insert (compiled, { [description] = compile_example (definition) })
+      table.insert (compiled, { [description] = compile_example (description, definition) })
 
     elseif type (definition) == "table" then
       -- A nested context table.
@@ -131,12 +131,21 @@ macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
 -- Compile S into a callable function.  If S is a reserved word,
 -- then return a function that does nothing.
 -- If FILENAME is passed, it is used in error messages from loadstring().
-function compile_example (s, filename)
+function compile_example (location, s)
   if s == nil then return util.nop end
 
   -- Wrap the fragment into a function that we can call later.
-  local f, errmsg = loadstring ("return function ()\n" ..
+  local f, errmsg = loadstring ("return function () " ..
 	              macro.substitute_tostring (s) .. "\nend", filename)
+
+  if f == nil then
+     local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+     if msg ~= nil then
+       errmsg = location .. ":" .. line .. ": " .. msg
+     end
+     io.stderr:write (errmsg .. "\n")
+     os.exit (1)
+  end
 
   -- Execute the function from 'loadstring' or report an error right away.
   if f ~= nil then
