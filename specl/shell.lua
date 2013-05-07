@@ -180,7 +180,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return "output matching " .. q(pattern)
+      return "output matching " .. q(expect)
     end,
   }
 
@@ -195,7 +195,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return "output containing " .. q(pattern)
+      return "output containing " .. q(expect)
     end,
   }
 end
