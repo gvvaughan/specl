@@ -140,7 +140,7 @@ matchers.error = Matcher {
 
   format_expect = function (expect)
     if expect ~= nil then
-      return "an error cantaining " .. q(expect)
+      return "an error containing " .. q(expect)
     else
       return "an error"
     end
