@@ -155,6 +155,12 @@ local function render (x, open, close, elem, pair, sep, roots)
 end
 
 
+-- Remove any final newline from a string.
+local function chomp (s)
+  return s:gsub ("\n$", "")
+end
+
+
 -- Slurp a file handle.
 local function slurp (h)
   if h == nil then
@@ -196,6 +202,7 @@ end
 
 
 local M = {
+  chomp        = chomp,
   clone        = clone,
   clone_rename = clone_rename,
   merge        = merge,

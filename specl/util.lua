@@ -197,6 +197,7 @@ local M = {
   Object        = Object,
 
   -- Functions
+  chomp         = std.chomp,
   indent        = indent,
   nop           = nop,
   map           = map,
