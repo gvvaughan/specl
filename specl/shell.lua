@@ -20,7 +20,6 @@
 
 -- Additional commands useful for writing command-line specs.
 
-local color    = require "specl.color"
 local matchers = require "specl.matchers"
 local util     = require "specl.util"
 
@@ -119,40 +118,23 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
-  local Matcher, matchers, q =
-        matchers.Matcher, matchers.matchers, matchers.stringify
-
-  -- color sequences escaped for use as literal strings in Lua patterns.
-  local escape = {
-	  reset = color.reset:gsub ("%W", "%%%0"),
-	  shell = color.shell:gsub ("%W", "%%%0"),
-	}
-
-  -- Reformat text into ":
-  -- | %{shell}first line of <text>%{reset}
-  -- | %{shell}next line of <text>%{reset}i
-  -- " etc.
-  local function colon (text)
-    return ":\n| " .. color.shell ..
-           util.chomp (text):gsub ("\n", escape.reset .. "\n| " .. escape.shell) ..
-           color.reset
-  end
-
+  local reformat, Matcher, matchers, q =
+        matchers.reformat, matchers.Matcher, matchers.matchers, matchers.stringify
 
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
   local function process_errout (process)
-    local m = colon (process.output)
+    local m = ":" .. reformat (process.output)
     if process.errout ~= nil and process.errout ~= "" then
-      return m .. "\nand error" .. colon(process.errout)
+      return m .. "\nand error:" .. reformat (process.errout)
     end
     return m
   end
 
 
-  -- Reformat process error output with the colon() function above.
-  local function colon_err (process)
-    return colon (process.errout)
+  -- Reformat process error output with the reformat() function.
+  local function reformat_err (process)
+    return ":" .. reformat (process.errout)
   end
 
 
@@ -165,9 +147,9 @@ do
     actual_type   = "process",
 
     format_actual = function (process)
-      local m = q(process.status)
+      local m = " " .. q(process.status)
       if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error" .. colon (process.errout)
+        return m .. "\nand error:" .. reformat (process.errout)
       end
       return m
     end,
@@ -188,7 +170,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return " output" .. colon (expect) .. "\n"
+      return " output:" .. reformat (expect) .. "\n"
     end,
   }
 
@@ -200,10 +182,10 @@ do
     end,
 
     actual_type   = "process",
-    format_actual = colon_err,
+    format_actual = reformat_err,
 
     format_expect = function (expect)
-      return " error output" .. colon (expect) .. "\n"
+      return " error output:" .. reformat (expect) .. "\n"
     end,
   }
 
@@ -218,7 +200,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return " output matching" .. colon (expect) .. "\n"
+      return " output matching:" .. reformat (expect) .. "\n"
     end,
   }
 
@@ -230,10 +212,10 @@ do
     end,
 
     actual_type   = "process",
-    format_actual = colon_err,
+    format_actual = reformat_err,
 
     format_expect = function (expect)
-      return " error output" .. colon (expect) .. "\n"
+      return " error output matching:" .. reformat (expect) .. "\n"
     end,
   }
 
@@ -249,7 +231,7 @@ do
     format_actual = process_errout,
 
     format_expect = function (expect)
-      return " output containing" .. colon (expect) .. "\n"
+      return " output containing:" .. reformat (expect) .. "\n"
     end,
   }
 
@@ -262,10 +244,10 @@ do
     end,
 
     actual_type   = "process",
-    format_actual = colon_err,
+    format_actual = reformat_err,
 
     format_expect = function (expect)
-      return " error output containing" .. colon (expect) .. "\n"
+      return " error output containing:" .. reformat (expect) .. "\n"
     end,
   }
 end

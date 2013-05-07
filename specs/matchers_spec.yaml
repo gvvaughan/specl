@@ -12,6 +12,10 @@ describe matchers:
 
 
 - describe be matcher:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).should_be 'one'"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting exactly "one", but got 1'
   - context when called normally:
     - it succeeds when comparing identical objects:
         expect (1).should_be (1)
@@ -27,6 +31,10 @@ describe matchers:
 
 
 - describe equal matcher:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "('str').should_equal {'table'}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting {1=table}, but got "str"'
   - context when called normally:
     - it succeeds when comparing equal objects:
         expect ({}).should_equal {}
@@ -50,6 +58,10 @@ describe matchers:
         should_error "string or table expected"
 
   - context when receiving a string:
+    - it displays expected and actual output for failures:
+        yaml = preamble .. "('tilde').should_contain '~'"
+        expect (run_spec (yaml)).
+          should_contain_output 'expecting string containing "~", but got "tilde"'
     - context while called normally:
       - it succeeds if the substring is present:
           expect ("English Language").should_contain "e"
@@ -67,6 +79,19 @@ describe matchers:
     - before:
         vals = "({ 'one', 'two', 'five' })"
         keys = "({ one = true, two = true, five = true })"
+
+    # This is probably too specific and brittle... but I do want to make
+    # sure the pretty printing of tables doesn't break with future
+    # releases, so let's try and see whether it flies.
+    - it displays expected and actual output for failures: |
+        yaml = preamble .. "({'one', 'two', 'five'}).should_contain 'three'"
+        expect (run_spec (yaml)).
+          should_match_output ("expecting table containing \"three\", but got:\n" ..
+                                "%s*| %{\n" ..
+                                "%s*|%s*%[1%] = \"one\",\n" ..
+                                "%s*|%s*%[2%] = \"two\",\n" ..
+                                "%s*|%s*%[3%] = \"five\",\n" ..
+                                "%s*| %}\n")
     - context while called normally:
       - it succeeds if the element is a table value:
           yaml = preamble .. vals .. ".should_contain 'five'"
@@ -111,6 +136,10 @@ describe matchers:
   - "it diagnoses non-string arguments":
       expect (expect ({"a table"}).should_match {}).
         should_error "string expected"
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "('no digits').should_match '%d+'"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting string matching "%d+", but got "no digits"'
 
   - context when called normally:
     - it succeeds if the pattern matches:
@@ -127,6 +156,11 @@ describe matchers:
 
 
 - describe error matcher:
+  - it displays expected and actual output for failures: |
+      yaml = preamble .. "(error 'error message').should_error 'failed'"
+      expect (run_spec (yaml)).
+        should_match_output ('expecting an error containing "failed", but got:\n' ..
+                             '%s*| .*: error message')
   - context when called normally:
     - it succeeds if there is an error that contains the message:
         expect (error "error message").should_error "error"

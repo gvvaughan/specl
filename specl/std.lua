@@ -195,6 +195,55 @@ local function tostring (x)
 end
 
 
+-- Pretty-print a table.
+local function prettytostring (t, indent, spacing)
+  indent = indent or "\t"
+  spacing = spacing or ""
+  return render (t,
+                 function ()
+                   local s = spacing .. "{"
+                   spacing = spacing .. indent
+                   return s
+                 end,
+                 function ()
+                   spacing = string.gsub (spacing, indent .. "$", "")
+                   return spacing .. "}"
+                 end,
+                 function (x)
+                   if type (x) == "string" then
+                     return string.format ("%q", x)
+                   else
+                     return tostring (x)
+                   end
+                 end,
+                 function (x, i, v, is, vs)
+                   local s = spacing .. "["
+                   if type (i) == "table" then
+                     s = s .. "\n"
+                   end
+                   s = s .. is
+                   if type (i) == "table" then
+                     s = s .. "\n"
+                   end
+                   s = s .. "] ="
+                   if type (v) == "table" then
+                     s = s .. "\n"
+                   else
+                     s = s .. " "
+                   end
+                   s = s .. vs
+                   return s
+                 end,
+                 function (_, i)
+                   local s = "\n"
+                   if i then
+                     s = "," .. s
+                   end
+                   return s
+                 end)
+end
+
+
 
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
@@ -202,16 +251,17 @@ end
 
 
 local M = {
-  chomp        = chomp,
-  clone        = clone,
-  clone_rename = clone_rename,
-  merge        = merge,
-  metamethod   = metamethod,
-  Object       = Object,
-  processFiles = processFiles,
-  render       = render,
-  slurp        = slurp,
-  tostring     = tostring,
+  chomp          = chomp,
+  clone          = clone,
+  clone_rename   = clone_rename,
+  merge          = merge,
+  metamethod     = metamethod,
+  Object         = Object,
+  prettytostring = prettytostring,
+  processFiles   = processFiles,
+  render         = render,
+  slurp          = slurp,
+  tostring       = tostring,
 }
 
 return M

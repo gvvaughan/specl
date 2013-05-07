@@ -194,24 +194,25 @@ end
 
 local M = {
   -- Prototypes
-  Object        = Object,
+  Object         = Object,
 
   -- Functions
-  chomp         = std.chomp,
-  indent        = indent,
-  nop           = nop,
-  map           = map,
-  merge         = std.merge,
-  princ         = princ,
-  process_args  = process_args,
-  process_files = std.processFiles,
-  slurp         = std.slurp,
-  strip1st      = strip1st,
-  tostring      = std.tostring,
-  type_check    = type_check,
-  typeof        = typeof,
-  warn          = warn,
-  writc         = writc,
+  chomp          = std.chomp,
+  indent         = indent,
+  nop            = nop,
+  map            = map,
+  merge          = std.merge,
+  prettytostring = std.prettytostring,
+  princ          = princ,
+  process_args   = process_args,
+  process_files  = std.processFiles,
+  slurp          = std.slurp,
+  strip1st       = strip1st,
+  tostring       = std.tostring,
+  type_check     = type_check,
+  typeof         = typeof,
+  warn           = warn,
+  writc          = writc,
 }
 
 return M

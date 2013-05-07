@@ -18,7 +18,8 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-local util = require "specl.util"
+local color = require "specl.color"
+local util  = require "specl.util"
 
 local M = {}
 
@@ -90,6 +91,25 @@ local matchers = setmetatable ({}, {
 })
 
 
+-- color sequences escaped for use as literal strings in Lua patterns.
+local escape = {
+        reset = color.reset:gsub ("%W", "%%%0"),
+        match = color.match:gsub ("%W", "%%%0"),
+      }
+
+
+-- Reformat text into ":
+-- | %{shell}first line of <text>%{reset}
+-- | %{shell}next line of <text>%{reset}i
+-- " etc.
+local function reformat (text, prefix)
+  prefix = prefix or "| "
+  return "\n| " .. color.match ..
+         util.chomp (text):gsub ("\n", escape.reset .. "\n| " .. escape.match) ..
+         color.reset
+end
+
+
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
   local type1, type2 = type (o1), type (o2)
@@ -150,7 +170,7 @@ matchers.error = Matcher {
 
   -- force a new-line, let the display engine take care of indenting.
   format_actual = function (actual)
-    return "\n" .. q (actual)
+    return ":" .. reformat (actual)
   end
 }
 
@@ -188,6 +208,14 @@ matchers.contain = Matcher {
   end,
 
   actual_type   = {"string", "table"},
+
+  format_actual = function (actual)
+    if type (actual) == "string" then
+      return " " .. q (actual)
+    else
+      return ":" .. reformat (util.prettytostring (actual, "  "))
+    end
+  end,
 
   format_expect = function (expect, actual)
     if type (actual) == "string" and type (expect) == "string" then
@@ -286,6 +314,7 @@ return util.merge (M, {
 
   -- API:
   expect    = expect,
+  reformat  = reformat,
   init      = init,
   matchers  = matchers,
   pending   = pending,
