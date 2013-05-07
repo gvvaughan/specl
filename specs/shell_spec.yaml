@@ -105,15 +105,15 @@ describe specl:
         should_error "process expected"
 
   - context when called normally:
-    - it succeeds when the output matches exactly:
+    - it succeeds when the output contains the match text:
         expect (spawn "printf hello").should_contain_output "e"
-    - it fails when the output mismatches:
+    - it fails when the output does not contain the match text:
         yaml = preamble .. "expect (spawn 'printf hello').should_contain_output '~'"
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
   - context when called with not_ prefix:
-    - it succeeds when the output mismatches:
+    - it succeeds when the output does not contain the match text:
         expect (spawn "printf hello").should_not_contain_output "~"
-    - it fails when the output matches:
+    - it fails when the output contains the match text:
         yaml = preamble .. "expect (spawn 'printf hello').should_not_contain_output 'e'"
         expect (run_spec (yaml)).should_contain_output (fail_1)
