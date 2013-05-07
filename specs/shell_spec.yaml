@@ -101,7 +101,7 @@ describe specl:
 
 - describe contain_output matcher:
   - it diagnoses incompatible arguments:
-      expect (expect ("meh").should_output "meh").
+      expect (expect ("meh").should_contain_output "meh").
         should_error "process expected"
 
   - context when called normally:
