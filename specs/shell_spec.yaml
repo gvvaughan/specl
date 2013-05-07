@@ -79,6 +79,28 @@ describe specl:
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
+- describe output_error matcher:
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_output_error "meh").
+        should_error "process expected"
+
+  - context when called normally:
+    - it succeeds when the error output matches exactly:
+        expect (spawn "printf hello >&2").should_output_error "hello"
+    - it fails when the error output mismatches:
+        yaml = preamble ..
+               "expect (spawn 'printf hello >&2').should_output_error 'hell'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when the output mismatches:
+        expect (spawn "printf hello >&2").should_not_output "hell"
+    - it fails when the output matches:
+        yaml = preamble ..
+               "expect (spawn 'printf hello >&2').should_not_output_error 'hello'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+
 - describe match_output matcher:
   - it diagnoses incompatible arguments:
       expect (expect ("meh").should_match_output "meh").
@@ -99,6 +121,28 @@ describe specl:
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
+- describe match_error matcher:
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_match_error "meh").
+        should_error "process expected"
+
+  - context when called normally:
+    - it succeeds when the error output matches:
+        expect (spawn "printf hello >&2").should_match_error "%S+"
+    - it fails when the error output mismatches:
+        yaml = preamble ..
+               "expect (spawn 'printf hello >&2').should_match_error '%s+'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when the error output mismatches:
+        expect (spawn "printf hello >&2").should_not_match_error "%s+"
+    - it fails when the error output matches:
+        yaml = preamble ..
+               "expect (spawn 'printf hello >&2').should_not_match_error '%S+'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+
 - describe contain_output matcher:
   - it diagnoses incompatible arguments:
       expect (expect ("meh").should_contain_output "meh").
@@ -116,4 +160,26 @@ describe specl:
         expect (spawn "printf hello").should_not_contain_output "~"
     - it fails when the output contains the match text:
         yaml = preamble .. "expect (spawn 'printf hello').should_not_contain_output 'e'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+
+- describe contain_error matcher:
+  - it diagnoses incompatible arguments:
+      expect (expect ("meh").should_contain_error "meh").
+        should_error "process expected"
+
+  - context when called normally:
+    - it succeeds when the error output contains the match text:
+        expect (spawn "printf hello >&2").should_contain_error "e"
+    - it fails when the output mismatches:
+        yaml = preamble ..
+               "expect (spawn 'printf hello >&2').should_contain_error '~'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds when the output mismatches:
+        expect (spawn "printf hello >&2").should_not_contain_error "~"
+    - it fails when the output matches:
+        yaml = preamble ..
+               "expect (spawn 'printf hello >&2').should_not_contain_error 'e'"
         expect (run_spec (yaml)).should_contain_output (fail_1)

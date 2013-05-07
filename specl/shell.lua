@@ -170,6 +170,26 @@ do
   }
 
 
+  local function q_errout (process)
+    return q(process.errout)
+  end
+
+
+  -- Matches if the error output of a process is exactly <expect>.
+  matchers.output_error = Matcher {
+    function (actual, expect)
+      return (actual.errout == expect)
+    end,
+
+    actual_type   = "process",
+    format_actual = q_errout,
+
+    format_expect = function (expect)
+      return "error output " .. q(expect)
+    end,
+  }
+
+
   -- Matches if the output of a process matches <pattern>.
   matchers.match_output = Matcher {
     function (actual, pattern)
@@ -184,6 +204,22 @@ do
     end,
   }
 
+
+  -- Matches if the error output of a process matches <pattern>.
+  matchers.match_error = Matcher {
+    function (actual, pattern)
+      return (string.match (actual.errout, pattern) ~= nil)
+    end,
+
+    actual_type   = "process",
+    format_actual = q_errout,
+
+    format_expect = function (expect)
+      return "error output " .. q(expect)
+    end,
+  }
+
+
   -- Matches if the output of a process contains <expect>.
   matchers.contain_output = Matcher {
     function (actual, expect)
@@ -196,6 +232,22 @@ do
 
     format_expect = function (expect)
       return "output containing " .. q(expect)
+    end,
+  }
+
+
+  -- Matches if the error output of a process contains <expect>.
+  matchers.contain_error = Matcher {
+    function (actual, expect)
+      local pattern = expect:gsub ("%W", "%%%0")
+      return (string.match (actual.errout, pattern) ~= nil)
+    end,
+
+    actual_type   = "process",
+    format_actual = q_errout,
+
+    format_expect = function (expect)
+      return "error output containing " .. q(expect)
     end,
   }
 end
