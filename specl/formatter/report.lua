@@ -59,7 +59,7 @@ local function expectations (status, descriptions)
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
         local pend = "  " .. color.pend ..
-              "PENDING expectation " ..  i .. "%{reset}: "
+              "PENDING expectation " ..  i .. color.reset .. ": "
         if type (expectation.pending) == "string" then
           pend = pend .. color.warn .. expectation.pending .. ", "
         end
@@ -68,10 +68,11 @@ local function expectations (status, descriptions)
 
 	  if prefix ~= color.fail then prefix = color.warn end
 
-          pend = pend .. color.warn .. "passed unexpectedly!%{reset}"
+          pend = pend .. color.warn .. "passed unexpectedly!" .. color.reset
           reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
               "  " .. color.strong ..
-              "You can safely remove the 'pending ()' call from this example.%{reset}"
+              "You can safely remove the 'pending ()' call from this example." ..
+	      color.reset
         else
 	  counts.pend = counts.pend + 1
 
@@ -87,7 +88,7 @@ local function expectations (status, descriptions)
 	counts.fail = counts.fail + 1
 
         local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. "%{reset}: " ..  expectation.message
+                     i .. color.reset .. ": " ..  expectation.message
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
 
         if opts.verbose then
@@ -109,7 +110,7 @@ local function expectations (status, descriptions)
 	table.insert (details, color.fail .. tostring (counts.fail) .. " failing")
       end
       if next (details) then
-	details = " (" .. table.concat (details, "%{reset}, ") .. "%{reset})"
+	details = " (" .. table.concat (details, color.reset .. ", ") .. color.reset
       else
 	details = ""
       end
@@ -119,8 +120,8 @@ local function expectations (status, descriptions)
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
-    local pend = " (" .. color.pend .. "PENDING example%{reset}: " ..
-                   "not yet implemented)"
+    local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
+                 ": " .. "not yet implemented)"
     reports.pend = reports.pend .. pend
 
     princ (spaces ..  tabulate (descriptions) ..  pend)
@@ -166,10 +167,11 @@ local function footer (stats, reports)
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""
   local pendcolor = (stats.pend > 0) and color.bad or ""
-  princ (passcolor   .. stats.pass .. " passed%{reset}, " ..
-         pendcolor   .. stats.pend .. " pending%{reset} and " ..
+  princ (passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
+         pendcolor   .. stats.pend .. " pending" .. color.reset .. " and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
-         color.clock .. (os.time () - stats.starttime) .. " seconds%{reset}.")
+         color.clock .. (os.time () - stats.starttime) .. " seconds" ..
+	 color.reset .. ".")
 end
 
 

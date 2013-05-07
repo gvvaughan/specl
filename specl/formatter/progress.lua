@@ -45,16 +45,17 @@ local function expectations (status, descriptions)
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
         reports.pend = reports.pend .. "\n  " ..
-	      color.pend .. "PENDING expectation " ..  i .. "%{reset}: "
+	      color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
 	if type (expectation.pending) == "string" then
           reports.pend = reports.pend .. color.warn .. expectation.pending .. ", "
 	end
         if expectation.status == true then
 	  writc (color.strong .. "?")
 	  reports.pend = reports.pend ..
-                color.warn .. "passed unexpectedly!%{reset}\n" ..
+                color.warn .. "passed unexpectedly!" .. color.reset .. "\n" ..
 		"  " .. color.strong ..
-		"You can safely remove the 'pending ()' call from this example.%{reset}"
+		"You can safely remove the 'pending ()' call from this example." ..
+		color.reset
         else
           writc (color.pend .. "*")
           reports.pend = reports.pend .. "not yet implemented"
@@ -67,7 +68,7 @@ local function expectations (status, descriptions)
         writc (color.bad .. "F")
 
         local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. "%{reset}: " ..  expectation.message
+                     i .. color.reset .. ": " ..  expectation.message
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
       end
     end
@@ -75,8 +76,8 @@ local function expectations (status, descriptions)
   elseif status.ispending then
     -- Otherwise, display only pending examples.
     writc (color.pend .. "*")
-    reports.pend = reports.pend .. " (" .. color.pend .. "PENDING example%{reset}" ..
-                   ": not yet implemented)"
+    reports.pend = reports.pend .. " (" .. color.pend .. "PENDING example" ..
+                   color.reset .. ": not yet implemented)"
   end
   io.write (">")
   io.flush ()
@@ -121,18 +122,19 @@ local function footer (stats, reports)
   local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
 
   if stats.fail == 0 then
-    writc (prefix .. " expectations met%{reset}")
+    writc (prefix .. " expectations met" .. color.reset)
 
     if stats.pend ~= 0 then
-      writc (", but " .. color.bad .. stats.pend .. " still pending%{reset},")
+      writc (", but " .. color.bad .. stats.pend ..
+             " still pending" .. color.reset .. ",")
     end
   else
-    writc (passcolor .. stats.pass .. " passed%{reset}, " ..
-           pendcolor .. stats.pend .. " pending%{reset}, " ..
-           "and " .. failcolor .. stats.fail .. " failed%{reset}")
+    writc (passcolor .. stats.pass .. " passed" .. color.reset .. ", " ..
+           pendcolor .. stats.pend .. " pending" .. color.reset .. ", " ..
+           "and " .. failcolor .. stats.fail .. " failed" .. color.reset)
   end
   princ (" in " .. color.clock ..  (os.time () - stats.starttime) ..
-         " seconds%{reset}.")
+         " seconds" .. color.reset .. ".")
 end
 
 

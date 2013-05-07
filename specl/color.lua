@@ -49,6 +49,8 @@ local colormap = {
   warn     = "%{red}",
   strong   = "%{bright white}",
 
+  reset    = "%{reset}",
+
   listpre     = "%{yellow}-%{reset} ",
   listpost    = "%{red}:%{reset}",
   allpass     = "",
