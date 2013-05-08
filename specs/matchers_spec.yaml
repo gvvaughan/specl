@@ -204,7 +204,9 @@ describe matchers:
   - it displays expected and actual output for failures: |
       yaml = preamble .. "(error 'cheese').should_error 'ham'"
       expect (run_spec (yaml)).
-        should_match_output ('expecting an error containing "ham", but got:\n' ..
+        should_match_output ('expecting an error containing:\n' ..
+                             '%s*| ham\n' ..
+                             '%s*but got:\n' ..
                              '%s*| .*: cheese')
   - it displays all expected and actual output for one_of failures: |
       yaml = preamble .. "(error 'cheese').should_error.one_of {'green eggs', 'ham'}"

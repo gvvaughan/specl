@@ -127,15 +127,36 @@ local escape = {
 
 
 -- Reformat text into "
--- | %{shell}first line of <text>%{reset}
--- | %{shell}next line of <text>%{reset}
+-- | %{match}first line of <text>%{reset}
+-- | %{match}next line of <text>%{reset}
 -- " etc.
-local function reformat (text, prefix)
+local function _reformat (text, prefix)
+  text = text or ""
   prefix = prefix or "| "
   return "\n" .. prefix .. color.match ..
          util.chomp (text):gsub ("\n",
 	   escape.reset .. "\n" .. prefix .. escape.match) ..
          color.reset
+end
+
+
+-- Reformat a list of alternatives into "
+-- | %{match}as many lines of <list>[1] as previded%{reset}
+-- or:
+-- | %{match}lines from <list>[2]%}reset}
+-- " etc.
+local function reformat (list, prefix, infix)
+  list, prefix, infix = list or {""}, prefix or "| ", infix or "or:"
+  if type (list) ~= "table" then
+    list = {list}
+  end
+
+  local s = ""
+  for _, expect in ipairs (list) do
+    s = s .. infix .. _reformat (expect, prefix) .. "\n"
+  end
+  -- strip the spurious <infix> from the start of the string.
+  return s:gsub ("^" .. infix:gsub ("%W", "%%%0"), "")
 end
 
 
@@ -196,7 +217,7 @@ matchers.error = Matcher {
 
   format_expect = function (expect)
     if expect ~= nil then
-      return " an error containing " .. q(expect) .. ", "
+      return " an error containing:" .. reformat (expect)
     else
       return "an error"
     end
