@@ -35,38 +35,19 @@ ACLOCAL_AMFLAGS = -I m4
 ## Declarations. ##
 ## ------------- ##
 
-auxdir = build-aux
-
+EXTRA_DIST		= README.md
 CLEANFILES		=
 DISTCLEANFILES		=
-EXTRA_DIST		=
 MAINTAINERCLEANFILES	=
 NOTHING_ELSE		=
 
 bin_SCRIPTS		=
 check_local		=
-doc_DATA		=
 install_exec_hooks	=
 man_MANS		=
 
-install_edit = sed					\
-	-e 's|@LUA[@]|$(LUA)|g'				\
-	$(NOTHING_ELSE)
-
-inplace_edit = sed					\
-	-e 's|@LUA[@]|$(LUA)|g'				\
-	$(NOTHING_ELSE)
-
-release_extra_dist	=				\
-	.autom4te.cfg					\
-	.travis.yml					\
-	GNUmakefile					\
-	bootstrap					\
-	travis.yml.in					\
-	$(NOTHING_ELSE)
-
+include local.mk
 include src/src.mk
-include specl/specl.mk
 include specs/specs.mk
 include build-aux/rockspecs.mk
 
@@ -84,4 +65,11 @@ check-local: $(check_local)
 
 install-exec-hook: $(install_exec_hooks)
 
-old_NEWS_hash = 78ee07b4964d6dc9e0658d71b55e2f5d
+
+## ------------- ##
+## Distribution. ##
+## ------------- ##
+
+EXTRA_DIST +=						\
+	README.md					\
+	$(NOTHING_ELSE)

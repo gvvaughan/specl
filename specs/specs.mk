@@ -21,24 +21,19 @@
 ## Specs. ##
 ## ------ ##
 
-SPECL  = src/specl
+# Override Slingshot SPECL.
+SPECL = bin/specl
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/formatters_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)
 
-check_local += specs-check-local
-specs-check-local: $(SPECL) $(specl_SPECS)
-	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS)
-
-
-## ------------- ##
-## Distribution. ##
-## ------------- ##
-
 EXTRA_DIST +=						\
-	$(specl_SPECS)					\
+	specs/spec_helper.lua				\
 	$(NOTHING_ELSE)
+
+include build-aux/specl.mk

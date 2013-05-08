@@ -48,49 +48,80 @@ end
 -- Diagnose any failed expectations in situ, and return failure messages
 -- for display at the end.
 local function expectations (status, descriptions)
-  local spaces = indent (descriptions)
+  local spaces  = indent (descriptions)
   local reports = { fail = "", pend = "" }
+  local counts  = { fail = 0, pend = 0, unexpected = 0 }
 
   if next (status.expectations) then
-    -- If we have expectations, display the result of each.
-    spec (descriptions)
+    local details = ""
 
+    -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
         local pend = "  " .. color.pend ..
-              "PENDING expectation " ..  i .. "%{reset}: "
+              "PENDING expectation " ..  i .. color.reset .. ": "
         if type (expectation.pending) == "string" then
           pend = pend .. color.warn .. expectation.pending .. ", "
         end
-	if expectation.status == true then
-          pend = pend .. color.warn .. "passed unexpectedly!%{reset}"
+        if expectation.status == true then
+          counts.unexpected = counts.unexpected + 1
+
+          if prefix ~= color.fail then prefix = color.warn end
+
+          pend = pend .. color.warn .. "passed unexpectedly!" .. color.reset
           reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
-	      "  " .. color.strong ..
-	      "You can safely remove the 'pending ()' call from this example.%{reset}"
+              "  " .. color.strong ..
+              "You can safely remove the 'pending ()' call from this example." ..
+              color.reset
         else
+          counts.pend = counts.pend + 1
+
           pend = pend .. "not yet implemented"
           reports.pend = reports.pend .. "\n" .. pend
-	end
+        end
 
         if opts.verbose then
-          princ (spaces .. pend)
+          details = details .. "\n" .. spaces .. pend
         end
 
       elseif expectation.status == false then
+        counts.fail = counts.fail + 1
+
         local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. "%{reset}: " ..  expectation.message
+                     i .. color.reset .. ": " ..  expectation.message
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
 
         if opts.verbose then
-          princ (spaces .. fail:gsub ("\n", "%0  " .. spaces))
+          details = details .. "\n" .. spaces .. fail:gsub ("\n", "%0  " .. spaces)
         end
       end
     end
 
+    -- One line summary of abnormal expectations, for non-verbose report format.
+    if not opts.verbose then
+      details = {}
+      if counts.pend > 0 then
+        table.insert (details, color.pend .. tostring (counts.pend) .. " pending")
+      end
+      if counts.unexpected > 0 then
+        table.insert (details, color.warn .. tostring (counts.unexpected) .. " unexpectedly passing")
+      end
+      if counts.fail > 0 then
+        table.insert (details, color.fail .. tostring (counts.fail) .. " failing")
+      end
+      if next (details) then
+        details = " (" .. table.concat (details, color.reset .. ", ") .. color.reset
+      else
+        details = ""
+      end
+    end
+
+    princ (spaces .. tabulate (descriptions) ..details)
+
   elseif status.ispending then
     -- Otherwise, display only pending examples.
-    local pend = " (" .. color.pend .. "PENDING example%{reset}: " ..
-                   "not yet implemented)"
+    local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
+                 ": " .. "not yet implemented)"
     reports.pend = reports.pend .. pend
 
     princ (spaces ..  tabulate (descriptions) ..  pend)
@@ -136,10 +167,11 @@ local function footer (stats, reports)
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""
   local pendcolor = (stats.pend > 0) and color.bad or ""
-  princ (passcolor   .. stats.pass .. " passed%{reset}, " ..
-         pendcolor   .. stats.pend .. " pending%{reset} and " ..
+  princ (passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
+         pendcolor   .. stats.pend .. " pending" .. color.reset .. " and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
-         color.clock .. (os.time () - stats.starttime) .. " seconds%{reset}.")
+         color.clock .. (os.time () - stats.starttime) .. " seconds" ..
+         color.reset .. ".")
 end
 
 

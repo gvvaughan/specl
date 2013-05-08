@@ -1,176 +1,347 @@
+before: |
+  require "specl.shell"
+  require "spec_helper"
+
+  preamble = "before: require 'specl.shell'\nit fails: expect "
+  fail_1   = "\n0 passed, 0 pending, and 1 failed"
+  pass_all = "\nAll expectations met"
+
 describe matchers:
-- before: |
-    preamble = "describe x:\n- it matches something: expect "
-
-    function run_spec (yaml, cmd)
-      yaml = (preamble .. yaml):gsub ("'", "'\\''")
-      cmd  = cmd or ""
-      -- if CMD begins with a '-' then only options follow, otherwise
-      -- we assume the entire command was passed.
-      if cmd == "" or cmd:sub (1, 1) == "-" then
-        cmd = "env LUA_PATH='" .. package.path .. "' src/specl --color=no " .. cmd
-      end
-      return (specl.cmdpipe ("printf '%s\\n' '" .. yaml .. "'|" .. cmd)).output
-    end
-
+- before:
     deep = "({{ 'subtable 1', {'sub-subtable'} }, { 'subtable 2' }})"
 
+- it diagnoses zero alternatives with any_of:
+    expect (expect (1).should_be.any_of {}).
+      should_error "non-empty table expected"
+- it diagnoses unsupported matcher adaptors:
+    expect (expect (1).should_not_be.the_thing_that ()).
+      should_error "unknown 'the_thing_that' adaptor with 'should_not_be'"
 
 - describe be matcher:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).should_be 'one'"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting exactly "one", but got 1'
+  - it displays all expected and actual output for any_of failures:
+      yaml = preamble .. "(3).should_be.any_of {'five', 2, 1}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting any of "five", 2 or 1, but got 3'
+  - it displays the normal format where any_of has only one alternative:
+      yaml = preamble .. "(3).should_be.any_of {'five'}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting exactly "five", but got 3'
+
   - context when called normally:
     - it succeeds when comparing identical objects:
-        expect (run_spec ("(1).should_be (1)")).
-          should_contain "\nAll expectations met"
+        expect (1).should_be (1)
+    - it succeeds when object is any of the alternatives:
+        expect (2).should_be.any_of {5, 2, 1}
     - it fails when comparing different objects:
-        expect (run_spec ("(1).should_be 'one'")).
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "(1).should_be 'one'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when object is not any of the alternatives:
+        yaml = preamble .. "(3).should_be.any_of {5, 2, 1}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
   - context when called with not_ prefix:
     - it succeeds when comparing different objects:
-        expect (run_spec ("(1).should_not_be 'one'")).
-          should_contain "\nAll expectations met"
+        expect (1).should_not_be 'one'
+    - it succeeds when object is not any of the alternatives:
+        expect (3).should_not_be.any_of {5, 2, 1}
     - it fails when comparing identical objects:
-        expect (run_spec ("(1).should_not_be (1)")).
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "(1).should_not_be (1)"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when object is any of the alternatives:
+        yaml = preamble .. "(2).should_not_be.any_of {5, 2, 1}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
 - describe equal matcher:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "('str').should_equal {'table'}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting {1=table}, but got "str"'
+  - it displays all expected and actual output for any_of failures:
+      yaml = preamble .. "('str').should_equal.any_of {'table', 'number'}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting any of "table" or "number", but got "str"'
   - context when called normally:
     - it succeeds when comparing equal objects:
-        expect (run_spec ("({}).should_equal {}")).
-          should_contain "\nAll expectations met"
-    - "it makes a deep comparison of non-string elements":
-        expect (run_spec (deep .. ".should_equal " .. deep)).
-          should_contain "\nAll expectations met"
+        expect ({}).should_equal {}
+    - it makes a deep comparison of table elements:
+        yaml = preamble .. deep .. ".should_equal " .. deep
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when object is any of the alternatives:
+        yaml = preamble .. deep .. ".should_equal.any_of {0, {0}, " .. deep .. "}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
     - it fails when comparing unequal objects:
-        expect (run_spec ("('str').should_equal {'table'}")).
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "('str').should_equal {'table'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when object is not any of the alternatives:
+        yaml = preamble .. "('str').should_equal.any_of {0, {0}, 'table'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
   - context when called with not_ prefix:
     - it succeeds when comparing unequal objects:
-        expect (run_spec ("('str').should_not_equal {'table'}")).
-          should_contain "\nAll expectations met"
+        expect ('str').should_not_equal {'table'}
+    - it succeeds when object is not any of the alternatives:
+        expect ('str').should_not_equal.any_of {0, {0}, 'table'}
     - it fails when comparing equal objects:
-        expect (run_spec ("({1, {2}}).should_not_equal {1, {2}}")).
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "({1, {2}}).should_not_equal {1, {2}}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when object is any of the alternatives:
+        yaml = preamble .. "({1, {2}}).should_not_equal.any_of {{1, {2}}, 3, {4}}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
 - describe contain matcher:
   - it diagnoses incompatible arguments:
-      specl = require "specl"
-      expect (specl._expect (function () end).should_contain "nothing").
+      expect (expect (function () end).should_contain "nothing").
         should_error "string or table expected"
 
   - context when receiving a string:
+    - it displays expected and actual output for failures:
+        yaml = preamble .. "('tilde').should_contain '~'"
+        expect (run_spec (yaml)).
+          should_contain_output 'expecting string containing "~", but got "tilde"'
+    - it displays all expected and actual output for any_of failures:
+        yaml = preamble .. "('tilde').should_contain.any_of {'~', 'x', 'foo', 9}"
+        expect (run_spec (yaml)).
+          should_contain_output ('expecting string containing any of "~",' ..
+                                 ' "x", "foo" or 9, but got "tilde"')
     - context while called normally:
       - it succeeds if the substring is present:
-          expect (run_spec ("('English Language').should_contain 'e'")).
-            should_contain "\nAll expectations met"
+          expect ("English Language").should_contain "e"
+      - it succeeds if any of the listed substrings is present:
+          expect ("English Language").
+           should_contain.any_of {"Cornish", "English", "Gaelic"}
       - it fails if the substring is absent:
-          expect (run_spec ("('English Language').should_contain '~'")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. "('English Language').should_contain '~'"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails of none of the listed substrings is present:
+          yaml = preamble .. "('English Language').should_contain." ..
+                 "any_of {'Celtic', 'Cornish', 'Gaelic'}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
     - context while called with not_ prefix:
       - it succeeds if the substring is absent:
-          expect (run_spec ("('English Language').should_not_contain '~'")).
-            should_contain "\nAll expectations met"
+          expect ("English Language").should_not_contain "~"
+      - it succeeds if none of the listed substrings is present:
+          expect ("English Language").should_not_contain.
+            any_of {"Celtic", "Cornish", "Gaelic"}
       - it fails if the substring is present:
-          expect (run_spec ("('English Language').should_not_contain 'e'")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. "('English Language').should_not_contain 'e'"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails if any of the listed substrings is present:
+          yaml = preamble .. "('English Language').should_not_contain." ..
+                 "any_of {'British', 'English', 'Language'}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
 
   - context when receiving a table:
     - before:
         vals = "({ 'one', 'two', 'five' })"
         keys = "({ one = true, two = true, five = true })"
+
+    # This is probably too specific and brittle... but I do want to make
+    # sure the pretty printing of tables doesn't break with future
+    # releases, so let's try and see whether it flies.
+    - it displays expected and actual output for failures: |
+        yaml = preamble .. "({'one', 'two', 'five'}).should_contain 'three'"
+        expect (run_spec (yaml)).
+          should_match_output ("expecting table containing \"three\", but got:\n" ..
+                                "%s*| %{\n" ..
+                                "%s*|%s*%[1%] = \"one\",\n" ..
+                                "%s*|%s*%[2%] = \"two\",\n" ..
+                                "%s*|%s*%[3%] = \"five\",\n" ..
+                                "%s*| %}\n")
+    - it displays all expected and actual output for any_of failures:
+        yaml = preamble .. "({'one', 'two', 'five'}).should_contain.any_of {'three', 'seven'}"
+        expect (run_spec (yaml)).
+          should_match_output ('expecting table containing any of "three" or "seven", but got:\n' ..
+                                "%s*| %{\n" ..
+                                "%s*|%s*%[1%] = \"one\",\n" ..
+                                "%s*|%s*%[2%] = \"two\",\n" ..
+                                "%s*|%s*%[3%] = \"five\",\n" ..
+                                "%s*| %}\n")
     - context while called normally:
       - it succeeds if the element is a table value:
-          expect (run_spec (vals .. ".should_contain 'five'")).
-            should_contain "\nAll expectations met"
+          yaml = preamble .. vals .. ".should_contain 'five'"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
+      - it succeeds if any listed element is a table value:
+          yaml = preamble .. vals .. ".should_contain." ..
+                 "any_of {'three', 'four', 'five'}"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
       - it succeeds if the element is a table key:
-          expect (run_spec (keys .. ".should_contain 'five'")).
-            should_contain "\nAll expectations met"
+          yaml = preamble .. keys .. ".should_contain 'five'"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
+      - it succeeds if any listed element is a table key:
+          yaml = preamble .. keys .. ".should_contain." ..
+                 "any_of {'three', 'four', 'five'}"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
       - "it succeeds with a one-deep match of a table element":
-          expect (run_spec (deep .. ".should_contain { 'subtable 2' }")).
-            should_contain "\nAll expectations met"
+          yaml = preamble .. deep .. ".should_contain { 'subtable 2' }"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
+      - it succeeds if there is a common element in both tables:
+          yaml = preamble .. deep .. ".should_contain." ..
+                 "any_of { 1, 'subtable 2', {3} }"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
       - it fails if the element is not a table value:
-          expect (run_spec (vals .. ".should_contain 'three'")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. vals .. ".should_contain 'three'"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails if the there are no common elements:
+          yaml = preamble .. vals .. ".should_contain." ..
+                 "any_of {'three', 'three', 'nine'}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
       - it fails if the element is not a table key:
-          expect (run_spec (keys .. ".should_contain 'three'")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
-      - "it fails with no one-deep match of a table element":
-          expect (run_spec (deep .. ".should_contain { 'subtable 1' }")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. keys .. ".should_contain 'three'"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails if no element also a table key:
+          yaml = preamble .. keys .. ".should_contain." ..
+                 "any_of {'three', 'three', 'nine'}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - "it fails if there are no comment elements to both tables":
+          yaml = preamble .. deep .. ".should_contain." ..
+                "any_of { 'one', 'subtable 1', {3} }"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
     - context while called with not_ prefix:
       - it succeeds if the element is not a table value:
-          expect (run_spec (vals .. ".should_not_contain 'three'")).
-            should_contain "\nAll expectations met"
+          yaml = preamble .. vals .. ".should_not_contain 'three'"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
+      - it succeeds if no listed element is a table value:
+          yaml = preamble .. vals .. ".should_not_contain." ..
+                 "any_of {'three', 'three', 'six'}"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
       - it succeeds if the element is not a table key:
-          expect (run_spec (keys .. ".should_not_contain 'three'")).
-            should_contain "\nAll expectations met"
+          yaml = preamble .. keys .. ".should_not_contain 'three'"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
+      - it succeeds if no listed element is a table key:
+          yaml = preamble .. keys .. ".should_not_contain." ..
+                 "any_of {'three', 'three', 'six'}"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
       - "it succeeds with no one-deep match of a table element":
-          expect (run_spec (deep .. ".should_not_contain { 'subtable 1' }")).
-            should_contain "\nAll expectations met"
+          yaml = preamble .. deep .. ".should_not_contain { 'subtable 1' }"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
+      - "it succeeds if there are no elements common to both tables":
+          yaml = preamble .. deep .. ".should_not_contain." ..
+                 "any_of { 'subtable 1' }"
+          expect (run_spec (yaml)).should_contain_output (pass_all)
       - it fails if the element is a table value:
-          expect (run_spec (vals .. ".should_not_contain 'five'")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. vals .. ".should_not_contain 'five'"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails if any listed element is a table value:
+          yaml = preamble .. vals .. ".should_not_contain." ..
+                 "any_of {'three', 'four', 'five'}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
       - it fails if the element is a table key:
-          expect (run_spec (keys .. ".should_not_contain 'five'")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. keys .. ".should_not_contain 'five'"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails if any listed element is a table key:
+          yaml = preamble .. keys .. ".should_not_contain." ..
+                 "any_of {'three', 'four', 'five'}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
       - "it fails with a one-deep match of a table element":
-          expect (run_spec (deep .. ".should_not_contain { 'subtable 2' }")).
-            should_contain "\n0 passed, 0 pending, and 1 failed"
+          yaml = preamble .. deep .. ".should_not_contain { 'subtable 2' }"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
+      - it fails if there is a common element in both tables:
+          yaml = preamble .. deep .. ".should_not_contain." ..
+                "any_of {1, { 'subtable 2' }, {3}}"
+          expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
 - describe match matcher:
   - "it diagnoses non-string arguments":
-      specl = require "specl"
-      expect (specl._expect ({"a table"}).should_match {}).
+      expect (expect ({"a table"}).should_match {}).
         should_error "string expected"
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "('no digits').should_match '%d+'"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting string matching "%d+", but got "no digits"'
+  - it displays all expected and actual output for any_of failures:
+      yaml = preamble .. "('no digits').should_match.any_of {'%d+', '^digits$'}"
+      expect (run_spec (yaml)).
+        should_contain_output ('expecting string matching any of "%d+" or "^digits$", ' ..
+                              'but got "no digits"')
 
   - context when called normally:
     - it succeeds if the pattern matches:
-        expect (run_spec ("('English Language').should_match '^%w+%s'")).
-          should_contain "\nAll expectations met"
+        expect ("English Language").should_match "^%w+%s"
+    - it succeds if any listed pattern matches:
+        expect ("English Language").should_match.any_of {"^%w+", "~", "e"}
     - it fails if the pattern does not match:
-        expect (run_spec ("('English Language').should_match '%d+'")).
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "('English Language').should_match '%d+'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails if none of the listed patterns match:
+        yaml = preamble .. "('English Language').should_match." ..
+              "any_of {'^[a-z]*$', 'French Language', '%d+'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
   - context when called with not_ prefix:
     - it succeeds if the pattern does not match:
-        expect (run_spec ("('English Language').should_not_match '%d+'")).
-          should_contain "\nAll expectations met"
+        expect ("English Language").should_not_match "%d+"
+    - it succeeds if none of the listed patterns match:
+        expect ("English Language").should_not_match.
+          any_of {"^[a-z]*$", "Amarican Language", "%d+"}
     - it fails if the pattern matches:
-        expect (run_spec ("('English Language').should_not_match '^%w+%s'")).
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "('English Language').should_not_match '^%w+%s'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails if any of the listed patterns match:
+        yaml = preamble .. "('English Language').should_not_match." ..
+               "any_of {'^[a-z]+$', '^%w+%s', '%d+'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
 - describe error matcher:
+  - it displays expected and actual output for failures: |
+      yaml = preamble .. "(error 'cheese').should_error 'ham'"
+      expect (run_spec (yaml)).
+        should_match_output ('expecting an error containing:\n' ..
+                             '%s*| ham\n' ..
+                             '%s*but got:\n' ..
+                             '%s*| .*cheese')
+  - it displays all expected and actual output for any_of failures: |
+      yaml = preamble .. "(error 'cheese').should_error.any_of {'green eggs', 'ham'}"
+      expect (run_spec (yaml)).
+        should_match_output ('expecting an error containing any of:\n' ..
+                             '%s*| green eggs\n' ..
+                             '%s*or:\n' ..
+                             '%s*| ham\n' ..
+                             '%s*but got:\n' ..
+                             '%s*| .*cheese')
+
   - context when called normally:
     - it succeeds if there is an error that contains the message:
-        expect (run_spec "(error 'error message').should_error 'error'").
-          should_contain "\nAll expectations met"
+        expect (error "error message").should_error "error"
+    - it succeeds if there is an error that contains any of the messages:
+        expect (error "error message").should_error.
+          any_of {"fail", "error", "bogus"}
     - it succeeds if there is any error with no message argument:
-        expect (run_spec "(error 'error message').should_error ()").
-          should_contain "\nAll expectations met"
-    - it fails if there is an error that does not contains the message:
-        expect (run_spec "(error 'error message').should_error 'failed'").
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        expect (error "error message").should_error ()
+    - it fails if there is an error that does not contain the message:
+        yaml = preamble .. "(error 'error message').should_error 'failed'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails if there is an error that does not contain any listed message:
+        yaml = preamble .. "(error 'error message').should_error." ..
+               "any_of {'failed', 'succeeded', 'exploded'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
     - it fails if there is no error nor any message argument:
-        expect (run_spec "('not an error').should_error ()").
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "('not an error').should_error ()"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
     - it fails if there is no error:
-        expect (run_spec "('not an error').should_error 'error'").
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "('not an error').should_error 'error'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
   - context when called with not_ prefix:
     - it succeeds if there is no error:
-        expect (run_spec "('not an error').should_not_error 'error'").
-          should_contain "\nAll expectations met"
+        expect ("not an error").should_not_error "error"
     - it succeeds if there is no error nor any message argument:
-        expect (run_spec "('not an error').should_not_error ()").
-          should_contain "\nAll expectations met"
-    - it succeeds if there is an error that does not contains the message:
-        expect (run_spec "(error 'error message').should_not_error 'failed'").
-          should_contain "\nAll expectations met"
+        expect ("not an error").should_not_error ()
+    - it succeeds if there is an error that does not contain the message:
+        expect (error "error message").should_not_error "failed"
+    - it succeeds if there is an error that does not contain any listed message:
+        expect (error "error message").should_not_error.
+          any_of {"failed", "suceeded", "exploded"}
     - it fails if there is any error with no message argument:
-        expect (run_spec "(error 'error message').should_not_error ()").
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "(error 'error message').should_not_error ()"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
     - it fails if there is an error that contains the message:
-        expect (run_spec "(error 'error message').should_not_error 'error'").
-          should_contain "\n0 passed, 0 pending, and 1 failed"
+        yaml = preamble .. "(error 'error message').should_not_error 'error'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails if there is an error that contains any listed message:
+        yaml = preamble .. "(error 'error message').should_not_error." ..
+               "any_of {'fail', 'error', 'bogus'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)

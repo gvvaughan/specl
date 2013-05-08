@@ -24,14 +24,14 @@ local prog  = require "specl.version"
 local std   = require "specl.std"
 
 
--- Return an appropriate indent for last element of DESCRIPTIONS.
-local function indent (descriptions)
-  return string.rep ("  ", #descriptions - 1)
+local Object = std.Object {_init = {"type"}, type = "object"}
+
+local function typeof (object)
+  if type (object) == "table" and object.type ~= nil then
+    return object.type
+  end
+  return type (object)
 end
-
-
--- A null operation function.
-local function nop () end
 
 
 -- Map function F over elements of T and return a table of results.
@@ -45,6 +45,96 @@ local function map (f, t)
   end
   return r
 end
+
+
+local function concat (alternatives, quoted)
+  if quoted then
+    alternatives = map (function (v)
+                          if typeof (v) ~= "string" then
+                            return std.tostring (v)
+                          else
+                            return ("%q"):format (v)
+                          end
+                        end, alternatives)
+  end
+
+  return table.concat (alternatives, ", "):gsub (",( [^,]+)$", " or%1")
+end
+
+
+-- Write a function call type error similar to how Lua core does it.
+local function type_error (name, i, arglist, typelist)
+  local expected = typelist[i]
+  local actual = "no value"
+
+  if arglist[i] then actual = typeof (arglist[i]) end
+
+  if typelist[i] == "#table" then
+    error ("bad argument #" .. tostring (i) .. " to '" .. name ..
+           "' (non-empty table expected, got {})", 3)
+  elseif typeof (typelist[i]) == "table" then
+    -- format as, eg: "number, string or table"
+    expected = concat (typelist[i])
+  end
+
+  error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
+         expected .. " expected, got " .. actual .. ")", 3)
+end
+
+
+-- Check that every parameter in <arglist> matches one of the types
+-- from the corresponding slot in <typelist>. Raise a parameter type
+-- error if there are any mismatches.
+-- Rather than leave gaps in <typelist> (which breaks ipairs), use
+-- the string "any" to accept any type from the corresponding <arglist>
+-- slot.
+local function type_check (name, arglist, typelist)
+  for i, v in ipairs (typelist) do
+    if v ~= "any" then
+      if typeof (v) ~= "table" then v = {v} end
+
+      if i > #arglist then
+        type_error (name, i, arglist, typelist)
+      end
+      local a = typeof (arglist[i])
+
+      -- check that argument at `i` has one of the types at typelist[i].
+      local ok = false
+      for _, check in ipairs (v) do
+        if check == "#table" then
+          if #arglist[i] > 0 and a == "table" then
+            ok = true
+            break
+          end
+        elseif a == check then
+          ok = true
+          break
+        end
+      end
+
+      if not ok then
+        type_error (name, i, arglist, typelist)
+      end
+    end
+  end
+end
+
+
+-- Escape pattern magic characters in a string, effectively making
+-- an active pattern into a plain string match.
+local function plain (pattern)
+  return pattern:gsub ("[%^%$%(%)%%%.%[%]%*%%+%-%?]", "%%%0")
+end
+
+
+-- Return an appropriate indent for last element of DESCRIPTIONS.
+local function indent (descriptions)
+  return string.rep ("  ", #descriptions - 1)
+end
+
+
+-- A null operation function.
+local function nop () end
 
 
 -- Color printing.
@@ -134,17 +224,31 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  indent        = indent,
-  nop           = nop,
-  map           = map,
-  princ         = princ,
-  process_args  = process_args,
-  process_files = std.processFiles,
-  slurp         = std.slurp,
-  strip1st      = strip1st,
-  tostring      = std.tostring,
-  warn          = warn,
-  writc         = writc,
+  -- Constants
+  QUOTED         = true,
+
+  -- Prototypes
+  Object         = Object,
+
+  -- Functions
+  chomp          = std.chomp,
+  concat         = concat,
+  indent         = indent,
+  nop            = nop,
+  map            = map,
+  merge          = std.merge,
+  plain          = plain,
+  prettytostring = std.prettytostring,
+  princ          = princ,
+  process_args   = process_args,
+  process_files  = std.processFiles,
+  slurp          = std.slurp,
+  strip1st       = strip1st,
+  tostring       = std.tostring,
+  type_check     = type_check,
+  typeof         = typeof,
+  warn           = warn,
+  writc          = writc,
 }
 
 return M

@@ -69,19 +69,9 @@ local reserved = { before = true, after = true }
 
 -- SPECS are compiled destructively in the specs table itself.
 function compile_specs (specs)
-  for i, contexts in ipairs (specs) do
-    -- Compile every top-level context specification.
-    specs[i] = compile_contexts (contexts)
+  for i, spec in ipairs (specs) do
+    specs[i] = compile_examples (spec)
   end
-end
-
-
--- CONTEXTS are also compiled destructively in place.
-function compile_contexts (contexts)
-  for description, examples in pairs (contexts) do
-    contexts[description] = compile_examples (examples)
-  end
-  return contexts
 end
 
 
@@ -92,8 +82,7 @@ function compile_examples (examples)
 
   -- Make sure we have a function for every reserved word.
   for s in pairs (reserved) do
-    -- Lua specs save ready compiled functions to examples[s] already.
-    compiled[s] = examples[s] or compile_example (s)
+    compiled[s] = compile_example (s, examples[s])
   end
 
   for _, example in ipairs (examples) do
@@ -105,16 +94,12 @@ function compile_examples (examples)
       -- so we have to hoist them out where we can rerun them around
       -- each real example in the list, without digging through all the
       -- entries each time.
-      compiled[description] = compile_example (definition)
-
-    elseif type (definition) == "function" then
-      -- Compiled Lua code.
-      table.insert (compiled, { [description] = definition })
+      compiled[description] = compile_example (description, definition)
 
     elseif type (definition) == "string" then
       -- Uncompiled Lua code.
       if definition == "" then definition = "pending ()" end
-      table.insert (compiled, { [description] = compile_example (definition) })
+      table.insert (compiled, { [description] = compile_example (description, definition) })
 
     elseif type (definition) == "table" then
       -- A nested context table.
@@ -131,18 +116,36 @@ function compile_examples (examples)
 end
 
 
+-- CONTEXTS are also compiled destructively in place.
+function compile_contexts (contexts)
+  for description, examples in pairs (contexts) do
+    contexts[description] = compile_examples (examples)
+  end
+  return contexts
+end
+
+
 -- Capture errors thrown by expectations.
 macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
 
 -- Compile S into a callable function.  If S is a reserved word,
 -- then return a function that does nothing.
 -- If FILENAME is passed, it is used in error messages from loadstring().
-function compile_example (s, filename)
-  if reserved[s] then return util.nop end
+function compile_example (location, s)
+  if s == nil then return util.nop end
 
   -- Wrap the fragment into a function that we can call later.
-  local f, errmsg = loadstring ("return function ()\n" ..
-	              macro.substitute_tostring (s) .. "\nend", filename)
+  local f, errmsg = loadstring ("return function () " ..
+                      macro.substitute_tostring (s) .. "\nend", filename)
+
+  if f == nil then
+     local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+     if msg ~= nil then
+       errmsg = location .. ":" .. line .. ": " .. msg
+     end
+     io.stderr:write (errmsg .. "\n")
+     os.exit (1)
+  end
 
   -- Execute the function from 'loadstring' or report an error right away.
   if f ~= nil then
@@ -174,20 +177,6 @@ local function accumulator (holder, arg)
 end
 
 
-local run_contexts, run_examples, run
-
-
--- Run each of CONTEXTS under ENV in order.
-function run_contexts (contexts, descriptions, env)
-  for description, examples in pairs (contexts) do
-    table.insert (descriptions, description)
-    accumulator (formatter, formatter.spec (descriptions))
-    run_examples (examples, descriptions, env)
-    table.remove (descriptions)
-  end
-end
-
-
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
@@ -201,7 +190,51 @@ local function initenv (env)
       end
     end
   end
+
+  -- This is gross :(  There must be a cleaner way to do it?!?
+  -- Manually walk the package path, and `loadstring(f)` what we fird...
+  --   * setfenv prior to running loadstring returned function, which
+  --     imports any global symbols from <f> into the local env;
+  --   * manually copy symbols out of a table returned by the loadstring
+  --     function (if any) into the local env;
+  --   * (re)load the module with the system loader so that specl itself
+  --     can find all the symbols it needs without digging through nested
+  --     sandbox environments.
+  env.require = function (f)
+    local h, filename
+
+    for path in string.gmatch (package.path .. ";", "([^;]*);") do
+      filename = path:gsub ("%?", (f:gsub ("%.", "/")))
+      h = io.open (filename, "rb")
+      if h then break end
+    end
+
+    -- Manually load into the local environment if we found it.
+    if h ~= nil then
+      local fn, errmsg = loadstring (h:read "*a", filename)
+      h:close ()
+
+      if fn == nil then error (errmsg) end
+
+      -- Ensure any global symbols arrive in <env>.
+      setfenv (fn, env)
+      local import = fn ()
+
+      -- Copy any returned access points into <env>
+      if type (import) == "table" then
+        for k, v in pairs (import) do
+          env[k] = v
+        end
+      end
+    end
+
+    -- Return the package.loaded result.
+    return env.specl._require (f)
+  end
 end
+
+
+local run_examples, run_contexts, run
 
 
 -- Run each of EXAMPLES under ENV in order.
@@ -211,6 +244,7 @@ function run_examples (examples, descriptions, env)
     local fenv = { _expect = matchers.expect, pending = matchers.pending }
 
     setmetatable (fenv, metatable)
+    initenv (fenv)
     setfenv (examples.before, fenv)
     examples.before ()
 
@@ -228,7 +262,6 @@ function run_examples (examples, descriptions, env)
 
     elseif type (definition) == "function" then
       -- An example, execute it in a clean new sub-environment.
-      initenv (fenv)
       table.insert (descriptions, description)
 
       matchers.init ()
@@ -254,6 +287,17 @@ function run_examples (examples, descriptions, env)
 end
 
 
+-- Run each of CONTEXTS under ENV in order.
+function run_contexts (contexts, descriptions, env)
+  for description, examples in pairs (contexts) do
+    table.insert (descriptions, description)
+    accumulator (formatter, formatter.spec (descriptions))
+    run_examples (examples, descriptions, env)
+    table.remove (descriptions)
+  end
+end
+
+
 -- Run SPECS, according to OPTS and ENV.
 function run (specs, env)
   formatter = opts.formatter or formatter
@@ -267,29 +311,13 @@ function run (specs, env)
     _load       = load,
     _loadfile   = loadfile,
     _loadstring = loadstring,
-
-    -- Additional commands useful for writing command-line specs.
-    cmdpipe     = function (cmd)
-      local output, status = "", nil
-      local pipe = io.popen (cmd .. '; printf "\\n$?"')
-      while true do
-        local line = pipe:read ()
-        if line == nil then break end
-        output = output .. "\n" .. (status or "")
-        status = line
-      end
-      pipe:close ()
-      return {
-        output = output:gsub ("^\n", "", 1),
-        status = tonumber (status),
-      }
-    end,
+    _require    = require,
   }
 
   -- Run compiled specs, in order.
   accumulator (formatter, formatter.header (matchers.stats))
-  for _, contexts in ipairs (specs) do
-    run_contexts (contexts, {}, env)
+  for _, spec in ipairs (specs) do
+    run_examples (spec, {}, env)
   end
   formatter.footer (matchers.stats, formatter.accumulated)
   return matchers.stats.fail ~= 0 and 1 or 0

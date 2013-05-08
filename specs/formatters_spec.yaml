@@ -1,14 +1,8 @@
-describe formatters:
-- before: |
-    function run_spec (yaml, arg)
-      yaml = yaml:gsub ("'", "'\\''")
-      path = arg:gsub ("/[^/]*$", "", 1)
-      name = arg:gsub (".*/", "")
-      return specl.cmdpipe ("printf '%s\\n' '" .. yaml .. "'| env " ..
-        "LUA_PATH='" .. path .. "/?;" .. package.path .. "' " ..
-        "src/specl --color=no -f" .. name)
-    end
+before:
+  require "specl.shell"
+  require "spec_helper"
 
+describe formatters:
 - context when using a custom formatter:
   - before: |
       -- Spec-file to feed to the formatter.
@@ -39,34 +33,35 @@ describe formatters:
           end
           f:write "}\n"
           f:close ()
-          return tmpfile
+          local d, f = tmpfile:match "^(.*)/([^/]*)$"
+          return {"-f" .. f, env = {LUA_PATH = d .. "/?"}, stdin = t.yaml}
         end
 
     - after:
         os.remove (tmpfile)
 
     - it will collect spec return strings:
-        fmt = formatter {
-          spec = "function (t) return t[#t] end",
+        cmd = formatter {
+          spec = "function (t) return t[#t] end", yaml = yaml,
         }
-        expect (run_spec (yaml, fmt).output).should_contain "dummy\n"
+        expect (run_spec (cmd)).should_contain_output "dummy\n"
     - it will collect expectations return strings: |
-        fmt = formatter {
-          expectations = "function (_, t) return t[#t] end",
+        cmd = formatter {
+          expectations = "function (_, t) return t[#t] end", yaml = yaml,
         }
-        expect (run_spec (yaml, fmt).output).should_contain "123\n"
-
+        expect (run_spec (cmd)).should_contain_output "123\n"
     - it will collect spec return table keys:
-        fmt = formatter { spec =
+        cmd = formatter { spec =
           "function (t) return {[1] = table.concat (t, '>'), [2] = t[#t]} end",
+          yaml = yaml,
         }
-        expect (run_spec (yaml, fmt).output).
-          should_contain "{1=dummy,2=dummy}"
+        expect (run_spec (cmd)).should_contain_output "{1=dummy,2=dummy}"
     - it will collect expectations return table keys:
-        formatter { expectations =
+        cmd = formatter { expectations =
           "function (_, t)\n" ..
           "  return { [1] = table.concat (t, '>') .. ';', [2] = t[#t] }\n" ..
           "end",
+          yaml = yaml,
         }
-        expect (run_spec (yaml, tmpfile).output).
-          should_contain "{1=dummy>1;dummy>2;dummy>3;,2=123}"
+        expect (run_spec (cmd)).
+          should_contain_output "{1=dummy>1;dummy>2;dummy>3;,2=123}"

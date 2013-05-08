@@ -1,5 +1,47 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 6 (2013-05-09) [stable]
+
+** This release is a significant upgrade, with many new features,
+   and, no doubt, some new bugs.
+
+** New features:
+
+  - Top level 'before' and 'after' functions are supported.
+
+  - A proper, documented, API for adding custom matchers.
+
+  - A new 'any_of' method for any matcher:
+
+     expect (ctermid ()).should_match.any_of {"/.*tty.*", "/.*pts.*"}
+
+  - You can `require "specl.shell"` from a spec file (usually in the
+    initial top-level `before`) to get access to a shell Command
+    constructor, a `spawn` executor function and several new matchers
+    for querying the status of a shell command.
+
+  - `package.path` is augmented, for the duration of each spec file,
+    so that `require` can find and load other Lua files in the same
+    directory.
+
+  - Additional YAML "documents" from a spec file with '---' and '...'
+    stream separators are no longer ignored; but treated as additional
+    unnamed documents.
+
+  - Report formatter displays inline expectation summaries for each
+    example when not in verbose mode.
+
+** Incompatible changes:
+
+  - Documentation is now in Jekyll format markdown for easy website
+    regeneration.
+
+  - Calling require in a spec file now runs in the local environment,
+    giving access to 'global' symbols from the newly loaded file from
+    the local namespace.  Conversely, access to those same symbols is
+    no longer available from "_G", the global environment table.
+
+
 * Noteworthy changes in release 5 (2013-04-29) [stable]
 
 ** This release is a significant upgrade.

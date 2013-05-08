@@ -62,6 +62,26 @@ local function clone (t, nometa)
 end
 
 
+-- Clone a table, renaming some keys.
+local function clone_rename (map, t)
+  local r = clone (t)
+  for i, v in pairs (map) do
+    r[v] = t[i]
+    r[i] = nil
+  end
+  return r
+end
+
+
+-- Merge one table into another. Merge <u> into <t>.
+local function merge (t, u)
+  for k, v in pairs (u) do
+    t[k] = v
+  end
+  return t
+end
+
+
 -- Return given metamethod, if any, or nil.
 local function metamethod (x, n)
   local _, m = pcall (function (x)
@@ -73,6 +93,27 @@ local function metamethod (x, n)
   end
   return m
 end
+
+
+-- Root object.
+local Object = {
+  _init = {},
+
+  _clone = function (self, ...)
+    local object = clone (self)
+    if type (self._init) == "table" then
+      merge (object, clone_rename (self._init, ...))
+    else
+      object = self._init (object, ...)
+    end
+    return setmetatable (object, object)
+  end,
+
+  __call = function (...)
+    return (...)._clone (...)
+  end,
+}
+setmetatable (Object, Object)
 
 
 -- Process files specified on the command-line.
@@ -114,6 +155,12 @@ local function render (x, open, close, elem, pair, sep, roots)
 end
 
 
+-- Remove any final newline from a string.
+local function chomp (s)
+  return s:gsub ("\n$", "")
+end
+
+
 -- Slurp a file handle.
 local function slurp (h)
   if h == nil then
@@ -148,6 +195,55 @@ local function tostring (x)
 end
 
 
+-- Pretty-print a table.
+local function prettytostring (t, indent, spacing)
+  indent = indent or "\t"
+  spacing = spacing or ""
+  return render (t,
+                 function ()
+                   local s = spacing .. "{"
+                   spacing = spacing .. indent
+                   return s
+                 end,
+                 function ()
+                   spacing = string.gsub (spacing, indent .. "$", "")
+                   return spacing .. "}"
+                 end,
+                 function (x)
+                   if type (x) == "string" then
+                     return string.format ("%q", x)
+                   else
+                     return tostring (x)
+                   end
+                 end,
+                 function (x, i, v, is, vs)
+                   local s = spacing .. "["
+                   if type (i) == "table" then
+                     s = s .. "\n"
+                   end
+                   s = s .. is
+                   if type (i) == "table" then
+                     s = s .. "\n"
+                   end
+                   s = s .. "] ="
+                   if type (v) == "table" then
+                     s = s .. "\n"
+                   else
+                     s = s .. " "
+                   end
+                   s = s .. vs
+                   return s
+                 end,
+                 function (_, i)
+                   local s = "\n"
+                   if i then
+                     s = "," .. s
+                   end
+                   return s
+                 end)
+end
+
+
 
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
@@ -155,12 +251,17 @@ end
 
 
 local M = {
-  clone        = clone,
-  metamethod   = metamethod,
-  processFiles = processFiles,
-  render       = render,
-  slurp        = slurp,
-  tostring     = tostring,
+  chomp          = chomp,
+  clone          = clone,
+  clone_rename   = clone_rename,
+  merge          = merge,
+  metamethod     = metamethod,
+  Object         = Object,
+  prettytostring = prettytostring,
+  processFiles   = processFiles,
+  render         = render,
+  slurp          = slurp,
+  tostring       = tostring,
 }
 
 return M

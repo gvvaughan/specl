@@ -45,7 +45,7 @@ for k, v in pairs (_G) do sandbox[k] = v end
 
 -- Called by io.processFiles() to concatenate a comma separated list of
 -- specifications in each FILENAME.
-local spec = {}
+local specs = {}
 function slurp (filename)
   local s, errmsg = util.slurp ()
   if errmsg ~= nil then
@@ -53,14 +53,30 @@ function slurp (filename)
     os.exit (1)
   end
 
-  t = yaml.load (s)
+  t = {yaml.load (s)}
+
+  -- Prepend the spec file location to the package load path, so that
+  -- requiring unqualified names from that directory works right away.
+  local load_path = filename:gsub ("[^/]+$", "?.lua;")
 
   -- Append to the specification list, which specl will run presently.
-  table.insert (spec, t)
+  for _, document in ipairs (t) do
+    local spec = {
+      before = "package.path = \"" .. load_path ..
+               "\" .. package.path\n" .. (document.before or ""),
+      after  = document.after,
+      document,
+    }
+
+    -- Remove duplicate entries already hoisted out above.
+    document.before, document.after = nil, nil
+
+    table.insert (specs, spec)
+  end
 end
 
 
 opts = util.process_args ()
 util.process_files (slurp)
 
-os.exit (specl.run (spec, sandbox))
+os.exit (specl.run (specs, sandbox))

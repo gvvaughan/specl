@@ -32,9 +32,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Specl make rules.
+# Local Make rules.
 #
-# Copyright (c) 2013 Gary V. Vaughan
+# Copyright (C) 2013 Gary V. Vaughan
 # Written by Gary V. Vaughan, 2013
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -85,6 +85,55 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Specl make rules.
+#
+# Copyright (c) 2013 Gary V. Vaughan
+# Written by Gary V. Vaughan, 2013
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Slingshot specl rules for make.
+
+# This file is distributed with Slingshot, and licensed under the
+# terms of the MIT license reproduced below.
+
+# ==================================================================== #
+# Copyright (C) 2013 Gary V. Vaughan                                   #
+#                                                                      #
+# Permission is hereby granted, free of charge, to any person          #
+# obtaining a copy of this software and associated documentation       #
+# files (the "Software"), to deal in the Software without restriction, #
+# including without limitation the rights to use, copy, modify, merge, #
+# publish, distribute, sublicense, and/or sell copies of the Software, #
+# and to permit persons to whom the Software is furnished to do so,    #
+# subject to the following conditions:                                 #
+#                                                                      #
+# The above copyright notice and this permission notice shall be       #
+# included in  all copies or substantial portions of the Software.     #
+#                                                                      #
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,      #
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF   #
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGE-   #
+# MENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE   #
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF   #
+# CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION   #
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.      #
+# ==================================================================== #
+
+# To use this file create a list of your spec files in specl_SPECS
+# and then include this make fragment.
 
 # Slingshot rockspec rules for make.
 
@@ -154,11 +203,12 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-DIST_COMMON = $(srcdir)/src/src.mk $(srcdir)/specl/specl.mk \
-	$(srcdir)/specs/specs.mk $(srcdir)/build-aux/rockspecs.mk \
+DIST_COMMON = $(srcdir)/local.mk $(srcdir)/specl/specl.mk \
+	$(srcdir)/src/src.mk $(srcdir)/specs/specs.mk \
+	$(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
-	$(top_srcdir)/specl/version.lua.in $(srcdir)/travis.yml.in \
+	$(srcdir)/travis.yml.in $(top_srcdir)/specl/version.lua.in \
 	$(dist_lua_DATA) $(nobase_dist_lua_DATA) AUTHORS COPYING \
 	ChangeLog NEWS build-aux/install-sh build-aux/missing \
 	$(top_srcdir)/build-aux/install-sh \
@@ -166,14 +216,13 @@ DIST_COMMON = $(srcdir)/src/src.mk $(srcdir)/specl/specl.mk \
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_compare_version.m4 \
-	$(top_srcdir)/m4/ax_lua.m4 $(top_srcdir)/m4/ax_with_prog.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_lua.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = specl/version.lua .travis.yml
+CONFIG_CLEAN_FILES = .travis.yml specl/version.lua
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -289,6 +338,10 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+
+# Override Slingshot SPECL.
+SPECL = bin/specl
+SPECL_FALSE = @SPECL_FALSE@
 STRIP = @STRIP@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
@@ -335,20 +388,21 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-auxdir = build-aux
-CLEANFILES = src/specl $(NOTHING_ELSE)
+EXTRA_DIST = README.md docs/specl.1 src/specl.in $(NOTHING_ELSE) \
+	specs/spec_helper.lua $(NOTHING_ELSE) $(specl_SPECS) \
+	$(NOTHING_ELSE) $(mkrockspecs) $(package_rockspec) \
+	$(rockspec_conf) $(NOTHING_ELSE) README.md $(NOTHING_ELSE)
+CLEANFILES = bin/specl $(NOTHING_ELSE)
 DISTCLEANFILES = docs/specl.1 $(NOTHING_ELSE) $(luarocks_config) \
 	$(NOTHING_ELSE)
-EXTRA_DIST = docs/specl.1 src/specl.in $(NOTHING_ELSE) $(specl_SPECS) \
-	$(NOTHING_ELSE) $(mkrockspecs) $(package_rockspec) \
-	$(rockspec_conf) $(NOTHING_ELSE)
 MAINTAINERCLEANFILES = 
 NOTHING_ELSE = 
-bin_SCRIPTS = src/specl
-check_local = specs-check-local
-doc_DATA = 
+bin_SCRIPTS = bin/specl
+check_local = specl-check-local
 install_exec_hooks = install-specl-hook
 man_MANS = docs/specl.1
+old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
+doc_DATA = 
 install_edit = sed					\
 	-e 's|@LUA[@]|$(LUA)|g'				\
 	$(NOTHING_ELSE)
@@ -362,7 +416,20 @@ release_extra_dist = \
 	.travis.yml					\
 	GNUmakefile					\
 	bootstrap					\
+	local.mk					\
 	travis.yml.in					\
+	$(NOTHING_ELSE)
+
+nobase_dist_lua_DATA = \
+	specl/formatter/progress.lua			\
+	specl/formatter/report.lua			\
+	specl/formatter/tap.lua				\
+	specl/color.lua					\
+	specl/matchers.lua				\
+	specl/shell.lua					\
+	specl/std.lua					\
+	specl/util.lua					\
+	specl/version.lua				\
 	$(NOTHING_ELSE)
 
 INSTALL_PATH = $(luadir)/?.lua
@@ -381,22 +448,11 @@ dist_lua_DATA = \
 	src/specl.lua					\
 	$(NOTHING_ELSE)
 
-nobase_dist_lua_DATA = \
-	specl/formatter/progress.lua			\
-	specl/formatter/report.lua			\
-	specl/formatter/tap.lua				\
-	specl/color.lua					\
-	specl/matchers.lua				\
-	specl/std.lua					\
-	specl/util.lua					\
-	specl/version.lua				\
-	$(NOTHING_ELSE)
-
-SPECL = src/specl
 specl_SPECS = \
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/formatters_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)
 
@@ -422,13 +478,12 @@ ROCKSPECS_DEPS = \
 set_LUA_BINDIR = LUA_BINDIR=`which $(LUA) |$(SED) 's|/[^/]*$$||'`
 LUA_INCDIR = `cd $$LUA_BINDIR/../include && pwd`
 LUA_LIBDIR = `cd $$LUA_BINDIR/../lib && pwd`
-old_NEWS_hash = 78ee07b4964d6dc9e0658d71b55e2f5d
 all: all-am
 
 .SUFFIXES:
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/src/src.mk $(srcdir)/specl/specl.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/rockspecs.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/local.mk $(srcdir)/specl/specl.mk $(srcdir)/src/src.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -451,7 +506,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
-$(srcdir)/src/src.mk $(srcdir)/specl/specl.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/rockspecs.mk:
+$(srcdir)/local.mk $(srcdir)/specl/specl.mk $(srcdir)/src/src.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
@@ -461,9 +516,9 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
-specl/version.lua: $(top_builddir)/config.status $(top_srcdir)/specl/version.lua.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 .travis.yml: $(top_builddir)/config.status $(srcdir)/travis.yml.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+specl/version.lua: $(top_builddir)/config.status $(top_srcdir)/specl/version.lua.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
@@ -910,15 +965,15 @@ uninstall-man: uninstall-man1
 
 LUA_PATH ?= ;
 
-src/specl: Makefile src/specl.in
-	@test -d src || mkdir src
+bin/specl: Makefile src/specl.in
+	@test -d bin || mkdir bin
 	@rm -f '$@' '$@.tmp'
-	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/$@.in' >'$@.tmp'
+	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/src/specl.in' >'$@.tmp'
 	$(AM_V_at)mv '$@.tmp' '$@'
 	$(AM_V_at)chmod +x '$@'
 	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
 
-docs/specl.1: src/specl specl/version.lua
+docs/specl.1: bin/specl specl/version.lua
 	@test -d docs || mkdir docs
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
@@ -927,15 +982,15 @@ docs/specl.1: src/specl specl/version.lua
 	    '--output=$@'				\
 	    '--no-info'					\
 	    '--name=Specl'				\
-	    src/specl;					\
+	    bin/specl;					\
 	fi
 install-specl-hook:
 	@$(specl_install_edit) $(srcdir)/src/specl.in >'$@.tmp'
-	@echo $(INSTALL_SCRIPT) src/specl $(DESTDIR)$(bindir)/specl
+	@echo $(INSTALL_SCRIPT) bin/specl $(DESTDIR)$(bindir)/specl
 	@$(INSTALL_SCRIPT) $@.tmp $(DESTDIR)$(bindir)/specl
 	@rm -f $@.tmp
-specs-check-local: $(SPECL) $(specl_SPECS)
-	$(AM_V_at)$(LUA) $(SPECL) $(SPECL_OPTS) $(specl_SPECS)
+specl-check-local: $(specl_SPECS)
+	$(AM_V_at)$(SPECL) $(SPECL_OPTS) $(specl_SPECS)
 
 $(luarocks_config): Makefile.am
 	@test -d build-aux || mkdir build-aux

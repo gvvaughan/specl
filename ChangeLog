@@ -1,4 +1,364 @@
+2013-05-09  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 6
+	* NEWS: Record release date.
+
+	maint: relax load error matching patterns for luajit compatibility.
+	Luajit returns errors from loadstring compiled code without line
+	numbers or truncated input string, so relax the match patterns
+	to accept either format.
+	Thanks again, Travis!
+	* specs/matchers_spec.yaml (error matcher): Relax error output
+	matching for luajit.
+	* specl/matchers.lua (matchers.error): Use long format for any_of
+	reformatter, to match format_expect.
+
+	maint: use Lua 5.2 compatible pattern escaping.
+	Lua 5.1 accepts patterns with unknown % escapes treated as
+	literals, but Lua 5.2 raises an error. Factor pattern escaping
+	into a function.
+	Thank you, Travis!
+	* specl/util.lua (plain): New function to escape only pattern
+	magic characters.
+	* specl/matchers.lua (escape, reformat, matchers.error)
+	(matchers.contain): Use it.
+	* specl/shell.lua (matchers.contain_output)
+	(matchers.contain_error): Likewise.
+
+2013-05-08  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: convert to jekyll markdown format.
+	Updating the docs site is now a simple matter of copying this
+	file to index.md in the gh-pages branch, and letting github do
+	its magic to pick up the changes.
+	* docs/specl.md: Add YAML frontmatter.
+	Wrap code blocks in pygments highlight tags.
+	Redo numbered headers with ## format markup for jekyll.
+	Add markdown section anchors that match jekyll auto-generated
+	anchors for easy cross-referencing.
+	* NEWS: Update.
+
+	refactor: untabify.
+	Bring back zmacs... vi's TABy auto-indent is EVIL!
+	* specl/color.lua, specl/formatter/progress.lua,
+	specl/formatter/report.lua, specl/formatter/tap.lua,
+	specl/matchers.lua, specl/util.lua, src/specl.lua: Untabify.
+
+	refactor: remove `one_of` support, always use `any_of`.
+	* specl/matchers.lua (Matcher["one_of?"}, Matcher.format_one_of):
+	Renamed from these...
+	(Matcher["any_of?"], Matcher.format_any_of): ...to these.
+	Adjust all callers.
+	(adaptor_error): Folded back into expect.__index.
+	(expect.one_of): Remove.
+	* specs/matchers_spec.yaml, specs/shell_spec.yaml: Adjust.
+	* docs/specl.md: Update.
+	* NEWS: Update.
+
+	matchers: support `any_of` as an alias for `one_of`.
+	* specl/matchers.lua (matchers.error): Display "no error" when no
+	error message was raised, but one was expected.
+	(adaptor_error): New function. Diagnose misuse of `should`
+	adaptors.
+	(expect): Don't overwrite full matcher name, use `matcher_root`
+	to hold the matcher lookup key.
+	Add support for `any_of` adaptor, mainly for use with `should_not`
+	because `expect (1).should_not_be.one_of {1, 2 ,3}` reads badly.
+	Call `adaptor_error` when an unsupported adaptor is called.
+	* specs/matchers_spec.yaml: Lots more examples to exercise every
+	permutation of matcher vs. not vs. one_of or any_of.
+
+	refactor: move long format display from shell.lua to matchers.lua.
+	* specl/matcher.lua (reformat): Rename single item reformatting
+	from this...
+	(_reformat): to this.
+	* specl/shell.lua (concat): Move from here...
+	* specl/matchers.lua (reformat): ...to here, making use of
+	_reformat to simplify.
+	(matchers.error): Use long format output.
+	* specs/matchers_spec.yaml: Adjust.
+	* specl/shell.lua: Simplify matchers accordingly.
+
+	refactor: rename expect target parameter to actual.
+	* specl/matchers.lua (expect): Rename <target> parameter to
+	<actual> to match the rest of the code.
+
+	refactor: no need to use matchers.stringify in shell.lua.
+	* specl/shell.lua (matchers.exit): Use `tostring` instead of
+	importing matchers.stringify into `q`.
+
+	refactor: use Lua "%q" formatting instead of rolling our own.
+	* specl/matchers.lua (q): Use Lua "%q" formatting instead of
+	manually emulating it.
+
+	matchers: support `one_of` syntax for alternatives.
+	* specs/matchers_spec.yaml: Add `one_of` examples for every
+	matcher.
+	(it diagnoses zero alternatives with one_of): Add an example of
+	getting a diagnostic from calling ...one_of {}.
+	* specs/shell_spec.yaml: Add `one_of` examples for every matcher.
+	* specl/matcher.lua (expect): Rename `matcher` parameter to
+	`matcher_name`.
+	(expect.__index:score): Factor out of returned function.
+	(expect.__index): Return a functable instead of a function, with
+	a `one_of` method, and a `__call` metamethod.
+	(Matcher["one_of?"]): Call the matcherp predicate with every
+	table entry, until one matches successfully.
+	(Matcher): Add default for `format_one_of`.
+	* specl/util.lua (concat): Factor pretty alternatives display
+	formatting out of type_error.
+	(M.QUOTED): Export a constant for self-documenting concat calls,
+	using `concat (foo, util.QUOTED)`.
+	(type_error): Simplify.
+	* specl/matcher.lua (matchers.error, matchers.match)
+	(matchers.contain): Add `format_one_of` methods.
+	* specl/util.lua (type_check): Support '#table' in the typelist to
+	specify a non-empty table.
+	(type_error): Display nicely formatted error when an empty table
+	is found when checking for '#table'.
+	* specl/util.lua (map): Move above first use, in concat ().
+	* docs/specl.md (Matching alternatives with `one_of`): Document it.
+	* NEWS: Update.
+
+	specl: show description and offset line for example compile errors.
+	Previously, if the Lua code of any example failed, Specl would
+	dump the stack, usually containing a useless list of nested
+	run_context, run_examples etc etc.  We can already do a much
+	better job than that... libyaml needs to provide the support
+	for full and proper filewise line numbers though.
+	* specs/specl_spec.yaml (it reports line of error): Example to
+	demonstrate that the offset line of a compile failure is shown
+	on stderr.
+	* src/specl.lua (compile_example): Add a description parameter,
+	and use it as a prefix for displaying the line offset for the
+	failure, along with the Lua error.
+
+	refactor: make output of failed expectations prettier.
+	* specl/color.lua (shell): Rename from this...
+	(match): ...to this. Adjust all callers.
+	* specl/shell.lua (escape, colon): Move from here...
+	* specl/matchers.lua (escape, reformat): ...to here. Adjust all
+	callers.
+	(M): Re-export reformat for use in specl/shell.lua.
+	* specl/std.lua (prettytostring): New function, from lua-stdlib
+	string_ext module.
+	* specl/util.lua (prettytostring): Re-export std.prettytostring.
+	* specl/matchers.lua (matcher.contain): Use prettytostring to
+	show contents of failed expections with tables.
+	* specs/matchers_spec.yaml, specs/shell_spec.yaml: Many new
+	examples to verify prettier failed expectation output for each
+	matcher.
+
+	matchers: more powerful matcher result message API.
+	* specl/matchers.lua (Matcher): Don't add spaces and commas auto-
+	matically, assuming output always fits on a line, but do set
+	format_actual and format_expect to provide that by default.
+	Adjust all clients.
+	* specl/color.lua (colormap): Add an entry for coloring shell
+	output.
+	* specl/shell.lua: Use new shell color, and new Matcher formatting
+	API to present nicely formatted output and error stream display.
+
+	std: add chomp from upstream lua-stdlib.
+	* specl/std.lua (chomp): New function, from lua-stdlib string_ext.
+	* specl/util.lua (chomp): Re-export std.chomp.
+
+	color: use color.reset instead of "%{reset}".
+	* specl/color.lua (colormap): Add reset.
+	* specl/formatter/progress.lua, specl/formatter/report.lua: Use it.
+
+	shell: add Process errout matchers.
+	* specs/shell_spec.lua (output_error matcher)
+	(match_error matcher, contain_error matcher): Specifications for
+	new matchers to check the contents of stderr from a Process.
+	* specl/shell.lua (matchers.output_error, matchers.match_error)
+	(matchers.contain_error): Implement new matchers.
+
+	specs: use unique description text in shell_spec.yaml.
+	* specs/shell_spec.yaml: correctly describe the behaviour being
+	checked.
+
+	specs: test the correct matcher when tickling errors.
+	* specs/shell_spec.yaml (contain_output matcher): Don't call the
+	should_output matcher by mistake!
+
+	shell: use the correct parameter name.
+	* specl/shell.lua (matchers.match_output, matchers.contain_output):
+	Format a correctly named parameter.
+
+2013-05-07  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: fix a message typo.
+	* specl/matchers.lua (matchers.error): 'containing' has only one 'a'!
+
+2013-05-05  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: support custom matchers.
+	* specl/matchers.lua (Matcher): matcher object factory.
+	(matchers): Add metatable to verify assignments are objects
+	from the Matcher factory.
+	(matchers.equal, matchers.be, matchers.error, matchers.match)
+	(matchers.contain): Rewrite with the API.
+	(expect): Adjust calling convention accordingly.
+	* specl/shell.lua: Rewrite shell matchers with the new API.
+	* specs/spec_helper.lua (matchers.instantiate_a): Likewise.
+	* docs/specl.md (Custom Matchers): New section. Document custom
+	matchers API.
+	* NEWS: Update.
+
+2013-05-04  Gary V. Vaughan  <gary@gnu.org>
+
+	util: matching a nil parameter with "any" type_check is ok!
+	* specl/util.lua (type_check): Lua treats deliberate `nil`
+	function arguments the same as omitted arguments, so don't raise
+	an error for a `nil` argument matched against an "any" type.
+
+	util: fix a misnamed local variable declaration.
+	* specl/util.lua (type_error): Declare `expected` correctly.
+
+	shell: support running and matching state of shell commands.
+	* specs/shell_spec.yaml: Specify desired behaviour for supporting
+	executing and matching results from shell commands.
+	* specs/specs.mk (specl_SPECS): Add shell_spec.yaml.
+	* specl/shell.lua: New file, implemnting specs above.
+	(Command): A util.Object type for specifying shell commands, along
+	with environment variables and input source.
+	(Process): A util.Object type for recording process status and
+	outputs.
+	(spawn): Execute a `Command` and return a `Process`.
+	* specl/specl.mk (nobase_dist_lua_DATA): Add specl/shell.lua.
+	* specl/matchers.lua (q): Export `q` to ease creation of additional
+	matchers in other modules.
+	* specl/shell.lua (exit, output, match_output, contain_output): New
+	matchers for querying the state of a `Process` from `spawn`.
+	* specs/spec_helper.lua (run_spec): Rewrite as a `specl/shell.lua`
+	client.
+	* specs/formatters_spec.yaml, specs/matchers_spec.yaml,
+	specs/specl_spec.yaml: Adjust for changes in `run_spec`.
+	* src/specl.lua (specl.cmdpipe): Remove undocumented function.
+	* NEWS: Update.
+
+	util: type aware Object wrapper, and parameter type checker.
+	* specl/util.lua (Object): New prototype inheriting from std.Object.
+	with the addition of a "type" field.
+	(typeof): Report the type of Object derived objects, or defer to
+	core type() for built in types.
+	(type_check): Compare types from a parameter list against valid
+	type list, raising an error for a type mismatch.
+	(type_error): Write a parameter type mismatch error in the style
+	of Lua core function parameter type errors.
+
+	std: import clone_rename, merge, and Object from lua-stdlib.
+	* specl/std.lua (clone_rename, merge, Object): Import from
+	lua-stdlib.
+	(M): Export them.
+
+	specs: nested expect calls don't need `require "specl"`.
+	* specs/matchers_spec.yaml (contain matcher, match matcher):
+	Remove noisy require and `specl.` table qualifiers.
+
+	specs: copy symbols from `require "foo"` into local env.
+	* src/specl.lua (initenv.require): Support consistent use of
+	`require "foo"` to import foo's global symbols into the local
+	environment, even when foo uses modern `return API_table` style.
+
+2013-05-02  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: update slingshot.
+	* local.mk: Move local changes from Makefile.am to here, to
+	match latest slingshot usage.
+	* GNUmakefile, Makeflie.am, build-aux/release.mk,
+	build-aux/specl.mk, specs/specs.mk: Update form slingshot
+	upstream.
+	* connfigure.ac: Merge changes from slingshot.
+	* m4/ax_with_prog.m4: Remove.
+	* .travis.yml: Regenerate.
+	* specs/formatters_spec.yaml, specs/matchers_spec.yaml,
+	specs/spec_helper.lua, specs/specl_spec.yaml, src/src.mk: Update
+	local specl path to new bin/specl location.
+
+2013-05-01  Gary V. Vaughan  <gary@gnu.org>
+
+	travis: make check in verbose mode.
+	* .travis.yml: Regenerate.
+
+	travis: let luarocks install dependencies to catch any missed ones.
+	* travis.yml.in (script): Remove inessential rock preinstallations.
+	Don't forget to run self-tests.
+	* .travis.yml: Regenerate.
+
+	portability: use {...} instead of table.pack (...).
+	* src/specl.in (slurp): table.pack is not supported by Lua 5.1,
+	so use {...} notation instead for compatibility with 5.1 and
+	5.2.
+
+	configury: remove needless subdir-objects option.
+	* configure.ac (AM_INIT_AUTOMAKE): Remove subdir-objects option.
+	We don't have any compiled objects at all!
+
+	configury: remove unused auxdir macro.
+	* Makefile.am (auxdir): Remove.
+
+	maint: distribute README.md.
+	* Makefile.am (EXTRA_DIST): Add README.md.
+	(old_NEWS_hash): Move into bootstrap section of the file.
+
+	maint: bump version to 6.
+	* configure.ac (AC_INIT): Bump version number to 6.
+
+	formatters: non-verbose inline report summaries.
+	* specl/formatters/report.lua (expectations): Keep track of
+	pending, failing and unexpectedly passing expectations, for
+	display as a per-example summary in non-verbose mode.
+
+	refactor: rearrange specl function into a more logical order.
+	* src/specl.lua: Reorder function definitions.
+
+	specl: top-level before and after support.
+	* src/specl.in (slurp): Hoist document-level before and after
+	functions out of the enumerated examples table.
+	Prepend the current spec directory to `package.path`.
+	* specs/specl_spec.yaml (describe specl before): Move from
+	here...
+	* src/specl.lua (run): Top level now has hoisted before and
+	afters, so pass it to `run_examples` rather than `run_contexts`.
+	(compile_specs): Likewise.
+	* specs/spec_helper.lua (run_spec): ...to here.
+	* docs/specl.md (Separating Helper Functions): Add documentation
+	and a basic example.
+	* NEWS: Update.
+
+	specl: remove dead code from Lua spec format days.
+	* src/specl.lua (compile_examples): No need to check for already
+	compiled code now that we only support YAML specs.
+	(compile_example): Simplify accordingly.
+
+	specl: initialise spec environments earlier.
+	* src/specl.lua (run_examples): initialise with local symbols
+	earlier, so that they are available to before and after blocks.
+
+	specl: require now works intuitively from a spec file.
+	* specs/environmest_spec.yaml (describe environments): Change
+	specifications to how require calls should affect the lookup of
+	symbols they define.
+	* src/specl.lua (initenv): Before deferring to the system
+	loaders, try to find a required file along package.path and if
+	found, load it in the context of the innermost environment.
+	* docs/specl.md (Environments verses `require`): Remove.
+	`require` works properly in spec files now.
+	* NEWS: Update.
+
+	specl: support multi-document YAML stream files.
+	* src/specl.in (slurp): Don't discard additional documents from the
+	yaml.load stream.
+	* NEWS: Update.
+
 2013-04-29  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./Makefile.am (old_NEWS_hash): Auto-update.
 
 	Release version 5
 	* NEWS: Record release date.

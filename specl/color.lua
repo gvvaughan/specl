@@ -49,6 +49,9 @@ local colormap = {
   warn     = "%{red}",
   strong   = "%{bright white}",
 
+  reset    = "%{reset}",
+  match    = "%{green}",
+
   listpre     = "%{yellow}-%{reset} ",
   listpost    = "%{red}:%{reset}",
   allpass     = "",
@@ -69,7 +72,7 @@ end
 
 
 return setmetatable (colormap, {
-	 __call  = function (_, s) return color (s) end,
+         __call  = function (_, s) return color (s) end,
          __index = function (_, k)
                      return "%{underline}"
                    end,

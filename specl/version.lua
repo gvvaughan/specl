@@ -17,7 +17,7 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 local M = {
-  _VERSION = "5",
+  _VERSION = "6",
 
   name = arg[0] and arg[0]:gsub (".*/", "") or "specl",
 
@@ -49,7 +49,7 @@ Report bugs to http://github.com/gvvaughan/specl/issues.]]
   end,
 
   ["--version"] = function ()
-    print [[specl (Specl) 5
+    print [[specl (Specl) 6
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2013, Gary V. Vaughan

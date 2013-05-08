@@ -8,6 +8,7 @@ env:
     - LUAROCKS_CONFIG=build-aux/luarocks-config.lua
     - LUAROCKS_BASE=luarocks-2.0.13
     - LUAROCKS="$LUA $HOME/bin/luarocks"
+    - SPECL=bin/specl
   matrix:
     - LUA=lua5.1             LUA_INCDIR=/usr/include/lua5.1
     - LUA=lua5.2             LUA_INCDIR=/usr/include/lua5.2
@@ -38,10 +39,15 @@ script:
   - make $LUAROCKS_CONFIG
     LUA="$LUA" LUA_INCDIR="$LUA_INCDIR" V=1
     || cat $LUAROCKS_CONFIG config.log
-  - $LUAROCKS install ansicolors
-  - $LUAROCKS install luamacro
+  # lyaml is needed to run the slingshot mkrockspecs script.
   - $LUAROCKS install lyaml
   - eval `$LUAROCKS path`;
     make rockspecs LUAROCKS="$LUAROCKS" V=1
     || { $LUAROCKS path; cat $ROCKSPEC; }
+  # LuaRocks make will fail if dependencies are missing.
   - $LUAROCKS make $ROCKSPEC
+  # The self tests must pass.
+  @SPECL_FALSE@- $LUAROCKS install specl
+  # Use bin/specl if we built it, or else the specl rock we just installed.
+  - test -f "$SPECL" || SPECL=luarocks/bin/specl;
+    make check SPEC="$SPECL" V=1

@@ -74,7 +74,7 @@ release-prep-hook  ?= release-prep
 _build-aux         ?= build-aux
 my_distdir	   ?= $(PACKAGE)-$(VERSION)
 prev_version_file  ?= $(srcdir)/.prev-version
-old_NEWS_hash-file ?= $(srcdir)/Makefile.am
+old_NEWS_hash-file ?= $(srcdir)/local.mk
 gl_noteworthy_news_ = * Noteworthy changes in release ?.? (????-??-??) [?]
 
 PREV_VERSION        = $(shell cat $(prev_version_file) 2>/dev/null)
@@ -106,6 +106,7 @@ release_extra_dist ?=					\
 	GNUmakefile					\
 	bootstrap					\
 	bootstrap.conf					\
+	local.mk					\
 	travis.yml.in					\
 	$(NOTHING_ELSE)
 
@@ -248,7 +249,7 @@ define emit-commit-log
 endef
 
 .PHONY: release-prep
-release-prep:
+release-prep: $(scm_rockspec)
 	$(AM_V_GEN)$(MAKE) --no-print-directory -s announcement		\
 	  > ~/announce-$(my_distdir)
 	$(AM_V_at)if test -d $(release_archive_dir); then		\
@@ -262,6 +263,7 @@ release-prep:
 	  $(srcdir)/NEWS
 	$(AM_V_at)msg=$$($(emit-commit-log)) || exit 1;			\
 	cd $(srcdir) && $(GIT) commit -s -m "$$msg" -a
+	@echo '**** Release announcement in ~/announce-$(my_distdir)'
 
 # Strip out copyright messages with years, so that changing those (e.g.
 # with 'make update-copyight') doesn't change the old_NEWS_hash.
@@ -285,27 +287,33 @@ update-old-NEWS-hash: NEWS
 	    >> $(old_NEWS_hash-file); \
 	fi
 
-ANNOUNCE_ENV	 = LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
-ANNOUNCE_PRINT	 = $(ANNOUNCE_ENV) $(LUA) -l$(PACKAGE) -e
+ANNOUNCE_ENV	= LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
+ANNOUNCE_PRINT	= $(ANNOUNCE_ENV) $(LUA) -l$(PACKAGE) -e
 
-announcement: NEWS $(scm_rockspec)
+_PRE	= "    http://raw."
+_POST	= "/release-v$(VERSION)/$(PACKAGE)-$(VERSION)-$(rockspec_revision).rockspec"
+GITHUB_ROCKSPEC	= (source.url:gsub ("^git://", $(_PRE)):gsub ("%.git$$", $(_POST)))
+
+announcement: NEWS
 # Not $(AM_V_GEN) since the output of this command serves as
 # announcement message: else, it would start with " GEN announcement".
-	$(AM_V_at)printf '%s\n'						\
-	  'I am happy to announce the release of $(PACKAGE) $(VERSION),'
 	$(AM_V_at)$(ANNOUNCE_PRINT) 'print (description.summary)'
+	$(AM_V_at)printf '%s\n'	''					\
+	  'I am happy to announce the release of $(PACKAGE_NAME) release $(VERSION).' \
+	  ''
+	$(AM_V_at)$(ANNOUNCE_PRINT)					\
+	  'print ("$(PACKAGE_NAME)'\''s home page is at " .. description.homepage)'
 	$(AM_V_at)printf '\n'
 	$(AM_V_at)$(SED) -n						\
 	    -e '/^\* Noteworthy changes in release $(PREV_VERSION)/q'	\
 	    -e p NEWS |$(SED) -e 1,2d
-	$(AM_V_at)printf '%s\n'	''					\
-	  'Install it as luarock xxxx (see http://luarocks.org/repositories/rocks)' \
-	  '' 'Most simply:' ''						\
-	  '  luarocks install $(PACKAGE)' ''				\
-	  '(You may need to wait a while after this announcement lands before the' \
-	  'rocks are available).' ''
-	$(AM_V_at)$(ANNOUNCE_PRINT)					\
-	  'print ("$(PACKAGE)'\''s home page is at " .. description.homepage)'
+	$(AM_V_at)printf '%s\n'						\
+	  'Install it with LuaRocks, using:' ''				\
+	  '  luarocks install $(PACKAGE)-$(VERSION)' ''			\
+	  'Until the rocks are available from the official repository in a few days,' \
+	  'you can install directly from the $(PACKAGE) release branch, with:' \
+	  '' '  $$ luarocks install \'
+	$(AM_V_at)$(ANNOUNCE_PRINT) 'print ($(GITHUB_ROCKSPEC))'
 
 
 branch		 = $(shell $(GIT) branch |$(SED) -ne '/^\* /{s///;p;q;}')
@@ -353,13 +361,16 @@ push:
 	$(AM_V_at)$(GIT) push origin v$(VERSION)
 	$(AM_V_at)$(GIT) push origin release-v$(VERSION)
 
+announce_emails ?= lua-l@lists.lua.org
+rockspec_emails ?= luarocks-developers@lists.sourceforge.net
+
 .PHONY: mail
 mail:
 	$(AM_V_at)cat ~/announce-$(my_distdir)				\
 	  | mail -s '[ANN] $(PACKAGE) $(VERSION) released' --		\
-	    lua-l@lists.lua.org
+	    $(announce_emails)
 	$(AM_V_at)printf '%s\n'						\
-	  'Rockspec for $(PACKAGE) version $(VERSION) attached.'	\
-	  | mail -a $(package_rockspec)					\
-	    -s '[ANN] $(PACKAGE) $(VERSION) released; rockspec attached' -- \
-	    luarocks-developers@lists.sourceforge.net
+	  'Rockspec for $(PACKAGE) version $(VERSION) at:'		\
+	  `$(ANNOUNCE_PRINT) 'print ($(GITHUB_ROCKSPEC))'`		\
+	  | mail -s '[ANN] $(PACKAGE) $(VERSION) released; rockspec url included' -- \
+	    $(rockspec_emails)
