@@ -334,7 +334,7 @@ message contains the supplied substring, if any.
 ### 2.6. Inverting a matcher with `not`
 
 Oftentimes, in your specification you need to check that an expectation
-does **no*t* match a particular outcome, and [Specl][] has you covered
+does **not** match a particular outcome, and [Specl][] has you covered
 there too. Rather than implement another set of matchers to do that
 though, you can just insert `not_` right in the matcher method name.
 [Specl][] will still call the matcher according to the root name (see
@@ -349,7 +349,22 @@ Note that the last `should_not_error` example doesn't pass the error
 message substring that _should not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
-### 2.7. Custom Matchers.
+### 2.7. Matching alternatives with `one_of`
+
+When you want to check whether an expectation matches among a list of
+alternatives, [Specl][] supports a `one_of` method for any matcher:
+
+    expect (ctermid ()).should_match.one_of {"/.*tty%d+", "/.*pts%d+"}
+
+The expectation above succeeds if `ctermid ()` output matches any of
+the patterns in the table argument to `one_of`.
+
+Conversely, as you might expect, when you combine `one_of` with `not`,
+an expectation succeeds only if none of the alternatives match:
+
+    expect (type "x").should_not_be.one_of {"table", "nil"}
+
+### 2.8. Custom Matchers
 
 Just like the built in matchers described above, you can use the
 `Matcher` factory object from `specl.matchers` to register additional

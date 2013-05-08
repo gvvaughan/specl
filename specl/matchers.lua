@@ -57,8 +57,8 @@ local Matcher = util.Object {"matcher";
     self = merge_hash (self, parms)
 
     -- This wrapper function is called to respond to `should_`s.
-    self["match?"] = function (actual, expect, ...)
-      util.type_check (self.name, {actual}, {self.actual_type})
+    self["match?"] = function (name, actual, expect, ...)
+      util.type_check (name, {actual}, {self.actual_type})
 
       -- Pass all parameters to both formatters!
       local m = "expecting" .. self.format_expect (expect, actual, ...) ..
@@ -66,13 +66,41 @@ local Matcher = util.Object {"matcher";
       return matchp (actual, expect, ...), m
     end
 
+    self["one_of?"] = function (name, actual, alternatives, ...)
+      util.type_check (name, {actual}, {self.actual_type})
+      util.type_check (name .. ".one_of", {alternatives}, {"#table"})
+
+      local success
+      for _, expect in ipairs (alternatives) do
+	success = matchp (actual, expect, ...)
+	if success then break end
+      end
+
+      local m
+      if #alternatives == 1 then
+	m = "expecting" .. self.format_expect (alternatives[1], actual, ...) ..
+	    "but got" .. self.format_actual (actual, expect, ...)
+      else
+        m = "expecting" .. self.format_one_of (alternatives, actual, ...) ..
+            "but got" .. self.format_actual (actual, expect, ...)
+      end
+
+      return success, m
+    end
+
     return self
   end,
 
   -- Defaults:
-  format_expect = function (expect) return " " .. q(expect) .. ", " end,
-  format_actual = function (actual) return " " .. q(actual) end,
   actual_type   = "any",
+
+  format_actual = function (actual) return " " .. q(actual) end,
+
+  format_expect = function (expect) return " " .. q(expect) .. ", " end,
+
+  format_one_of = function (alternatives)
+    return " one of " .. util.concat (alternatives, util.QUOTED) .. ", "
+  end,
 }
 
 
@@ -98,14 +126,15 @@ local escape = {
       }
 
 
--- Reformat text into ":
+-- Reformat text into "
 -- | %{shell}first line of <text>%{reset}
--- | %{shell}next line of <text>%{reset}i
+-- | %{shell}next line of <text>%{reset}
 -- " etc.
 local function reformat (text, prefix)
   prefix = prefix or "| "
-  return "\n| " .. color.match ..
-         util.chomp (text):gsub ("\n", escape.reset .. "\n| " .. escape.match) ..
+  return "\n" .. prefix .. color.match ..
+         util.chomp (text):gsub ("\n",
+	   escape.reset .. "\n" .. prefix .. escape.match) ..
          color.reset
 end
 
@@ -160,6 +189,11 @@ matchers.error = Matcher {
     return not ok
   end,
 
+  -- force a new-line, let the display engine take care of indenting.
+  format_actual = function (actual)
+    return ":" .. reformat (actual)
+  end,
+
   format_expect = function (expect)
     if expect ~= nil then
       return " an error containing " .. q(expect) .. ", "
@@ -168,10 +202,10 @@ matchers.error = Matcher {
     end
   end,
 
-  -- force a new-line, let the display engine take care of indenting.
-  format_actual = function (actual)
-    return ":" .. reformat (actual)
-  end
+  format_one_of = function (alternatives)
+    return " an error containing one of " ..
+           util.concat (alternatives, util.QUOTED) .. ", "
+  end,
 }
 
 
@@ -185,6 +219,11 @@ matchers.match = Matcher {
 
   format_expect = function (pattern)
     return " string matching " .. q(pattern) .. ", "
+  end,
+
+  format_one_of = function (alternatives)
+    return " string matching one of " ..
+           util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
 
@@ -224,6 +263,11 @@ matchers.contain = Matcher {
       return " table containing " .. q(expect) .. ", "
     end
   end,
+
+  format_one_of = function (alternatives, actual)
+    return " " .. util.typeof (actual) .. " containing one of " ..
+           util.concat (alternatives, util.QUOTED) .. ", "
+  end,
 }
 
 
@@ -260,16 +304,17 @@ M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.time () }
 
 local function expect (ok, target)
   return setmetatable ({}, {
-    __index = function (_, matcher)
+    __index = function (_, matcher_name)
       local inverse = false
-      if matcher:match ("^should_not_") then
-        inverse, matcher = true, matcher:sub (12)
+      if matcher_name:match ("^should_not_") then
+        inverse, matcher_name = true, matcher_name:sub (12)
       else
-        matcher = matcher:sub (8)
+        matcher_name = matcher_name:sub (8)
       end
-      return function (expected)
-        matchers[matcher].name = matcher
-        local success, message = matchers[matcher]["match?"](target, expected, ok)
+
+      local match = matchers[matcher_name]
+
+      local function score (success, message)
 	local pending
 
         if inverse then
@@ -292,6 +337,21 @@ local function expect (ok, target)
 	  pending = pending,
         })
       end
+
+      -- Returns a functable:
+      return setmetatable ({
+	--  (i) with a `one_of` field to respond to:
+	--      | expect (foo).should_be.one_of {bar, baz, quux}
+	one_of = function (alternatives)
+	  score (match["one_of?"] (matcher_name, target, alternatives, ok))
+	end,
+      }, {
+	-- (ii) and a `__call` metamethod to respond to:
+	--      | expect (foo).should_be (bar)
+        __call = function (_, expected)
+          score (match["match?"] (matcher_name, target, expected, ok))
+        end,
+      })
     end
   })
 end

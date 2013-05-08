@@ -121,6 +121,16 @@ do
   local reformat, Matcher, matchers, q =
         matchers.reformat, matchers.Matcher, matchers.matchers, matchers.stringify
 
+  -- Long format shell output formatting.
+  local function concat (alternatives)
+    local m = ""
+    for _, expect in ipairs (alternatives) do
+      m = m .. "or:" .. reformat (expect) .. "\n"
+    end
+    return m:gsub ("^or:", "")
+  end
+
+
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
   local function process_errout (process)
@@ -157,6 +167,10 @@ do
     format_expect = function (expect)
       return " exit status " .. q(expect) .. ", "
     end,
+
+    format_one_of = function (alternatives)
+      return " an exit status of " .. util.concat (alternatives, util.QUOTED) .. ", "
+    end,
   }
 
 
@@ -171,6 +185,10 @@ do
 
     format_expect = function (expect)
       return " output:" .. reformat (expect) .. "\n"
+    end,
+
+    format_one_of = function (alternatives)
+      return " output:" .. concat (alternatives)
     end,
   }
 
@@ -187,6 +205,10 @@ do
     format_expect = function (expect)
       return " error output:" .. reformat (expect) .. "\n"
     end,
+
+    format_one_of = function (alternatives)
+      return " error output:" .. concat (alternatives)
+    end,
   }
 
 
@@ -202,6 +224,10 @@ do
     format_expect = function (expect)
       return " output matching:" .. reformat (expect) .. "\n"
     end,
+
+    format_one_of = function (alternatives)
+      return " output matching:" .. concat (alternatives)
+    end,
   }
 
 
@@ -216,6 +242,10 @@ do
 
     format_expect = function (expect)
       return " error output matching:" .. reformat (expect) .. "\n"
+    end,
+
+    format_one_of = function (alternatives)
+      return " error output matching:" .. concat (alternatives)
     end,
   }
 
@@ -233,6 +263,10 @@ do
     format_expect = function (expect)
       return " output containing:" .. reformat (expect) .. "\n"
     end,
+
+    format_one_of = function (alternatives)
+      return " output containing:" .. concat (alternatives)
+    end,
   }
 
 
@@ -248,6 +282,10 @@ do
 
     format_expect = function (expect)
       return " error output containing:" .. reformat (expect) .. "\n"
+    end,
+
+    format_one_of = function (alternatives)
+      return " error output containing:" .. concat (alternatives)
     end,
   }
 end

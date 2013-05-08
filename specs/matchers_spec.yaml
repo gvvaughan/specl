@@ -12,21 +12,43 @@ describe matchers:
 
 
 - describe be matcher:
+  - it diagnoses zero alternatives with one_of:
+      expect (expect (1).should_be.one_of {}).
+        should_error "non-empty table expected"
   - it displays expected and actual output for failures:
       yaml = preamble .. "(1).should_be 'one'"
       expect (run_spec (yaml)).
         should_contain_output 'expecting exactly "one", but got 1'
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble .. "(3).should_be.one_of {'five', 2, 1}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting one of "five", 2 or 1, but got 3'
+  - it displays the normal format where one_of has only one alternative:
+      yaml = preamble .. "(3).should_be.one_of {'five'}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting exactly "five", but got 3'
+
   - context when called normally:
     - it succeeds when comparing identical objects:
         expect (1).should_be (1)
+    - it succeeds when object is one of the alternatives:
+        expect (2).should_be.one_of {5, 2, 1}
     - it fails when comparing different objects:
         yaml = preamble .. "(1).should_be 'one'"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when object is not one of the alternatives:
+        yaml = preamble .. "(3).should_be.one_of {5, 2, 1}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
   - context when called with not_ prefix:
     - it succeeds when comparing different objects:
         expect (1).should_not_be 'one'
+    - it succeeds when object is not one of the alternatives:
+        expect (3).should_not_be.one_of {5, 2, 1}
     - it fails when comparing identical objects:
         yaml = preamble .. "(1).should_not_be (1)"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when object is one of the alternatives:
+        yaml = preamble .. "(2).should_not_be.one_of {5, 2, 1}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
@@ -35,6 +57,10 @@ describe matchers:
       yaml = preamble .. "('str').should_equal {'table'}"
       expect (run_spec (yaml)).
         should_contain_output 'expecting {1=table}, but got "str"'
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble .. "('str').should_equal.one_of {'table', 'number'}"
+      expect (run_spec (yaml)).
+        should_contain_output 'expecting one of "table" or "number", but got "str"'
   - context when called normally:
     - it succeeds when comparing equal objects:
         expect ({}).should_equal {}
@@ -62,6 +88,11 @@ describe matchers:
         yaml = preamble .. "('tilde').should_contain '~'"
         expect (run_spec (yaml)).
           should_contain_output 'expecting string containing "~", but got "tilde"'
+    - it displays all expected and actual output for one_of failures:
+        yaml = preamble .. "('tilde').should_contain.one_of {'~', 'x', 'foo', 9}"
+        expect (run_spec (yaml)).
+          should_contain_output ('expecting string containing one of "~",' ..
+                                 ' "x", "foo" or 9, but got "tilde"')
     - context while called normally:
       - it succeeds if the substring is present:
           expect ("English Language").should_contain "e"
@@ -87,6 +118,15 @@ describe matchers:
         yaml = preamble .. "({'one', 'two', 'five'}).should_contain 'three'"
         expect (run_spec (yaml)).
           should_match_output ("expecting table containing \"three\", but got:\n" ..
+                                "%s*| %{\n" ..
+                                "%s*|%s*%[1%] = \"one\",\n" ..
+                                "%s*|%s*%[2%] = \"two\",\n" ..
+                                "%s*|%s*%[3%] = \"five\",\n" ..
+                                "%s*| %}\n")
+    - it displays all expected and actual output for one_of failures:
+        yaml = preamble .. "({'one', 'two', 'five'}).should_contain.one_of {'three', 'seven'}"
+        expect (run_spec (yaml)).
+          should_match_output ('expecting table containing one of "three" or "seven", but got:\n' ..
                                 "%s*| %{\n" ..
                                 "%s*|%s*%[1%] = \"one\",\n" ..
                                 "%s*|%s*%[2%] = \"two\",\n" ..
@@ -140,6 +180,11 @@ describe matchers:
       yaml = preamble .. "('no digits').should_match '%d+'"
       expect (run_spec (yaml)).
         should_contain_output 'expecting string matching "%d+", but got "no digits"'
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble .. "('no digits').should_match.one_of {'%d+', '^digits$'}"
+      expect (run_spec (yaml)).
+        should_contain_output ('expecting string matching one of "%d+" or "^digits$", ' ..
+                              'but got "no digits"')
 
   - context when called normally:
     - it succeeds if the pattern matches:
@@ -157,10 +202,17 @@ describe matchers:
 
 - describe error matcher:
   - it displays expected and actual output for failures: |
-      yaml = preamble .. "(error 'error message').should_error 'failed'"
+      yaml = preamble .. "(error 'cheese').should_error 'ham'"
       expect (run_spec (yaml)).
-        should_match_output ('expecting an error containing "failed", but got:\n' ..
-                             '%s*| .*: error message')
+        should_match_output ('expecting an error containing "ham", but got:\n' ..
+                             '%s*| .*: cheese')
+  - it displays all expected and actual output for one_of failures: |
+      yaml = preamble .. "(error 'cheese').should_error.one_of {'green eggs', 'ham'}"
+      expect (run_spec (yaml)).
+        should_match_output ('expecting an error containing one of ' ..
+                             '"green eggs" or "ham", but got:\n' ..
+                             '%s*| .*: cheese')
+
   - context when called normally:
     - it succeeds if there is an error that contains the message:
         expect (error "error message").should_error "error"

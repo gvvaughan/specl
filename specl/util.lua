@@ -34,6 +34,34 @@ local function typeof (object)
 end
 
 
+-- Map function F over elements of T and return a table of results.
+local function map (f, t)
+  local r = {}
+  for _, v in pairs (t) do
+    local o = f (v)
+    if o then
+      table.insert (r, o)
+    end
+  end
+  return r
+end
+
+
+local function concat (alternatives, quoted)
+  if quoted then
+    alternatives = map (function (v)
+                          if typeof (v) ~= "string" then
+        		    return std.tostring (v)
+        		  else
+        		    return ("%q"):format (v)
+        		  end
+        		end, alternatives)
+  end
+
+  return table.concat (alternatives, ", "):gsub (",( [^,]+)$", " or%1")
+end
+
+
 -- Write a function call type error similar to how Lua core does it.
 local function type_error (name, i, arglist, typelist)
   local expected = typelist[i]
@@ -41,9 +69,12 @@ local function type_error (name, i, arglist, typelist)
 
   if arglist[i] then actual = typeof (arglist[i]) end
 
-  if typeof (typelist[i]) == "table" then
+  if typelist[i] == "#table" then
+    error ("bad argument #" .. tostring (i) .. " to '" .. name ..
+           "' (non-empty table expected, got {})", 3)
+  elseif typeof (typelist[i]) == "table" then
     -- format as, eg: "number, string or table"
-    expected = table.concat (typelist[i], ", "):gsub (",( [^,]+)$", " or%1")
+    expected = concat (typelist[i])
   end
 
   error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
@@ -70,7 +101,12 @@ local function type_check (name, arglist, typelist)
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
       for _, check in ipairs (v) do
-        if a == check then
+	if check == "#table" then
+	  if #arglist[i] > 0 and a == "table" then
+	    ok = true
+	    break
+	  end
+        elseif a == check then
           ok = true
           break
         end
@@ -91,19 +127,6 @@ end
 
 -- A null operation function.
 local function nop () end
-
-
--- Map function F over elements of T and return a table of results.
-local function map (f, t)
-  local r = {}
-  for _, v in pairs (t) do
-    local o = f (v)
-    if o then
-      table.insert (r, o)
-    end
-  end
-  return r
-end
 
 
 -- Color printing.
@@ -193,11 +216,15 @@ end
 --[[ ----------------- ]]--
 
 local M = {
+  -- Constants
+  QUOTED         = true,
+
   -- Prototypes
   Object         = Object,
 
   -- Functions
   chomp          = std.chomp,
+  concat         = concat,
   indent         = indent,
   nop            = nop,
   map            = map,

@@ -48,6 +48,10 @@ describe specl:
       yaml = preamble .. "(spawn 'exit 3').should_exit (7)"
       expect (run_spec (yaml)).
         should_contain_output "expecting exit status 7, but got 3"
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble .. "(spawn 'exit 3').should_exit.one_of {7, 11}"
+      expect (run_spec (yaml)).
+        should_contain_output "expecting an exit status of 7 or 11, but got 3"
 
   - context when called normally:
     - it succeeds when process exit status matches:
@@ -72,6 +76,16 @@ describe specl:
       yaml = preamble .. "(spawn 'printf hello').should_output 'hell'"
       expect (run_spec (yaml)).
         should_match_output ("expecting output:\n" ..
+                             "%s*| hell\n" ..
+                             "%s*but got:\n" ..
+                             "%s*| hello\n")
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble ..
+             "(spawn 'printf hello').should_output.one_of {'heaven', 'hell'}"
+      expect (run_spec (yaml)).
+        should_match_output ("expecting output:\n" ..
+                             "%s*| heaven\n" ..
+                             "%s*or:\n" ..
                              "%s*| hell\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
@@ -102,6 +116,16 @@ describe specl:
                              "%s*| hell\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble ..
+             "(spawn 'printf hello >&2').should_output_error.one_of {'heaven', 'hell'}"
+      expect (run_spec (yaml)).
+        should_match_output ("expecting error output:\n" ..
+                             "%s*| heaven\n" ..
+                             "%s*or:\n" ..
+                             "%s*| hell\n" ..
+                             "%s*but got:\n" ..
+                             "%s*| hello\n")
 
   - context when called normally:
     - it succeeds when the error output matches exactly:
@@ -124,11 +148,21 @@ describe specl:
   - it diagnoses incompatible arguments:
       expect (expect ("meh").should_match_output "meh").
         should_error "process expected"
-  - it displays actual and expected output on failure: |
+  - it displays actual and expected output on failure:
       yaml = preamble .. "(spawn 'printf hello').should_match_output '%s+'"
       expect (run_spec (yaml)).
         should_match_output ("expecting output matching:\n" ..
                              "%s*| %%s%+\n" ..
+                             "%s*but got:\n" ..
+                             "%s*| hello\n")
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble ..
+             "(spawn 'printf hello').should_match_output.one_of {'%s+', '%d+'}"
+      expect (run_spec (yaml)).
+        should_match_output ("expecting output matching:\n" ..
+                             "%s*| %%s%+\n" ..
+                             "%s*or:\n" ..
+                             "%s*| %%d%+\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
 
@@ -156,6 +190,16 @@ describe specl:
       expect (run_spec (yaml)).
         should_match_output ("expecting error output matching:\n" ..
                              "%s*| %%s%+\n" ..
+                             "%s*but got:\n" ..
+                             "%s*| hello\n")
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble ..
+             "(spawn 'printf hello >&2').should_match_error.one_of {'%s+', '%d+'}"
+      expect (run_spec (yaml)).
+        should_match_output ("expecting error output matching:\n" ..
+                             "%s*| %%s%+\n" ..
+                             "%s*or:\n" ..
+                             "%s*| %%d%+\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
 
@@ -187,6 +231,18 @@ describe specl:
                              "%s*| ~\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble ..
+             "(spawn 'printf hello').should_contain_output.one_of {'~', 'x', 'foo'}"
+      expect (run_spec (yaml)).
+        should_match_output ("expecting output containing:\n" ..
+                             "%s*| ~\n" ..
+                             "%s*or:\n" ..
+                             "%s*| x\n" ..
+                             "%s*or:\n" ..
+                             "%s*| foo\n" ..
+                             "%s*but got:\n" ..
+                             "%s*| hello\n")
 
   - context when called normally:
     - it succeeds when the output contains the match text:
@@ -212,6 +268,18 @@ describe specl:
       expect (run_spec (yaml)).
         should_match_output ("expecting error output containing:\n" ..
                              "%s*| ~\n" ..
+                             "%s*but got:\n" ..
+                             "%s*| hello\n")
+  - it displays all expected and actual output for one_of failures:
+      yaml = preamble ..
+             "(spawn 'printf hello >&2').should_contain_error.one_of {'~', 'x', 'foo'}"
+      expect (run_spec (yaml)).
+        should_match_output ("expecting error output containing:\n" ..
+                             "%s*| ~\n" ..
+                             "%s*or:\n" ..
+                             "%s*| x\n" ..
+                             "%s*or:\n" ..
+                             "%s*| foo\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
 
