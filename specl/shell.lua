@@ -243,8 +243,7 @@ do
   -- Matches if the output of a process contains <expect>.
   matchers.contain_output = Matcher {
     function (actual, expect)
-      local pattern = expect:gsub ("%W", "%%%0")
-      return (string.match (actual.output, pattern) ~= nil)
+      return (string.match (actual.output, util.plain (expect)) ~= nil)
     end,
 
     actual_type   = "process",
@@ -263,8 +262,7 @@ do
   -- Matches if the error output of a process contains <expect>.
   matchers.contain_error = Matcher {
     function (actual, expect)
-      local pattern = expect:gsub ("%W", "%%%0")
-      return (string.match (actual.errout, pattern) ~= nil)
+      return (string.match (actual.errout, util.plain (expect)) ~= nil)
     end,
 
     actual_type   = "process",
