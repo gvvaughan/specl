@@ -222,13 +222,12 @@ matchers.error = Matcher {
     if expect ~= nil then
       return " an error containing:" .. reformat (expect)
     else
-      return "an error"
+      return " an error"
     end
   end,
 
   format_any_of = function (alternatives)
-    return " an error containing any of " ..
-           util.concat (alternatives, util.QUOTED) .. ", "
+    return " an error containing any of:" .. reformat (alternatives)
   end,
 }
 

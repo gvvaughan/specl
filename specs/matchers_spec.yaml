@@ -293,13 +293,16 @@ describe matchers:
         should_match_output ('expecting an error containing:\n' ..
                              '%s*| ham\n' ..
                              '%s*but got:\n' ..
-                             '%s*| .*: cheese')
+                             '%s*| .*cheese')
   - it displays all expected and actual output for any_of failures: |
       yaml = preamble .. "(error 'cheese').should_error.any_of {'green eggs', 'ham'}"
       expect (run_spec (yaml)).
-        should_match_output ('expecting an error containing any of ' ..
-                             '"green eggs" or "ham", but got:\n' ..
-                             '%s*| .*: cheese')
+        should_match_output ('expecting an error containing any of:\n' ..
+                             '%s*| green eggs\n' ..
+                             '%s*or:\n' ..
+                             '%s*| ham\n' ..
+                             '%s*but got:\n' ..
+                             '%s*| .*cheese')
 
   - context when called normally:
     - it succeeds if there is an error that contains the message:
