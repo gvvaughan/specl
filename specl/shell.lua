@@ -118,8 +118,8 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
-  local reformat, Matcher, matchers, q =
-        matchers.reformat, matchers.Matcher, matchers.matchers, matchers.stringify
+  local reformat, Matcher, matchers =
+        matchers.reformat, matchers.Matcher, matchers.matchers
 
   -- Long format shell output formatting.
   local function concat (alternatives)
@@ -157,7 +157,7 @@ do
     actual_type   = "process",
 
     format_actual = function (process)
-      local m = " " .. q(process.status)
+      local m = " " .. tostring (process.status)
       if process.errout ~= nil and process.errout ~= "" then
         return m .. "\nand error:" .. reformat (process.errout)
       end
@@ -165,7 +165,7 @@ do
     end,
 
     format_expect = function (expect)
-      return " exit status " .. q(expect) .. ", "
+      return " exit status " .. tostring (expect) .. ", "
     end,
 
     format_one_of = function (alternatives)
