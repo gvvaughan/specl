@@ -72,14 +72,14 @@ local Matcher = util.Object {"matcher";
 
       local success
       for _, expect in ipairs (alternatives) do
-	success = matchp (actual, expect, ...)
-	if success then break end
+        success = matchp (actual, expect, ...)
+        if success then break end
       end
 
       local m
       if #alternatives == 1 then
-	m = "expecting" .. self.format_expect (alternatives[1], actual, ...) ..
-	    "but got" .. self.format_actual (actual, expect, ...)
+        m = "expecting" .. self.format_expect (alternatives[1], actual, ...) ..
+            "but got" .. self.format_actual (actual, expect, ...)
       else
         m = "expecting" .. self.format_any_of (alternatives, actual, ...) ..
             "but got" .. self.format_actual (actual, expect, ...)
@@ -135,7 +135,7 @@ local function _reformat (text, prefix)
   prefix = prefix or "| "
   return "\n" .. prefix .. color.match ..
          util.chomp (text):gsub ("\n",
-	   escape.reset .. "\n" .. prefix .. escape.match) ..
+           escape.reset .. "\n" .. prefix .. escape.match) ..
          color.reset
 end
 
@@ -340,48 +340,48 @@ local function expect (ok, actual)
       local match = matchers[matcher_root]
 
       local function score (success, message)
-	local pending
+        local pending
 
         if inverse then
-	  success = not success
-	  message = message and ("not " .. message)
-	end
+          success = not success
+          message = message and ("not " .. message)
+        end
 
-	if ispending ~= nil then
-	  -- stats.pend is updated by pending ()
-	  -- +1 per pending example, not per expectation in pending examples
-	  pending = ispending
-	elseif success ~= true then
-	  M.stats.fail = M.stats.fail + 1
-	else
-	  M.stats.pass = M.stats.pass + 1
-	end
+        if ispending ~= nil then
+          -- stats.pend is updated by pending ()
+          -- +1 per pending example, not per expectation in pending examples
+          pending = ispending
+        elseif success ~= true then
+          M.stats.fail = M.stats.fail + 1
+        else
+          M.stats.pass = M.stats.pass + 1
+        end
         table.insert (expectations, {
-	  message = message,
-	  status  = success,
-	  pending = pending,
+          message = message,
+          status  = success,
+          pending = pending,
         })
       end
 
       -- Returns a functable:
       return setmetatable ({
-	--   (i) with `any_of` to respond to:
-	--       | expect (foo).should_be.any_of {bar, baz, quux}
-	any_of = function (alternatives)
-	  score (match["any_of?"] (matcher_root, actual, alternatives, ok))
-	end,
+        --   (i) with `any_of` to respond to:
+        --       | expect (foo).should_be.any_of {bar, baz, quux}
+        any_of = function (alternatives)
+          score (match["any_of?"] (matcher_root, actual, alternatives, ok))
+        end,
       }, {
-	--  (ii) and a `__call` metamethod to respond to:
-	--       | expect (foo).should_be (bar)
+        --  (ii) and a `__call` metamethod to respond to:
+        --       | expect (foo).should_be (bar)
         __call = function (_, expected)
           score (match["match?"] (matcher_root, actual, expected, ok))
         end,
 
-	-- (iii) throw an error for unsupported modifiers.
-	__index = function (_, adaptor_name)
+        -- (iii) throw an error for unsupported modifiers.
+        __index = function (_, adaptor_name)
           error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
                  matcher_name .. "'")
-	end,
+        end,
       })
     end
   })

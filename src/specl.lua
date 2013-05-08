@@ -136,7 +136,7 @@ function compile_example (location, s)
 
   -- Wrap the fragment into a function that we can call later.
   local f, errmsg = loadstring ("return function () " ..
-	              macro.substitute_tostring (s) .. "\nend", filename)
+                      macro.substitute_tostring (s) .. "\nend", filename)
 
   if f == nil then
      local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')

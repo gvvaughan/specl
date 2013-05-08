@@ -72,7 +72,7 @@ end
 
 
 return setmetatable (colormap, {
-	 __call  = function (_, s) return color (s) end,
+         __call  = function (_, s) return color (s) end,
          __index = function (_, k)
                      return "%{underline}"
                    end,

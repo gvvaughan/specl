@@ -51,11 +51,11 @@ local function concat (alternatives, quoted)
   if quoted then
     alternatives = map (function (v)
                           if typeof (v) ~= "string" then
-        		    return std.tostring (v)
-        		  else
-        		    return ("%q"):format (v)
-        		  end
-        		end, alternatives)
+                            return std.tostring (v)
+                          else
+                            return ("%q"):format (v)
+                          end
+                        end, alternatives)
   end
 
   return table.concat (alternatives, ", "):gsub (",( [^,]+)$", " or%1")
@@ -101,11 +101,11 @@ local function type_check (name, arglist, typelist)
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
       for _, check in ipairs (v) do
-	if check == "#table" then
-	  if #arglist[i] > 0 and a == "table" then
-	    ok = true
-	    break
-	  end
+        if check == "#table" then
+          if #arglist[i] > 0 and a == "table" then
+            ok = true
+            break
+          end
         elseif a == check then
           ok = true
           break

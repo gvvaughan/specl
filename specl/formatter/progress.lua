@@ -45,17 +45,17 @@ local function expectations (status, descriptions)
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
         reports.pend = reports.pend .. "\n  " ..
-	      color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
-	if type (expectation.pending) == "string" then
-          reports.pend = reports.pend .. color.warn .. expectation.pending .. ", "
-	end
+          color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
+        if type (expectation.pending) == "string" then
+            reports.pend = reports.pend .. color.warn .. expectation.pending .. ", "
+        end
         if expectation.status == true then
-	  writc (color.strong .. "?")
-	  reports.pend = reports.pend ..
-                color.warn .. "passed unexpectedly!" .. color.reset .. "\n" ..
-		"  " .. color.strong ..
-		"You can safely remove the 'pending ()' call from this example." ..
-		color.reset
+          writc (color.strong .. "?")
+          reports.pend = reports.pend ..
+              color.warn .. "passed unexpectedly!" .. color.reset .. "\n" ..
+              "  " .. color.strong ..
+              "You can safely remove the 'pending ()' call from this example." ..
+              color.reset
         else
           writc (color.pend .. "*")
           reports.pend = reports.pend .. "not yet implemented"

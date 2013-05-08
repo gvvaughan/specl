@@ -20,7 +20,7 @@ local function expectations (status, descriptions)
       io.write ("ok " .. curr_test .. " " .. name)
       io.write "\n"
       if expectation.status == "pending" then
-	print "# PENDING expectation: Not Implemented Yet"
+        print "# PENDING expectation: Not Implemented Yet"
       end
       if fail then
         print ("# " .. expectation.message:gsub ("\n", "\n# "))

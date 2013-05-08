@@ -64,17 +64,17 @@ local function expectations (status, descriptions)
           pend = pend .. color.warn .. expectation.pending .. ", "
         end
         if expectation.status == true then
-	  counts.unexpected = counts.unexpected + 1
+          counts.unexpected = counts.unexpected + 1
 
-	  if prefix ~= color.fail then prefix = color.warn end
+          if prefix ~= color.fail then prefix = color.warn end
 
           pend = pend .. color.warn .. "passed unexpectedly!" .. color.reset
           reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
               "  " .. color.strong ..
               "You can safely remove the 'pending ()' call from this example." ..
-	      color.reset
+              color.reset
         else
-	  counts.pend = counts.pend + 1
+          counts.pend = counts.pend + 1
 
           pend = pend .. "not yet implemented"
           reports.pend = reports.pend .. "\n" .. pend
@@ -85,7 +85,7 @@ local function expectations (status, descriptions)
         end
 
       elseif expectation.status == false then
-	counts.fail = counts.fail + 1
+        counts.fail = counts.fail + 1
 
         local fail = "  " .. color.fail .. "FAILED expectation " ..
                      i .. color.reset .. ": " ..  expectation.message
@@ -101,18 +101,18 @@ local function expectations (status, descriptions)
     if not opts.verbose then
       details = {}
       if counts.pend > 0 then
-	table.insert (details, color.pend .. tostring (counts.pend) .. " pending")
+        table.insert (details, color.pend .. tostring (counts.pend) .. " pending")
       end
       if counts.unexpected > 0 then
-	table.insert (details, color.warn .. tostring (counts.unexpected) .. " unexpectedly passing")
+        table.insert (details, color.warn .. tostring (counts.unexpected) .. " unexpectedly passing")
       end
       if counts.fail > 0 then
-	table.insert (details, color.fail .. tostring (counts.fail) .. " failing")
+        table.insert (details, color.fail .. tostring (counts.fail) .. " failing")
       end
       if next (details) then
-	details = " (" .. table.concat (details, color.reset .. ", ") .. color.reset
+        details = " (" .. table.concat (details, color.reset .. ", ") .. color.reset
       else
-	details = ""
+        details = ""
       end
     end
 
@@ -171,7 +171,7 @@ local function footer (stats, reports)
          pendcolor   .. stats.pend .. " pending" .. color.reset .. " and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
          color.clock .. (os.time () - stats.starttime) .. " seconds" ..
-	 color.reset .. ".")
+         color.reset .. ".")
 end
 
 
