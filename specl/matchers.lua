@@ -211,8 +211,12 @@ matchers.error = Matcher {
   end,
 
   -- force a new-line, let the display engine take care of indenting.
-  format_actual = function (actual)
-    return ":" .. reformat (actual)
+  format_actual = function (actual, _, ok)
+    if ok then
+      return " no error"
+    else
+      return ":" .. reformat (actual)
+    end
   end,
 
   format_expect = function (expect)
@@ -314,6 +318,18 @@ local function status ()
 end
 
 
+-- Raise an unsupported adaptor error.
+local function adaptor_error (matcher_name, adaptor_name)
+  if matcher_name:match ("^should_not_") and adaptor_name == "one_of" then
+    error ("unsupported 'one_of' adaptor with '" .. matcher_name ..
+           "' (try 'any_of' adaptor)")
+  end
+
+  error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
+         matcher_name .. "'")
+end
+
+
 -- Wrap <actual> in metatable that dynamically looks up an appropriate
 -- matcher from the table above for comparison with the following
 -- parameter. Matcher names containing '_not_' invert their results
@@ -328,12 +344,12 @@ local function expect (ok, actual)
     __index = function (_, matcher_name)
       local inverse = false
       if matcher_name:match ("^should_not_") then
-        inverse, matcher_name = true, matcher_name:sub (12)
+        inverse, matcher_root = true, matcher_name:sub (12)
       else
-        matcher_name = matcher_name:sub (8)
+        matcher_root = matcher_name:sub (8)
       end
 
-      local match = matchers[matcher_name]
+      local match = matchers[matcher_root]
 
       local function score (success, message)
 	local pending
@@ -361,17 +377,29 @@ local function expect (ok, actual)
 
       -- Returns a functable:
       return setmetatable ({
-	--  (i) with a `one_of` field to respond to:
-	--      | expect (foo).should_be.one_of {bar, baz, quux}
+	--   (i) with `one_of`/`any_of` fields to respond to:
+	--       | expect (foo).should_be.one_of {bar, baz, quux}
 	one_of = function (alternatives)
-	  score (match["one_of?"] (matcher_name, actual, alternatives, ok))
+	  if inverse then
+	    adaptor_error (matcher_name, 'one_of')
+	  end
+	  score (match["one_of?"] (matcher_root, actual, alternatives, ok))
+	end,
+
+	any_of = function (alternatives)
+	  score (match["one_of?"] (matcher_root, actual, alternatives, ok))
 	end,
       }, {
-	-- (ii) and a `__call` metamethod to respond to:
-	--      | expect (foo).should_be (bar)
+	--  (ii) and a `__call` metamethod to respond to:
+	--       | expect (foo).should_be (bar)
         __call = function (_, expected)
-          score (match["match?"] (matcher_name, actual, expected, ok))
+          score (match["match?"] (matcher_root, actual, expected, ok))
         end,
+
+	-- (iii) throw an error for unsupported modifiers.
+	__index = function (_, adaptor_name)
+	  adaptor_error (matcher_name, adaptor_name)
+	end,
       })
     end
   })
