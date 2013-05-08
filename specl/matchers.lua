@@ -293,7 +293,7 @@ local function status ()
 end
 
 
--- Wrap <target> in metatable that dynamically looks up an appropriate
+-- Wrap <actual> in metatable that dynamically looks up an appropriate
 -- matcher from the table above for comparison with the following
 -- parameter. Matcher names containing '_not_' invert their results
 -- before returning.
@@ -302,7 +302,7 @@ end
 
 M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.time () }
 
-local function expect (ok, target)
+local function expect (ok, actual)
   return setmetatable ({}, {
     __index = function (_, matcher_name)
       local inverse = false
@@ -343,13 +343,13 @@ local function expect (ok, target)
 	--  (i) with a `one_of` field to respond to:
 	--      | expect (foo).should_be.one_of {bar, baz, quux}
 	one_of = function (alternatives)
-	  score (match["one_of?"] (matcher_name, target, alternatives, ok))
+	  score (match["one_of?"] (matcher_name, actual, alternatives, ok))
 	end,
       }, {
 	-- (ii) and a `__call` metamethod to respond to:
 	--      | expect (foo).should_be (bar)
         __call = function (_, expected)
-          score (match["match?"] (matcher_name, target, expected, ok))
+          score (match["match?"] (matcher_name, actual, expected, ok))
         end,
       })
     end
