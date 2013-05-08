@@ -40,7 +40,7 @@ end
 -- Quote strings nicely, and coerce non-strings into strings.
 local function q (obj)
   if type (obj) == "string" then
-    return '"' .. obj:gsub ('[\\"]', "\\%0") .. '"'
+    return ("%q"):format (obj)
   end
   return util.tostring (obj)
 end
