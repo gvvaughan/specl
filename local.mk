@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
+old_NEWS_hash = cc72f2d86bd849eb07a52e15aee06161
 
 doc_DATA	=
 
