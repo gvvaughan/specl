@@ -33,6 +33,9 @@ Specl NEWS - User visible changes.
 
 ** Incompatible changes:
 
+  - Documentation is now in Jekyll format markdown for easy website
+    regeneration.
+
   - Calling require in a spec file now runs in the local environment,
     giving access to 'global' symbols from the newly loaded file from
     the local namespace.  Conversely, access to those same symbols is
