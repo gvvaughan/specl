@@ -349,20 +349,20 @@ Note that the last `should_not_error` example doesn't pass the error
 message substring that _should not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
-### 2.7. Matching alternatives with `one_of`
+### 2.7. Matching alternatives with `any_of`
 
 When you want to check whether an expectation matches among a list of
-alternatives, [Specl][] supports a `one_of` method for any matcher:
+alternatives, [Specl][] supports a `any_of` method for any matcher:
 
-    expect (ctermid ()).should_match.one_of {"/.*tty%d+", "/.*pts%d+"}
+    expect (ctermid ()).should_match.any_of {"/.*tty%d+", "/.*pts%d+"}
 
 The expectation above succeeds if `ctermid ()` output matches any of
-the patterns in the table argument to `one_of`.
+the patterns in the table argument to `any_of`.
 
-Conversely, as you might expect, when you combine `one_of` with `not`,
+Conversely, as you might expect, when you combine `any_of` with `not`,
 an expectation succeeds only if none of the alternatives match:
 
-    expect (type "x").should_not_be.one_of {"table", "nil"}
+    expect (type "x").should_not_be.any_of {"table", "nil"}
 
 ### 2.8. Custom Matchers
 

@@ -11,9 +11,9 @@ Specl NEWS - User visible changes.
 
   - A proper, documented, API for adding custom matchers.
 
-  - A new 'one_of' method for any matcher:
+  - A new 'any_of' method for any matcher:
 
-     expect (ctermid ()).should_match.one_of {"/.*tty.*", "/.*pts.*"}
+     expect (ctermid ()).should_match.any_of {"/.*tty.*", "/.*pts.*"}
 
   - You can `require "specl.shell"` from a spec file (usually in the
     initial top-level `before`) to get access to a shell Command

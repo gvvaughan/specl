@@ -158,7 +158,7 @@ do
       return " exit status " .. tostring (expect) .. ", "
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " an exit status of " .. util.concat (alternatives, util.QUOTED) .. ", "
     end,
   }
@@ -177,7 +177,7 @@ do
       return " output:" .. reformat (expect)
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " output:" .. reformat (alternatives)
     end,
   }
@@ -196,7 +196,7 @@ do
       return " error output:" .. reformat (expect)
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " error output:" .. reformat (alternatives)
     end,
   }
@@ -215,7 +215,7 @@ do
       return " output matching:" .. reformat (expect)
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " output matching:" .. reformat (alternatives)
     end,
   }
@@ -234,7 +234,7 @@ do
       return " error output matching:" .. reformat (expect)
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " error output matching:" .. reformat (alternatives)
     end,
   }
@@ -254,7 +254,7 @@ do
       return " output containing:" .. reformat (expect)
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " output containing:" .. reformat (alternatives)
     end,
   }
@@ -274,7 +274,7 @@ do
       return " error output containing:" .. reformat (expect)
     end,
 
-    format_one_of = function (alternatives)
+    format_any_of = function (alternatives)
       return " error output containing:" .. reformat (alternatives)
     end,
   }

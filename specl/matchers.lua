@@ -66,9 +66,9 @@ local Matcher = util.Object {"matcher";
       return matchp (actual, expect, ...), m
     end
 
-    self["one_of?"] = function (name, actual, alternatives, ...)
+    self["any_of?"] = function (name, actual, alternatives, ...)
       util.type_check (name, {actual}, {self.actual_type})
-      util.type_check (name .. ".one_of", {alternatives}, {"#table"})
+      util.type_check (name .. ".any_of", {alternatives}, {"#table"})
 
       local success
       for _, expect in ipairs (alternatives) do
@@ -81,7 +81,7 @@ local Matcher = util.Object {"matcher";
 	m = "expecting" .. self.format_expect (alternatives[1], actual, ...) ..
 	    "but got" .. self.format_actual (actual, expect, ...)
       else
-        m = "expecting" .. self.format_one_of (alternatives, actual, ...) ..
+        m = "expecting" .. self.format_any_of (alternatives, actual, ...) ..
             "but got" .. self.format_actual (actual, expect, ...)
       end
 
@@ -98,8 +98,8 @@ local Matcher = util.Object {"matcher";
 
   format_expect = function (expect) return " " .. q(expect) .. ", " end,
 
-  format_one_of = function (alternatives)
-    return " one of " .. util.concat (alternatives, util.QUOTED) .. ", "
+  format_any_of = function (alternatives)
+    return " any of " .. util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
 
@@ -227,8 +227,8 @@ matchers.error = Matcher {
     end
   end,
 
-  format_one_of = function (alternatives)
-    return " an error containing one of " ..
+  format_any_of = function (alternatives)
+    return " an error containing any of " ..
            util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
@@ -246,8 +246,8 @@ matchers.match = Matcher {
     return " string matching " .. q(pattern) .. ", "
   end,
 
-  format_one_of = function (alternatives)
-    return " string matching one of " ..
+  format_any_of = function (alternatives)
+    return " string matching any of " ..
            util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
@@ -289,8 +289,8 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_one_of = function (alternatives, actual)
-    return " " .. util.typeof (actual) .. " containing one of " ..
+  format_any_of = function (alternatives, actual)
+    return " " .. util.typeof (actual) .. " containing any of " ..
            util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
@@ -315,18 +315,6 @@ end
 -- Return status since last init.
 local function status ()
   return { expectations = expectations, ispending = ispending }
-end
-
-
--- Raise an unsupported adaptor error.
-local function adaptor_error (matcher_name, adaptor_name)
-  if matcher_name:match ("^should_not_") and adaptor_name == "one_of" then
-    error ("unsupported 'one_of' adaptor with '" .. matcher_name ..
-           "' (try 'any_of' adaptor)")
-  end
-
-  error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-         matcher_name .. "'")
 end
 
 
@@ -377,17 +365,10 @@ local function expect (ok, actual)
 
       -- Returns a functable:
       return setmetatable ({
-	--   (i) with `one_of`/`any_of` fields to respond to:
-	--       | expect (foo).should_be.one_of {bar, baz, quux}
-	one_of = function (alternatives)
-	  if inverse then
-	    adaptor_error (matcher_name, 'one_of')
-	  end
-	  score (match["one_of?"] (matcher_root, actual, alternatives, ok))
-	end,
-
+	--   (i) with `any_of` to respond to:
+	--       | expect (foo).should_be.any_of {bar, baz, quux}
 	any_of = function (alternatives)
-	  score (match["one_of?"] (matcher_root, actual, alternatives, ok))
+	  score (match["any_of?"] (matcher_root, actual, alternatives, ok))
 	end,
       }, {
 	--  (ii) and a `__call` metamethod to respond to:
@@ -398,7 +379,8 @@ local function expect (ok, actual)
 
 	-- (iii) throw an error for unsupported modifiers.
 	__index = function (_, adaptor_name)
-	  adaptor_error (matcher_name, adaptor_name)
+          error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
+                 matcher_name .. "'")
 	end,
       })
     end

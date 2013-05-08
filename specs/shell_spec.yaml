@@ -48,8 +48,8 @@ describe specl:
       yaml = preamble .. "(spawn 'exit 3').should_exit (7)"
       expect (run_spec (yaml)).
         should_contain_output "expecting exit status 7, but got 3"
-  - it displays all expected and actual output for one_of failures:
-      yaml = preamble .. "(spawn 'exit 3').should_exit.one_of {7, 11}"
+  - it displays all expected and actual output for any_of failures:
+      yaml = preamble .. "(spawn 'exit 3').should_exit.any_of {7, 11}"
       expect (run_spec (yaml)).
         should_contain_output "expecting an exit status of 7 or 11, but got 3"
 
@@ -79,9 +79,9 @@ describe specl:
                              "%s*| hell\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
-  - it displays all expected and actual output for one_of failures:
+  - it displays all expected and actual output for any_of failures:
       yaml = preamble ..
-             "(spawn 'printf hello').should_output.one_of {'heaven', 'hell'}"
+             "(spawn 'printf hello').should_output.any_of {'heaven', 'hell'}"
       expect (run_spec (yaml)).
         should_match_output ("expecting output:\n" ..
                              "%s*| heaven\n" ..
@@ -116,9 +116,9 @@ describe specl:
                              "%s*| hell\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
-  - it displays all expected and actual output for one_of failures:
+  - it displays all expected and actual output for any_of failures:
       yaml = preamble ..
-             "(spawn 'printf hello >&2').should_output_error.one_of {'heaven', 'hell'}"
+             "(spawn 'printf hello >&2').should_output_error.any_of {'heaven', 'hell'}"
       expect (run_spec (yaml)).
         should_match_output ("expecting error output:\n" ..
                              "%s*| heaven\n" ..
@@ -155,9 +155,9 @@ describe specl:
                              "%s*| %%s%+\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
-  - it displays all expected and actual output for one_of failures:
+  - it displays all expected and actual output for any_of failures:
       yaml = preamble ..
-             "(spawn 'printf hello').should_match_output.one_of {'%s+', '%d+'}"
+             "(spawn 'printf hello').should_match_output.any_of {'%s+', '%d+'}"
       expect (run_spec (yaml)).
         should_match_output ("expecting output matching:\n" ..
                              "%s*| %%s%+\n" ..
@@ -192,9 +192,9 @@ describe specl:
                              "%s*| %%s%+\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
-  - it displays all expected and actual output for one_of failures:
+  - it displays all expected and actual output for any_of failures:
       yaml = preamble ..
-             "(spawn 'printf hello >&2').should_match_error.one_of {'%s+', '%d+'}"
+             "(spawn 'printf hello >&2').should_match_error.any_of {'%s+', '%d+'}"
       expect (run_spec (yaml)).
         should_match_output ("expecting error output matching:\n" ..
                              "%s*| %%s%+\n" ..
@@ -231,9 +231,9 @@ describe specl:
                              "%s*| ~\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
-  - it displays all expected and actual output for one_of failures:
+  - it displays all expected and actual output for any_of failures:
       yaml = preamble ..
-             "(spawn 'printf hello').should_contain_output.one_of {'~', 'x', 'foo'}"
+             "(spawn 'printf hello').should_contain_output.any_of {'~', 'x', 'foo'}"
       expect (run_spec (yaml)).
         should_match_output ("expecting output containing:\n" ..
                              "%s*| ~\n" ..
@@ -270,9 +270,9 @@ describe specl:
                              "%s*| ~\n" ..
                              "%s*but got:\n" ..
                              "%s*| hello\n")
-  - it displays all expected and actual output for one_of failures:
+  - it displays all expected and actual output for any_of failures:
       yaml = preamble ..
-             "(spawn 'printf hello >&2').should_contain_error.one_of {'~', 'x', 'foo'}"
+             "(spawn 'printf hello >&2').should_contain_error.any_of {'~', 'x', 'foo'}"
       expect (run_spec (yaml)).
         should_match_output ("expecting error output containing:\n" ..
                              "%s*| ~\n" ..
