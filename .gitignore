@@ -10,7 +10,7 @@
 .deps
 .dirstamp
 .libs
-/release-notes-*
+/bin
 /ChangeLog
 /Makefile
 /Makefile.in
