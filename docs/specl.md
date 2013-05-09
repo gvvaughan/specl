@@ -14,7 +14,7 @@ layout: default
 
 ## 1. Specifications
 
-[specifications]: #1_specifications
+[specifications]: #1-specifications
 
 The `specl` command verifies that the behaviour of your software meets
 the specifications encoded in one or more _spec-files_. A spec-file is
@@ -285,7 +285,7 @@ Running [Specl][] now shows the string in the pending summary report:
 
 ## 2. Matchers
 
-[matchers]: #2_matchers
+[matchers]: #2-matchers
 
 When `expect` looks up a matcher to validate an expectation, the
 `should_` part is just syntactic sugar to make the whole line read more
@@ -561,7 +561,7 @@ with `should_` and inverting matchers with the `not_` string.
 
 ## 3. Environments
 
-[environments]: #3_environments
+[environments]: #3-environments
 
 It's important that every example be evaluated from a clean slate, both
 to prevent the side effects of one example affecting the start
@@ -665,7 +665,7 @@ function:
 
 ## 4. Formatters
 
-[formatters]: #4_formatters
+[formatters]: #4-formatters
 
 As [Specl][] executes examples and tests the expectations of a
 specification, it can displays its progress using a formatter.
@@ -812,7 +812,7 @@ your custom formatter.
 
 ## 5. Command Line
 
-[command line]: #5_command_line
+[command line]: #5-command-line
 
 Given a spec-file or two, along with the implementation of the code
 being checked against those specifications, you run [Specl][] inside the
@@ -855,7 +855,7 @@ remaining available options.
 
 ## 6. Not Yet Implemented
 
-[not yet implemented]: #6_not_yet_implemented
+[not yet implemented]: #6-not-yet-implemented
 
 No support for mocks in the current version.
 
