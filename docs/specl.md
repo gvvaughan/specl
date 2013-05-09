@@ -493,7 +493,7 @@ constructor:
       end,
 
       format_expect = function (expected)
-        return "exactly " .. matcher.stringify (expected)
+        return " exactly " .. matcher.stringify (expected)
       end,
     }
     ...
@@ -516,6 +516,23 @@ prototypes are:
 
 The `specl.shell` custom matchers use this feature if you want to see
 an example of how it can be useful.
+
+Usually, you'll also need to provide nicely formatted messages when
+`any_of` calls fail.  Not surprisingly, you define another function in
+the `Matcher` constructor:
+
+{% highlight lua %}
+    function format_any_of (alternatives, actual, ...)
+{% endhighlight %}
+
+When constructed without a specific `format_any_of` entry, `Matcher`
+uses the default format, similarly to how `table.concat` behaves with
+", " separators, except that the final separator is always " or ", and
+the individual entries are stringified first.  If you want to make use
+of that format in your own matchers, it is available in `specl.util`
+as `concat`.  Again examples of this, and the more complicated shell
+output formatter (`specl.util.reformat`) are available in the source
+code, from `specl/shell.lua`.
 
 One final feature of the `Matcher` constructor is that you can have it
 enforce a particular type (or types) for the `actual` parameter, by
