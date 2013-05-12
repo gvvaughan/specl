@@ -6,6 +6,9 @@ Specl NEWS - User visible changes.
 
   - Add missing documentation for `matchers.Matcher.format_any_of`.
 
+  - It's no longer possible to crash Specl using example descriptions
+    that look like other types during lyaml parsing.
+
   - Specl 6 had a broken `should_contain` matcher, that would
     fail to match any expected substring with an active Lua
     pattern character in it (such as ?, * or % for example).
