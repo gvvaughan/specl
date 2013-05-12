@@ -13,6 +13,14 @@ Specl NEWS - User visible changes.
     fail to match any expected substring with an active Lua
     pattern character in it (such as ?, * or % for example).
 
+  - Add missing close parenthesis in non-verbose mode report
+    formatter summaries with failing or pending expectations.
+
+** Incompatible changes:
+
+  - While not encouraged, one word descriptions are now supported,
+    and are displayed correctly by the bundled formatters.
+
 
 * Noteworthy changes in release 6 (2013-05-09) [stable]
 

@@ -206,9 +206,11 @@ local function process_args ()
 end
 
 
--- Return S with the first word and following whitespace stripped.
+-- Return S with the first word and following whitespace stripped,
+-- where S contains some whitespace initially (i.e single words are
+-- returned unchanged).
 local function strip1st (s)
-  return s:gsub ("%w+%s*", "", 1)
+  return s:gsub ("^%s*%w+%s+", "")
 end
 
 
