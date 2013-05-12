@@ -120,13 +120,6 @@ local function type_check (name, arglist, typelist)
 end
 
 
--- Escape pattern magic characters in a string, effectively making
--- an active pattern into a plain string match.
-local function plain (pattern)
-  return pattern:gsub ("[%^%$%(%)%%%.%[%]%*%%+%-%?]", "%%%0")
-end
-
-
 -- Return an appropriate indent for last element of DESCRIPTIONS.
 local function indent (descriptions)
   return string.rep ("  ", #descriptions - 1)
@@ -239,7 +232,7 @@ local M = {
   nop            = nop,
   map            = map,
   merge          = std.merge,
-  plain          = plain,
+  escape_pattern = std.escape_pattern,
   prettytostring = std.prettytostring,
   princ          = princ,
   process_args   = process_args,

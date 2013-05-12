@@ -161,6 +161,12 @@ local function chomp (s)
 end
 
 
+--- Escape a string to be used as a pattern
+local function escape_pattern (s)
+  return (string.gsub (s, "[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0"))
+end
+
+
 -- Slurp a file handle.
 local function slurp (h)
   if h == nil then
@@ -254,6 +260,7 @@ local M = {
   chomp          = chomp,
   clone          = clone,
   clone_rename   = clone_rename,
+  escape_pattern = escape_pattern,
   merge          = merge,
   metamethod     = metamethod,
   Object         = Object,

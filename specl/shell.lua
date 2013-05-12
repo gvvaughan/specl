@@ -243,7 +243,7 @@ do
   -- Matches if the output of a process contains <expect>.
   matchers.contain_output = Matcher {
     function (actual, expect)
-      return (string.match (actual.output, util.plain (expect)) ~= nil)
+      return (string.match (actual.output, util.escape_pattern (expect)) ~= nil)
     end,
 
     actual_type   = "process",
@@ -262,7 +262,7 @@ do
   -- Matches if the error output of a process contains <expect>.
   matchers.contain_error = Matcher {
     function (actual, expect)
-      return (string.match (actual.errout, util.plain (expect)) ~= nil)
+      return (string.match (actual.errout, util.escape_pattern (expect)) ~= nil)
     end,
 
     actual_type   = "process",
