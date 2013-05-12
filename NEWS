@@ -6,6 +6,10 @@ Specl NEWS - User visible changes.
 
   - Add missing documentation for `matchers.Matcher.format_any_of`.
 
+  - Specl 6 had a broken `should_contain` matcher, that would
+    fail to match any expected substring with an active Lua
+    pattern character in it (such as ?, * or % for example).
+
 
 * Noteworthy changes in release 6 (2013-05-09) [stable]
 
