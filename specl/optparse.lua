@@ -56,7 +56,11 @@ local function normalise (parser, arglist)
         -- Split '-xyz' into '-x -yz', and reiterate for '-yz'
         if parser[opt].handler ~= optional and
            parser[opt].handler ~= required then
-          opt = "-" .. rest
+	  if string.len (rest) > 0 then
+            opt = "-" .. rest
+	  else
+	    opt = nil
+	  end
 
         -- Split '-xshortargument' into '-x shortargument'.
         else
@@ -95,10 +99,10 @@ end
 
 -- Finish option processing.
 function finished (parser, arglist, i)
-  for opt = i, #arglist do
-    table.insert (parser.unrecognized, arglist[i])
+  for opt = i + 1, #arglist do
+    table.insert (parser.unrecognised, arglist[opt])
   end
-  return #arglist
+  return 1 + #arglist
 end
 
 
@@ -196,8 +200,6 @@ end
 
 
 
-
-
 --[[ =============== ]]--
 --[[ Option Parsing. ]]--
 --[[ =============== ]]--
@@ -205,6 +207,8 @@ end
 
 local function opterr (parser, msg)
   local prog = parser.program
+  -- Ensure final period.
+  if msg:match ("%.$") == nil then msg = msg .. "." end
   io.stderr:write (prog .. ": error: " .. msg .. "\n")
   io.stderr:write (prog .. ": Try '" .. prog .. " --help' for help.\n")
   os.exit (2)
@@ -254,7 +258,7 @@ end
 
 -- Parse ARGLIST with PARSER.
 local function parse (parser, arglist)
-  local unrecognised = {}
+  parser.unrecognised = {}
 
   arglist = normalise (parser, arglist)
 
@@ -263,12 +267,12 @@ local function parse (parser, arglist)
     local opt = arglist[i]
 
     if parser[opt] == nil then
-      table.insert (unrecognised, opt)
+      table.insert (parser.unrecognised, opt)
       i = i + 1
 
       -- Following non-'-' prefixed argument is an optarg.
       if i <= #arglist and arglist[i]:match "^[^%-]" then
-        table.insert (unrecognised, arglist[i])
+        table.insert (parser.unrecognised, arglist[i])
         i = i + 1
       end
 
@@ -280,7 +284,7 @@ local function parse (parser, arglist)
     end
   end
 
-  return unrecognised, parser.opts
+  return parser.unrecognised, parser.opts
 end
 
 
@@ -304,6 +308,8 @@ local function set_handler (current, new)
   return new
 end
 
+
+-- Instantiate a new parser, ready to parse the documented options in SPEC.
 M.new = function (spec)
   local parser = setmetatable ({ opts = {} }, { __index = M })
 
@@ -311,7 +317,8 @@ M.new = function (spec)
     spec:match ("^([^\n]-(%S+)\n.-)%s*([Uu]sage: (%S+).-)%s*$")
 
   if parser.versiontext == nil then
-    error "OptionParser spec argument must match '<version>\n...Usage: <program>...'"
+    error ("OptionParser spec argument must match '<version>\\n" ..
+           "...Usage: <program>...'")
   end
 
   -- Collect helptext lines that begin with two or more spaces followed
@@ -327,22 +334,23 @@ M.new = function (spec)
     -- Loop around each '-' prefixed option on this line.
     while spec:sub (1, 1) == "-" do
 
+      -- Capture end of options processing marker.
+      if spec:match "^%-%-,?%s" then
+        handler = set_handler (handler, finished)
+
       -- Capture optional argument in the option string.
-      if spec:match "^%-[%-%w]+=%[.+%]%s" then
+      elseif spec:match "^%-[%-%w]+=%[.+%],?%s" then
         handler = set_handler (handler, optional)
 
       -- Capture required argument in the option string.
-      elseif spec:match "^%-[%-%w]+=%S+%s" then
+      elseif spec:match "^%-[%-%w]+=%S+,?%s" then
         handler = set_handler (handler, required)
 
       -- Capture any specially handled arguments.
-      elseif spec:match "^%-%-%s" then
-        handler = set_handler (handler, finish)
-
-      elseif spec:match "^%-%-help%s" then
+      elseif spec:match "^%-%-help,?%s" then
         handler = set_handler (handler, help)
 
-      elseif spec:match "^%-%-version%s" then
+      elseif spec:match "^%-%-version,?%s" then
         handler = set_handler (handler, version)
       end
 
@@ -361,7 +369,7 @@ M.new = function (spec)
       -- otherwise we might miss a handler test at the next loop.
       if c == 0 then
         -- Consume long option.
-        spec:gsub ("^%-%-([%-%w]+)%s+(.*)$",
+        spec:gsub ("^%-%-([%-%w]+),?%s+(.*)$",
                    function (opt, rest)
                      table.insert (options, opt)
                      spec = rest
@@ -377,6 +385,9 @@ M.new = function (spec)
 end
 
 
+-- Support calling the returned table:
+--   local OptionParser = require "specl.optparse"
+--   local parser = OptionParser (helptext)
 return setmetatable (M, {
   __call = function (self, ...)
              return self.new (...)

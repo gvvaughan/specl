@@ -19,12 +19,17 @@ specify optparse:
 
     Options:
 
-      -h, --help           display this help, then exit
-          --version        display version information, then exit
-      -v, --verbose        be verbose
-      -o, --output=[FILE]  parse an optional argument
-      -n, --name=USER      require an argument
-      -b                   a boolean with no long option
+      -h, --help               display this help, then exit
+          --version            display version information, then exit
+      -b                       a short option with no long option
+          --long               a long option with no short option
+          --another-long       a long option with internal hypen
+          --true               a Lua keyword as an option name
+      -v, --verbose            a combined short and long option
+      -n, --dryrun, --dry-run  several spellings of the same option
+      -u, --name=USER          require an argument
+      -o, --output=[FILE]      accept an optional argument
+      --                       end of options
 
     Footer text.
 
@@ -44,7 +49,8 @@ specify optparse:
         should_match "^parseme .*Copyright .*NO WARRANTY%."
   - it recognises the help text: |
       expect (parser.helptext).
-        should_match "^Usage: parseme .*Banner .*Long .*Options:.*Footer .*/issues>%."
+        should_match ("^Usage: parseme .*Banner .*Long .*Options:.*" ..
+                      "Footer .*/issues>%.")
   - it diagnoses incorrect input text:
       expect (OptionParser "garbage in").should_error "argument must match"
 
@@ -58,19 +64,24 @@ specify optparse:
 
         h:write ([[
           package.path = "]] .. package.path .. [["
-          OptionParser = require 'specl.optparse'
-          help = [=[]] .. help .. [[]=]
+          local OptionParser = require 'specl.optparse'
+          local help = [=[]] .. help .. [[]=]
           help = help:match ("^[%s\n]*(.-)[%s\n]*$")
 
-          parser = OptionParser (help)
-          _G.arg, opts = parser:parse (_G.arg)
+          local parser = OptionParser (help)
+          local arg, opts = parser:parse (_G.arg)
 
           o = {}
-          for k, v in pairs (opts) do table.insert (o, k .. " = " .. tostring (v)) end
-          o[1] = "opts = { " .. o[1]
-          o[#o] = o[#o] .. " }"
-
-          print (table.concat (o, ", "))
+          for k, v in pairs (opts) do
+            table.insert (o, k .. " = " .. tostring (v))
+          end
+          if #o > 0 then
+            table.sort (o)
+            print ("opts = { " .. table.concat (o, ", ") .. " }")
+          end
+          if #arg > 0 then
+            print ("args = { " .. table.concat (arg, ", ") .. " }")
+          end
         ]])
         h:close ()
 
@@ -78,11 +89,83 @@ specify optparse:
       end
   - after: os.remove (f)
 
-  - "it responds to --version with version text": |
+  - it leaves behind unrecognised options:
+      expect (parse {"--not-an-option"}).
+        should_output "args = { --not-an-option }\n"
+  - it responds to --version with version text:
       expect (parse {"--version"}).
         should_match_output "^%s*parseme .*Copyright .*NO WARRANTY%.\n$"
-  - "it responds to --help with help text": |
+  - it responds to --help with help text: |
       expect (parse {"--help"}).
-        should_match_output "^%s*Usage: parseme .*Banner.*Long.*Options:.*Footer.*/issues>%.\n$"
-  - it responds to --verbose:
+        should_match_output ("^%s*Usage: parseme .*Banner.*Long.*" ..
+                              "Options:.*Footer.*/issues>%.\n$")
+  - it recognises short options:
+      expect (parse {"-b"}).should_output "opts = { b = true }\n"
+  - it recognises long options:
+      expect (parse {"--long"}).should_output "opts = { long = true }\n"
+  - it recognises long options with hyphens:
+      expect (parse {"--another-long"}).
+        should_output "opts = { another_long = true }\n"
+  - it recognises long options named after Lua keywords:
+      expect (parse {"--true"}).should_output "opts = { true = true }\n"
+  - it recognises combined short and long option specs:
+      expect (parse {"-v"}).should_output "opts = { verbose = true }\n"
       expect (parse {"--verbose"}).should_output "opts = { verbose = true }\n"
+  - it recognises options with several spellings:
+      expect (parse {"-n"}).should_output "opts = { dry_run = true }\n"
+      expect (parse {"--dry-run"}).should_output "opts = { dry_run = true }\n"
+      expect (parse {"--dryrun"}).should_output "opts = { dry_run = true }\n"
+  - it recognises end of options marker:
+      expect (parse {"-- -n"}).should_output "args = { -n }\n"
+  - context given an option with a required argument:
+    - it records an argument to a long option following an '=' delimiter:
+        expect (parse {"--name=Gary"}).
+          should_output "opts = { name = Gary }\n"
+    - it records an argument to a short option without a space:
+        expect (parse {"-uGary"}).
+          should_output "opts = { name = Gary }\n"
+    - it records an argument to a long option following a space:
+        expect (parse {"--name Gary"}).
+          should_output "opts = { name = Gary }\n"
+    - it records an argument to a short option following a space:
+        expect (parse {"-u Gary"}).
+          should_output "opts = { name = Gary }\n"
+    - it diagnoses a missing argument:
+        expect (parse {"--name"}).
+          should_contain_error "'--name' requires an argument"
+        expect (parse {"-u"}).
+          should_contain_error "'-u' requires an argument"
+  - context given an option with an optional argument:
+    - it records an argument to a long option following an '=' delimiter:
+        expect (parse {"--output=filename"}).
+          should_output "opts = { output = filename }\n"
+    - it records an argument to a short option without a space:
+        expect (parse {"-ofilename"}).
+          should_output "opts = { output = filename }\n"
+    - it records an argument to a long option following a space:
+        expect (parse {"--output filename"}).
+          should_output "opts = { output = filename }\n"
+    - it records an argument to a short option following a space:
+        expect (parse {"-o filename"}).
+          should_output "opts = { output = filename }\n"
+    - it doesn't consume the following option:
+        expect (parse {"--output -v"}).
+          should_output "opts = { output = true, verbose = true }\n"
+        expect (parse {"-o -v"}).
+          should_output "opts = { output = true, verbose = true }\n"
+  - context when splitting combined short options:
+    - it separates non-argument options:
+        expect (parse {"-bn"}).
+          should_output "opts = { b = true, dry_run = true }\n"
+        expect (parse {"-vbn"}).
+          should_output "opts = { b = true, dry_run = true, verbose = true }\n"
+    - it stops separating at a required argument option:
+        expect (parse {"-vuname"}).
+          should_output "opts = { name = name, verbose = true }\n"
+        expect (parse {"-vuob"}).
+          shauld_output "opts = { name = ob, verbose = true }\n"
+    - it stops separating at an optional argument option:
+        expect (parse {"-vofilename"}).
+          should_output "opts = { output = filename, verbose = true }\n"
+        expect (parse {"-vobn"}).
+          shauld_output "opts = { output = bn, verbose = true }\n"
