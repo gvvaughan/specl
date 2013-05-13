@@ -56,6 +56,8 @@ VC_LIST_EXCEPT = \
 ## Sanity checks.  ##
 ## --------------- ##
 
+-include $(srcdir)/$(_build-aux)/sanity-cfg.mk
+
 _cfg_mk := $(wildcard $(srcdir)/cfg.mk)
 
 # Collect the names of rules starting with 'sc_'.
@@ -271,7 +273,7 @@ sc_prohibit_strcmp:
 # It may fail to NUL-terminate the destination,
 # and always NUL-pads out to the specified length.
 sc_prohibit_strncpy:
-	@prohibit='\<strncpy *\('					\
+	@prohibit='\<strncpy *\( *[^)]'					\
 	halt='do not use strncpy, period'				\
 	  $(_sc_search_regexp)
 
