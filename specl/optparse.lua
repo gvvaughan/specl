@@ -18,7 +18,8 @@
 
 
 -- forward declarations
-local optional, required, finished, flag, file, help, version
+local optional, required, finished, flag, help, version
+local boolean, file
 
 
 --[[ ----------------- ]]--
@@ -298,6 +299,11 @@ local M = {
 }
 
 
+local function set_handler (current, new)
+  assert (current == nil, "only one handler per option")
+  return new
+end
+
 M.new = function (spec)
   local parser = setmetatable ({ opts = {} }, { __index = M })
 
@@ -308,12 +314,64 @@ M.new = function (spec)
     error "OptionParser spec argument must match '<version>\n...Usage: <program>...'"
   end
 
-  parser:on ({"f", "format", "formatter"}, required)
-  parser:on ({"h", "help"},                help)
-  parser:on ("version",                    version)
-  parser:on ("color",                      required)
-  parser:on ({"v", "verbose"},             flag)
-  parser:on ("--",                         finished)
+  -- Collect helptext lines that begin with two or more spaces followed
+  -- by a '-'.
+  local specs = {}
+  parser.helptext:gsub ("\n  %s*(%-[^\n]+)",
+                        function (spec) table.insert (specs, spec) end)
+
+  -- Register option handlers according to the help text.
+  for _, spec in ipairs (specs) do
+    local options, handler = {}
+
+    -- Loop around each '-' prefixed option on this line.
+    while spec:sub (1, 1) == "-" do
+
+      -- Capture optional argument in the option string.
+      if spec:match "^%-[%-%w]+=%[.+%]%s" then
+        handler = set_handler (handler, optional)
+
+      -- Capture required argument in the option string.
+      elseif spec:match "^%-[%-%w]+=%S+%s" then
+        handler = set_handler (handler, required)
+
+      -- Capture any specially handled arguments.
+      elseif spec:match "^%-%-%s" then
+        handler = set_handler (handler, finish)
+
+      elseif spec:match "^%-%-help%s" then
+        handler = set_handler (handler, help)
+
+      elseif spec:match "^%-%-version%s" then
+        handler = set_handler (handler, version)
+      end
+
+      -- Consume argument spec, now that it was processed above.
+      spec = spec:gsub ("^(%-[%-%w]+)=%S+%s", "%1 ")
+
+      -- Consume short option.
+      local _, c = spec:gsub ("^%-([-%w]),?%s+(.*)$",
+                              function (opt, rest)
+                                if opt == "-" then opt = "--" end
+                                table.insert (options, opt)
+                                spec = rest
+                              end)
+
+      -- Be careful not to consume more than one option per iteration,
+      -- otherwise we might miss a handler test at the next loop.
+      if c == 0 then
+        -- Consume long option.
+        spec:gsub ("^%-%-([%-%w]+)%s+(.*)$",
+                   function (opt, rest)
+                     table.insert (options, opt)
+                     spec = rest
+                   end)
+      end
+    end
+
+    -- Unless specified otherwise, treat each option as a flag.
+    parser:on (options, handler or flag)
+  end
 
   return parser
 end
