@@ -32,7 +32,7 @@ specl_install_edit =					\
 INPLACE_PATH  = $(abs_srcdir)/src/?.lua;$(abs_srcdir)/?.lua
 
 specl_inplace_edit =					\
-	$(inplace_edit)					\
+	$(install_edit)					\
 	-e 's|@speclpath[@]|$(INPLACE_PATH)|g'		\
 	$(NOTHING_ELSE)
 
@@ -58,7 +58,7 @@ bin/specl: Makefile src/specl.in
 	$(AM_V_at)chmod +x '$@'
 	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
 
-docs/specl.1: bin/specl specl/version.lua
+docs/specl.1: bin/specl
 	@test -d docs || mkdir docs
 ## Exit gracefully if specl.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \

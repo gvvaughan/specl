@@ -89,6 +89,10 @@ function compile_examples (examples)
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
+    -- Undo any type coercion from YAML where a description looked like
+    -- something else.
+    description = tostring(description)
+
     if reserved[description] then
       -- YAML specs store reserved words in the ordered example list,
       -- so we have to hoist them out where we can rerun them around
@@ -329,10 +333,7 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
-local version = require "specl.version"
-
 local M = {
-  _VERSION  = version._VERSION,
   run       = run,
 }
 

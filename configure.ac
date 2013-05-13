@@ -19,7 +19,7 @@ dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
 AC_PREREQ([2.68])
 
 dnl Initialise autoconf and automake
-AC_INIT([Specl], [6], [http://github.com/gvvaughan/specl/issues])
+AC_INIT([Specl], [7], [http://github.com/gvvaughan/specl/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -42,5 +42,5 @@ AS_IF([test -f src/specl.in], [SPECL_FALSE='#'])
 AC_SUBST([SPECL_FALSE])
 
 AC_CONFIG_FILES([.travis.yml:travis.yml.in])
-AC_CONFIG_FILES([Makefile specl/version.lua])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

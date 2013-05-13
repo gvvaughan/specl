@@ -1,5 +1,5 @@
 package = "specl"
-version = "6-1"
+version = "7-1"
 description = {
   homepage = "http://gvvaughan.github.io/specl",
   license = "GPLv3+",
@@ -7,8 +7,8 @@ description = {
   detailed = "Develop and run BDD specs written in Lua for RSpec style workflow.",
 }
 source = {
-  url = "http://github.com/gvvaughan/specl/archive/release-v6.zip",
-  dir = "specl-release-v6",
+  url = "http://github.com/gvvaughan/specl/archive/release-v7.zip",
+  dir = "specl-release-v7",
 }
 dependencies = {
   "ansicolors",

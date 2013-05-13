@@ -1,4 +1,119 @@
+2013-05-13  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 7
+	* NEWS: Record release date.
+
+	sanity: allow OptionParser in optparse error messages.
+	* build-aux/sanity.mk: Update from slingshot.
+	* build-aux/sanity-cfg.mk (sc_error_message_uppercase): Exclude
+	specl/optparse.lua from check.
+	(EXTRA_DIST): Add build-aux/sanity-cfg.mk.
+
+	specl: remove reference to deleted specl.version module.
+	* src/specl.lua: Remove `require "spec.version"`.
+	(M._VERSION): Remove.
+
+	util: remove reference to deleted specl.version module.
+	* specl/util.lua: Remove `require "spec.version"`
+
+	specl: much improved optparse specs, prompting some bug fixes.
+	* specs/optparse_spec.yaml: Many, many more examples.
+	* specl/optparse.lua (normalise): Don't add a phantom '-' to the
+	end of split short options.
+	(finished): Add to unrecognised list options *after* the '--' that
+	got us here.
+	(opterr): Add a missing period to the end of passed error message
+	if necessary.
+	(parse): Make unrecognised list an instance variable so that it
+	can be augmented in `finished`.
+	(M.new): Capture and handle `--` first, as it is a substring of
+	long options and might match twice otherwise.
+	Accept a comma after a long option to allow multiple spellings of
+	a long option on the same line.
+	Consume only one `-` prefixed word per iteration to ensure the
+	handler patterns are compared against each one.
+
+	specl: extract rather than hardcode default option specs.
+	* specl/optparse.lua (set_handler): Diagnose multiple handlers.
+	(new): Loop over option specification lines in the parsed help
+	text, and set up default option handlers to match.
+
+	specl: use optparse for command line option parsing.
+	Make a start at replacing the current ad-hoc option parsing
+	code with a more civilised module.
+	* specs/optparse_specl.yaml: Write examples for the API we'd
+	like to have.
+	* specs/specs.mk (specl_SPECS): Add specs/optparse_specl.yaml.
+	* specl/optparse.lua: New file, an option parser with a more
+	civilised API.
+	* specl/specl.mk (nobase_dist_lua_DATA): Add specl/optparse.lua.
+	* src/specl.in: Use OptionParser instead of process_args.
+	* specl/util.lua (warn, process_args): Remove.
+	* specl/version.lua.in: Remove.
+	* configure.ac (AC_CONFIG_FILES): Remove specl/version.lua.
+	* local.mk (install_edit): Add various equivalent @PACKAGE@ etc.
+	substitutions.
+	(inplace_edit): Remove, it's a duplicate of $(install_edit).
+	* src/src.mk (specl_inplace_edit): Start with $(install_edit).
+	(docs/specl.1): Remove specl/version.lua dependency.
+
+2013-05-12  Gary V. Vaughan  <gary@gnu.org>
+
+	stdlib: use string_ext.escape_pattern instead of util.plain.
+	* specl/std.lua (escape_pattern): Imported from upstream
+	lua-stdlib.
+	* specl/util.lua (plain): Remove. Re-export escape_pattern.
+	Adjust all callers.
+
+	formatters: display non-verbose inline summaries properly.
+	* spec/util.lua (strip1st): Strip the 1st word, but NOT the only
+	word!
+	* spec/formatter/report.lua (tablulate): Use it. Reset colors
+	correctly.
+	(expectations): Show missing close-paren.
+	* NEWS: Update.
+
+	specl: be tolerant of spec descriptions that look like other types.
+	* src/specl.lua (compile_examples): The rest of the code assumes
+	that `description` is always a string.  Make it so.
+	* NEWS: Update.
+
+	matchers: be careful not to pass additional args to string.match!
+	* specl/matchers.lua (matchers.contain): Wrap the returned
+	values of util.plain in extra parens to discard all but the first
+	return value before passing to string.match.
+	* NEWS: Update.
+
+2013-05-10  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: match <h2> anchor shortcuts with github.io generated html anchors.
+	* docs/specl.md: The javascript at http://gvvaughan/github.io/specl
+	rewrites h2 anchors with '-' separators.  Make sure the markdown
+	shortcuts match.
+
 2013-05-09  Gary V. Vaughan  <gary@gnu.org>
+
+	docs: add missing docs for matchers.Matcher.format_any_of.
+	* docs/specl.md (Custom Matchers): Document format_any_of
+	constructor method.
+	* NEWS: Update.
+
+2013-05-09  Gary V. Vaughan  <gary@vaughan.pe>
+
+	Merge pull request #9 from rrthomas/master
+	.gitignore: add bin/
+
+2013-05-09  Reuben Thomas  <rrt@sc3d.org>
+
+	.gitignore: remove release-notes-* and add bin/
+
+2013-05-09  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* configure.ac (AC_INIT): Bump version number to 7.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 6
 	* NEWS: Record release date.

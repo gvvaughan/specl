@@ -208,9 +208,9 @@ DIST_COMMON = $(srcdir)/local.mk $(srcdir)/specl/specl.mk \
 	$(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/travis.yml.in $(top_srcdir)/specl/version.lua.in \
-	$(dist_lua_DATA) $(nobase_dist_lua_DATA) AUTHORS COPYING \
-	ChangeLog NEWS build-aux/install-sh build-aux/missing \
+	$(srcdir)/travis.yml.in $(dist_lua_DATA) \
+	$(nobase_dist_lua_DATA) AUTHORS COPYING ChangeLog NEWS \
+	build-aux/install-sh build-aux/missing \
 	$(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing
 subdir = .
@@ -222,7 +222,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = .travis.yml specl/version.lua
+CONFIG_CLEAN_FILES = .travis.yml
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -401,14 +401,14 @@ bin_SCRIPTS = bin/specl
 check_local = specl-check-local
 install_exec_hooks = install-specl-hook
 man_MANS = docs/specl.1
-old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
+old_NEWS_hash = cc72f2d86bd849eb07a52e15aee06161
 doc_DATA = 
-install_edit = sed					\
-	-e 's|@LUA[@]|$(LUA)|g'				\
-	$(NOTHING_ELSE)
-
-inplace_edit = sed					\
-	-e 's|@LUA[@]|$(LUA)|g'				\
+install_edit = sed						\
+	-e 's|@LUA[@]|$(LUA)|g'					\
+	-e 's|@PACKAGE[@]|$(PACKAGE)|g'				\
+	-e 's|@PACKAGE_BUGREPORT[@]|$(PACKAGE_BUGREPORT)|g'	\
+	-e 's|@PACKAGE_NAME[@]|$(PACKAGE_NAME)|g'		\
+	-e 's|@VERSION[@]|$(VERSION)|g'				\
 	$(NOTHING_ELSE)
 
 release_extra_dist = \
@@ -421,15 +421,15 @@ release_extra_dist = \
 	$(NOTHING_ELSE)
 
 nobase_dist_lua_DATA = \
-	specl/formatter/progress.lua			\
-	specl/formatter/report.lua			\
-	specl/formatter/tap.lua				\
-	specl/color.lua					\
-	specl/matchers.lua				\
-	specl/shell.lua					\
-	specl/std.lua					\
-	specl/util.lua					\
-	specl/version.lua				\
+	specl/formatter/progress.lua	\
+	specl/formatter/report.lua	\
+	specl/formatter/tap.lua		\
+	specl/color.lua			\
+	specl/matchers.lua		\
+        specl/optparse.lua		\
+	specl/shell.lua			\
+	specl/std.lua			\
+	specl/util.lua			\
 	$(NOTHING_ELSE)
 
 INSTALL_PATH = $(luadir)/?.lua
@@ -440,7 +440,7 @@ specl_install_edit = \
 
 INPLACE_PATH = $(abs_srcdir)/src/?.lua;$(abs_srcdir)/?.lua
 specl_inplace_edit = \
-	$(inplace_edit)					\
+	$(install_edit)					\
 	-e 's|@speclpath[@]|$(INPLACE_PATH)|g'		\
 	$(NOTHING_ELSE)
 
@@ -452,6 +452,7 @@ specl_SPECS = \
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/formatters_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/optparse_spec.yaml		\
 	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)
@@ -517,8 +518,6 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 .travis.yml: $(top_builddir)/config.status $(srcdir)/travis.yml.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-specl/version.lua: $(top_builddir)/config.status $(top_srcdir)/specl/version.lua.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
@@ -973,7 +972,7 @@ bin/specl: Makefile src/specl.in
 	$(AM_V_at)chmod +x '$@'
 	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
 
-docs/specl.1: bin/specl specl/version.lua
+docs/specl.1: bin/specl
 	@test -d docs || mkdir docs
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\

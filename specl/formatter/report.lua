@@ -34,8 +34,11 @@ local function tabulate (descriptions)
   if color[key] then
     table.insert (t, color[key])
   end
-  s = s:gsub ("%w+%s*", "", 1)
+  s = strip1st (s)
   table.insert (t, s)
+  if color[key] then
+    table.insert (t, color.reset)
+  end
   return table.concat (t)
 end
 
@@ -110,7 +113,7 @@ local function expectations (status, descriptions)
         table.insert (details, color.fail .. tostring (counts.fail) .. " failing")
       end
       if next (details) then
-        details = " (" .. table.concat (details, color.reset .. ", ") .. color.reset
+        details = " (" .. table.concat (details, color.reset .. ", ") .. color.reset .. ")"
       else
         details = ""
       end

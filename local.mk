@@ -16,16 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-old_NEWS_hash = 198844df9628aa2ca847e9ca4443b1c9
+old_NEWS_hash = cc72f2d86bd849eb07a52e15aee06161
 
 doc_DATA	=
 
-install_edit	= sed					\
-	-e 's|@LUA[@]|$(LUA)|g'				\
-	$(NOTHING_ELSE)
-
-inplace_edit	= sed					\
-	-e 's|@LUA[@]|$(LUA)|g'				\
+install_edit	= sed						\
+	-e 's|@LUA[@]|$(LUA)|g'					\
+	-e 's|@PACKAGE[@]|$(PACKAGE)|g'				\
+	-e 's|@PACKAGE_BUGREPORT[@]|$(PACKAGE_BUGREPORT)|g'	\
+	-e 's|@PACKAGE_NAME[@]|$(PACKAGE_NAME)|g'		\
+	-e 's|@VERSION[@]|$(VERSION)|g'				\
 	$(NOTHING_ELSE)
 
 release_extra_dist =					\

@@ -28,6 +28,7 @@ specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/formatters_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/optparse_spec.yaml		\
 	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)

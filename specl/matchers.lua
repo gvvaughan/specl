@@ -121,8 +121,8 @@ local matchers = setmetatable ({}, {
 
 -- color sequences escaped for use as literal strings in Lua patterns.
 local escape = {
-  reset = util.plain (color.reset),
-  match = util.plain (color.match),
+  reset = util.escape_pattern (color.reset),
+  match = util.escape_pattern (color.match),
 }
 
 
@@ -156,7 +156,7 @@ local function reformat (list, prefix, infix)
     s = s .. infix .. _reformat (expect, prefix) .. "\n"
   end
   -- strip the spurious <infix> from the start of the string.
-  return s:gsub ("^" .. util.plain (infix), "")
+  return s:gsub ("^" .. util.escape_pattern (infix), "")
 end
 
 
@@ -203,7 +203,7 @@ matchers.error = Matcher {
   function (actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
-        ok = not actual:match (".*" .. util.plain (expect) .. ".*")
+        ok = not actual:match (".*" .. util.escape_pattern (expect) .. ".*")
       end
     end
     return not ok
@@ -256,7 +256,7 @@ matchers.contain = Matcher {
   function (actual, expect)
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
-      return (actual:match (util.plain (expect)) ~= nil)
+      return (actual:match (util.escape_pattern (expect)) ~= nil)
     elseif type (actual) == "table" then
       -- Do deep comparison against keys and values of the table.
       for k, v in pairs (actual) do

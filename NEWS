@@ -1,5 +1,27 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 7 (2013-05-13) [stable]
+
+** Bug fixes:
+
+  - Add missing documentation for `matchers.Matcher.format_any_of`.
+
+  - It's no longer possible to crash Specl using example descriptions
+    that look like other types during lyaml parsing.
+
+  - Specl 6 had a broken `should_contain` matcher, that would
+    fail to match any expected substring with an active Lua
+    pattern character in it (such as ?, * or % for example).
+
+  - Add missing close parenthesis in non-verbose mode report
+    formatter summaries with failing or pending expectations.
+
+** Incompatible changes:
+
+  - While not encouraged, one word descriptions are now supported,
+    and are displayed correctly by the bundled formatters.
+
+
 * Noteworthy changes in release 6 (2013-05-09) [stable]
 
 ** This release is a significant upgrade, with many new features,
