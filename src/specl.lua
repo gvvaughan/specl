@@ -333,10 +333,7 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
-local version = require "specl.version"
-
 local M = {
-  _VERSION  = version._VERSION,
   run       = run,
 }
 
