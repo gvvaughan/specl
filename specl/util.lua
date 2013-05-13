@@ -20,7 +20,6 @@
 
 
 local color = require "specl.color"
-local prog  = require "specl.version"
 local std   = require "specl.std"
 
 
