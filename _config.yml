@@ -1,10 +1,10 @@
 owner:   Gary V. Vaughan
 account: gvvaughan
 
-name:         Specl 6
+name:         Specl 7
 description:  Behaviour Driven Development for Lua.
 forkme:       "https://github.com/gvvaughan/specl"
-release-no:   6
+release-no:   7
 
 url:      "http://gvvaughan.github.io/specl"
 pygments: true
