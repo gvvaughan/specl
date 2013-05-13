@@ -136,69 +136,6 @@ local function princ (...)
 end
 
 
--- Print an argument processing error message, and return non-zero exit status.
-local function warn (msg)
-  io.stderr:write (prog.name .. ": error: " .. msg .. ".\n")
-  io.stderr:write (prog.name .. ": Try '" .. prog.name .. " --help' for help.\n")
-  return 2
-end
-
-
--- Process command line options.
-local function process_args ()
-  local nonopts = nil
-  local status = 0
-  for _, opt in ipairs (arg) do
-    local x, arg
-    if opt:sub (2, 2) == "-" then
-      x = opt:find ("=", 1, true)
-      if x then
-        arg = opt:sub (x + 1)
-        opt = opt:sub (1, x -1)
-      end
-    elseif opt:sub (1, 1) == "-" and string.len (opt) > 2 then
-      arg = opt:sub (3)
-      opt = opt:sub (1,2)
-    end
-
-    -- Collect non-option arguments to save back into _G.arg later.
-    if type (nonopts) == "table" then
-      table.insert (nonopts, opt)
-
-    -- Run user supplied option handler.
-    elseif opt:sub (1, 1) == "-" and type (prog[opt]) == "function" then
-      local result, key = prog[opt] (opt, arg)
-      if result == nil then
-        status = warn (key)
-      else
-        prog.opts [key or opt:gsub ("^%-*", "", 1)] = result
-      end
-
-    -- End of option arguments.
-    elseif opt == "--" then
-      nonopts = {}
-
-    -- Diagnose unknown command line options.
-    elseif opt ~= "-" and string.sub (opt, 1, 1) == "-" then
-      status = warn ("unrecognized option '" .. opt .. "'")
-
-    -- First non-option argument marks the end of options.
-    else
-      nonopts = { opt }
-    end
-  end
-
-  if status ~= 0 then os.exit (status) end
-
-  -- put non-option args back into global arg table.
-  nonopts = nonopts or {}
-  nonopts[0] = arg[0]
-  _G.arg = nonopts
-
-  return prog.opts
-end
-
-
 -- Return S with the first word and following whitespace stripped,
 -- where S contains some whitespace initially (i.e single words are
 -- returned unchanged).
@@ -235,14 +172,12 @@ local M = {
   escape_pattern = std.escape_pattern,
   prettytostring = std.prettytostring,
   princ          = princ,
-  process_args   = process_args,
   process_files  = std.processFiles,
   slurp          = std.slurp,
   strip1st       = strip1st,
   tostring       = std.tostring,
   type_check     = type_check,
   typeof         = typeof,
-  warn           = warn,
   writc          = writc,
 }
 

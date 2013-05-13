@@ -42,5 +42,5 @@ AS_IF([test -f src/specl.in], [SPECL_FALSE='#'])
 AC_SUBST([SPECL_FALSE])
 
 AC_CONFIG_FILES([.travis.yml:travis.yml.in])
-AC_CONFIG_FILES([Makefile specl/version.lua])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

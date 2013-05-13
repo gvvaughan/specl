@@ -18,14 +18,14 @@
 
 
 ## Use `require "specl.std"` for implementation modules.
-nobase_dist_lua_DATA =					\
-	specl/formatter/progress.lua			\
-	specl/formatter/report.lua			\
-	specl/formatter/tap.lua				\
-	specl/color.lua					\
-	specl/matchers.lua				\
-	specl/shell.lua					\
-	specl/std.lua					\
-	specl/util.lua					\
-	specl/version.lua				\
+nobase_dist_lua_DATA =			\
+	specl/formatter/progress.lua	\
+	specl/formatter/report.lua	\
+	specl/formatter/tap.lua		\
+	specl/color.lua			\
+	specl/matchers.lua		\
+        specl/optparse.lua		\
+	specl/shell.lua			\
+	specl/std.lua			\
+	specl/util.lua			\
 	$(NOTHING_ELSE)
