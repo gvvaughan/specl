@@ -2,6 +2,12 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Incompatible changes:
+
+  - API change in matchers, generalizing the former `format_any_of` to
+    `format_alternatives`, with a new `adaptor` parameter for use with
+    additional matcher adaptors.
+
 
 * Noteworthy changes in release 7 (2013-05-13) [stable]
 

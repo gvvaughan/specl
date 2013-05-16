@@ -81,7 +81,8 @@ local Matcher = util.Object {"matcher";
         m = "expecting" .. self.format_expect (alternatives[1], actual, ...) ..
             "but got" .. self.format_actual (actual, expect, ...)
       else
-        m = "expecting" .. self.format_any_of (alternatives, actual, ...) ..
+        m = "expecting" ..
+	    self.format_alternatives ("any of", alternatives, actual, ...) ..
             "but got" .. self.format_actual (actual, expect, ...)
       end
 
@@ -98,8 +99,9 @@ local Matcher = util.Object {"matcher";
 
   format_expect = function (expect) return " " .. q(expect) .. ", " end,
 
-  format_any_of = function (alternatives)
-    return " any of " .. util.concat (alternatives, util.QUOTED) .. ", "
+  format_alternatives = function (adaptor, alternatives)
+    return " " .. adaptor .. " " ..
+           util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
 
@@ -226,8 +228,8 @@ matchers.error = Matcher {
     end
   end,
 
-  format_any_of = function (alternatives)
-    return " an error containing any of:" .. reformat (alternatives)
+  format_alternatives = function (adaptor, alternatives)
+    return " an error containing " .. adaptor .. ":" .. reformat (alternatives)
   end,
 }
 
@@ -244,8 +246,8 @@ matchers.match = Matcher {
     return " string matching " .. q(pattern) .. ", "
   end,
 
-  format_any_of = function (alternatives)
-    return " string matching any of " ..
+  format_alternatives = function (adaptor, alternatives)
+    return " string matching " .. adaptor .. " " ..
            util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }
@@ -286,8 +288,9 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_any_of = function (alternatives, actual)
-    return " " .. util.typeof (actual) .. " containing any of " ..
+  format_alternatives = function (adaptor, alternatives, actual)
+    return " " .. util.typeof (actual) .. " containing " ..
+           adaptor .. " " ..
            util.concat (alternatives, util.QUOTED) .. ", "
   end,
 }

@@ -506,8 +506,8 @@ less useful here than it is in the other formatting function slot,
 
 Both of these functions are passed all of the arguments that are
 generated in the code wrapped in `expect` that eventually leads to
-the custom matcher, though they are not useful here, the full
-prototypes are:
+the custom matcher, though they are not useful in this particular
+example, the full prototypes are:
 
 {% highlight lua %}
     function format_expect (expected, actual, ...)
@@ -522,17 +522,17 @@ Usually, you'll also need to provide nicely formatted messages when
 the `Matcher` constructor:
 
 {% highlight lua %}
-    function format_any_of (alternatives, actual, ...)
+    function format_alternatives (adaptor, alternatives, actual, ...)
 {% endhighlight %}
 
-When constructed without a specific `format_any_of` entry, `Matcher`
-uses the default format, similarly to how `table.concat` behaves with
-", " separators, except that the final separator is always " or ", and
-the individual entries are stringified first.  If you want to make use
-of that format in your own matchers, it is available in `specl.util`
-as `concat`.  Again examples of this, and the more complicated shell
-output formatter (`specl.util.reformat`) are available in the source
-code, from `specl/shell.lua`.
+When constructed without a specific `format_alternatives` entry,
+`Matcher` uses the default format, similarly to how `table.concat`
+behaves with ", " separators, except that the final separator is always
+" or ", and the individual entries are stringified first.  If you want
+to make use of that format in your own matchers, it is available in
+`specl.util` as `concat`.  Again examples of this, and the more
+complicated shell output formatter (`specl.util.reformat`) are available
+in the source code, from `specl/shell.lua`.
 
 One final feature of the `Matcher` constructor is that you can have it
 enforce a particular type (or types) for the `actual` parameter, by
