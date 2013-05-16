@@ -2,11 +2,23 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features:
+
+  - A new 'all_of' adaptor for any matcher:
+
+     expect (mytable).should_contain.all_of {x, y, z}
+
 ** Incompatible changes:
 
   - API change in matchers, generalizing the former `format_any_of` to
     `format_alternatives`, with a new `adaptor` parameter for use with
     additional matcher adaptors.
+
+  - API change in both matchers.concat and matchers.reformat, each of
+    which now take an additional `adaptor` argument, which can be
+    passed in from `format_alternatives` as received so that the
+    grammatically best choice of `and` or `or` is used to display the
+    list of alternatives when an expectation fails.
 
 
 * Noteworthy changes in release 7 (2013-05-13) [stable]

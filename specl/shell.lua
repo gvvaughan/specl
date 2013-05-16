@@ -118,8 +118,8 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
-  local reformat, Matcher, matchers =
-        matchers.reformat, matchers.Matcher, matchers.matchers
+  local concat, reformat, Matcher, matchers =
+        matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
 
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
@@ -159,7 +159,8 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " an exit status of " .. util.concat (alternatives, util.QUOTED) .. ", "
+      return " an exit status of " ..
+             concat (alternatives, adaptor, util.QUOTED) .. ", "
     end,
   }
 
@@ -178,7 +179,7 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " output:" .. reformat (alternatives)
+      return " output:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -197,7 +198,7 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " error output:" .. reformat (alternatives)
+      return " error output:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -216,7 +217,7 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " output matching:" .. reformat (alternatives)
+      return " output matching:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -235,7 +236,7 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " error output matching:" .. reformat (alternatives)
+      return " error output matching:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -254,7 +255,7 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " output containing:" .. reformat (alternatives)
+      return " output containing:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -273,7 +274,7 @@ do
     end,
 
     format_alternatives = function (adaptor, alternatives)
-      return " error output containing:" .. reformat (alternatives)
+      return " error output containing:" .. reformat (alternatives, adaptor)
     end,
   }
 end
