@@ -445,7 +445,7 @@ contents of the `should_` argument:
 
 {% highlight lua %}
     ...
-    Matcher {
+    matchers.Matcher {
       function (actual, expected)
         return (actual == expected)
       end,
@@ -466,14 +466,14 @@ You can do this in a `before` block, or your `spec_helper.lua` (see
 
 {% highlight lua %}
     ...
-    require "specl.matcher"
+    matchers = require "specl.matchers"
 
-    matcher.be_again = Matcher {
+    matchers.matchers.be_again = matchers.Matcher {
       function (actual, expected)
     ...
 {% endhighlight %}
 
-Note that the `matcher` table needs to do some work to fully install
+Note that the `matchers` table needs to do some work to fully install
 the new `be_again`, and so checks that the assignment is the result
 of a `Matcher` factory call.  Trying to assign anthing else won't
 work.
@@ -487,19 +487,19 @@ constructor:
 
 {% highlight lua %}
     ...
-    matcher.be_again = Matcher {
+    matchers.matchers.be_again = matchers.Matcher {
       function (actual, expected)
         return (actual == expected)
       end,
 
       format_expect = function (expected)
-        return " exactly " .. matcher.stringify (expected)
+        return " exactly " .. matchers.stringify (expected)
       end,
     }
     ...
 {% endhighlight %}
 
-Notice the use of `matcher.stringify` to coerce the `expected`
+Notice the use of `matchers.stringify` to coerce the `expected`
 parameter to a nicely formatted and quoted string.  `stringify` is
 less useful here than it is in the other formatting function slot,
 `format_actual`.
@@ -541,7 +541,7 @@ the built in `contain` matcher handles matching against both Lua string
 types and Lua tables:
 
 {% highlight lua %}
-    matcher.contain = Matcher {
+    matchers.matchers.contain = matchers.Matcher {
       ...
       actual_type = {"string", "table"},
     ...
