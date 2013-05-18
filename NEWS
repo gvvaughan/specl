@@ -20,6 +20,27 @@ Specl NEWS - User visible changes.
     grammatically best choice of `and` or `or` is used to display the
     list of alternatives when an expectation fails.
 
+  - Calling `require` in a spec file no longer artificially extracts
+    symbols from a returned table and injects them into the local
+    environment -- because it was inelegant and unnecessary.  If you
+    had relied on this feature, simply capture the returned table and
+    either manually copy the symbols you need or use a fully qualified
+    name.  Previously:
+
+      # Don't do this!
+      before:
+        require "specl.shell"
+      describe spawn:
+        expect (spawn "printf hello").should_output "hello"
+
+    Much better:
+
+      # Do this instead.
+      before:
+        spawn = (require "specl.shell").spawn
+      describe spawn:
+        expect (spawn "printf hello").should_output "hello"
+
 
 * Noteworthy changes in release 7 (2013-05-13) [stable]
 

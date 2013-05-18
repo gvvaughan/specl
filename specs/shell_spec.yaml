@@ -1,8 +1,14 @@
 before: |
-  require "specl.shell"
   require "spec_helper"
 
-  preamble = "before: require 'specl.shell'\nit fails: expect "
+  hell = require "specl.shell"
+  Command, spawn = hell.Command, hell.spawn
+
+  preamble = "before:\n" ..
+             "  hell = require 'specl.shell'\n" ..
+             "  Command, spawn = hell.Command, hell.spawn\n" ..
+             "it fails:\n" ..
+             "  expect "
   fail_1   = "\n0 passed, 0 pending, and 1 failed"
 
 # For speed, run most of the expectations in specl's process.  Forking

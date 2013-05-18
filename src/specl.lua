@@ -195,12 +195,9 @@ local function initenv (env)
     end
   end
 
-  -- This is gross :(  There must be a cleaner way to do it?!?
   -- Manually walk the package path, and `loadstring(f)` what we find...
   --   * setfenv prior to running loadstring returned function, which
   --     imports any global symbols from <f> into the local env;
-  --   * manually copy symbols out of a table returned by the loadstring
-  --     function (if any) into the local env;
   --   * (re)load the module with the system loader so that specl itself
   --     can find all the symbols it needs without digging through nested
   --     sandbox environments.
@@ -223,13 +220,6 @@ local function initenv (env)
       -- Ensure any global symbols arrive in <env>.
       setfenv (fn, env)
       local import = fn ()
-
-      -- Copy any returned access points into <env>
-      if type (import) == "table" then
-        for k, v in pairs (import) do
-          env[k] = v
-        end
-      end
     end
 
     -- Return the package.loaded result.
