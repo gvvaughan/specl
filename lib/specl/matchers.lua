@@ -46,6 +46,35 @@ local function q (obj)
 end
 
 
+-- Call util.concat with an infix appropriate to ADAPTOR.
+local function concat (alternatives, adaptor, quoted)
+  local infix
+  if adaptor == "all of" then
+    infix = " and "
+  elseif adaptor == "any of" then
+    infix = " or "
+  end
+
+  return util.concat (alternatives, infix, quoted)
+end
+
+
+local function alternatives_msg (object, adaptor, alternatives, actual, expect, ...)
+  local m
+
+  if #alternatives == 1 then
+    m = "expecting" .. object.format_expect (alternatives[1], actual, ...) ..
+        "but got" .. object.format_actual (actual, expect, ...)
+  else
+    m = "expecting" ..
+        object.format_alternatives (adaptor, alternatives, actual, ...) ..
+        "but got" .. object.format_actual (actual, expect, ...)
+  end
+
+  return m
+end
+
+
 -- The `Matcher` object assembles a self type checking function
 -- for assignment to the matchers table.
 local Matcher = util.Object {"matcher";
@@ -66,6 +95,20 @@ local Matcher = util.Object {"matcher";
       return matchp (actual, expect, ...), m
     end
 
+    self["all_of?"] = function (name, actual, alternatives, ...)
+      util.type_check (name, {actual}, {self.actual_type})
+      util.type_check (name .. ".all_of", {alternatives}, {"#table"})
+
+      local success
+      for _, expect in ipairs (alternatives) do
+        success = matchp (actual, expect, ...)
+        if not success then break end
+      end
+
+      return success, alternatives_msg (self, "all of", alternatives,
+                                        actual, expect, ...)
+    end
+
     self["any_of?"] = function (name, actual, alternatives, ...)
       util.type_check (name, {actual}, {self.actual_type})
       util.type_check (name .. ".any_of", {alternatives}, {"#table"})
@@ -76,16 +119,8 @@ local Matcher = util.Object {"matcher";
         if success then break end
       end
 
-      local m
-      if #alternatives == 1 then
-        m = "expecting" .. self.format_expect (alternatives[1], actual, ...) ..
-            "but got" .. self.format_actual (actual, expect, ...)
-      else
-        m = "expecting" .. self.format_any_of (alternatives, actual, ...) ..
-            "but got" .. self.format_actual (actual, expect, ...)
-      end
-
-      return success, m
+      return success, alternatives_msg (self, "any of", alternatives,
+                                        actual, expect, ...)
     end
 
     return self
@@ -98,8 +133,9 @@ local Matcher = util.Object {"matcher";
 
   format_expect = function (expect) return " " .. q(expect) .. ", " end,
 
-  format_any_of = function (alternatives)
-    return " any of " .. util.concat (alternatives, util.QUOTED) .. ", "
+  format_alternatives = function (adaptor, alternatives)
+    return " " .. adaptor .. " " ..
+           concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,
 }
 
@@ -145,10 +181,17 @@ end
 -- or:
 -- | %{match}lines from <list>[2]%}reset}
 -- " etc.
-local function reformat (list, prefix, infix)
-  list, prefix, infix = list or {""}, prefix or "| ", infix or "or:"
+local function reformat (list, adaptor, prefix)
+  list, prefix = list or {""}, prefix or "| "
   if type (list) ~= "table" then
     list = {list}
+  end
+
+  local infix = "or:"
+  if adaptor == "all of" then
+    infix = "and:"
+  elseif adaptor == "any of" then
+    infix = "or:"
   end
 
   local s = ""
@@ -226,8 +269,9 @@ matchers.error = Matcher {
     end
   end,
 
-  format_any_of = function (alternatives)
-    return " an error containing any of:" .. reformat (alternatives)
+  format_alternatives = function (adaptor, alternatives)
+    return " an error containing " .. adaptor .. ":" ..
+           reformat (alternatives, adaptor)
   end,
 }
 
@@ -244,9 +288,9 @@ matchers.match = Matcher {
     return " string matching " .. q(pattern) .. ", "
   end,
 
-  format_any_of = function (alternatives)
-    return " string matching any of " ..
-           util.concat (alternatives, util.QUOTED) .. ", "
+  format_alternatives = function (adaptor, alternatives)
+    return " string matching " .. adaptor .. " " ..
+           concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,
 }
 
@@ -286,9 +330,10 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_any_of = function (alternatives, actual)
-    return " " .. util.typeof (actual) .. " containing any of " ..
-           util.concat (alternatives, util.QUOTED) .. ", "
+  format_alternatives = function (adaptor, alternatives, actual)
+    return " " .. util.typeof (actual) .. " containing " ..
+           adaptor .. " " ..
+           concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,
 }
 
@@ -362,8 +407,12 @@ local function expect (ok, actual)
 
       -- Returns a functable:
       return setmetatable ({
-        --   (i) with `any_of` to respond to:
+        --   (i) with `all_of` or `any_of` to respond to, e.g.:
         --       | expect (foo).should_be.any_of {bar, baz, quux}
+        all_of = function (alternatives)
+          score (match["all_of?"] (matcher_root, actual, alternatives, ok))
+        end,
+
         any_of = function (alternatives)
           score (match["any_of?"] (matcher_root, actual, alternatives, ok))
         end,
@@ -401,6 +450,7 @@ return util.merge (M, {
   Matcher   = Matcher,
 
   -- API:
+  concat    = concat,
   expect    = expect,
   reformat  = reformat,
   init      = init,

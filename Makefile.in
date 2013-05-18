@@ -68,42 +68,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Specl make rules.
-#
-# Copyright (c) 2013 Gary V. Vaughan
-# Written by Gary V. Vaughan, 2013
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-# Specl make rules.
-#
-# Copyright (c) 2013 Gary V. Vaughan
-# Written by Gary V. Vaughan, 2013
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 # Slingshot specl rules for make.
 
 # This file is distributed with Slingshot, and licensed under the
@@ -169,6 +133,7 @@
 #   include build-aux/rockspecs.mk
 
 
+
 VPATH = @srcdir@
 am__make_dryrun = \
   { \
@@ -203,15 +168,15 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-DIST_COMMON = $(srcdir)/local.mk $(srcdir)/specl/specl.mk \
-	$(srcdir)/src/src.mk $(srcdir)/specs/specs.mk \
+DIST_COMMON = $(srcdir)/local.mk $(srcdir)/specs/specs.mk \
 	$(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk \
-	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/travis.yml.in $(dist_lua_DATA) \
-	$(nobase_dist_lua_DATA) AUTHORS COPYING ChangeLog NEWS \
-	build-aux/install-sh build-aux/missing \
-	$(top_srcdir)/build-aux/install-sh \
+	INSTALL NEWS README AUTHORS ChangeLog $(srcdir)/Makefile.in \
+	$(srcdir)/Makefile.am $(top_srcdir)/configure \
+	$(am__configure_deps) $(srcdir)/travis.yml.in \
+	$(top_srcdir)/lib/specl.in $(dist_bin_SCRIPTS) \
+	$(dist_lua_DATA) $(dist_luaformatter_DATA) \
+	$(dist_luaspecl_DATA) COPYING build-aux/install-sh \
+	build-aux/missing $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -222,7 +187,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = .travis.yml
+CONFIG_CLEAN_FILES = .travis.yml bin/specl
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -251,10 +216,12 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
-	"$(DESTDIR)$(luadir)" "$(DESTDIR)$(docdir)" \
-	"$(DESTDIR)$(luadir)"
-SCRIPTS = $(bin_SCRIPTS)
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
+	"$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
+	"$(DESTDIR)$(luadir)" "$(DESTDIR)$(luaformatterdir)" \
+	"$(DESTDIR)$(luaspecldir)"
+LTLIBRARIES = $(lib_LTLIBRARIES)
+SCRIPTS = $(bin_SCRIPTS) $(dist_bin_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -277,7 +244,8 @@ am__can_run_installinfo = \
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(man_MANS)
-DATA = $(dist_lua_DATA) $(doc_DATA) $(nobase_dist_lua_DATA)
+DATA = $(dist_lua_DATA) $(dist_luaformatter_DATA) \
+	$(dist_luaspecl_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
@@ -340,7 +308,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 
 # Override Slingshot SPECL.
-SPECL = bin/specl
+SPECL = specs/specl
 SPECL_FALSE = @SPECL_FALSE@
 STRIP = @STRIP@
 VERSION = @VERSION@
@@ -388,27 +356,50 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = README.md docs/specl.1 src/specl.in $(NOTHING_ELSE) \
-	specs/spec_helper.lua $(NOTHING_ELSE) $(specl_SPECS) \
+AM_CPPFLAGS = $(LUA_INCLUDE)
+EXTRA_DIST = $(srcdir)/specs/spec_helper.lua $(NOTHING_ELSE) \
+	$(specl_SPECS) $(NOTHING_ELSE) docs/specl.1 lib/specl.in \
 	$(NOTHING_ELSE) $(mkrockspecs) $(package_rockspec) \
 	$(rockspec_conf) $(NOTHING_ELSE) README.md $(NOTHING_ELSE)
+EXTRA_LTLIBRARIES = 
 CLEANFILES = bin/specl $(NOTHING_ELSE)
-DISTCLEANFILES = docs/specl.1 $(NOTHING_ELSE) $(luarocks_config) \
-	$(NOTHING_ELSE)
+DISTCLEANFILES = $(SPECL) docs/specl.1 $(NOTHING_ELSE) \
+	$(luarocks_config) $(NOTHING_ELSE)
 MAINTAINERCLEANFILES = 
 NOTHING_ELSE = 
-bin_SCRIPTS = bin/specl
+bin_SCRIPTS = 
 check_local = specl-check-local
-install_exec_hooks = install-specl-hook
+dist_bin_SCRIPTS = bin/specl
+dist_lua_DATA = lib/specl.lua $(NOTHING_ELSE)
+install_exec_hooks = 
 man_MANS = docs/specl.1
-old_NEWS_hash = cc72f2d86bd849eb07a52e15aee06161
-doc_DATA = 
-install_edit = sed						\
-	-e 's|@LUA[@]|$(LUA)|g'					\
-	-e 's|@PACKAGE[@]|$(PACKAGE)|g'				\
-	-e 's|@PACKAGE_BUGREPORT[@]|$(PACKAGE_BUGREPORT)|g'	\
-	-e 's|@PACKAGE_NAME[@]|$(PACKAGE_NAME)|g'		\
-	-e 's|@VERSION[@]|$(VERSION)|g'				\
+lib_LTLIBRARIES = 
+old_NEWS_hash = 6669649f776eeb4ee02d6a74a69ca04c
+specl_SPECS = \
+	$(srcdir)/specs/environment_spec.yaml		\
+	$(srcdir)/specs/formatters_spec.yaml		\
+	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/optparse_spec.yaml		\
+	$(srcdir)/specs/shell_spec.yaml			\
+	$(srcdir)/specs/specl_spec.yaml			\
+	$(NOTHING_ELSE)
+
+mkrockspecs_args = --module-dir $(srcdir)/lib
+luaspecldir = $(luadir)/specl
+dist_luaspecl_DATA = \
+	lib/specl/color.lua				\
+	lib/specl/matchers.lua				\
+        lib/specl/optparse.lua				\
+	lib/specl/shell.lua				\
+	lib/specl/std.lua				\
+	lib/specl/util.lua				\
+	$(NOTHING_ELSE)
+
+luaformatterdir = $(luaspecldir)/formatter
+dist_luaformatter_DATA = \
+	lib/specl/formatter/progress.lua		\
+	lib/specl/formatter/report.lua			\
+	lib/specl/formatter/tap.lua			\
 	$(NOTHING_ELSE)
 
 release_extra_dist = \
@@ -418,43 +409,6 @@ release_extra_dist = \
 	bootstrap					\
 	local.mk					\
 	travis.yml.in					\
-	$(NOTHING_ELSE)
-
-nobase_dist_lua_DATA = \
-	specl/formatter/progress.lua	\
-	specl/formatter/report.lua	\
-	specl/formatter/tap.lua		\
-	specl/color.lua			\
-	specl/matchers.lua		\
-        specl/optparse.lua		\
-	specl/shell.lua			\
-	specl/std.lua			\
-	specl/util.lua			\
-	$(NOTHING_ELSE)
-
-INSTALL_PATH = $(luadir)/?.lua
-specl_install_edit = \
-	$(install_edit)					\
-	-e 's|@speclpath[@]|$(INSTALL_PATH)|g'		\
-	$(NOTHING_ELSE)
-
-INPLACE_PATH = $(abs_srcdir)/src/?.lua;$(abs_srcdir)/?.lua
-specl_inplace_edit = \
-	$(install_edit)					\
-	-e 's|@speclpath[@]|$(INPLACE_PATH)|g'		\
-	$(NOTHING_ELSE)
-
-dist_lua_DATA = \
-	src/specl.lua					\
-	$(NOTHING_ELSE)
-
-specl_SPECS = \
-	$(srcdir)/specs/environment_spec.yaml		\
-	$(srcdir)/specs/formatters_spec.yaml		\
-	$(srcdir)/specs/matchers_spec.yaml		\
-	$(srcdir)/specs/optparse_spec.yaml		\
-	$(srcdir)/specs/shell_spec.yaml			\
-	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)
 
 luarocks_config = build-aux/luarocks-config.lua
@@ -484,19 +438,19 @@ all: all-am
 .SUFFIXES:
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/local.mk $(srcdir)/specl/specl.mk $(srcdir)/src/src.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/local.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign'; \
-	      $(am__cd) $(srcdir) && $(AUTOMAKE) --foreign \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu'; \
+	      $(am__cd) $(srcdir) && $(AUTOMAKE) --gnu \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign Makefile
+	  $(AUTOMAKE) --gnu Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -507,7 +461,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
-$(srcdir)/local.mk $(srcdir)/specl/specl.mk $(srcdir)/src/src.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk:
+$(srcdir)/local.mk $(srcdir)/specs/specs.mk $(srcdir)/build-aux/specl.mk $(srcdir)/build-aux/rockspecs.mk:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
@@ -519,6 +473,43 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 $(am__aclocal_m4_deps):
 .travis.yml: $(top_builddir)/config.status $(srcdir)/travis.yml.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
+bin/specl: $(top_builddir)/config.status $(top_srcdir)/lib/specl.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	list2=; for p in $$list; do \
+	  if test -f $$p; then \
+	    list2="$$list2 $$p"; \
+	  else :; fi; \
+	done; \
+	test -z "$$list2" || { \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
+	  echo " $(INSTALL) $(INSTALL_STRIP_FLAG) $$list '$(DESTDIR)$(libdir)'"; \
+	  $(INSTALL) $(INSTALL_STRIP_FLAG) $$list "$(DESTDIR)$(libdir)"; \
+	}
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
@@ -551,6 +542,41 @@ install-binSCRIPTS: $(bin_SCRIPTS)
 uninstall-binSCRIPTS:
 	@$(NORMAL_UNINSTALL)
 	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || exit 0; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	       sed -e 's,.*/,,;$(transform)'`; \
+	dir='$(DESTDIR)$(bindir)'; $(am__uninstall_files_from_dir)
+install-dist_binSCRIPTS: $(dist_bin_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n' \
+	    -e 'h;s|.*|.|' \
+	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
+	      if (++n[d] == $(am__install_max)) { \
+		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
+	    else { print "f", d "/" $$4, $$1 } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	     test -z "$$files" || { \
+	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	     } \
+	; done
+
+uninstall-dist_binSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_bin_SCRIPTS)'; test -n "$(bindir)" || exit 0; \
 	files=`for p in $$list; do echo "$$p"; done | \
 	       sed -e 's,.*/,,;$(transform)'`; \
 	dir='$(DESTDIR)$(bindir)'; $(am__uninstall_files_from_dir)
@@ -618,51 +644,48 @@ uninstall-dist_luaDATA:
 	@list='$(dist_lua_DATA)'; test -n "$(luadir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(luadir)'; $(am__uninstall_files_from_dir)
-install-docDATA: $(doc_DATA)
+install-dist_luaformatterDATA: $(dist_luaformatter_DATA)
 	@$(NORMAL_INSTALL)
-	@list='$(doc_DATA)'; test -n "$(docdir)" || list=; \
+	@list='$(dist_luaformatter_DATA)'; test -n "$(luaformatterdir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(docdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(docdir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(luaformatterdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(luaformatterdir)" || exit 1; \
 	fi; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(docdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(docdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(luaformatterdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(luaformatterdir)" || exit $$?; \
 	done
 
-uninstall-docDATA:
+uninstall-dist_luaformatterDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(doc_DATA)'; test -n "$(docdir)" || list=; \
+	@list='$(dist_luaformatter_DATA)'; test -n "$(luaformatterdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(docdir)'; $(am__uninstall_files_from_dir)
-install-nobase_dist_luaDATA: $(nobase_dist_lua_DATA)
+	dir='$(DESTDIR)$(luaformatterdir)'; $(am__uninstall_files_from_dir)
+install-dist_luaspeclDATA: $(dist_luaspecl_DATA)
 	@$(NORMAL_INSTALL)
-	@list='$(nobase_dist_lua_DATA)'; test -n "$(luadir)" || list=; \
+	@list='$(dist_luaspecl_DATA)'; test -n "$(luaspecldir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(luadir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(luadir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(luaspecldir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(luaspecldir)" || exit 1; \
 	fi; \
-	$(am__nobase_list) | while read dir files; do \
-	  xfiles=; for file in $$files; do \
-	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
-	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
-	  test -z "$$xfiles" || { \
-	    test "x$$dir" = x. || { \
-	      echo " $(MKDIR_P) '$(DESTDIR)$(luadir)/$$dir'"; \
-	      $(MKDIR_P) "$(DESTDIR)$(luadir)/$$dir"; }; \
-	    echo " $(INSTALL_DATA) $$xfiles '$(DESTDIR)$(luadir)/$$dir'"; \
-	    $(INSTALL_DATA) $$xfiles "$(DESTDIR)$(luadir)/$$dir" || exit $$?; }; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(luaspecldir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(luaspecldir)" || exit $$?; \
 	done
 
-uninstall-nobase_dist_luaDATA:
+uninstall-dist_luaspeclDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(nobase_dist_lua_DATA)'; test -n "$(luadir)" || list=; \
-	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
-	dir='$(DESTDIR)$(luadir)'; $(am__uninstall_files_from_dir)
+	@list='$(dist_luaspecl_DATA)'; test -n "$(luaspecldir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(luaspecldir)'; $(am__uninstall_files_from_dir)
 tags TAGS:
 
 ctags CTAGS:
@@ -829,9 +852,9 @@ distcleancheck: distclean
 check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) check-local
 check: check-am
-all-am: Makefile $(SCRIPTS) $(MANS) $(DATA)
+all-am: Makefile $(LTLIBRARIES) $(SCRIPTS) $(MANS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(luadir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(luadir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(luadir)" "$(DESTDIR)$(luaformatterdir)" "$(DESTDIR)$(luaspecldir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -869,7 +892,7 @@ maintainer-clean-generic:
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-libLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -888,14 +911,15 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_luaDATA install-docDATA install-man \
-	install-nobase_dist_luaDATA
+install-data-am: install-dist_luaDATA install-dist_luaformatterDATA \
+	install-dist_luaspeclDATA install-man
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binSCRIPTS
+install-exec-am: install-binSCRIPTS install-dist_binSCRIPTS \
+	install-libLTLIBRARIES
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-am
@@ -936,43 +960,56 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binSCRIPTS uninstall-dist_luaDATA \
-	uninstall-docDATA uninstall-man uninstall-nobase_dist_luaDATA
+uninstall-am: uninstall-binSCRIPTS uninstall-dist_binSCRIPTS \
+	uninstall-dist_luaDATA uninstall-dist_luaformatterDATA \
+	uninstall-dist_luaspeclDATA uninstall-libLTLIBRARIES \
+	uninstall-man
 
 uninstall-man: uninstall-man1
 
 .MAKE: check-am install-am install-exec-am install-strip
 
 .PHONY: all all-am am--refresh check check-am check-local clean \
-	clean-generic cscopelist-am ctags-am dist dist-all dist-bzip2 \
-	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
-	distcheck distclean distclean-generic distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-binSCRIPTS install-data \
-	install-data-am install-dist_luaDATA install-docDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-exec-hook install-html install-html-am install-info \
-	install-info-am install-man install-man1 \
-	install-nobase_dist_luaDATA install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	clean-generic clean-libLTLIBRARIES cscopelist-am ctags-am dist \
+	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
+	dist-xz dist-zip distcheck distclean distclean-generic \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-binSCRIPTS \
+	install-data install-data-am install-dist_binSCRIPTS \
+	install-dist_luaDATA install-dist_luaformatterDATA \
+	install-dist_luaspeclDATA install-dvi install-dvi-am \
+	install-exec install-exec-am install-exec-hook install-html \
+	install-html-am install-info install-info-am \
+	install-libLTLIBRARIES install-man install-man1 install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags-am uninstall uninstall-am \
-	uninstall-binSCRIPTS uninstall-dist_luaDATA uninstall-docDATA \
-	uninstall-man uninstall-man1 uninstall-nobase_dist_luaDATA
+	uninstall-binSCRIPTS uninstall-dist_binSCRIPTS \
+	uninstall-dist_luaDATA uninstall-dist_luaformatterDATA \
+	uninstall-dist_luaspeclDATA uninstall-libLTLIBRARIES \
+	uninstall-man uninstall-man1
 
 
-LUA_PATH ?= ;
+LUA_PATH  ?= ;
+LUA_CPATH ?= ;
 
-bin/specl: Makefile src/specl.in
-	@test -d bin || mkdir bin
-	@rm -f '$@' '$@.tmp'
-	$(AM_V_GEN)$(specl_inplace_edit) '$(srcdir)/src/specl.in' >'$@.tmp'
-	$(AM_V_at)mv '$@.tmp' '$@'
-	$(AM_V_at)chmod +x '$@'
-	$(AM_V_at)$@ --version >/dev/null || : rm '$@'
+specl-check-local: $(SPECL)
 
-docs/specl.1: bin/specl
+$(SPECL):
+	$(AM_V_at)test -d specs || mkdir -p specs
+	$(AM_V_GEN){ printf '%s\n'					\
+	  '#!/bin/sh'							\
+	  '# DO NOT EDIT - This file is generated by specs/specs.mk'	\
+	  ': $${LUA_PATH=";"}'						\
+	  'LUA_PATH="$(srcdir)/lib/?.lua;$$LUA_PATH" bin/specl "$$@"'	\
+	  'exit $$?';							\
+	} > $@
+	$(AM_V_at)chmod 555 '$@'
+specl-check-local: $(specl_SPECS)
+	$(AM_V_at)$(SPECL) $(SPECL_OPTS) $(specl_SPECS)
+
+docs/specl.1: $(SPECL)
 	@test -d docs || mkdir docs
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
@@ -981,15 +1018,8 @@ docs/specl.1: bin/specl
 	    '--output=$@'				\
 	    '--no-info'					\
 	    '--name=Specl'				\
-	    bin/specl;					\
+	    $(SPECL);					\
 	fi
-install-specl-hook:
-	@$(specl_install_edit) $(srcdir)/src/specl.in >'$@.tmp'
-	@echo $(INSTALL_SCRIPT) bin/specl $(DESTDIR)$(bindir)/specl
-	@$(INSTALL_SCRIPT) $@.tmp $(DESTDIR)$(bindir)/specl
-	@rm -f $@.tmp
-specl-check-local: $(specl_SPECS)
-	$(AM_V_at)$(SPECL) $(SPECL_OPTS) $(specl_SPECS)
 
 $(luarocks_config): Makefile.am
 	@test -d build-aux || mkdir build-aux
@@ -1007,13 +1037,15 @@ $(luarocks_config): Makefile.am
 $(package_rockspec): $(ROCKSPECS_DEPS)
 	$(AM_V_at)rm -f '$@' 2>/dev/null || :
 	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) $(VERSION) $(rockspec_revision) > '$@'
+	  $(MKROCKSPECS) $(mkrockspecs_args)			\
+	    $(PACKAGE) $(VERSION) $(rockspec_revision) > '$@'
 	$(AM_V_at)$(LUAROCKS) lint '$@'
 
 $(scm_rockspec): $(ROCKSPECS_DEPS)
 	$(AM_V_at)rm '$@' 2>/dev/null || :
 	$(AM_V_GEN)test -f '$@' ||				\
-	  $(MKROCKSPECS) $(PACKAGE) git 1 > '$@'
+	  $(MKROCKSPECS) $(mkrockspecs_args)			\
+	    $(PACKAGE) git 1 > '$@'
 	$(AM_V_at)$(LUAROCKS) lint '$@'
 
 .PHONY: rockspecs

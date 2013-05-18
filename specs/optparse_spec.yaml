@@ -1,5 +1,5 @@
 before:
-  require "specl.shell"
+  hell = require "specl.shell"
 
 specify optparse:
 - before: |
@@ -85,7 +85,7 @@ specify optparse:
         ]])
         h:close ()
 
-        return spawn {arg[-1], f, unpack (arglist)}
+        return hell.spawn {arg[-1], f, unpack (arglist)}
       end
   - after: os.remove (f)
 

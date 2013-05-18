@@ -118,8 +118,8 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
-  local reformat, Matcher, matchers =
-        matchers.reformat, matchers.Matcher, matchers.matchers
+  local concat, reformat, Matcher, matchers =
+        matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
 
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
@@ -158,8 +158,9 @@ do
       return " exit status " .. tostring (expect) .. ", "
     end,
 
-    format_any_of = function (alternatives)
-      return " an exit status of " .. util.concat (alternatives, util.QUOTED) .. ", "
+    format_alternatives = function (adaptor, alternatives)
+      return " an exit status of " ..
+             concat (alternatives, adaptor, util.QUOTED) .. ", "
     end,
   }
 
@@ -177,8 +178,8 @@ do
       return " output:" .. reformat (expect)
     end,
 
-    format_any_of = function (alternatives)
-      return " output:" .. reformat (alternatives)
+    format_alternatives = function (adaptor, alternatives)
+      return " output:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -196,8 +197,8 @@ do
       return " error output:" .. reformat (expect)
     end,
 
-    format_any_of = function (alternatives)
-      return " error output:" .. reformat (alternatives)
+    format_alternatives = function (adaptor, alternatives)
+      return " error output:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -215,8 +216,8 @@ do
       return " output matching:" .. reformat (expect)
     end,
 
-    format_any_of = function (alternatives)
-      return " output matching:" .. reformat (alternatives)
+    format_alternatives = function (adaptor, alternatives)
+      return " output matching:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -234,8 +235,8 @@ do
       return " error output matching:" .. reformat (expect)
     end,
 
-    format_any_of = function (alternatives)
-      return " error output matching:" .. reformat (alternatives)
+    format_alternatives = function (adaptor, alternatives)
+      return " error output matching:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -253,8 +254,8 @@ do
       return " output containing:" .. reformat (expect)
     end,
 
-    format_any_of = function (alternatives)
-      return " output containing:" .. reformat (alternatives)
+    format_alternatives = function (adaptor, alternatives)
+      return " output containing:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -272,8 +273,8 @@ do
       return " error output containing:" .. reformat (expect)
     end,
 
-    format_any_of = function (alternatives)
-      return " error output containing:" .. reformat (alternatives)
+    format_alternatives = function (adaptor, alternatives)
+      return " error output containing:" .. reformat (alternatives, adaptor)
     end,
   }
 end

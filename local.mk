@@ -16,16 +16,75 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-old_NEWS_hash = cc72f2d86bd849eb07a52e15aee06161
 
-doc_DATA	=
+## ---------- ##
+## Bootstrap. ##
+## ---------- ##
 
-install_edit	= sed						\
-	-e 's|@LUA[@]|$(LUA)|g'					\
-	-e 's|@PACKAGE[@]|$(PACKAGE)|g'				\
-	-e 's|@PACKAGE_BUGREPORT[@]|$(PACKAGE_BUGREPORT)|g'	\
-	-e 's|@PACKAGE_NAME[@]|$(PACKAGE_NAME)|g'		\
-	-e 's|@VERSION[@]|$(VERSION)|g'				\
+old_NEWS_hash = 6669649f776eeb4ee02d6a74a69ca04c
+
+include specs/specs.mk
+
+## ------ ##
+## Build. ##
+## ------ ##
+
+docs/specl.1: $(SPECL)
+	@test -d docs || mkdir docs
+## Exit gracefully if specl.1 is not writeable, such as during distcheck!
+	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
+	then						\
+	  builddir='$(builddir)'			\
+	  $(HELP2MAN)					\
+	    '--output=$@'				\
+	    '--no-info'					\
+	    '--name=Specl'				\
+	    $(SPECL);					\
+	fi
+
+## Use a builtin rockspec build with root at $(srcdir)/lib
+mkrockspecs_args = --module-dir $(srcdir)/lib
+
+
+## ------------- ##
+## Installation. ##
+## ------------- ##
+
+man_MANS += docs/specl.1
+
+dist_bin_SCRIPTS += bin/specl
+
+dist_lua_DATA +=					\
+	lib/specl.lua					\
+	$(NOTHING_ELSE)
+
+luaspecldir = $(luadir)/specl
+
+dist_luaspecl_DATA =					\
+	lib/specl/color.lua				\
+	lib/specl/matchers.lua				\
+        lib/specl/optparse.lua				\
+	lib/specl/shell.lua				\
+	lib/specl/std.lua				\
+	lib/specl/util.lua				\
+	$(NOTHING_ELSE)
+
+luaformatterdir = $(luaspecldir)/formatter
+
+dist_luaformatter_DATA =				\
+	lib/specl/formatter/progress.lua		\
+	lib/specl/formatter/report.lua			\
+	lib/specl/formatter/tap.lua			\
+	$(NOTHING_ELSE)
+
+
+## ------------- ##
+## Distribution. ##
+## ------------- ##
+
+EXTRA_DIST +=						\
+	docs/specl.1					\
+	lib/specl.in					\
 	$(NOTHING_ELSE)
 
 release_extra_dist =					\
@@ -37,4 +96,15 @@ release_extra_dist =					\
 	travis.yml.in					\
 	$(NOTHING_ELSE)
 
-include specl/specl.mk
+
+## ------------ ##
+## Maintenance. ##
+## ------------ ##
+
+CLEANFILES +=						\
+	bin/specl					\
+	$(NOTHING_ELSE)
+
+DISTCLEANFILES +=					\
+	docs/specl.1					\
+	$(NOTHING_ELSE)

@@ -1,4 +1,89 @@
+2013-05-18  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 8
+	* NEWS: Record release date.
+
+	configury: support non-autotool LuaRocks installation.
+	* Makefile.am, build-aux/mkrockspecs, build-aux/rockspecs.mk:
+	Sync with upstream slingshot.
+	* src/specl.in: Move from here...
+	* lib/specl.in: ...to here.
+	* configure.ac (SPECL_FALSE): Adjust.
+	(AC_CONFIG_FILES): Generate a non-writeable bin/specl from
+	lib/specl.in.
+	(AM_INIT_AUTOMAKE): Remove `foreign` option, so
+	that INSTALL is distributed, among other small nits.
+	* lib/specl.in (@LUA@): Remove substituted value, and replace
+	with a Bourne shell Lua search, and use that to re-execute.
+	(package.path): Do not set here.
+	* specs/specs.mk (specs/specl): Generate a wrapper to set
+	LUA_PATH appropriately for running bin/specl in the build tree.
+	(SPECL): Use it.
+	* specs/specl_helper.lua (run_spec): Use it.
+	* bootstrap: Create a README softlink to keep Automake happy.
+	* src/.gitignore, src/specl.lua, specl/color.lua,
+	specl/formatter/progress.lua, specl/formatter/report.lua,
+	specl/formatter/tap.lua, specl/matchers.lua, specl/optparse.lua,
+	specl/shell.lua, specl/std.lua, specl/util.lua: Move from
+	here...
+	* bin/.gitignore, lib/specl.lua, lib/specl/color.lua,
+	lib/specl/formatter/progress.lua, lib/specl/formatter/report.lua,
+	lib/specl/formatter/tap.lua, lib/specl/matchers.lua,
+	lib/specl/optparse.lua, lib/specl/shell.lua, lib/specl/std.lua,
+	lib/specl/util.lua: ...to here.
+	* src/src.mk, specl/specl.mk: Consolidate into...
+	* local.mk: ...here.
+	* m4/.gitignore, specl/.gitignore, specs/.gitignore: Delete.
+	* rockspec.conf (build.copy_directories): Add docs and bin.
+	* NEWS, README.md: Update.
+
+	specl: remove implicit imports misfeature.
+	* src/specl.lua (initenv): No need to clobber the environment
+	with everything in the table returned from any `require` in a
+	spec file.
+	* specs/shell_spec.yaml, specs/optparse_spec.yaml: Explicity
+	import function symbols from `specl.shell` as needed.
+	* NEWS: Update.
+
+	typo: spell the matchers module name correctly in documentation.
+	* docs/specl.md (Custom Matchers): The module is called `matchers`
+	not `matcher`, and API calls are now fully qualified.
+
+	typo: first "describe" in shell_spec.yaml should be "describe shell".
+	* specs/shell_spec.yaml (describe specl): Rename from this...
+	(describe shell): ...to this.
+
+	typo: spell "find" correctly in a comment.
+	* src/specl.lua: Spell "find" correctly in a comment.
+
+2013-05-16  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: support new `any_of` matcher adaptor.
+	* specs/matchers_spec.yaml, specs/shell_spec.yaml: Examples of
+	new behaviours with `any_of` adaptor.
+	* specl/matchers.lua (concat): Add a new `adaptor` parameter to
+	decide between formatting a list with a final `or` or `and`
+	depending on whether called from `any_of` or `all_of`.  Adjust
+	all callers.
+	(reformat): Likewise.
+	(Matcher): Add a new `all_of?` receiver.
+	(alternatives_msg): Factor out common code from `any_of?` and
+	`all_of?` receivers.
+	* NEWS: Update.
+
+	refactor: rename format_any_of to format_alternatives.
+	* specl/matchers.lua (Matcher.format_any_of): Rename from this...
+	(Matcher.format_alternatives): ...to this. Adjust all callers.
+	* docs/specl.md (Custom Matchers): Update.
+	* NEWS: Update.
+
 2013-05-13  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* configure.ac (AC_INIT): Bump relese to version 8.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 7
 	* NEWS: Record release date.

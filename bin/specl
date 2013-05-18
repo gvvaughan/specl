@@ -1,0 +1,154 @@
+#! /bin/sh
+SH=--[[                                             # -*- mode: lua; -*-
+## Specification testing framework.
+##
+## Copyright (c) 2013 Free Software Foundation, Inc.
+## Written by Gary V. Vaughan, 2013
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3, or (at your option)
+## any later version.
+##
+## This program is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; see the file COPYING.  If not, write to the
+## Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+## MA 02111-1301, USA.
+
+# If LUA is not set, search PATH for something suitable.
+test -n "$LUA" || {
+  # Check that the supplied binary is executable and returns a compatible
+  # Lua version number.
+  func_vercheck ()
+  {
+    test -x "$1" && {
+      case `$1 -e 'print (_VERSION)' 2>/dev/null` in
+        *"Lua "5\.[12]*) LUA=$1 ;;
+      esac
+    }
+  }
+
+  save_IFS="$IFS"
+  LUA=
+  for x in lua lua5.2 lua5.1; do
+    IFS=:
+    for dir in $PATH; do
+      IFS="$save_IFS"
+      func_vercheck "$dir/$x"
+      test -n "$LUA" && break
+    done
+    IFS="$save_IFS"
+    test -n "$LUA" && break
+  done
+}
+
+# Reexecute using the interpreter suppiled in LUA, or found above.
+exec "$LUA" "$0" "$@"
+]]SH
+
+-- Notify modules that specifications are being checked.
+_G._SPEC = true
+
+local specl  = require "specl"
+local util   = require "specl.util"
+local yaml   = require "lyaml"
+
+
+-- Make a shallow copy of the pristine global environment, so that the
+-- state of the Specl Lua environment is not exposed to spec files.
+local sandbox = {}
+for k, v in pairs (_G) do sandbox[k] = v end
+
+
+-- Parse command line options.
+local OptionParser = require "specl.optparse"
+
+local parser = OptionParser [[
+specl (Specl) 8
+Written by Gary V. Vaughan <gary@gnu.org>, 2013
+
+Copyright (C) 2013, Gary V. Vaughan
+Specl comes with ABSOLUTELY NO WARRANTY.
+You may redistribute copies of Specl under the terms of the GNU
+General Public License; either version 3, or any later version.
+For more information, see <http://www.gnu.org/licenses>.
+
+Usage: specl [OPTION]... [FILE]...
+
+Behaviour Driven Development for Lua.
+
+Develop and run BDD specs written in Lua for RSpec style workflow, by
+verifying specification expectations read from given FILEs or standard
+input, and reporting the results on standard output.
+
+If no FILE is listed, or where '-' is given as a FILE, then read from
+standard input.
+
+      --help            print this help, then exit
+      --version         print version number, then exit
+      --color=WHEN      request colorized formatter output [default=yes]
+  -f, --formatter=FILE  use a specific formatter [default=progress]
+  -v, --verbose         request verbose formatter output
+
+Report bugs to http://github.com/gvvaughan/specl/issues.]]
+
+parser:on ("color", parser.required, parser.boolean)
+parser:on ({"f", "format", "formatter"}, parser.required,
+           function (parser, opt, optarg)
+             local ok, formatter = pcall (require, optarg)
+	     if not ok then
+	       ok, formatter = pcall (require, "specl.formatter." ..optarg)
+	     end
+	     if not ok then
+	       parser:opterr ("could not load '" .. optarg .. "' formatter.")
+	     end
+	     return formatter
+           end)
+
+_G.arg, opts = parser:parse (_G.arg)
+
+-- Option defaults.
+if opts.color == nil then opts.color = true end
+
+
+-- Called by util.process_files() to concatenate YAML formatted
+-- specifications in each <filename>
+local specs = {}
+function slurp (filename)
+  local s, errmsg = util.slurp ()
+  if errmsg ~= nil then
+    io.stderr:write (errmsg .. "\n")
+    os.exit (1)
+  end
+
+  t = {yaml.load (s)}
+
+  -- Prepend the spec file location to the package load path, so that
+  -- requiring unqualified names from that directory works right away.
+  local load_path = filename:gsub ("[^/]+$", "?.lua;")
+
+  -- Append to the specification list, which specl will run presently.
+  for _, document in ipairs (t) do
+    local spec = {
+      before = "package.path = \"" .. load_path ..
+               "\" .. package.path\n" .. (document.before or ""),
+      after  = document.after,
+      document,
+    }
+
+    -- Remove duplicate entries already hoisted out above.
+    document.before, document.after = nil, nil
+
+    table.insert (specs, spec)
+  end
+end
+
+
+util.process_files (slurp)
+
+os.exit (specl.run (specs, sandbox))

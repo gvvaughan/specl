@@ -46,7 +46,14 @@ local function map (f, t)
 end
 
 
-local function concat (alternatives, quoted)
+-- Concatenate elements of table ALTERNATIVES much like `table.concat`
+-- except the separator is always ", ".  If INFIX is provided, the
+-- final separotor uses that instead of ", ".  If QUOTED is not nil or
+-- false, then any elements of ALTERNATIVES with type "string" will be
+-- quoted using `string.format ("%q")` before concatenation.
+local function concat (alternatives, infix, quoted)
+  infix = infix or ", "
+
   if quoted then
     alternatives = map (function (v)
                           if typeof (v) ~= "string" then
@@ -57,7 +64,7 @@ local function concat (alternatives, quoted)
                         end, alternatives)
   end
 
-  return table.concat (alternatives, ", "):gsub (",( [^,]+)$", " or%1")
+  return table.concat (alternatives, ", "):gsub (", ([^,]+)$", infix .. "%1")
 end
 
 
@@ -73,7 +80,7 @@ local function type_error (name, i, arglist, typelist)
            "' (non-empty table expected, got {})", 3)
   elseif typeof (typelist[i]) == "table" then
     -- format as, eg: "number, string or table"
-    expected = concat (typelist[i])
+    expected = concat (typelist[i], " or ")
   end
 
   error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
