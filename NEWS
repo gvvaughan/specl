@@ -8,6 +8,10 @@ Specl NEWS - User visible changes.
 
      expect (mytable).should_contain.all_of {x, y, z}
 
+  - Can now be installed directly from a release tarball by `luarocks`.
+    No need to run `./configure` or `make`, unless you want to install
+    to a custom location, or do not use LuaRocks.
+
 ** Incompatible changes:
 
   - API change in matchers, generalizing the former `format_any_of` to

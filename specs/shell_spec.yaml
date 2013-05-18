@@ -48,8 +48,8 @@ describe shell:
 
   # The other exceptions are where we want to test that an expectation
   # fails correctly, which involves using the shell extensions to fork
-  # a whole other bin/specl, where we then compare it's output with what
-  # we'd expect from the failure we're tickling.
+  # a whole other specl process, where we then compare it's output with
+  # what we'd expect from the failure we're tickling.
   - it displays actual and expected output on failure:
       yaml = preamble .. "(spawn 'exit 3').should_exit (7)"
       expect (run_spec (yaml)).

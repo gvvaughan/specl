@@ -2,7 +2,7 @@ local hell = require "specl.shell"
 local util = require "specl.util"
 
 function run_spec (params)
-  local SPECL = "bin/specl --color=no"
+  local SPECL = "specs/specl --color=no"
 
   -- If params is a string, it is the input text for the subprocess.
   if type (params) == "string" then
