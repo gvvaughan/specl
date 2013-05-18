@@ -196,7 +196,7 @@ local function initenv (env)
   end
 
   -- This is gross :(  There must be a cleaner way to do it?!?
-  -- Manually walk the package path, and `loadstring(f)` what we fird...
+  -- Manually walk the package path, and `loadstring(f)` what we find...
   --   * setfenv prior to running loadstring returned function, which
   --     imports any global symbols from <f> into the local env;
   --   * manually copy symbols out of a table returned by the loadstring
