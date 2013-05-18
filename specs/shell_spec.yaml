@@ -10,7 +10,7 @@ before: |
 # and report on a test specification file is an order of magnitude
 # slower (maybe two orders!).
 
-describe specl:
+describe shell:
 - describe Command instance:
   - it diagnoses incompatible arguments:
       expect (Command ()).should_error "string or table expected, got no value"
