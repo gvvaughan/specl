@@ -37,11 +37,7 @@ AC_PROG_EGREP
 AC_PROG_SED
 
 dnl Generate output files
-SPECL_FALSE=
-AS_IF([test -f lib/specl.in], [SPECL_FALSE='#'])
-AC_SUBST([SPECL_FALSE])
-
-AC_CONFIG_FILES([.travis.yml:travis.yml.in])
+SS_CONFIG_TRAVIS
 AC_CONFIG_FILES([bin/specl:lib/specl.in], [chmod 555 bin/specl])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

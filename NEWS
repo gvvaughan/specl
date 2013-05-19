@@ -12,6 +12,13 @@ Specl NEWS - User visible changes.
     No need to run `./configure` or `make`, unless you want to install
     to a custom location, or do not use LuaRocks.
 
+  - `./bootstrap` runs slowly again with 4800 lines of code
+    reintroduced required to automatically manage Slingshot files with
+    new `bootstrap.slingshot`.  This doesn't have any direct effect on
+    users, except that the Slingshot managed release process is much
+    more robust, reducing the chances you'll end up with a still-born
+    release.
+
 ** Incompatible changes:
 
   - API change in matchers, generalizing the former `format_any_of` to
