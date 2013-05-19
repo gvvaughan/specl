@@ -69,12 +69,3 @@ check-local: $(check_local)
 ## ------------- ##
 
 install-exec-hook: $(install_exec_hooks)
-
-
-## ------------- ##
-## Distribution. ##
-## ------------- ##
-
-EXTRA_DIST +=						\
-	README.md					\
-	$(NOTHING_ELSE)
