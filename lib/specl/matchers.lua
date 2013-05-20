@@ -21,6 +21,9 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
+local object = util.object
+local Object = object.new
+
 local M = {}
 
 
@@ -77,7 +80,9 @@ end
 
 -- The `Matcher` object assembles a self type checking function
 -- for assignment to the matchers table.
-local Matcher = util.Object {"matcher";
+local Matcher = Object {
+  _type = "matcher",
+
   _init = function (self, parms)
     local matchp = parms[1]
     util.type_check ("Matcher", {matchp}, {"function"})
@@ -331,7 +336,7 @@ matchers.contain = Matcher {
   end,
 
   format_alternatives = function (adaptor, alternatives, actual)
-    return " " .. util.typeof (actual) .. " containing " ..
+    return " " .. object.type (actual) .. " containing " ..
            adaptor .. " " ..
            concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,

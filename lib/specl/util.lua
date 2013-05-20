@@ -22,15 +22,7 @@
 local color = require "specl.color"
 local std   = require "specl.std"
 
-
-local Object = std.Object {_init = {"type"}, type = "object"}
-
-local function typeof (object)
-  if type (object) == "table" and object.type ~= nil then
-    return object.type
-  end
-  return type (object)
-end
+local object = std.object
 
 
 -- Map function F over elements of T and return a table of results.
@@ -56,7 +48,7 @@ local function concat (alternatives, infix, quoted)
 
   if quoted then
     alternatives = map (function (v)
-                          if typeof (v) ~= "string" then
+                          if object.type (v) ~= "string" then
                             return std.tostring (v)
                           else
                             return ("%q"):format (v)
@@ -73,12 +65,12 @@ local function type_error (name, i, arglist, typelist)
   local expected = typelist[i]
   local actual = "no value"
 
-  if arglist[i] then actual = typeof (arglist[i]) end
+  if arglist[i] then actual = object.type (arglist[i]) end
 
   if typelist[i] == "#table" then
     error ("bad argument #" .. tostring (i) .. " to '" .. name ..
            "' (non-empty table expected, got {})", 3)
-  elseif typeof (typelist[i]) == "table" then
+  elseif object.type (typelist[i]) == "table" then
     -- format as, eg: "number, string or table"
     expected = concat (typelist[i], " or ")
   end
@@ -97,12 +89,12 @@ end
 local function type_check (name, arglist, typelist)
   for i, v in ipairs (typelist) do
     if v ~= "any" then
-      if typeof (v) ~= "table" then v = {v} end
+      if object.type (v) ~= "table" then v = {v} end
 
       if i > #arglist then
         type_error (name, i, arglist, typelist)
       end
-      local a = typeof (arglist[i])
+      local a = object.type (arglist[i])
 
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
@@ -165,9 +157,6 @@ local M = {
   -- Constants
   QUOTED         = true,
 
-  -- Prototypes
-  Object         = Object,
-
   -- Functions
   chomp          = std.chomp,
   concat         = concat,
@@ -176,6 +165,7 @@ local M = {
   map            = map,
   merge          = std.merge,
   escape_pattern = std.escape_pattern,
+  object         = std.object,
   prettytostring = std.prettytostring,
   princ          = princ,
   process_files  = std.processFiles,
@@ -183,7 +173,6 @@ local M = {
   strip1st       = strip1st,
   tostring       = std.tostring,
   type_check     = type_check,
-  typeof         = typeof,
   writc          = writc,
 }
 

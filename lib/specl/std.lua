@@ -96,7 +96,9 @@ end
 
 
 -- Root object.
-local Object = {
+local new = {
+  _type = "object",
+
   _init = {},
 
   _clone = function (self, ...)
@@ -113,7 +115,19 @@ local Object = {
     return (...)._clone (...)
   end,
 }
-setmetatable (Object, Object)
+setmetatable (new, new)
+
+function new.type (self)
+  if type (self) == "table" and self._type ~= nil then
+    return self._type
+  end
+  return type (self)
+end
+
+local object = {
+  new  = new,
+  type = new.type,
+}
 
 
 -- Process files specified on the command-line.
@@ -263,7 +277,7 @@ local M = {
   escape_pattern = escape_pattern,
   merge          = merge,
   metamethod     = metamethod,
-  Object         = Object,
+  object         = object,
   prettytostring = prettytostring,
   processFiles   = processFiles,
   render         = render,
