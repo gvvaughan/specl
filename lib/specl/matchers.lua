@@ -210,9 +210,18 @@ end
 
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
-  local type1, type2 = type (o1), type (o2)
+  -- cache extended types
+  local type1, type2 = object.type (o1), object.type (o2)
+
+  -- different types are unequal
   if type1 ~= type2 then return false end
-  if type1 ~= "table" or type2 ~= "table" then return o1 == o2 end
+
+  -- core types can be compared directly
+  if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
+
+  -- compare std.objects according to table contents
+  if type1 ~= "table" then o1 = util.totable (o1) end
+  if type2 ~= "table" then o2 = util.totable (o2) end
 
   for k, v in pairs (o1) do
     if o2[k] == nil or not objcmp (v, o2[k]) then return false end

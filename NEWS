@@ -15,6 +15,9 @@ Specl NEWS - User visible changes.
   - 'contain' matcher handles std.object module derived objects by
     coercing them to tables.
 
+  - 'equal' matcher performs a deep comparison of std.object module
+    derived objects' contents.
+
   - `./bootstrap` runs slowly again with 4800 lines of code
     reintroduced required to automatically manage Slingshot files with
     new `bootstrap.slingshot`.  This doesn't have any direct effect on

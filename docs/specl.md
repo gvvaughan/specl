@@ -327,15 +327,19 @@ still separate and distinct objects.
 
 [equal]: #22_equal
 
-To get around that problem when comparing tables, use the `equal`
-matcher, which does a recursive element by element comparison of the
-expectation. The following expectations all pass:
+To get around that problem when comparing tables, or std.object derived
+objects, use the `equal` matcher, which does a recursive element by
+element comparison of the contents of the expectation arguments. The
+following expectations all pass:
 
 {% highlight lua %}
 {% raw %}
     expect ({}).should_equal ({})
     expect ({1, two = "three"}).should_equal ({1, two = "three"})
     expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2}, {{3}, 4}})
+
+    Set = require "std.set"
+    expect (Set {1, 2, 5, 3}).should_equal (Set {5, 1, 2, 3})
 {% endraw %}
 {% endhighlight %}
 

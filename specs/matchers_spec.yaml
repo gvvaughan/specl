@@ -102,6 +102,20 @@ describe matchers:
     - it succeeds when object equals any of the alternatives:
         yaml = preamble .. deep .. ".should_equal.any_of {0, {0}, " .. deep .. "}"
         expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when extended objects have equal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "should_equal (hell.Process {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when extended object equals all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_equal." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when extended object equals any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_equal." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
     - it fails when comparing unequal objects:
         yaml = preamble .. "('str').should_equal {'table'}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
@@ -111,6 +125,24 @@ describe matchers:
     - it fails when object does not equal any of the alternatives:
         yaml = preamble .. "('str').should_equal.any_of {0, {0}, 'table'}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended objects have unequal types:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "should_equal (hell.Command {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended objects have unequal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "should_equal (hell.Process {2, 'good', 'bad'})"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended object does not equal all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_equal." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}, 'another thing'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended object does not equal any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_equal." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {2, 'good', 'bad'}}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
   - context when called with not_ prefix:
     - it succeeds when comparing unequal objects:
         expect ('str').should_not_equal {'table'}
@@ -118,6 +150,24 @@ describe matchers:
         expect ('str').should_not_equal.all_of {'str', 'table'}
     - it succeeds when object is not any of the alternatives:
         expect ('str').should_not_equal.any_of {0, {0}, 'table'}
+    - it succeeds when extended objects have unequal types:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "should_not_equal (hell.Command {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when extended objects have unequal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "should_not_equal (hell.Process {2, 'good', 'bad'})"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when extended object does not equal all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_not_equal." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}, 'another thing'}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds when extended object does not equal any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_not_equal." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {2, 'good', 'bad'}}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
     - it fails when comparing equal objects:
         yaml = preamble .. "({1, {2}}).should_not_equal {1, {2}}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
@@ -126,6 +176,20 @@ describe matchers:
         expect (run_spec (yaml)).should_contain_output (fail_1)
     - it fails when object does not equal any of the alternatives:
         yaml = preamble .. "({1, {2}}).should_not_equal.any_of {{1, {2}}, 3, {4}}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended objects have equal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "should_not_equal (hell.Process {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended object equals all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_not_equal." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails when extended object equals any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).should_not_equal." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
