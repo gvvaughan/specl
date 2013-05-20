@@ -49,7 +49,7 @@ local function concat (alternatives, infix, quoted)
   if quoted then
     alternatives = map (function (v)
                           if object.type (v) ~= "string" then
-                            return std.tostring (v)
+                            return std.string.tostring (v)
                           else
                             return ("%q"):format (v)
                           end
@@ -158,20 +158,20 @@ local M = {
   QUOTED         = true,
 
   -- Functions
-  chomp          = std.chomp,
+  chomp          = std.string.chomp,
   concat         = concat,
   indent         = indent,
   nop            = nop,
   map            = map,
-  merge          = std.merge,
-  escape_pattern = std.escape_pattern,
+  merge          = std.table.merge,
+  escape_pattern = std.string.escape_pattern,
   object         = std.object,
-  prettytostring = std.prettytostring,
+  prettytostring = std.string.prettytostring,
   princ          = princ,
-  process_files  = std.processFiles,
-  slurp          = std.slurp,
+  process_files  = std.io.process_files,
+  slurp          = std.string.slurp,
   strip1st       = strip1st,
-  tostring       = std.tostring,
+  tostring       = std.string.tostring,
   type_check     = type_check,
   writc          = writc,
 }

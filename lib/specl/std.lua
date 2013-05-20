@@ -29,24 +29,38 @@ THE SOFTWARE.
 =============================================================================
 ]]
 
---- String buffers.
 
-local metatable = {}
-local strbuf = {
-  -- Create a new string buffer.
-  new      = function () return setmetatable ({}, metatable) end,
+local std = {}
 
-  -- Add a string to a buffer.
-  concat   = function (b, s) table.insert (b, s); return b end,
 
-  -- Convert a buffer to a string.
-  tostring = function  (b) return table.concat (b) end,
+
+--[[ -------------- ]]--
+--[[ std.functional ]]--
+--[[ -------------- ]]--
+
+
+-- Return given metamethod, if any, or nil.
+local function metamethod (x, n)
+  local _, m = pcall (function (x)
+                        return getmetatable (x)[n]
+                      end,
+                      x)
+  if type (m) ~= "function" then
+    m = nil
+  end
+  return m
+end
+
+
+std.func = {
+  metamethod = metamethod,
 }
 
--- Metamethods for string buffers.
-metatable.__index    = strbuf
-metatable.__concat   = strbuf.concat
-metatable.__tostring = strbuf.tostring
+
+
+--[[ --------- ]]--
+--[[ std.table ]]--
+--[[ --------- ]]--
 
 
 -- Make a shallow copy of a table, including any metatable.
@@ -82,17 +96,42 @@ local function merge (t, u)
 end
 
 
--- Return given metamethod, if any, or nil.
-local function metamethod (x, n)
-  local _, m = pcall (function (x)
-                        return getmetatable (x)[n]
-                      end,
-                      x)
-  if type (m) ~= "function" then
-    m = nil
+--- Turn an object into a table according to __totable metamethod.
+local function totable (x)
+  local m = func.metamethod (x, "__totable")
+  if m then
+    return m (x)
+  elseif type (x) == "table" then
+    return x
+  else
+    return nil
   end
-  return m
 end
+
+
+std.table = {
+  clone        = clone,
+  clone_rename = clone_rename,
+  merge        = merge,
+  totable      = totable,
+}
+
+
+
+--[[ ---------- ]]--
+--[[ std.object ]]--
+--[[ ---------- ]]--
+
+
+-- Object methods.
+local M = {
+  type = function (self)
+    if type (self) == "table" and self._type ~= nil then
+      return self._type
+    end
+    return type (self)
+  end,
+}
 
 
 -- Root object.
@@ -111,27 +150,100 @@ local new = {
     return setmetatable (object, object)
   end,
 
+  -- respond to table.totable with a new table containing a copy of all
+  -- elements from object, except any key prefixed with "_".
+  __totable = function (self)
+    local t = {}
+    for k, v in pairs (self) do
+      if type (k) ~= "string" or k:sub (1, 1) ~= "_" then
+        t[k] = v
+      end
+    end
+    return t
+  end,
+
+  __index = M,
+
   __call = function (...)
     return (...)._clone (...)
   end,
 }
 setmetatable (new, new)
 
-function new.type (self)
-  if type (self) == "table" and self._type ~= nil then
-    return self._type
-  end
-  return type (self)
+-- Inject `new` method into public interface.
+M.new = new
+
+std.object = setmetatable (M, {
+  -- Sugar to call new automatically from module table.
+  -- Use select to replace `self` (this table) with `new`, the real prototype.
+  __call = function (...)
+    return new._clone (new, select (2, ...))
+  end,
+})
+
+
+-- A nicer handle for the rest of the file to use...
+Object = new
+
+
+
+--[[ ---------- ]]--
+--[[ std.strbuf ]]--
+--[[ ---------- ]]--
+
+--- String buffers.
+
+local M = {
+  --- Add a string to a buffer
+  concat = function (b, s)
+    table.insert (b, s)
+    return b
+  end,
+
+  --- Convert a buffer to a string
+  tostring = function (b)
+    return table.concat (b)
+  end,
+}
+
+--- Create a new string buffer
+-- @return strbuf
+local function new (...)
+  return Object {
+    -- Derived object type.
+    _type = "strbuf",
+
+    -- Metamethods.
+    __concat   = M.concat,   -- buffer .. string
+    __tostring = M.tostring, -- tostring (buffer)
+
+    -- strbuf:method ()
+    __index = M,
+
+    -- Initialise.
+    ...
+  }
 end
 
-local object = {
-  new  = new,
-  type = new.type,
-}
+-- Inject `new` method into public interface.
+M.new = new
+
+std.strbuf = setmetatable (M, {
+  -- Sugar to call new automatically from module table.
+  __call = function (self, t)
+    return new (unpack (t))
+  end,
+})
+
+
+
+--[[ ------ ]]--
+--[[ std.io ]]--
+--[[ ------ ]]--
 
 
 -- Process files specified on the command-line.
-local function processFiles (fn)
+local function process_files (fn)
   if #arg == 0 then
     table.insert (arg,  "-")
   end
@@ -146,6 +258,17 @@ local function processFiles (fn)
 end
 
 
+std.io = {
+  process_files = process_files,
+}
+
+
+
+--[[ ---------- ]]--
+--[[ std.string ]]--
+--[[ ---------- ]]--
+
+
 -- Turn tables into strings with recursion detection.
 local function render (x, open, close, elem, pair, sep, roots)
   local function stop_roots (x)
@@ -155,7 +278,7 @@ local function render (x, open, close, elem, pair, sep, roots)
   if type (x) ~= "table" or metamethod (x, "__tostring") then
     return elem (x)
   else
-    local s = strbuf.new ()
+    local s = std.strbuf {}
     s = s .. open (x)
     roots[x] = elem (x)
     local i, v = nil, nil
@@ -264,25 +387,19 @@ local function prettytostring (t, indent, spacing)
 end
 
 
+std.string = {
+  chomp          = chomp,
+  escape_pattern = escape_pattern,
+  prettytostring = prettytostring,
+  render         = render,
+  slurp          = slurp,
+  tostring       = tostring,
+}
+
 
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
 
-local M = {
-  chomp          = chomp,
-  clone          = clone,
-  clone_rename   = clone_rename,
-  escape_pattern = escape_pattern,
-  merge          = merge,
-  metamethod     = metamethod,
-  object         = object,
-  prettytostring = prettytostring,
-  processFiles   = processFiles,
-  render         = render,
-  slurp          = slurp,
-  tostring       = tostring,
-}
-
-return M
+return std
