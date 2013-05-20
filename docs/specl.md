@@ -362,9 +362,13 @@ keys can be of any type.
 {% endraw %}
 {% endhighlight %}
 
-If `expect` passes anything other than a string or table to this
-matcher, [Specl][] aborts with an error; use `tostring` or similar if
-you need it.
+A final convenience is that `contain` will use the `__totable`
+metamethod of any lua-stdlib `std.object` derived objects to coerce
+a table to test for matching keys or values in the expectation.
+
+If `expect` passes anything other than a string, table or `std.object`
+derivative to this matcher, [Specl][] aborts with an error; use
+`tostring` or similar if you need to.
 
 ### 2.4. match
 

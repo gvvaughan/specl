@@ -4,13 +4,16 @@ Specl NEWS - User visible changes.
 
 ** New features:
 
+  - Can now be installed directly from a release tarball by `luarocks`.
+    No need to run `./configure` or `make`, unless you want to install
+    to a custom location, or do not use LuaRocks.
+
   - A new 'all_of' adaptor for any matcher:
 
      expect (mytable).should_contain.all_of {x, y, z}
 
-  - Can now be installed directly from a release tarball by `luarocks`.
-    No need to run `./configure` or `make`, unless you want to install
-    to a custom location, or do not use LuaRocks.
+  - 'contain' matcher handles std.object module derived objects by
+    coercing them to tables.
 
   - `./bootstrap` runs slowly again with 4800 lines of code
     reintroduced required to automatically manage Slingshot files with

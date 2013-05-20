@@ -83,9 +83,12 @@ end
 -- Check that every parameter in <arglist> matches one of the types
 -- from the corresponding slot in <typelist>. Raise a parameter type
 -- error if there are any mismatches.
--- Rather than leave gaps in <typelist> (which breaks ipairs), use
--- the string "any" to accept any type from the corresponding <arglist>
--- slot.
+-- There are a few additional strings you can use in <typelist> to
+-- match special types in <arglist>:
+--
+--   #table    accept any non-empty table
+--   object    accept any std.object derived type
+--   any       accept any type
 local function type_check (name, arglist, typelist)
   for i, v in ipairs (typelist) do
     if v ~= "any" then
@@ -104,6 +107,13 @@ local function type_check (name, arglist, typelist)
             ok = true
             break
           end
+
+	elseif check == "object" then
+	  if type (arglist[i]) == "table" and arglist[i]._type ~= nil then
+	    ok = true
+	    break
+	  end
+
         elseif a == check then
           ok = true
           break
@@ -172,6 +182,7 @@ local M = {
   slurp          = std.string.slurp,
   strip1st       = strip1st,
   tostring       = std.string.tostring,
+  totable        = std.table.totable,
   type_check     = type_check,
   writc          = writc,
 }

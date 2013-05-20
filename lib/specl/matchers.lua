@@ -306,7 +306,14 @@ matchers.contain = Matcher {
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
       return (actual:match (util.escape_pattern (expect)) ~= nil)
-    elseif type (actual) == "table" then
+    end
+
+    -- Coerce an object to a table.
+    if type (actual) == "table" and object.type (actual) ~= "table" then
+      actual = util.totable (actual)
+    end
+
+    if type (actual) == "table" then
       -- Do deep comparison against keys and values of the table.
       for k, v in pairs (actual) do
         if objcmp (k, expect) or objcmp (v, expect) then
@@ -315,13 +322,18 @@ matchers.contain = Matcher {
       end
       return false
     end
+
+    -- probably an object with no __totable metamethod.
+    return false
   end,
 
-  actual_type   = {"string", "table"},
+  actual_type   = {"string", "table", "object"},
 
   format_actual = function (actual)
     if type (actual) == "string" then
       return " " .. q (actual)
+    elseif object.type (actual) ~= "table" then
+      return ":" .. reformat (util.prettytostring (util.totable (actual), "  "))
     else
       return ":" .. reformat (util.prettytostring (actual, "  "))
     end
@@ -336,7 +348,7 @@ matchers.contain = Matcher {
   end,
 
   format_alternatives = function (adaptor, alternatives, actual)
-    return " " .. object.type (actual) .. " containing " ..
+    return " " .. type (actual) .. " containing " ..
            adaptor .. " " ..
            concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,
