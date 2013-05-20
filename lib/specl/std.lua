@@ -98,7 +98,7 @@ end
 
 --- Turn an object into a table according to __totable metamethod.
 local function totable (x)
-  local m = func.metamethod (x, "__totable")
+  local m = std.func.metamethod (x, "__totable")
   if m then
     return m (x)
   elseif type (x) == "table" then
@@ -269,29 +269,6 @@ std.io = {
 --[[ ---------- ]]--
 
 
--- Turn tables into strings with recursion detection.
-local function render (x, open, close, elem, pair, sep, roots)
-  local function stop_roots (x)
-    return roots[x] or render (x, open, close, elem, pair, sep, clone (roots))
-  end
-  roots = roots or {}
-  if type (x) ~= "table" or metamethod (x, "__tostring") then
-    return elem (x)
-  else
-    local s = std.strbuf {}
-    s = s .. open (x)
-    roots[x] = elem (x)
-    local i, v = nil, nil
-    for j, w in pairs (x) do
-      s = s .. sep (x, i, v, j, w) .. pair (x, j, w, stop_roots (j), stop_roots (w))
-      i, v = j, w
-    end
-    s = s .. sep(x, i, v, nil, nil) .. close (x)
-    return s:tostring ()
-  end
-end
-
-
 -- Remove any final newline from a string.
 local function chomp (s)
   return s:gsub ("\n$", "")
@@ -315,6 +292,37 @@ local function slurp (h)
     local s = h:read ("*a")
     h:close ()
     return s
+  end
+end
+
+
+-- Turn tables into strings with recursion detection.
+local function render (x, open, close, elem, pair, sep, roots)
+  local function stop_roots (x)
+    return roots[x] or render (x, open, close, elem, pair, sep, clone (roots))
+  end
+  roots = roots or {}
+  if type (x) ~= "table" or metamethod (x, "__tostring") then
+    return elem (x)
+  else
+    local s = std.strbuf {}
+    s = s .. open (x)
+    roots[x] = elem (x)
+
+    -- create a sorted list of keys
+    local ord = {}
+    for k, _ in pairs (x) do table.insert (ord, k) end
+    table.sort (ord, function (a, b) return tostring (a) < tostring (b) end)
+
+    -- traverse x again in sorted order
+    local i, v = nil, nil
+    for _, j in pairs (ord) do
+      local w = x[j]
+      s = s .. sep (x, i, v, j, w) .. pair (x, j, w, stop_roots (j), stop_roots (w))
+      i, v = j, w
+    end
+    s = s .. sep(x, i, v, nil, nil) .. close (x)
+    return s:tostring ()
   end
 end
 
@@ -360,15 +368,21 @@ local function prettytostring (t, indent, spacing)
                    end
                  end,
                  function (x, i, v, is, vs)
-                   local s = spacing .. "["
-                   if type (i) == "table" then
-                     s = s .. "\n"
-                   end
-                   s = s .. is
-                   if type (i) == "table" then
-                     s = s .. "\n"
-                   end
-                   s = s .. "] ="
+                   local s = spacing
+		   if type (i) ~= "string" or i:match "[^%w_]" then
+		     s = s .. "["
+                     if type (i) == "table" then
+                       s = s .. "\n"
+                     end
+                     s = s .. is
+                     if type (i) == "table" then
+                       s = s .. "\n"
+                     end
+                     s = s .. "]"
+		   else
+		     s = s .. i
+		   end
+		   s = s .. " ="
                    if type (v) == "table" then
                      s = s .. "\n"
                    else
