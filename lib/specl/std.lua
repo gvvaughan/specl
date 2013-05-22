@@ -126,7 +126,7 @@ std.table = {
 -- Object methods.
 local M = {
   type = function (self)
-    if type (self) == "table" and self._type ~= nil then
+    if type (self) == "table" and rawget (self, "_type") ~= nil then
       return self._type
     end
     return type (self)
