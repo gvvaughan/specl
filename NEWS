@@ -25,6 +25,10 @@ Specl NEWS - User visible changes.
     more robust, reducing the chances you'll end up with a still-born
     release.
 
+** Bug fixes:
+
+  - Avoid 'nan%' divide-by-zero error output from report formatter.
+
 ** Incompatible changes:
 
   - API change in matchers, generalizing the former `format_any_of` to

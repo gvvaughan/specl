@@ -163,9 +163,13 @@ local function footer (stats, reports)
     princ (reports.fail)
   end
 
-  local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
-  princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
-         " expectations.")
+  if total > 0 then
+    local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
+    princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
+           " expectations.")
+  else
+    princ (color.notallpass .. "No expectations met.")
+  end
 
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""

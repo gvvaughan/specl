@@ -1,0 +1,40 @@
+before:
+  require "spec_helper"
+
+describe report:
+- before:
+    preamble = "describe report:\n- it is pending:"
+
+- context with empty example:
+  - it exits with zero status:
+      expect (run_spec (preamble)).should_exit (0)
+  - it reports no expectations:
+      expect (run_spec (preamble)).
+        should_contain_output "No expectations met."
+  - it reports a pending example:
+      expect (run_spec (preamble)).
+         should_contain_output ", 1 pending "
+
+- context with pending call from empty example:
+  - before:
+      yaml = preamble .. "\n    pending ()"
+  - it exits with zero status:
+      expect (run_spec (yaml)).should_exit (0)
+  - it reports no expectations:
+      expect (run_spec (yaml)).
+        should_contain_output "No expectations met."
+  - it reports the pending example:
+      expect (run_spec (yaml)).
+      should_match_output ", 1 pending "
+  - it appends pending suffix to the example output: |
+      expect (run_spec (yaml)).
+      should_match_output (
+        "report\n" ..
+        "  is pending %(PENDING example: not yet implemented%)\n"
+      )
+  - it lists pending example in report summary: |
+      expect (run_spec (yaml)).
+      should_match_output (
+        "Summary of pending expectations:\n" ..
+        "%- report is pending: %(PENDING example: not yet implemented%)\n"
+      )
