@@ -462,7 +462,7 @@ end
 
 local function pending (s)
   M.stats.pend = M.stats.pend + 1
-  ispending  = s or true
+  ispending  = s or "not yet implemented"
 end
 
 

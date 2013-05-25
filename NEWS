@@ -29,6 +29,9 @@ Specl NEWS - User visible changes.
 
   - Avoid 'nan%' divide-by-zero error output from report formatter.
 
+  - Built in report formatter displays argument strings to pending
+    calls from examples consistently.
+
 ** Incompatible changes:
 
   - API change in matchers, generalizing the former `format_any_of` to

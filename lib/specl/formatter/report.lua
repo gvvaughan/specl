@@ -62,10 +62,8 @@ local function expectations (status, descriptions)
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
         local pend = "  " .. color.pend ..
-              "PENDING expectation " ..  i .. color.reset .. ": "
-        if type (expectation.pending) == "string" then
-          pend = pend .. color.warn .. expectation.pending .. ", "
-        end
+              "PENDING expectation " ..  i .. color.reset .. ": " ..
+              color.warn .. expectation.pending
         if expectation.status == true then
           counts.unexpected = counts.unexpected + 1
 
@@ -78,8 +76,6 @@ local function expectations (status, descriptions)
               color.reset
         else
           counts.pend = counts.pend + 1
-
-          pend = pend .. "not yet implemented"
           reports.pend = reports.pend .. "\n" .. pend
         end
 
@@ -124,7 +120,7 @@ local function expectations (status, descriptions)
   elseif status.ispending then
     -- Otherwise, display only pending examples.
     local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
-                 ": " .. "not yet implemented)"
+                 ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
 
     princ (spaces ..  tabulate (descriptions) ..  pend)
