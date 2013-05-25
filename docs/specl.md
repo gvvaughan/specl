@@ -76,13 +76,13 @@ Indenting with TAB characters is a syntax error, because the [YAML][]
 parser uses indentation columns to infer nesting.  It's easiest just to
 avoid putting TAB characters in your spec files entirely.
 
-Punctuation is not allowed in an unquoted [YAML][] string, so you will
-need to force the parser to read the description as a string by
+Some punctuation is not allowed in an unquoted [YAML][] string, so you
+will need to force the parser to read the description as a string by
 surrounding it with `"` (double-quote mark) if you want to put any
 punctuation in the description text:
 
 {% highlight lua %}
-    - "it requires double-quote marks, but only when using punctuation":
+    - "it requires double-quote marks: but only when using punctuation":
 {% endhighlight %}
 
 Indentation of the code following an example description must be at
@@ -117,10 +117,11 @@ this:
 
 You also have to be careful about commenting within a spec-file. [YAML][]
 comments begin with ` #` (space, hash) and extend to the end of the line.
-You can use these anywhere outside of a Lua code block. [Lua][] comments
-don't work outside of a lua block, and [YAML][] comments don't work
-inside a Lua block, so you have to pick the right comment character,
-depending where in the hierarchy it will go.
+You can use these anywhere outside of a Lua code block, including any
+lines immediately following a description before any actual [Lua][] code.
+[Lua][] comments don't work outside of a lua block, and [YAML][] comments
+don't work inside a Lua block, so you have to pick the right comment
+character, depending where in the hierarchy it will go.
 
 ### 1.2. Contexts
 

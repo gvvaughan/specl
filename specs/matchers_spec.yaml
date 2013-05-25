@@ -313,7 +313,7 @@ describe matchers:
           yaml = preamble .. keys .. ".should_contain." ..
                  "any_of {'three', 'four', 'five'}"
           expect (run_spec (yaml)).should_contain_output (pass_all)
-      - "it succeeds with a one-deep match of a table element":
+      - it succeeds with a one-deep match of a table element:
           yaml = preamble .. deep .. ".should_contain { 'subtable 2' }"
           expect (run_spec (yaml)).should_contain_output (pass_all)
       - it succeeds if all elements are  common to both tables:
