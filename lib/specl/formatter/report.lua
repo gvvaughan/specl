@@ -69,7 +69,7 @@ local function expectations (status, descriptions)
 
           if prefix ~= color.fail then prefix = color.warn end
 
-          pend = pend .. color.warn .. "passed unexpectedly!" .. color.reset
+          pend = pend .. color.warn .. " passed unexpectedly!" .. color.reset
           reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
               "  " .. color.strong ..
               "You can safely remove the 'pending ()' call from this example." ..
