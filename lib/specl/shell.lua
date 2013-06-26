@@ -23,8 +23,7 @@
 local matchers = require "specl.matchers"
 local util     = require "specl.util"
 
-local object   = util.object
-local Object   = object.new
+local Object   = util.Object
 
 local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"
@@ -33,13 +32,13 @@ end
 -- Massage a command description into a string suitable for executing
 -- by the shell.
 local Command = Object {
-  _type = "command",
+  _type = "Command",
 
   _init = function (self, params)
     util.type_check ("Command",
-      {self, params}, {"command", {"string", "table"}})
+      {self, params}, {{"Command", "table"}, {"string", "table"}})
 
-    local kind = object.type (params)
+    local kind = Object.type (params)
     if kind == "string" then params = {params} end
 
     local cmd = table.concat (params, " ")
@@ -47,7 +46,7 @@ local Command = Object {
 
     -- Flatten the command itstelf to a string.
     self.cmd = cmd
-    if object.type (cmd) == "table" then
+    if Object.type (cmd) == "table" then
       -- Subshell is required to make sure redirections are captured,
       -- and environment is already set in time for embedded references.
       self.cmd = table.concat (cmd, " ")
@@ -84,16 +83,15 @@ local Command = Object {
 
 -- Description of a completed process.
 local Process = Object {
-  _type = "process",
+  _type = "Process",
   _init = {"status", "output", "errout"},
-  __index = Object,
 }
 
 
 -- Run a command in a subprocess
 local function spawn (o)
-  util.type_check ("spawn", {o}, {{"string", "table", "command"}})
-  if object.type (o) ~= "command" then o = Command (o) end
+  util.type_check ("spawn", {o}, {{"string", "table", "Command"}})
+  if Object.type (o) ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.
   local fout = os.tmpname ()
@@ -148,7 +146,7 @@ do
       return (actual.status == expect)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " " .. tostring (process.status)
@@ -175,7 +173,7 @@ do
       return (actual.output == expect)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
     format_actual = process_errout,
 
     format_expect = function (expect)
@@ -194,7 +192,7 @@ do
       return (actual.errout == expect)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
     format_actual = reformat_err,
 
     format_expect = function (expect)
@@ -213,7 +211,7 @@ do
       return (string.match (actual.output, pattern) ~= nil)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
     format_actual = process_errout,
 
     format_expect = function (expect)
@@ -232,7 +230,7 @@ do
       return (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
     format_actual = reformat_err,
 
     format_expect = function (expect)
@@ -251,7 +249,7 @@ do
       return (string.match (actual.output, util.escape_pattern (expect)) ~= nil)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
     format_actual = process_errout,
 
     format_expect = function (expect)
@@ -270,7 +268,7 @@ do
       return (string.match (actual.errout, util.escape_pattern (expect)) ~= nil)
     end,
 
-    actual_type   = "process",
+    actual_type   = "Process",
     format_actual = reformat_err,
 
     format_expect = function (expect)

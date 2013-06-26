@@ -22,7 +22,7 @@
 local color = require "specl.color"
 local std   = require "specl.std"
 
-local object = std.object
+local Object = std.Object
 
 
 -- Map function F over elements of T and return a table of results.
@@ -48,7 +48,7 @@ local function concat (alternatives, infix, quoted)
 
   if quoted then
     alternatives = map (function (v)
-                          if object.type (v) ~= "string" then
+                          if Object.type (v) ~= "string" then
                             return std.string.tostring (v)
                           else
                             return ("%q"):format (v)
@@ -65,12 +65,12 @@ local function type_error (name, i, arglist, typelist)
   local expected = typelist[i]
   local actual = "no value"
 
-  if arglist[i] then actual = object.type (arglist[i]) end
+  if arglist[i] then actual = Object.type (arglist[i]) end
 
   if typelist[i] == "#table" then
     error ("bad argument #" .. tostring (i) .. " to '" .. name ..
            "' (non-empty table expected, got {})", 3)
-  elseif object.type (typelist[i]) == "table" then
+  elseif Object.type (typelist[i]) == "table" then
     -- format as, eg: "number, string or table"
     expected = concat (typelist[i], " or ")
   end
@@ -87,17 +87,17 @@ end
 -- match special types in <arglist>:
 --
 --   #table    accept any non-empty table
---   object    accept any std.object derived type
+--   object    accept any std.Object derived type
 --   any       accept any type
 local function type_check (name, arglist, typelist)
   for i, v in ipairs (typelist) do
     if v ~= "any" then
-      if object.type (v) ~= "table" then v = {v} end
+      if Object.type (v) ~= "table" then v = {v} end
 
       if i > #arglist then
         type_error (name, i, arglist, typelist)
       end
-      local a = object.type (arglist[i])
+      local a = Object.type (arglist[i])
 
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
@@ -108,11 +108,11 @@ local function type_check (name, arglist, typelist)
             break
           end
 
-	elseif check == "object" then
-	  if type (arglist[i]) == "table" and arglist[i]._type ~= nil then
-	    ok = true
-	    break
-	  end
+        elseif check == "object" then
+          if type (arglist[i]) == "table" and Object.type (arglist[i]) ~= "table" then
+            ok = true
+            break
+          end
 
         elseif a == check then
           ok = true
@@ -175,7 +175,7 @@ local M = {
   map            = map,
   merge          = std.table.merge,
   escape_pattern = std.string.escape_pattern,
-  object         = std.object,
+  Object         = std.Object,
   prettytostring = std.string.prettytostring,
   princ          = princ,
   process_files  = std.io.process_files,

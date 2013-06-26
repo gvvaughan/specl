@@ -1,7 +1,7 @@
 local hell = require "specl.shell"
 local util = require "specl.util"
 
-local object = util.object
+local Object = util.Object
 
 function run_spec (params)
   local SPECL = "specs/specl --color=no"
@@ -43,11 +43,11 @@ do
   -- Matches if the type of <actual> is <expect>.
   matchers.instantiate_a = Matcher {
     function (actual, expect)
-      return (object.type (actual) == expect)
+      return (Object.type (actual) == expect)
     end,
 
     format_actual = function (actual)
-      return "a " .. object.type (actual)
+      return "a " .. Object.type (actual)
     end,
 
     format_expect = function (expect)

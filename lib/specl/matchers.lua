@@ -21,8 +21,7 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local object = util.object
-local Object = object.new
+local Object = util.Object
 
 local M = {}
 
@@ -81,7 +80,7 @@ end
 -- The `Matcher` object assembles a self type checking function
 -- for assignment to the matchers table.
 local Matcher = Object {
-  _type = "matcher",
+  _type = "Matcher",
 
   _init = function (self, parms)
     local matchp = parms[1]
@@ -154,7 +153,7 @@ local Matcher = Object {
 -- Only allow Matcher objects to be assigned to a slot in this table.
 local matchers = setmetatable ({}, {
   __newindex = function (self, name, matcher)
-    util.type_check ("matchers." .. name, {matcher}, {"matcher"})
+    util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
     rawset (self, name, matcher)
   end,
 })
@@ -211,7 +210,7 @@ end
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
   -- cache extended types
-  local type1, type2 = object.type (o1), object.type (o2)
+  local type1, type2 = Object.type (o1), Object.type (o2)
 
   -- different types are unequal
   if type1 ~= type2 then return false end
@@ -219,7 +218,7 @@ local function objcmp (o1, o2)
   -- core types can be compared directly
   if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
 
-  -- compare std.objects according to table contents
+  -- compare std.Objects according to table contents
   if type1 ~= "table" then o1 = util.totable (o1) end
   if type2 ~= "table" then o2 = util.totable (o2) end
 
@@ -318,7 +317,7 @@ matchers.contain = Matcher {
     end
 
     -- Coerce an object to a table.
-    if type (actual) == "table" and object.type (actual) ~= "table" then
+    if type (actual) == "table" and Object.type (actual) ~= "table" then
       actual = util.totable (actual)
     end
 
@@ -341,7 +340,7 @@ matchers.contain = Matcher {
   format_actual = function (actual)
     if type (actual) == "string" then
       return " " .. q (actual)
-    elseif object.type (actual) ~= "table" then
+    elseif Object.type (actual) ~= "table" then
       return ":" .. reformat (util.prettytostring (util.totable (actual), "  "))
     else
       return ":" .. reformat (util.prettytostring (actual, "  "))
