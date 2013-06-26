@@ -47,11 +47,11 @@ do
     end,
 
     format_actual = function (actual)
-      return "a " .. Object.type (actual)
+      return " a " .. Object.type (actual)
     end,
 
     format_expect = function (expect)
-      return "a " .. expect
+      return " a " .. expect .. ", "
     end,
   }
 end
