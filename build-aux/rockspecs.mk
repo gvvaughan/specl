@@ -104,6 +104,8 @@ EXTRA_DIST +=						\
 	$(rockspec_conf)				\
 	$(NOTHING_ELSE)
 
+save_release_files += $(scm_rockspec)
+
 
 ## ------------ ##
 ## Maintenance. ##

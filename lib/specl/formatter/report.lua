@@ -62,24 +62,20 @@ local function expectations (status, descriptions)
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
         local pend = "  " .. color.pend ..
-              "PENDING expectation " ..  i .. color.reset .. ": "
-        if type (expectation.pending) == "string" then
-          pend = pend .. color.warn .. expectation.pending .. ", "
-        end
+              "PENDING expectation " ..  i .. color.reset .. ": " ..
+              color.warn .. expectation.pending
         if expectation.status == true then
           counts.unexpected = counts.unexpected + 1
 
           if prefix ~= color.fail then prefix = color.warn end
 
-          pend = pend .. color.warn .. "passed unexpectedly!" .. color.reset
+          pend = pend .. color.warn .. " passed unexpectedly!" .. color.reset
           reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
               "  " .. color.strong ..
               "You can safely remove the 'pending ()' call from this example." ..
               color.reset
         else
           counts.pend = counts.pend + 1
-
-          pend = pend .. "not yet implemented"
           reports.pend = reports.pend .. "\n" .. pend
         end
 
@@ -124,7 +120,7 @@ local function expectations (status, descriptions)
   elseif status.ispending then
     -- Otherwise, display only pending examples.
     local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
-                 ": " .. "not yet implemented)"
+                 ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
 
     princ (spaces ..  tabulate (descriptions) ..  pend)
@@ -163,9 +159,13 @@ local function footer (stats, reports)
     princ (reports.fail)
   end
 
-  local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
-  princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
-         " expectations.")
+  if total > 0 then
+    local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
+    princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
+           " expectations.")
+  else
+    princ (color.notallpass .. "No expectations met.")
+  end
 
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""

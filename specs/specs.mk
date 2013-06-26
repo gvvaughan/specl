@@ -26,7 +26,8 @@ SPECL = specs/specl
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
-	$(srcdir)/specs/formatters_spec.yaml		\
+	$(srcdir)/specs/custom_formatters_spec.yaml	\
+	$(srcdir)/specs/formatter/report_spec.yaml	\
 	$(srcdir)/specs/matchers_spec.yaml		\
 	$(srcdir)/specs/optparse_spec.yaml		\
 	$(srcdir)/specs/shell_spec.yaml			\
@@ -35,6 +36,7 @@ specl_SPECS =						\
 
 EXTRA_DIST +=						\
 	$(srcdir)/specs/spec_helper.lua			\
+	$(srcdir)/specs/formatter/spec_helper.lua	\
 	$(NOTHING_ELSE)
 
 specl-check-local: $(SPECL)

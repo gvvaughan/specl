@@ -21,6 +21,8 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
+local Object = util.Object
+
 local M = {}
 
 
@@ -77,7 +79,9 @@ end
 
 -- The `Matcher` object assembles a self type checking function
 -- for assignment to the matchers table.
-local Matcher = util.Object {"matcher";
+local Matcher = Object {
+  _type = "Matcher",
+
   _init = function (self, parms)
     local matchp = parms[1]
     util.type_check ("Matcher", {matchp}, {"function"})
@@ -149,7 +153,7 @@ local Matcher = util.Object {"matcher";
 -- Only allow Matcher objects to be assigned to a slot in this table.
 local matchers = setmetatable ({}, {
   __newindex = function (self, name, matcher)
-    util.type_check ("matchers." .. name, {matcher}, {"matcher"})
+    util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
     rawset (self, name, matcher)
   end,
 })
@@ -205,9 +209,18 @@ end
 
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
-  local type1, type2 = type (o1), type (o2)
+  -- cache extended types
+  local type1, type2 = Object.type (o1), Object.type (o2)
+
+  -- different types are unequal
   if type1 ~= type2 then return false end
-  if type1 ~= "table" or type2 ~= "table" then return o1 == o2 end
+
+  -- core types can be compared directly
+  if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
+
+  -- compare std.Objects according to table contents
+  if type1 ~= "table" then o1 = util.totable (o1) end
+  if type2 ~= "table" then o2 = util.totable (o2) end
 
   for k, v in pairs (o1) do
     if o2[k] == nil or not objcmp (v, o2[k]) then return false end
@@ -301,7 +314,14 @@ matchers.contain = Matcher {
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
       return (actual:match (util.escape_pattern (expect)) ~= nil)
-    elseif type (actual) == "table" then
+    end
+
+    -- Coerce an object to a table.
+    if type (actual) == "table" and Object.type (actual) ~= "table" then
+      actual = util.totable (actual)
+    end
+
+    if type (actual) == "table" then
       -- Do deep comparison against keys and values of the table.
       for k, v in pairs (actual) do
         if objcmp (k, expect) or objcmp (v, expect) then
@@ -310,13 +330,18 @@ matchers.contain = Matcher {
       end
       return false
     end
+
+    -- probably an object with no __totable metamethod.
+    return false
   end,
 
-  actual_type   = {"string", "table"},
+  actual_type   = {"string", "table", "object"},
 
   format_actual = function (actual)
     if type (actual) == "string" then
       return " " .. q (actual)
+    elseif Object.type (actual) ~= "table" then
+      return ":" .. reformat (util.prettytostring (util.totable (actual), "  "))
     else
       return ":" .. reformat (util.prettytostring (actual, "  "))
     end
@@ -331,7 +356,7 @@ matchers.contain = Matcher {
   end,
 
   format_alternatives = function (adaptor, alternatives, actual)
-    return " " .. util.typeof (actual) .. " containing " ..
+    return " " .. type (actual) .. " containing " ..
            adaptor .. " " ..
            concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,
@@ -436,7 +461,7 @@ end
 
 local function pending (s)
   M.stats.pend = M.stats.pend + 1
-  ispending  = s or true
+  ispending  = s or "not yet implemented"
 end
 
 

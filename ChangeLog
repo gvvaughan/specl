@@ -1,7 +1,170 @@
-2013-05-18  Gary V. Vaughan  <gary@gnu.org>
+2013-06-26  Gary V. Vaughan  <gary@gnu.org>
 
 	Release version 8
 	* NEWS: Record release date.
+
+	specs: correct output from instantiate_a matcher.
+	Without this changeset, output from failed instantiate_a matches
+	aresmooshedtogetherlikethis.
+	* specs/spec_helper.lua (matchers.instantiate_a::format_actual):
+	Add missing leading space.
+	(matchers.instantiate_a::format_expect): Add missing leading space,
+	and trailing comma.
+
+	stdlib: sync with upstream.
+	* lib/specl/std.lua: Improved Object implementation.
+	Adjust all clients.
+	* lib/specl/matchers.lua (Matcher::_type): Capitalize typename to
+	match stdlib pattern.
+	Adjust all clients.
+	* lib/specl/shell.lua (Command::_type): Likewise.
+	(Process::_type): Likewise.
+	* lib/specl/util.lua (type_check): Detect an Object based type
+	with `type (x) == "table" and Object.type (x) ~= "table"` rather
+	than encoding knowledge about the object layout (which just
+	changed with this update, and broke here in a hard to find way!).
+	* specs/shell_spec.yaml: Adjust for capitalized type names.
+
+2013-06-01  Gary V. Vaughan  <gary@gnu.org>
+
+	formatters: no need to hardcode 'not yet implemented' in progress.
+	* lib/specl/formatter/progress.lua (expectations): Like the report
+	formatter, we can rely on status.ispending or expectation.pending
+	to hold a suitable string, without hardcoding 'not yet implemented'
+	as a fallback.
+
+2013-05-31  Gary V. Vaughan  <gary@gnu.org>
+
+	formatters: insert missing space in unexpected pass message for report.
+	* lib/specl/formatter/report.lua: Insert a missing space in the
+	unexpected pass message.
+
+2013-05-25  Gary V. Vaughan  <gary@gnu.org>
+
+	formatters: report pending argument strings consistently.
+	* specs/formatter/spec_helper.lua (run_spec): Accept additional
+	arguments to SPECL call.
+	* specs/formatter/report_spec.yaml: Specify output for various
+	combinations of pending calls in example specs.
+	* specs/specl_spec.yaml: Loosen specification to allow additional
+	pending argument display.
+	* lib/specl/matchers.lua (pending): Always save the argument
+	as a string, defaulting to "not yet implemented".
+	* lib/specl/formatter/report_spec.yaml: Display pending argument
+	strings consistently.
+	* NEWS: Update.
+
+	formatters: report 'No expectations' instead of 'nan% of expectations'
+	* specs/formatters_spec.yaml: Move from here...
+	* specs/custom_formatters_spec.yaml: ...to here.
+	* specs/formatter/spec_helper.lua: New file. Implement spec
+	runner helper.
+	* specs/formatter/report_spec.yaml: Specify correct output from
+	report formatter.
+	* specs/specs.mk (specl_SPECS): Add
+	specs/formatter/report_spec.yaml.
+	(EXTRA_DIST): Add specs/formatter/spec_helper.lua.
+	* lib/specl/formatter/report.lua (footer): When there are zero
+	passing expectations, don't trigger a DIVBYZERO, just report "No
+	expectations met".
+	* NEWS: Update.
+
+	docs: clarify YAML string quotation rules.
+	* docs/specl.md (YAML): Not all punctuation forces description
+	strings to require quotes, only punctuation that is ambiguous to
+	the YAML parser.
+	* specs/matchers_spec.yaml, specs/specl_spec.yaml: Remove
+	unnecessary description quoting.
+
+2013-05-24  Gary V. Vaughan  <gary@gnu.org>
+
+	slingshot: sync with upstream.
+	* slingshot: Sync with upstream for scm_rockspec distribution.
+
+2013-05-22  Gary V. Vaughan  <gary@gnu.org>
+
+	stdlib: sync with upstream.
+	* lib/specl/std.lua (M.type): Use rawget to avoid triggering
+	__index metamethod when _type is not present.
+
+2013-05-21  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: equal matcher now understands std.objects.
+	* specs/matchers_spec.yaml: Specify desired behaviour when
+	comparing objects with the equal matcher.
+	* lib/specl/matchers.lua (objcmp): Compare the contents of
+	std.object derived types.
+	* docs/specl.md (equal): Update.
+	* NEWS: Update.
+
+2013-05-20  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: contain matcher now accepts std.objects.
+	Now that stdlib objects convert to tables by default (which in
+	turn prettyprint with ordered keys suitable for expectations to
+	compare against), should_contain can coerce an unknown object to
+	a table and search within that.
+	* specs/matchers_spec.yaml: Specify desired behaviour when passing
+	an object to the contain matcher.
+	* lib/specl/util.lua (type_check): Support "object" in the type
+	list, to denote a table that object.type recognises.
+	(M.totable): Re-export this from specl.std.
+	* lib/specl/matchers.lua (matchers.contain): Accept an object, and
+	coerce it to a table with std.table for comparison purposes.
+	* docs/specl.md (contain): Update.
+	* NEWS: Update.
+
+	stdlib: import prettyprint improvements from upstream.
+	* lib/specl/std.lua (render): Output table keys in order.
+	(prettytostring): Omit quoting for table keys that are already
+	valid symbol names.
+
+	stdlib: resync from upstream and reorganise hierarchically.
+	* lib/specl/std.lua (std): Return this new top-level namespace.
+	(std.func): New namespace for std.functional apis.
+	(std.string, std.io): Likewise.
+	(std.table): Likewise, adding totable api from upstream.
+	(std.object): Likewise, with a callable metatable like upstream.
+	(std.strbuf): Likewise, sync with Object based upstream
+	implementation.
+	* lib/specl/util.lua: Adjust.
+
+	stdlib: update object implementation from upstream.
+	* lib/specl/std.lua (Object, new, object): Update to typed object
+	from upstream.
+	* lib/specl/util.lua (Object, typeof): Remove custom type layer.
+	(object, object.type): Re-export apis from "specl.std".
+	Adjust all callers.
+
+	travis: regenerate .travis.yml.
+	* .travis.yml: Regenerate from Slingshot.
+
+2013-05-19  Gary V. Vaughan  <gary@gnu.org>
+
+	slingshot: let slingshot manage its own files.
+	* GNUmakefile, Makefile.am, build-aux/do-release-commit-and-tag,
+	build-aux/gitlog-to-changelog, build-aux/mail, build-aux/mkrockspecs,
+	build-aux/release.mk, build-aux/rockspecs.mk, build-aux/sanity.mk,
+	build-aux/specl.mk, m4/ax_compare_version.m4, m4/ax_lua.m4,
+	travis.yml.in: Remove.  Slingshot will pull back the right versions
+	during bootstrap.
+	* slingshot: New git submodule.
+	* bootstrap, bootstrap.slingshot: Manually copy in from Slingshot.
+	* .gitignore, bootstrap.conf, configure.ac: Adjust.
+	* NEWS: Update.
+
+	README: INSTALL is only available on release branch.
+	* README.md: Fix url for Automake installed INSTALL file to point
+	at release branch, where it is checked in.
+
+	configury: don't force distribution of README.md.
+	* Makefile.am (EXTRA_DIST): Don't force distribution of README.md.
+
+	git: consolidate and simplify .gitignore.
+	* bin/.gitignore, build-aux/.gitignore: Consolidate into...
+	* .gitignore: ...here.  Simplify.
+
+2013-05-18  Gary V. Vaughan  <gary@gnu.org>
 
 	configury: support non-autotool LuaRocks installation.
 	* Makefile.am, build-aux/mkrockspecs, build-aux/rockspecs.mk:

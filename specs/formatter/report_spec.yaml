@@ -1,0 +1,173 @@
+before:
+  require "spec_helper"
+
+
+describe report:
+- before:
+    preamble = "describe report:\n- it is pending:"
+
+
+- context with empty example:
+  - it exits with zero status:
+      expect (run_spec (preamble)).should_exit (0)
+  - it reports no expectations:
+      expect (run_spec (preamble)).
+        should_contain_output "No expectations met."
+  - it reports a pending example:
+      expect (run_spec (preamble)).
+         should_contain_output ", 1 pending "
+
+
+- context with pending call from empty example:
+  - before:
+      yaml = preamble .. "\n    pending ()"
+
+  - context in non-verbose mode:
+    - it exits with zero status:
+        expect (run_spec (yaml, args)).should_exit (0)
+    - it reports no expectations:
+        expect (run_spec (yaml, args)).
+          should_contain_output "No expectations met."
+    - it reports the pending example:
+        expect (run_spec (yaml, args)).
+        should_match_output ", 1 pending "
+    - it appends pending suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is pending %(PENDING example: not yet implemented%)\n"
+        )
+    - it lists pending example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of pending expectations:\n" ..
+          "%- report is pending: %(PENDING example: not yet implemented%)\n"
+        )
+
+  - context in verbose mode:
+    - before: args = "-v"
+    - it exits with zero status:
+        expect (run_spec (yaml, args)).should_exit (0)
+    - it reports no expectations:
+        expect (run_spec (yaml, args)).
+          should_contain_output "No expectations met."
+    - it reports the pending example:
+        expect (run_spec (yaml, args)).
+        should_match_output ", 1 pending "
+    - it appends pending suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is pending %(PENDING example: not yet implemented%)\n"
+        )
+    - it lists pending example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of pending expectations:\n" ..
+          "%- report is pending: %(PENDING example: not yet implemented%)\n"
+        )
+
+
+- context with pending argument from empty example:
+  - before: |
+      yaml = preamble .. "\n    pending 'see issue 123'"
+
+  - context in non-verbose mode:
+    - it exits with zero status:
+        expect (run_spec (yaml, args)).should_exit (0)
+    - it reports no expectations:
+        expect (run_spec (yaml, args)).
+          should_contain_output "No expectations met."
+    - it reports the pending example:
+        expect (run_spec (yaml, args)).
+        should_match_output ", 1 pending "
+    - it appends pending suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is pending %(PENDING example: see issue 123%)\n"
+        )
+    - it lists pending example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of pending expectations:\n" ..
+          "%- report is pending: %(PENDING example: see issue 123%)\n"
+        )
+
+  - context in verbose mode:
+    - before: args = "-v"
+    - it exits with zero status:
+        expect (run_spec (yaml, args)).should_exit (0)
+    - it reports no expectations:
+        expect (run_spec (yaml, args)).
+          should_contain_output "No expectations met."
+    - it reports the pending example:
+        expect (run_spec (yaml, args)).
+        should_match_output ", 1 pending "
+    - it appends pending suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is pending %(PENDING example: see issue 123%)\n"
+        )
+    - it lists pending example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of pending expectations:\n" ..
+          "%- report is pending: %(PENDING example: see issue 123%)\n"
+        )
+
+
+- context with pending argument before expectation:
+  - before: |
+      yaml = preamble .. "\n" ..
+             "    pending 'see issue 123'\n" ..
+             "    expect (1).should_be (0)\n"
+
+  - context in non-verbose mode:
+    - it exits with zero status:
+        expect (run_spec (yaml, args)).should_exit (0)
+    - it reports no expectations:
+        expect (run_spec (yaml, args)).
+          should_contain_output "No expectations met."
+    - it reports the pending example:
+        expect (run_spec (yaml, args)).
+        should_match_output ", 1 pending "
+    - it appends pending suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is pending %(1 pending%)\n"
+        )
+    - it lists pending example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of pending expectations:\n" ..
+          "%- report is pending:\n" ..
+          "  PENDING expectation 1: see issue 123\n"
+        )
+
+  - context in verbose mode:
+    - before: args = "-v"
+    - it exits with zero status:
+        expect (run_spec (yaml, args)).should_exit (0)
+    - it reports no expectations:
+        expect (run_spec (yaml, args)).
+          should_contain_output "No expectations met."
+    - it reports the pending example:
+        expect (run_spec (yaml, args)).
+        should_match_output ", 1 pending "
+    - it appends pending suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is pending\n" ..
+          "    PENDING expectation 1: see issue 123\n"
+        )
+    - it lists pending example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of pending expectations:\n" ..
+          "%- report is pending:\n" ..
+          "  PENDING expectation 1: see issue 123\n"
+        )

@@ -51,7 +51,7 @@ Specl includes [Markdown formatted documentation][github.io].
 [automake]:  http://gnu.org/s/automake
 [bdd]:       http://en.wikipedia.org/wiki/Behavior-driven_development
 [github.io]: http://gvvaughan.github.io/specl
-[install]:   http://raw.github.com/gvvaughan/specl/master/INSTALL
+[install]:   http://raw.github.com/gvvaughan/specl/release/INSTALL
 [lua]:       http://www.lua.org
 [luarocks]:  http://www.luarocks.org
 [rspec]:     http://github.com/rspec/rspec

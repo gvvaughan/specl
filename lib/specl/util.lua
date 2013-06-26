@@ -22,15 +22,7 @@
 local color = require "specl.color"
 local std   = require "specl.std"
 
-
-local Object = std.Object {_init = {"type"}, type = "object"}
-
-local function typeof (object)
-  if type (object) == "table" and object.type ~= nil then
-    return object.type
-  end
-  return type (object)
-end
+local Object = std.Object
 
 
 -- Map function F over elements of T and return a table of results.
@@ -56,8 +48,8 @@ local function concat (alternatives, infix, quoted)
 
   if quoted then
     alternatives = map (function (v)
-                          if typeof (v) ~= "string" then
-                            return std.tostring (v)
+                          if Object.type (v) ~= "string" then
+                            return std.string.tostring (v)
                           else
                             return ("%q"):format (v)
                           end
@@ -73,12 +65,12 @@ local function type_error (name, i, arglist, typelist)
   local expected = typelist[i]
   local actual = "no value"
 
-  if arglist[i] then actual = typeof (arglist[i]) end
+  if arglist[i] then actual = Object.type (arglist[i]) end
 
   if typelist[i] == "#table" then
     error ("bad argument #" .. tostring (i) .. " to '" .. name ..
            "' (non-empty table expected, got {})", 3)
-  elseif typeof (typelist[i]) == "table" then
+  elseif Object.type (typelist[i]) == "table" then
     -- format as, eg: "number, string or table"
     expected = concat (typelist[i], " or ")
   end
@@ -91,18 +83,21 @@ end
 -- Check that every parameter in <arglist> matches one of the types
 -- from the corresponding slot in <typelist>. Raise a parameter type
 -- error if there are any mismatches.
--- Rather than leave gaps in <typelist> (which breaks ipairs), use
--- the string "any" to accept any type from the corresponding <arglist>
--- slot.
+-- There are a few additional strings you can use in <typelist> to
+-- match special types in <arglist>:
+--
+--   #table    accept any non-empty table
+--   object    accept any std.Object derived type
+--   any       accept any type
 local function type_check (name, arglist, typelist)
   for i, v in ipairs (typelist) do
     if v ~= "any" then
-      if typeof (v) ~= "table" then v = {v} end
+      if Object.type (v) ~= "table" then v = {v} end
 
       if i > #arglist then
         type_error (name, i, arglist, typelist)
       end
-      local a = typeof (arglist[i])
+      local a = Object.type (arglist[i])
 
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
@@ -112,6 +107,13 @@ local function type_check (name, arglist, typelist)
             ok = true
             break
           end
+
+        elseif check == "object" then
+          if type (arglist[i]) == "table" and Object.type (arglist[i]) ~= "table" then
+            ok = true
+            break
+          end
+
         elseif a == check then
           ok = true
           break
@@ -165,25 +167,23 @@ local M = {
   -- Constants
   QUOTED         = true,
 
-  -- Prototypes
-  Object         = Object,
-
   -- Functions
-  chomp          = std.chomp,
+  chomp          = std.string.chomp,
   concat         = concat,
   indent         = indent,
   nop            = nop,
   map            = map,
-  merge          = std.merge,
-  escape_pattern = std.escape_pattern,
-  prettytostring = std.prettytostring,
+  merge          = std.table.merge,
+  escape_pattern = std.string.escape_pattern,
+  Object         = std.Object,
+  prettytostring = std.string.prettytostring,
   princ          = princ,
-  process_files  = std.processFiles,
-  slurp          = std.slurp,
+  process_files  = std.io.process_files,
+  slurp          = std.string.slurp,
   strip1st       = strip1st,
-  tostring       = std.tostring,
+  tostring       = std.string.tostring,
+  totable        = std.table.totable,
   type_check     = type_check,
-  typeof         = typeof,
   writc          = writc,
 }
 

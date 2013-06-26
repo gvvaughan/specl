@@ -587,7 +587,9 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-SPECL_FALSE
+EXTRA_ROCKS
+SPECL_MIN
+LUADOC_FALSE
 SED
 EGREP
 GREP
@@ -2290,7 +2292,12 @@ mkdir_p='$(MKDIR_P)'
 # in the wild :-(  We should find a proper way to deprecate it ...
 AMTAR='$${TAR-tar}'
 
+
+# We'll loop over all known methods to create a tar archive until one works.
+_am_tools='gnutar  pax cpio none'
+
 am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
+
 
 
 
@@ -3020,13 +3027,36 @@ $as_echo "$ac_cv_path_SED" >&6; }
   rm -f conftest.sed
 
 
-SPECL_FALSE=
-if test -f lib/specl.in; then :
-  SPECL_FALSE='#'
-fi
+
+  # Luadoc only works with Lua 5.1, so must be installed with care.
+  LUADOC_FALSE=#
 
 
-ac_config_files="$ac_config_files .travis.yml:travis.yml.in"
+  SPECL_MIN=${SPECL_MIN-"5"}
+
+
+  # luarocks requires a separate invocation per luarock, and lyaml
+  # is required by all slingshot clients for mkrockspecs.
+  EXTRA_ROCKS=-
+  for _ss_rock in lyaml ; do
+    # Enable associated .travis sections for special rocks.
+    case $_ss_rock in
+      luadoc)
+        LUADOC_FALSE=-
+        continue
+        ;;
+    esac
+
+    case $EXTRA_ROCKS in
+      *" $_ss_rock;"*) ;; # ignore duplicates
+      *)
+        EXTRA_ROCKS="$EXTRA_ROCKS"' $LUAROCKS install '"$_ss_rock;"
+        ;;
+    esac
+  done
+
+  ac_config_files="$ac_config_files .travis.yml:travis.yml.in"
+
 
 ac_config_files="$ac_config_files bin/specl:lib/specl.in"
 

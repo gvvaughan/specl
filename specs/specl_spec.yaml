@@ -2,7 +2,7 @@ before:
   require "spec_helper"
 
 describe specl:
-- "describe spec-file format":
+- describe spec-file format:
   - before: |
       yaml = "describe x:\n- it is pending:"
 
@@ -24,7 +24,7 @@ describe specl:
     - it reports unexpected pending passes: |
         yaml = yaml .. "\n    pending ()\n    expect (1).should_be (1)"
         expect (run_spec (yaml)).
-          should_match_output "%?.*PENDING expectation 1: passed unexpectedly"
+          should_match_output "%?.*PENDING expectation 1: .*passed unexpectedly"
     - it uses pending argument for pending passes: |
         yaml = yaml .. " |\n    pending 'issue #23'\n    expect (1).should_be (1)"
         expect (run_spec (yaml)).
@@ -42,12 +42,12 @@ describe specl:
 
   - it reads a spec from standard input with no arguments:
       expect (run_spec (yaml)).should_contain_output "All expectations met in "
-  - "it reads a spec from standard input for '-' filename argument":
+  - it reads a spec from standard input for '-' filename argument:
       expect (run_spec {"-"; stdin = yaml}).
         should_contain_output "All expectations met in "
   - it exits with zero status when there are no failing examples:
       expect (run_spec (yaml)).should_exit (0)
-  - "it exits with non-zero status when there are failing examples": |
+  - it exits with non-zero status when there are failing examples: |
       yaml = "describe x:\n- it fails: expect (1).should_be (0)"
       expect (run_spec (yaml)).should_not_exit (0)
   - it outputs results from a formatter specified on the command line:
@@ -76,7 +76,7 @@ describe specl:
           stdin = yaml,
         }
         expect (run_spec (command)).should_output "hs.f"
-    - "it accepts -f as an equivalent to --formatter":
+    - it accepts -f as an equivalent to --formatter:
         command = {
           "-f" .. fname, "-";
           env = { LUA_PATH = fdir .. "/?" },

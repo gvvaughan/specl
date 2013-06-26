@@ -31,7 +31,7 @@ build = {
     ["specl.formatter.report"] = "lib/specl/formatter/report.lua",
   },
   type = "builtin",
-  ["copy_directories"] = {
+  copy_directories = {
     "bin",
     "docs",
   },

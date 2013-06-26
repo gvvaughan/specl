@@ -50,8 +50,9 @@ check_local		=
 dist_bin_SCRIPTS	=
 dist_lua_DATA		=
 install_exec_hooks	=
-man_MANS		=
 lib_LTLIBRARIES		=
+man_MANS		=
+save_release_files	=
 
 include local.mk
 include build-aux/rockspecs.mk
@@ -69,12 +70,3 @@ check-local: $(check_local)
 ## ------------- ##
 
 install-exec-hook: $(install_exec_hooks)
-
-
-## ------------- ##
-## Distribution. ##
-## ------------- ##
-
-EXTRA_DIST +=						\
-	README.md					\
-	$(NOTHING_ELSE)

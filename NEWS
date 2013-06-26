@@ -1,16 +1,36 @@
 Specl NEWS - User visible changes.
 
-* Noteworthy changes in release 8 (2013-05-18) [stable]
+* Noteworthy changes in release 8 (2013-06-26) [stable]
 
 ** New features:
+
+  - Can now be installed directly from a release tarball by `luarocks`.
+    No need to run `./configure` or `make`, unless you want to install
+    to a custom location, or do not use LuaRocks.
 
   - A new 'all_of' adaptor for any matcher:
 
      expect (mytable).should_contain.all_of {x, y, z}
 
-  - Can now be installed directly from a release tarball by `luarocks`.
-    No need to run `./configure` or `make`, unless you want to install
-    to a custom location, or do not use LuaRocks.
+  - 'contain' matcher handles std.object module derived objects by
+    coercing them to tables.
+
+  - 'equal' matcher performs a deep comparison of std.object module
+    derived objects' contents.
+
+  - `./bootstrap` runs slowly again with 4800 lines of code
+    reintroduced required to automatically manage Slingshot files with
+    new `bootstrap.slingshot`.  This doesn't have any direct effect on
+    users, except that the Slingshot managed release process is much
+    more robust, reducing the chances you'll end up with a still-born
+    release.
+
+** Bug fixes:
+
+  - Avoid 'nan%' divide-by-zero error output from report formatter.
+
+  - Built in report formatter displays argument strings to pending
+    calls from examples consistently.
 
 ** Incompatible changes:
 

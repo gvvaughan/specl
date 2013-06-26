@@ -35,7 +35,16 @@
 
 check_local += specl-check-local
 specl-check-local: $(specl_SPECS)
-	$(AM_V_at)$(SPECL) $(SPECL_OPTS) $(specl_SPECS)
+	@v=`$(SPECL) --version | sed -e 's|^.* ||' -e 1q`;		\
+	if test "$$v" -lt "$(SPECL_MIN)"; then				\
+	  printf "%s%s\n%s\n"						\
+	    "ERROR: Specl version $$v is too old,"			\
+	    " please upgrade to at least version $(SPECL_MIN),"		\
+	    "ERROR: and rerun \`make check\`";				\
+	  exit 1;							\
+	else								\
+	  $(SPECL_ENV) $(SPECL) $(SPECL_OPTS) $(specl_SPECS);		\
+	fi
 
 
 ## ------------- ##

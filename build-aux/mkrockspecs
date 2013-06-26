@@ -29,7 +29,7 @@ SH=--[[                                             # -*- mode: lua; -*-
 ## ====================================================================
 
 # If LUA is not set, search PATH for something suitable.
-test -x "$LUA" || {
+test -n "$LUA" || {
   # Check that the supplied binary is executable and returns a compatible
   # Lua version number.
   func_vercheck ()
@@ -64,6 +64,14 @@ exec "$LUA" "$0" "$@"
 --[[ Parse options. ]]--
 --[[ ============== ]]--
 
+local usage = 'Usage: mkrockspecs [OPTIONS] PACKAGE VERSION [REVISION] [FILE]\n'
+
+prog = {
+  name = arg[0] and arg[0]:gsub (".*/", "") or "mkrockspecs",
+
+  opts = {},
+}
+
 -- Print an argument processing error message, and return non-zero exit
 -- status.
 local function opterr (msg)
@@ -73,45 +81,37 @@ local function opterr (msg)
   os.exit (2)
 end
 
-local usage = 'Usage: mkrockspecs [OPTIONS] PACKAGE VERSION [REVISION]\n'
-
-local prog = {
-  _VERSION = "2",
-
-  name = arg[0] and arg[0]:gsub (".*/", "") or "mkrockspecs",
-
-  opts = {},
-
-  ["--help"] = function ()
-    print (usage .. [[
+prog["--help"] = function ()
+  print (usage .. [[
 
 Convert a YAML configuration file into a full rockspec.
 
-If there is a 'rockspec.conf' in the current directory, load it as the
-base configuration, otherwise wait for input on stdin.
+If FILE is provided, load it as the base configuration, otherwise if
+there is a 'rockspec.conf' in the current directory use that, or else
+wait for input on stdin.  If FILE is '-', force reading base config-
+uration from stdin.
 
 PACKAGE and VERSION are the package name and version number as defined
 by 'configure.ac' or similar. REVISION is only required for a revised
 rockspec if the default "-1" revision was released with errors.
 
-      --help               print this help, then exit
-      --version            print version number, then exit
-  -m, --module-dir=[ROOT]  directory of lua-files for builtin build type
+      --help             print this help, then exit
+      --version          print version number, then exit
+  -m, --module-dir=ROOT  directory of lua-files for builtin build type
 
 Report bugs to http://github.com/gvvaughan/slingshot/issues.]])
     os.exit (0)
-  end,
+end
 
-  ["--version"] = function ()
-    print [[mkrockspecs (slingshot) 2
+prog["--version"] = function ()
+  print [[mkrockspecs (slingshot) 3
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2013, Gary V. Vaughan
 Slingshot comes with ABSOLUTELY NO WARRANTY.
 See source files for individual license conditions.]]
-    os.exit (0)
-  end,
-}
+  os.exit (0)
+end
 
 prog["--module-dir"] = function (arglist, i)
   local opt = arglist[i]
@@ -159,13 +159,13 @@ nonopts[0] = arg[0]
 _G.arg = nonopts
 
 if select ("#", ...) < 2 then
-  io.stderr:write (usage .. "\n")
-  os.exit ()
+  opterr ("only " .. select ("#", ...) .. " arguments provided")
 end
 
 local package  = arg[1]
 local version  = arg[2]
 local revision = arg[3] or "1"
+local conf     = arg[4] or "rockspec.conf"
 
 
 --[[ ================= ]]--
@@ -209,7 +209,6 @@ end
 --[[ =================== ]]--
 
 local yaml = require "lyaml"
-local conf = "rockspec.conf"
 
 -- Slurp io.input ().
 local function slurp ()
@@ -221,12 +220,16 @@ local function slurp ()
   end
 end
 
-local h = io.open (conf)
-if h then
-  io.input (conf)
-  h:close ()
-else
+if conf == "-" then
   io.input (io.stdin)
+else
+  local h = io.open (conf)
+  if h then
+    io.input (conf)
+    h:close ()
+  else
+    io.input (io.stdin)
+  end
 end
 
 local spec = yaml.load (slurp ())
@@ -239,7 +242,7 @@ if spec.source ~= nil then
 elseif spec.description ~= nil then
   url = spec.description.homepage
 end
-url = url:gsub ("^[a-z]*://", "")
+url = url:gsub ("^[a-z]*://", ""):gsub ("%.git$", "")
 
 -- Interpolate default values.
 default.package = package
@@ -259,7 +262,7 @@ if type (spec.external_dependencies) == "table" then
     configure_flags = configure_flags ..
         "CPPFLAGS='" .. CPPFLAGS:gsub ("^%s", "") .. "'" ..
         " LDFLAGS='" ..  LDFLAGS:gsub ("^%s", "") .. "'" ..
-	" "
+        " "
   end
 end
 
@@ -322,13 +325,13 @@ local function format (x, indent)
       local s = "{\n"
       for i, v in pairs (x) do
         if type (i) ~= "number" then
-	  s = s .. indent
-	  if i:match ("%W") then
+          s = s .. indent
+          if i:match ("[^_%w]") then
             -- wrap keys with non-%w chars in square brackets
-	    s = s .. '["' .. i .. '"]'
-	  else
-	    s = s .. i
-	  end
+            s = s .. '["' .. i .. '"]'
+          else
+            s = s .. i
+          end
           s = s .. " = " .. format (v, indent .. "  ") .. ",\n"
         end
       end

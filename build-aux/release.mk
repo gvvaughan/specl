@@ -106,6 +106,7 @@ release_extra_dist ?=					\
 	GNUmakefile					\
 	bootstrap					\
 	bootstrap.conf					\
+	bootstrap.slingshot				\
 	local.mk					\
 	travis.yml.in					\
 	$(NOTHING_ELSE)
@@ -156,7 +157,7 @@ no-submodule-changes:
 		echo "$$diff"; exit 1;; esac;				\
 	else								\
 	  : ;								\
-	fi
+	fi; true
 
 # Ensure that each sub-module commit we're using is public.
 # Without this, it is too easy to tag and release code that
@@ -239,7 +240,7 @@ news-check: NEWS
 release-commit:
 	$(AM_V_GEN)cd $(srcdir)						\
 	  && $(_build-aux)/do-release-commit-and-tag			\
-	       -C $(abs_builddir) $(VERSION) $(RELEASE_TYPE)
+	       -C '$(abs_builddir)' $(VERSION) $(RELEASE_TYPE)
 
 define emit-commit-log
   printf '%s\n' 'maint: post-release administrivia.' ''			\
@@ -312,7 +313,7 @@ announcement: NEWS
 	  '  luarocks install $(PACKAGE)-$(VERSION)' ''			\
 	  'Until the rocks are available from the official repository in a few days,' \
 	  'you can install directly from the $(PACKAGE) release branch, with:' \
-	  '' '  $$ luarocks install \'
+	  '' '  $$ luarocks install '\\
 	$(AM_V_at)$(ANNOUNCE_PRINT) 'print ($(GITHUB_ROCKSPEC))'
 
 

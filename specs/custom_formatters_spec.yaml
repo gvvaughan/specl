@@ -1,0 +1,66 @@
+before:
+  require "specl.shell"
+  require "spec_helper"
+
+describe custom formatters:
+- before: |
+    -- Spec-file to feed to the formatter.
+    yaml = "dummy:\n" ..
+           "- 1:\n" ..
+           "    expect (1).should_be (0)\n" ..
+           "    expect (0).should_not_be (0)\n" ..
+           "- 2:\n" ..
+           "- 3:\n"
+
+- context with an accumulator:
+  - before: |
+      tmpfile = os.tmpname ()
+
+      -- Write a custom formatter to a temporary file, with overrides from T.
+      function formatter (t)
+        local f = io.open (tmpfile, "w")
+        f:write "local util = require 'specl.util'\n"
+        f:write "return {\n"
+        for _, k in ipairs {"header", "spec", "expectations", "footer"} do
+          local fn = "function (_, a) print (util.tostring (a)) end"
+          if t[k] then
+            fn = t[k]
+          elseif k ~= "footer" then
+            fn = "util.nop"
+          end
+          f:write ("  " .. k .. " = " .. fn  .. ",\n")
+        end
+        f:write "}\n"
+        f:close ()
+        local d, f = tmpfile:match "^(.*)/([^/]*)$"
+        return {"-f" .. f, env = {LUA_PATH = d .. "/?"}, stdin = t.yaml}
+      end
+
+  - after:
+      os.remove (tmpfile)
+
+  - it will collect spec return strings:
+      cmd = formatter {
+        spec = "function (t) return t[#t] end", yaml = yaml,
+      }
+      expect (run_spec (cmd)).should_contain_output "dummy\n"
+  - it will collect expectations return strings: |
+      cmd = formatter {
+        expectations = "function (_, t) return t[#t] end", yaml = yaml,
+      }
+      expect (run_spec (cmd)).should_contain_output "123\n"
+  - it will collect spec return table keys:
+      cmd = formatter { spec =
+        "function (t) return {[1] = table.concat (t, '>'), [2] = t[#t]} end",
+        yaml = yaml,
+      }
+      expect (run_spec (cmd)).should_contain_output "{1=dummy,2=dummy}"
+  - it will collect expectations return table keys:
+      cmd = formatter { expectations =
+        "function (_, t)\n" ..
+        "  return { [1] = table.concat (t, '>') .. ';', [2] = t[#t] }\n" ..
+        "end",
+        yaml = yaml,
+      }
+      expect (run_spec (cmd)).
+        should_contain_output "{1=dummy>1;dummy>2;dummy>3;,2=123}"
