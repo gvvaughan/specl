@@ -1,14 +1,10 @@
 owner:   Gary V. Vaughan
 account: gvvaughan
 
-# committing a change to _config.yml alone isn't enough to force
-# a regeneration of _site at github...
-#
-# *** CHANGE THE RELEASE NUMBER IN THE _layouts/default.html MANUALLY ***
 name:         Specl
 description:  Behaviour Driven Development for Lua.
 forkme:       "https://github.com/gvvaughan/specl"
-release-no:   7
+release-no:   8
 
 url:      "http://gvvaughan.github.io/specl"
 pygments: true

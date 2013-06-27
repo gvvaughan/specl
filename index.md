@@ -76,13 +76,13 @@ Indenting with TAB characters is a syntax error, because the [YAML][]
 parser uses indentation columns to infer nesting.  It's easiest just to
 avoid putting TAB characters in your spec files entirely.
 
-Punctuation is not allowed in an unquoted [YAML][] string, so you will
-need to force the parser to read the description as a string by
+Some punctuation is not allowed in an unquoted [YAML][] string, so you
+will need to force the parser to read the description as a string by
 surrounding it with `"` (double-quote mark) if you want to put any
 punctuation in the description text:
 
 {% highlight lua %}
-    - "it requires double-quote marks, but only when using punctuation":
+    - "it requires double-quote marks: but only when using punctuation":
 {% endhighlight %}
 
 Indentation of the code following an example description must be at
@@ -117,10 +117,11 @@ this:
 
 You also have to be careful about commenting within a spec-file. [YAML][]
 comments begin with ` #` (space, hash) and extend to the end of the line.
-You can use these anywhere outside of a Lua code block. [Lua][] comments
-don't work outside of a lua block, and [YAML][] comments don't work
-inside a Lua block, so you have to pick the right comment character,
-depending where in the hierarchy it will go.
+You can use these anywhere outside of a Lua code block, including any
+lines immediately following a description before any actual [Lua][] code.
+[Lua][] comments don't work outside of a lua block, and [YAML][] comments
+don't work inside a Lua block, so you have to pick the right comment
+character, depending where in the hierarchy it will go.
 
 ### 1.2. Contexts
 
@@ -327,15 +328,19 @@ still separate and distinct objects.
 
 [equal]: #22_equal
 
-To get around that problem when comparing tables, use the `equal`
-matcher, which does a recursive element by element comparison of the
-expectation. The following expectations all pass:
+To get around that problem when comparing tables, or std.object derived
+objects, use the `equal` matcher, which does a recursive element by
+element comparison of the contents of the expectation arguments. The
+following expectations all pass:
 
 {% highlight lua %}
 {% raw %}
     expect ({}).should_equal ({})
     expect ({1, two = "three"}).should_equal ({1, two = "three"})
     expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2}, {{3}, 4}})
+
+    Set = require "std.set"
+    expect (Set {1, 2, 5, 3}).should_equal (Set {5, 1, 2, 3})
 {% endraw %}
 {% endhighlight %}
 
@@ -362,9 +367,13 @@ keys can be of any type.
 {% endraw %}
 {% endhighlight %}
 
-If `expect` passes anything other than a string or table to this
-matcher, [Specl][] aborts with an error; use `tostring` or similar if
-you need it.
+A final convenience is that `contain` will use the `__totable`
+metamethod of any lua-stdlib `std.object` derived objects to coerce
+a table to test for matching keys or values in the expectation.
+
+If `expect` passes anything other than a string, table or `std.object`
+derivative to this matcher, [Specl][] aborts with an error; use
+`tostring` or similar if you need to.
 
 ### 2.4. match
 
@@ -411,12 +420,22 @@ Note that the last `should_not_error` example doesn't pass the error
 message substring that _should not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
-### 2.7. Matching alternatives with any_of
+### 2.7. Matcher adaptors
 
-[matching alternatives with any_of]: #27_matching_alternative_with_any_of
+[matcher adaptors]: #27_matcher_adaptors
+
+In addition to using matchers for straight one-to-one comparisons
+between the result of an `expect` and the argument provided to the
+matcher, [Specl][] has some shortcuts that can intercept the arguments
+and adapt the comparison sequence.  These shortcuts are called
+_adaptors_.
+
+#### 2.7.1. Matching alternatives with any_of
+
+[matching alternatives with any_of]: #271_matching_alternative_with_any_of
 
 When you want to check whether an expectation matches among a list of
-alternatives, [Specl][] supports a `any_of` method for any matcher:
+alternatives, [Specl][] supports an `any_of` adaptor for any matcher:
 
 {% highlight lua %}
     expect (ctermid ()).should_match.any_of {"/.*tty%d+", "/.*pts%d+"}
@@ -432,6 +451,42 @@ an expectation succeeds only if none of the alternatives match:
     expect (type "x").should_not_be.any_of {"table", "nil"}
 {% endhighlight %}
 
+#### 2.7.2. Multiple matches with all_of
+
+[multiple matches with all_of]: #272_multiple_matches_with_all_of
+
+When you need to ensure that several matches succed, [Specl][] provides
+the `all_of` adaptor:
+
+{% highlight lua %}
+    expect (("1 2 5"):split " ").should_contain.all_of {"1", "2"}
+{% endhighlight %}
+
+This expectation succeeds if the `split` method produces a table that
+contains each of the strings in the argument to `all_of`; note that it
+does not fail if there are elements other than those specified - the
+example above will succeed even though there is (presumably!) an
+unchecked `"5"` element in the table returned by this `split`.
+
+For completeness, `all_of` can surely be combined with `not`, but the
+resulting expression is hard to understand, so I recommend that you
+don't use it.  Try running the following to see whether it behaves as
+you expect, and notice how carefully you have to think about it
+compared to the usual English inspired syntax of [Specl][]
+expectations:
+
+{% highlight lua %}
+    expect ({true}).should_not_contain.all_of {true, false}
+{% endhighlight %}
+
+If you want to assert that an expectation does not contain any of the
+supplied elements, it is far better to use:
+
+{% highlight lua %}
+    expect ({non_boolean_result}).should_not_contain.any_of {true, false}
+{% endhighlight %}
+
+
 ### 2.8. Custom Matchers
 
 [custom matchers]: #28_custom_matchers
@@ -445,7 +500,7 @@ contents of the `should_` argument:
 
 {% highlight lua %}
     ...
-    Matcher {
+    matchers.Matcher {
       function (actual, expected)
         return (actual == expected)
       end,
@@ -466,14 +521,14 @@ You can do this in a `before` block, or your `spec_helper.lua` (see
 
 {% highlight lua %}
     ...
-    require "specl.matcher"
+    matchers = require "specl.matchers"
 
-    matcher.be_again = Matcher {
+    matchers.matchers.be_again = matchers.Matcher {
       function (actual, expected)
     ...
 {% endhighlight %}
 
-Note that the `matcher` table needs to do some work to fully install
+Note that the `matchers` table needs to do some work to fully install
 the new `be_again`, and so checks that the assignment is the result
 of a `Matcher` factory call.  Trying to assign anthing else won't
 work.
@@ -487,27 +542,27 @@ constructor:
 
 {% highlight lua %}
     ...
-    matcher.be_again = Matcher {
+    matchers.matchers.be_again = matchers.Matcher {
       function (actual, expected)
         return (actual == expected)
       end,
 
       format_expect = function (expected)
-        return " exactly " .. matcher.stringify (expected)
+        return " exactly " .. matchers.stringify (expected)
       end,
     }
     ...
 {% endhighlight %}
 
-Notice the use of `matcher.stringify` to coerce the `expected`
+Notice the use of `matchers.stringify` to coerce the `expected`
 parameter to a nicely formatted and quoted string.  `stringify` is
 less useful here than it is in the other formatting function slot,
 `format_actual`.
 
 Both of these functions are passed all of the arguments that are
 generated in the code wrapped in `expect` that eventually leads to
-the custom matcher, though they are not useful here, the full
-prototypes are:
+the custom matcher, though they are not useful in this particular
+example, the full prototypes are:
 
 {% highlight lua %}
     function format_expect (expected, actual, ...)
@@ -522,17 +577,17 @@ Usually, you'll also need to provide nicely formatted messages when
 the `Matcher` constructor:
 
 {% highlight lua %}
-    function format_any_of (alternatives, actual, ...)
+    function format_alternatives (adaptor, alternatives, actual, ...)
 {% endhighlight %}
 
-When constructed without a specific `format_any_of` entry, `Matcher`
-uses the default format, similarly to how `table.concat` behaves with
-", " separators, except that the final separator is always " or ", and
-the individual entries are stringified first.  If you want to make use
-of that format in your own matchers, it is available in `specl.util`
-as `concat`.  Again examples of this, and the more complicated shell
-output formatter (`specl.util.reformat`) are available in the source
-code, from `specl/shell.lua`.
+When constructed without a specific `format_alternatives` entry,
+`Matcher` uses the default format, similarly to how `table.concat`
+behaves with ", " separators, except that the final separator is always
+" or ", and the individual entries are stringified first.  If you want
+to make use of that format in your own matchers, it is available in
+`specl.util` as `concat`.  Again examples of this, and the more
+complicated shell output formatter (`specl.util.reformat`) are available
+in the source code, from `specl/shell.lua`.
 
 One final feature of the `Matcher` constructor is that you can have it
 enforce a particular type (or types) for the `actual` parameter, by
@@ -541,7 +596,7 @@ the built in `contain` matcher handles matching against both Lua string
 types and Lua tables:
 
 {% highlight lua %}
-    matcher.contain = Matcher {
+    matchers.matchers.contain = matchers.Matcher {
       ...
       actual_type = {"string", "table"},
     ...
