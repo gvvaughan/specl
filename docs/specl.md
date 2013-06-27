@@ -420,12 +420,22 @@ Note that the last `should_not_error` example doesn't pass the error
 message substring that _should not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
-### 2.7. Matching alternatives with any_of
+### 2.7. Matcher adaptors
 
-[matching alternatives with any_of]: #27_matching_alternative_with_any_of
+[matcher adaptors]: #27_matcher_adaptors
+
+In addition to using matchers for straight one-to-one comparisons
+between the result of an `expect` and the argument provided to the
+matcher, [Specl][] has some shortcuts that can intercept the arguments
+and adapt the comparison sequence.  These shortcuts are called
+_adaptors_.
+
+#### 2.7.1. Matching alternatives with any_of
+
+[matching alternatives with any_of]: #271_matching_alternative_with_any_of
 
 When you want to check whether an expectation matches among a list of
-alternatives, [Specl][] supports a `any_of` method for any matcher:
+alternatives, [Specl][] supports an `any_of` adaptor for any matcher:
 
 {% highlight lua %}
     expect (ctermid ()).should_match.any_of {"/.*tty%d+", "/.*pts%d+"}
@@ -440,6 +450,42 @@ an expectation succeeds only if none of the alternatives match:
 {% highlight lua %}
     expect (type "x").should_not_be.any_of {"table", "nil"}
 {% endhighlight %}
+
+#### 2.7.2. Multiple matches with all_of
+
+[multiple matches with all_of]: #272_multiple_matches_with_all_of
+
+When you need to ensure that several matches succed, [Specl][] provides
+the `all_of` adaptor:
+
+{% highlight lua %}
+    expect (("1 2 5"):split " ").should_contain.all_of {"1", "2"}
+{% endhighlight %}
+
+This expectation succeeds if the `split` method produces a table that
+contains each of the strings in the argument to `all_of`; note that it
+does not fail if there are elements other than those specified - the
+example above will succeed even though there is (presumably!) an
+unchecked `"5"` element in the table returned by this `split`.
+
+For completeness, `all_of` can surely be combined with `not`, but the
+resulting expression is hard to understand, so I recommend that you
+don't use it.  Try running the following to see whether it behaves as
+you expect, and notice how carefully you have to think about it
+compared to the usual English inspired syntax of [Specl][]
+expectations:
+
+{% highlight lua %}
+    expect ({true}).should_not_contain.all_of {true, false}
+{% endhighlight %}
+
+If you want to assert that an expectation does not contain any of the
+supplied elements, it is far better to use:
+
+{% highlight lua %}
+    expect ({non_boolean_result}).should_not_contain.any_of {true, false}
+{% endhighlight %}
+
 
 ### 2.8. Custom Matchers
 
