@@ -54,18 +54,9 @@ exec "$LUA" "$0" "$@"
 -- Notify modules that specifications are being checked.
 _G._SPEC = true
 
-local specl  = require "specl"
-local util   = require "specl.util"
-local ok, yaml = pcall (require, "yaml")
-
--- lyaml < 4 compatibility:
-if not ok then
-  -- lyaml < 4 returns only the first document in the YAML stream, so wrap it
-  -- in a table to simulate lyaml >= 4 (if lyaml >= 4 discarded document 2+!)
-  yaml = require "lyaml"
-  local load = yaml.load
-  yaml.load = function (...) return { load (...) } end
-end
+local specl = require "specl"
+local util  = require "specl.util"
+local yaml  = require "lyaml"
 
 
 -- Make a shallow copy of the pristine global environment, so that the
@@ -135,7 +126,7 @@ function slurp (filename)
     os.exit (1)
   end
 
-  t = yaml.load (s)
+  t = yaml.load (s, true)
 
   -- Prepend the spec file location to the package load path, so that
   -- requiring unqualified names from that directory works right away.
