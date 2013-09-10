@@ -19,12 +19,44 @@
 -- MA 02111-1301, USA.
 
 
-local util = require "specl.util"
-local yaml = require "yaml"
+local macro = require "macro"
+local util  = require "specl.util"
+local yaml  = require "yaml"
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
 local null       = { type = "LYAML null" }
+
+
+-- Capture errors thrown by expectations.
+macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
+
+-- Compile S into a callable function.
+-- LOCATION is used with error messages from loadstring().
+local function compile (location, s)
+  -- Wrap the fragment into a function that we can call later.
+  local f, errmsg = loadstring ("return function () " ..
+                      macro.substitute_tostring (s) .. "\nend", location)
+
+  if f == nil then
+     local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+     if msg ~= nil then
+       errmsg = location .. ":" .. line .. ": " .. msg
+     end
+     io.stderr:write (errmsg .. "\n")
+     os.exit (1)
+  end
+
+  -- Execute the function from 'loadstring' or report an error right away.
+  if f ~= nil then
+    f, errmsg = f ()
+  end
+  if errmsg ~= nil then
+    error (errmsg)
+  end
+
+  return f
+end
 
 
 -- Metatable for Parser objects.
@@ -53,7 +85,7 @@ local parser_mt = {
       self.event = self.next ()
       self.mark  = {
         line   = tostring (self.event.start_mark.line + 1),
-	column = tostring (self.event.start_mark.column + 1),
+        column = tostring (self.event.start_mark.column + 1),
       }
       -- TODO: report parser problems here
       return self:type ()
@@ -74,12 +106,20 @@ local parser_mt = {
         if value == nil then
           return self:error ("unexpected " .. self:type () .. " event")
         end
-        -- Be careful not to overwrite injected preamble.
-	if key == "before" then
-	  map.before = table.concat {map.before or "", value}
-	else
+        if key == "before" then
+          -- Be careful not to overwrite injected preamble.
+          map.before = table.concat {map.before or "", value}
+        elseif value == "" then
+          map[key] = compile (key, "pending ()")
+        elseif type (value) == "string" then
+          map[key] = compile (key, value)
+        else
           map[key] = value
-	end
+        end
+      end
+      -- Delayed compilation of before, having injecting preamble now.
+      if type (map.before) == "string" then
+        map.before = compile ("before", map.before)
       end
       return map
     end,
@@ -91,14 +131,14 @@ local parser_mt = {
       while true do
         local node = self:load_node ()
         if node == nil then
-	  break
+          break
         elseif node.before then
-	  sequence.before = node.before
-	elseif node.after then
+          sequence.before = node.before
+        elseif node.after then
           sequence.after = node.after
-	else
+        else
           sequence[#sequence + 1] = node
-	end
+        end
       end
       return sequence
     end,
@@ -200,6 +240,10 @@ local function load (filename, s)
 
     -- save document
     documents[#documents + 1] = document
+
+    -- Hoist document-level befores and afters.
+    documents.before, document.before = document.before, nil
+    documents.after, document.after = document.after, nil
 
     -- reset anchor table
     parser.anchors = {}

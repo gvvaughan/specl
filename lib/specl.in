@@ -125,21 +125,7 @@ function slurp (filename)
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
   end
-
-  t = loader.load (filename, s)
-
-  for _, document in ipairs (t) do
-    local spec = {
-      before    = document.before,
-      after     = document.after,
-      document,
-    }
-
-    -- Remove duplicate entries already hoisted out above.
-    document.before, document.after = nil, nil
-
-    table.insert (specs, spec)
-  end
+  specs[#specs + 1] = loader.load (filename, s)
 end
 
 

@@ -19,8 +19,6 @@
 -- MA 02111-1301, USA.
 
 
-local macro      = require "macro"
-
 -- Use the simple progress formatter by default.  Can be changed by run().
 local formatter  = require "specl.formatter.progress"
 local matchers   = require "specl.matchers"
@@ -58,102 +56,6 @@ end
 --[[ ============= ]]--
 --[[ Spec' Runner. ]]--
 --[[ ============= ]]--
-
-
-local compile_specs, compile_contexts, compile_examples, compile_example
-
-
--- These strings cannot be used for an example description.
-local reserved = { before = true, after = true }
-
-
--- SPECS are compiled destructively in the specs table itself.
-function compile_specs (specs)
-  for i, spec in ipairs (specs) do
-    specs[i] = compile_examples (spec)
-  end
-end
-
-
--- Return EXAMPLES table with all of the lua fragments compiled into
--- callable functions.
-function compile_examples (examples)
-  local compiled = {}
-
-  -- Make sure we have a function for every reserved word.
-  for s in pairs (reserved) do
-    compiled[s] = compile_example (s, examples[s])
-  end
-
-  for _, example in ipairs (examples) do
-    -- There is only one, otherwise we can't maintain example order.
-    local description, definition = next (example)
-
-    -- Undo any type coercion from YAML where a description looked like
-    -- something else.
-    description = tostring(description)
-
-    if type (definition) == "string" then
-      -- Uncompiled Lua code.
-      if definition == "" then definition = "pending ()" end
-      table.insert (compiled, { [description] = compile_example (description, definition) })
-
-    elseif type (definition) == "table" then
-      -- A nested context table.
-      table.insert (compiled, compile_contexts (example))
-
-    else
-      -- Oh dear, most likely your nesting is not quite right!
-      error ('malformed spec in "' .. tostring (description) .. '", a ' ..
-             type (definition) .. " (expecting table or string)")
-    end
-  end
-
-  return compiled
-end
-
-
--- CONTEXTS are also compiled destructively in place.
-function compile_contexts (contexts)
-  for description, examples in pairs (contexts) do
-    contexts[description] = compile_examples (examples)
-  end
-  return contexts
-end
-
-
--- Capture errors thrown by expectations.
-macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
-
--- Compile S into a callable function.  If S is a reserved word,
--- then return a function that does nothing.
--- If FILENAME is passed, it is used in error messages from loadstring().
-function compile_example (location, s)
-  if s == nil then return util.nop end
-
-  -- Wrap the fragment into a function that we can call later.
-  local f, errmsg = loadstring ("return function () " ..
-                      macro.substitute_tostring (s) .. "\nend", filename)
-
-  if f == nil then
-     local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
-     if msg ~= nil then
-       errmsg = location .. ":" .. line .. ": " .. msg
-     end
-     io.stderr:write (errmsg .. "\n")
-     os.exit (1)
-  end
-
-  -- Execute the function from 'loadstring' or report an error right away.
-  if f ~= nil then
-    f, errmsg = f ()
-  end
-  if errmsg ~= nil then
-    error (errmsg)
-  end
-
-  return f
-end
 
 
 -- Append non-nil ARG to HOLDER.accumulated.
@@ -232,16 +134,14 @@ function run_examples (examples, descriptions, env)
 
     setmetatable (fenv, metatable)
     initenv (fenv)
-    setfenv (examples.before, fenv)
-    examples.before ()
+
+    if examples.before ~= nil then
+      setfenv (examples.before, fenv)
+      examples.before ()
+    end
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
-
-    if type (definition) == "string" then
-      -- Uncompiled example.
-      definition = compile_example (definition)
-    end
 
     if type (definition) == "table" then
       -- A nested context, revert back to run_contexts.
@@ -260,8 +160,10 @@ function run_examples (examples, descriptions, env)
       table.remove (descriptions)
     end
 
-    setfenv (examples.after, fenv)
-    examples.after ()
+    if examples.after ~= nil then
+      setfenv (examples.after, fenv)
+      examples.after ()
+    end
   end
 
   for _, example in ipairs (examples) do
@@ -288,9 +190,6 @@ end
 -- Run SPECS, according to OPTS and ENV.
 function run (specs, env)
   formatter = opts.formatter or formatter
-
-  -- Precompile Lua code on initial pass.
-  compile_specs (specs)
 
   env.specl = {
     -- Environment access to core functions that we override to
