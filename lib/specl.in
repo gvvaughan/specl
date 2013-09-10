@@ -126,7 +126,7 @@ function slurp (filename)
     os.exit (1)
   end
 
-  t = loader.load (s)
+  t = loader.load (filename, s)
 
   -- Prepend the spec file location to the package load path, so that
   -- requiring unqualified names from that directory works right away.

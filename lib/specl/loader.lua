@@ -35,6 +35,12 @@ local parser_mt = {
       return tostring (self.event.type)
     end,
 
+    -- Raise a parse error.
+    error = function (self, errmsg)
+      return error (self.filename .. ":" .. self.mark.line .. ":" ..
+                    self.mark.column .. ": " .. errmsg, 0)
+    end,
+
     -- Save node in the anchor table for reference in future ALIASes.
     add_anchor = function (self, node)
       if self.event.anchor ~= nil then
@@ -45,6 +51,10 @@ local parser_mt = {
     -- Fetch the next event.
     parse = function (self)
       self.event = self.next ()
+      self.mark  = {
+        line   = tostring (self.event.start_mark.line + 1),
+	column = tostring (self.event.start_mark.column + 1),
+      }
       -- TODO: report parser problems here
       return self:type ()
     end,
@@ -58,7 +68,7 @@ local parser_mt = {
         if key == nil then break end
         local value = self:load_node ()
         if value == nil then
-          error ("unexpected " .. self:type () .. "event")
+          return self:error ("unexpected " .. self:type () .. " event")
         end
         map[key] = value
       end
@@ -109,7 +119,7 @@ local parser_mt = {
     load_alias = function (self)
       local anchor = self.event.anchor
       if self.anchors[anchor] == nil then
-        error ("invalid reference: " .. tostring (anchor))
+        return self:error ("invalid reference: " .. tostring (anchor))
       end
       return self.anchors[anchor]
     end,
@@ -127,7 +137,7 @@ local parser_mt = {
 
       local event = self:parse ()
       if dispatch[event] == nil then
-        error ("invalid event: " .. self:type ())
+        return self:error ("invalid event: " .. self:type ())
       end
      return dispatch[event] (self)
     end,
@@ -136,31 +146,35 @@ local parser_mt = {
 
 
 -- Parser object constructor.
-local function Parser (s)
+local function Parser (filename, s)
   local object = {
-    anchors = {},
-    next    = yaml.parser (s),
+    anchors  = {},
+    filename = filename:gsub ("^%./", ""),
+    mark     = { line = "0", column = "0" },
+    next     = yaml.parser (s),
   }
   return setmetatable (object, parser_mt)
 end
 
 
-local function load (s)
+local function load (filename, s)
   local documents = {}
-  local parser    = Parser (s)
+  local parser    = Parser (filename, s)
 
   if parser:parse () ~= "STREAM_START" then
-    error ("expecting STREAM_START event, but got " .. parser:type ())
+    return parser:error ("expecting STREAM_START event, but got " ..
+                         parser:type ())
   end
 
   while parser:parse () ~= "STREAM_END" do
     local document = parser:load_node ()
     if document == nil then
-      error ("unexpected " .. parser:type () .. " event")
+      return parser:error ("unexpected " .. parser:type () .. " event")
     end
 
     if parser:parse () ~= "DOCUMENT_END" then
-      error ("expecting DOCUMENT_END event, but got " .. parser:type ())
+      return parser:error ("expecting DOCUMENT_END event, but got " ..
+                           parser:type ())
     end
 
     -- save document
