@@ -93,14 +93,7 @@ function compile_examples (examples)
     -- something else.
     description = tostring(description)
 
-    if reserved[description] then
-      -- YAML specs store reserved words in the ordered example list,
-      -- so we have to hoist them out where we can rerun them around
-      -- each real example in the list, without digging through all the
-      -- entries each time.
-      compiled[description] = compile_example (description, definition)
-
-    elseif type (definition) == "string" then
+    if type (definition) == "string" then
       -- Uncompiled Lua code.
       if definition == "" then definition = "pending ()" end
       table.insert (compiled, { [description] = compile_example (description, definition) })

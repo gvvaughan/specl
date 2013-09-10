@@ -90,8 +90,15 @@ local parser_mt = {
       self:add_anchor (sequence)
       while true do
         local node = self:load_node ()
-        if node == nil then break end
-        sequence[#sequence + 1] = node
+        if node == nil then
+	  break
+        elseif node.before then
+	  sequence.before = node.before
+	elseif node.after then
+          sequence.after = node.after
+	else
+          sequence[#sequence + 1] = node
+	end
       end
       return sequence
     end,
