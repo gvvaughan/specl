@@ -54,9 +54,9 @@ exec "$LUA" "$0" "$@"
 -- Notify modules that specifications are being checked.
 _G._SPEC = true
 
-local specl = require "specl"
-local util  = require "specl.util"
-local yaml  = require "lyaml"
+local specl  = require "specl"
+local util   = require "specl.util"
+local loader = require "specl.loader"
 
 
 -- Make a shallow copy of the pristine global environment, so that the
@@ -126,7 +126,7 @@ function slurp (filename)
     os.exit (1)
   end
 
-  t = yaml.load (s, true)
+  t = loader.load (s)
 
   -- Prepend the spec file location to the package load path, so that
   -- requiring unqualified names from that directory works right away.
