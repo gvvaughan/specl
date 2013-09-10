@@ -168,4 +168,196 @@ specify optparse:
         expect (parse {"-vofilename"}).
           should_output "opts = { output = filename, verbose = true }\n"
         expect (parse {"-vobn"}).
-          shauld_output "opts = { output = bn, verbose = true }\n"
+          should_output "opts = { output = bn, verbose = true }\n"
+
+- describe parser:on:
+  - before: |
+      f = os.tmpname ()
+
+      function parseargs (onargstr, arglist)
+        local d = f:gsub ("/[^/]*$", "", 1)
+        local h = io.open (f, "w")
+
+        h:write ([[
+          package.path = "]] .. package.path .. [["
+          local OptionParser = require 'specl.optparse'
+          local help = [=[]] .. help .. [[]=]
+          help = help:match ("^[%s\n]*(.-)[%s\n]*$")
+
+          local parser = OptionParser (help)
+
+          parser:on (]] .. onargstr .. [[)
+
+          local arg, opts = parser:parse (_G.arg)
+
+          o = {}
+          for k, v in pairs (opts) do
+            table.insert (o, k .. " = " .. tostring (v))
+          end
+          if #o > 0 then
+            table.sort (o)
+            print ("opts = { " .. table.concat (o, ", ") .. " }")
+          end
+          if #arg > 0 then
+            print ("args = { " .. table.concat (arg, ", ") .. " }")
+          end
+        ]])
+        h:close ()
+
+        return hell.spawn {arg[-1], f, unpack (arglist)}
+      end
+  - after: os.remove (f)
+
+  - it recognises short options:
+      expect (parseargs ([["x"]], {"-x"})).
+        should_output "opts = { x = true }\n"
+  - it recognises long options:
+      expect (parseargs([["something"]], {"--something"})).
+        should_output "opts = { something = true }\n"
+  - it recognises long options with hyphens:
+      expect (parseargs([["some-thing"]], {"--some-thing"})).
+        should_output "opts = { some_thing = true }\n"
+  - it recognises long options named after Lua keywords:
+      expect (parseargs ([["if"]], {"--if"})).
+        should_output "opts = { if = true }\n"
+  - it recognises combined short and long option specs:
+      expect (parseargs ([[{"x", "if"}]], {"-x"})).
+        should_output "opts = { if = true }\n"
+      expect (parseargs ([[{"x", "if"}]], {"--if"})).
+        should_output "opts = { if = true }\n"
+  - it recognises options with several spellings:
+      expect (parseargs ([[{"x", "blah", "if"}]], {"-x"})).
+        should_output "opts = { if = true }\n"
+      expect (parseargs ([[{"x", "blah", "if"}]], {"--blah"})).
+        should_output "opts = { if = true }\n"
+      expect (parseargs ([[{"x", "blah", "if"}]], {"--if"})).
+        should_output "opts = { if = true }\n"
+  - it recognises end of options marker:
+      expect (parseargs ([["x"]], {"--", "-x"})).
+        should_output "args = { -x }\n"
+  - context given an option with a required argument:
+    - it records an argument to a short option without a space:
+        expect (parseargs ([["x", parser.required]], {"-y", "-xarg", "-b"})).
+          should_contain_output "opts = { b = true, x = arg }"
+    - it records an argument to a short option following a space:
+        expect (parseargs ([["x", parser.required]], {"-y", "-x", "arg", "-b"})).
+          should_contain_output "opts = { b = true, x = arg }\n"
+    - it records an argument to a long option following a space:
+        expect (parseargs ([["this", parser.required]], {"--this", "arg"})).
+          should_output "opts = { this = arg }\n"
+    - it records an argument to a long option following an '=' delimiter:
+        expect (parseargs ([["this", parser.required]], {"--this=arg"})).
+          should_output "opts = { this = arg }\n"
+    - it diagnoses a missing argument:
+        expect (parseargs ([[{"x", "this"}, parser.required]], {"-x"})).
+          should_contain_error "'-x' requires an argument"
+        expect (parseargs ([[{"x", "this"}, parser.required]], {"--this"})).
+          should_contain_error "'--this' requires an argument"
+    - context with a boolean handler function:
+      - it records a truthy argument:
+          for _, optarg in ipairs {"1", "TRUE", "true", "yes", "Yes", "y"}
+          do
+            expect (parseargs ([["x", parser.required, parser.boolean]],
+                               {"-x", optarg})).
+              should_output "opts = { x = true }\n"
+          end
+      - it records a falsey argument:
+          for _, optarg in ipairs {"0", "FALSE", "false", "no", "No", "n"}
+          do
+            expect (parseargs ([["x", parser.required, parser.boolean]],
+                               {"-x", optarg})).
+              should_output "opts = { x = false }\n"
+          end
+    - context with a file handler function:
+      - it records an existing file:
+          expect (parseargs ([["x", parser.required, parser.file]],
+                             {"-x", "/dev/null"})).
+            should_output "opts = { x = /dev/null }\n"
+      - it diagnoses a missing file: |
+          expect (parseargs ([["x", parser.required, parser.file]],
+                             {"-x", "/this/file/does/not/exist"})).
+            should_contain_error "error: /this/file/does/not/exist: "
+    - context with a custom handler function:
+      - it calls the handler:
+          expect (parseargs ([["x", parser.required, function (p,o,a)
+                                                       return "custom"
+                                                     end
+                             ]], {"-x", "ignored"})).
+            should_output "opts = { x = custom }\n"
+      - it diagnoses a missing argument:
+          expect (parseargs ([["x", parser.required, function (p,o,a)
+                                                       return "custom"
+                                                     end
+                             ]], {"-x"})).
+            should_contain_error "option '-x' requires an argument"
+  - context given an option with an optional argument:
+    - it records an argument to a short option without a space:
+        expect (parseargs ([["x", parser.optional]], {"-y", "-xarg", "-b"})).
+          should_contain_output "opts = { b = true, x = arg }"
+    - it records an argument to a short option following a space:
+        expect (parseargs ([["x", parser.optional]], {"-y", "-x", "arg", "-b"})).
+          should_contain_output "opts = { b = true, x = arg }\n"
+    - it records an argument to a long option following a space:
+        expect (parseargs ([["this", parser.optional]], {"--this", "arg"})).
+          should_output "opts = { this = arg }\n"
+    - it records an argument to a long option following an '=' delimiter:
+        expect (parseargs ([["this", parser.optional]], {"--this=arg"})).
+          should_output "opts = { this = arg }\n"
+    - it does't consume the following option:
+        expect (parseargs ([[{"x", "this"}, parser.optional]], {"-x", "-b"})).
+          should_output "opts = { b = true, this = true }\n"
+          expect (parseargs ([[{"x", "this"}, parser.optional]], {"--this", "-b"})).
+          should_output "opts = { b = true, this = true }\n"
+    - context with a boolean handler function:
+      - it records a truthy argument:
+          for _, optarg in ipairs {"1", "TRUE", "true", "yes", "Yes", "y"}
+          do
+            expect (parseargs ([["x", parser.optional, parser.boolean]],
+                               {"-x", optarg})).
+              should_output "opts = { x = true }\n"
+          end
+      - it records a falsey argument:
+          for _, optarg in ipairs {"0", "FALSE", "false", "no", "No", "n"}
+          do
+            expect (parseargs ([["x", parser.optional, parser.boolean]],
+                               {"-x", optarg})).
+              should_output "opts = { x = false }\n"
+          end
+      - it defaults to a truthy value:
+          expect (parseargs ([["x", parser.optional, parser.boolean]],
+                             {"-x", "-b"})).
+            should_output "opts = { b = true, x = true }\n"
+    - context with a file handler function:
+      - it records an existing file:
+          expect (parseargs ([["x", parser.optional, parser.file]],
+                             {"-x", "/dev/null"})).
+            should_output "opts = { x = /dev/null }\n"
+      - it diagnoses a missing file: |
+          expect (parseargs ([["x", parser.optional, parser.file]],
+                             {"-x", "/this/file/does/not/exist"})).
+            should_contain_error "error: /this/file/does/not/exist: "
+    - context with a custom handler function:
+      - it calls the handler:
+          expect (parseargs ([["x", parser.optional, function (p,o,a)
+                                                       return "custom"
+                                                     end
+                             ]], {"-x", "ignored"})).
+            should_output "opts = { x = custom }\n"
+      - it does not consume a following option:
+          expect (parseargs ([["x", parser.optional, function (p,o,a)
+                                                       return a or "default"
+                                                     end
+                             ]], {"-x", "-b"})).
+            should_output "opts = { b = true, x = default }\n"
+  - context when splitting combined short options:
+    - it separates non-argument options:
+        expect (parseargs ([["x"]], {"-xb"})).
+          should_output "opts = { b = true, x = true }\n"
+        expect (parseargs ([["x"]], {"-vxb"})).
+          should_output "opts = { b = true, verbose = true, x = true }\n"
+    - it stops separating at a required argument option:
+        expect (parseargs ([[{"x", "this"}, parser.required]], {"-bxbit"})).
+          should_output "opts = { b = true, this = bit }\n"
+    - it stops separating at an optional argument option:
+        expect (parseargs ([[{"x", "this"}, parser.optional]], {"-bxbit"})).
+          should_output "opts = { b = true, this = bit }\n"

@@ -133,7 +133,7 @@ function optional (parser, arglist, i, value)
   end
 
   if type (value) == "function" then
-    value = value (parser, opt, true)
+    value = value (parser, opt, nil)
   elseif value == nil then
     value = true
   end
@@ -184,18 +184,25 @@ local boolvals = {
 
 -- Value is one of the keys in BOOLVALS above.
 function boolean (parser, opt, optarg)
-  return boolvals[optarg]
+  if optarg == nil then optarg = "1" end -- default to truthy
+  local b = boolvals[tostring (optarg):lower ()]
+  if b == nil then
+    parser:opterr (optarg .. ": Not a valid argument to " ..opt[1] .. ".")
+  end
+  return b
 end
 
 
 -- Bail out with an error unless OPTARG is an existing file.
+-- FIXME: this only checks whether the file has read permissions
 function file (parser, opt, optarg)
-  h = io.open (optarg)
+  local h, errmsg = io.open (optarg, "r")
   if h == nil then
-    parser:opterr (optarg .. ": No such file or directory.")
+    parser:opterr (optarg .. ": " .. errmsg)
+    return nil
   end
   h:close ()
-  return filename
+  return optarg
 end
 
 
@@ -222,6 +229,7 @@ end
 -- @param value   additional value passed to <handler>
 local function on (parser, opts, handler, value)
   if type (opts) == "string" then opts = { opts } end
+  handler = handler or flag -- unspecified options behave as flags
 
   normal = {}
   for _, optspec in ipairs (opts) do
@@ -290,8 +298,9 @@ end
 
 local M = {
   boolean  = boolean,
-  flag     = flag,
+  file     = file,
   finished = finished,
+  flag     = flag,
   help     = help,
   optional = optional,
   required = required,
