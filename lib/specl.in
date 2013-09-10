@@ -128,16 +128,10 @@ function slurp (filename)
 
   t = loader.load (filename, s)
 
-  -- Prepend the spec file location to the package load path, so that
-  -- requiring unqualified names from that directory works right away.
-  local load_path = filename:gsub ("[^/]+$", "?.lua;")
-
-  -- Append to the specification list, which specl will run presently.
   for _, document in ipairs (t) do
     local spec = {
-      before = "package.path = \"" .. load_path ..
-               "\" .. package.path\n" .. (document.before or ""),
-      after  = document.after,
+      before    = document.before,
+      after     = document.after,
       document,
     }
 

@@ -63,6 +63,10 @@ local parser_mt = {
     load_map = function (self)
       local map = {}
       self:add_anchor (map)
+      -- Inject the preamble into before node of the outermost map.
+      if self.preamble then
+        map.before, self.preamble = self.preamble, nil
+      end
       while true do
         local key = self:load_node ()
         if key == nil then break end
@@ -70,7 +74,12 @@ local parser_mt = {
         if value == nil then
           return self:error ("unexpected " .. self:type () .. " event")
         end
-        map[key] = value
+        -- Be careful not to overwrite injected preamble.
+	if key == "before" then
+	  map.before = table.concat {map.before or "", value}
+	else
+          map[key] = value
+	end
       end
       return map
     end,
@@ -152,6 +161,11 @@ local function Parser (filename, s)
     filename = filename:gsub ("^%./", ""),
     mark     = { line = "0", column = "0" },
     next     = yaml.parser (s),
+
+    -- Used to simplify requiring from the spec file directory.
+    preamble = "package.path = \"" ..
+               filename:gsub ("[^/]+$", "?.lua;") ..
+               "\" .. package.path\n",
   }
   return setmetatable (object, parser_mt)
 end
