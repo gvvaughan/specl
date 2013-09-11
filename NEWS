@@ -4,8 +4,7 @@ Specl NEWS - User visible changes.
 
 ** New features:
 
-  - Better error messages from syntax errors in Lua examples in
-    spec files.
+  - Better error diagnostics for syntax errors in spec files.
 
 ** Incompatible changes:
 

@@ -52,21 +52,19 @@ local parser_mt = {
       local f, errmsg = loadstring ("return function () " ..
                           macro.substitute_tostring (s) .. "\nend", self.filename)
       if f == nil then
-         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
-         if msg ~= nil then
-           line = line + self.mark.line
-	   if self.mark.style == "PLAIN" then line = line - 1 end
-           errmsg = self.filename .. ":" .. tostring (line) .. ": " .. msg
-         end
-         io.stderr:write (errmsg .. "\n")
-         os.exit (1)
-      end
-      -- Execute the function from 'loadstring' or report an error right away.
-      if f ~= nil then
+        local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+        if msg ~= nil then
+          line = line + self.mark.line
+	  if self.mark.style == "PLAIN" then line = line - 1 end
+          errmsg = self.filename .. ":" .. tostring (line) .. ": " .. msg
+        end
+      else
+        -- Execute the function from 'loadstring' or report an error right away.
         f, errmsg = f ()
       end
       if errmsg ~= nil then
-        error (errmsg)
+        io.stderr:write (errmsg .. "\n")
+        os.exit (1)
       end
       return f
     end,
