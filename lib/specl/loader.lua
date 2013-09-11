@@ -48,7 +48,14 @@ local parser_mt = {
 
     -- Compile S into a callable function.
     compile = function (self, s)
-      local f, errmsg = loadstring ((macro.substitute_tostring (s)))
+      local f, errmsg = macro.substitute_tostring (s)
+      if f == nil then
+	-- Replace the error message from macro; it's just internal gunk.
+        errmsg = self.filename .. ":" .. tostring (self.mark.line) ..
+	         ": parse error near 'expect', while collecting arguments"
+      else
+        f, errmsg = loadstring (f)
+      end
       if f == nil then
         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
         if msg ~= nil then
