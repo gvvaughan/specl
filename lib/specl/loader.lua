@@ -31,33 +31,6 @@ local null       = { type = "LYAML null" }
 -- Capture errors thrown by expectations.
 macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
 
--- Compile S into a callable function.
--- LOCATION is used with error messages from loadstring().
-local function compile (location, s)
-  -- Wrap the fragment into a function that we can call later.
-  local f, errmsg = loadstring ("return function () " ..
-                      macro.substitute_tostring (s) .. "\nend", location)
-
-  if f == nil then
-     local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
-     if msg ~= nil then
-       errmsg = location .. ":" .. line .. ": " .. msg
-     end
-     io.stderr:write (errmsg .. "\n")
-     os.exit (1)
-  end
-
-  -- Execute the function from 'loadstring' or report an error right away.
-  if f ~= nil then
-    f, errmsg = f ()
-  end
-  if errmsg ~= nil then
-    error (errmsg)
-  end
-
-  return f
-end
-
 
 -- Metatable for Parser objects.
 local parser_mt = {
@@ -71,6 +44,31 @@ local parser_mt = {
     error = function (self, errmsg)
       return error (self.filename .. ":" .. self.mark.line .. ":" ..
                     self.mark.column .. ": " .. errmsg, 0)
+    end,
+
+    -- Compile S into a callable function.
+    compile = function (self, s)
+      -- Wrap the fragment into a function that we can call later.
+      local f, errmsg = loadstring ("return function () " ..
+                          macro.substitute_tostring (s) .. "\nend", self.filename)
+      if f == nil then
+         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+         if msg ~= nil then
+           line = line + self.mark.line
+	   if self.mark.style == "PLAIN" then line = line - 1 end
+           errmsg = self.filename .. ":" .. tostring (line) .. ": " .. msg
+         end
+         io.stderr:write (errmsg .. "\n")
+         os.exit (1)
+      end
+      -- Execute the function from 'loadstring' or report an error right away.
+      if f ~= nil then
+        f, errmsg = f ()
+      end
+      if errmsg ~= nil then
+        error (errmsg)
+      end
+      return f
     end,
 
     -- Save node in the anchor table for reference in future ALIASes.
@@ -110,16 +108,16 @@ local parser_mt = {
           -- Be careful not to overwrite injected preamble.
           map.before = table.concat {map.before or "", value}
         elseif value == "" then
-          map[key] = compile (key, "pending ()")
+          map[key] = self:compile ("pending ()")
         elseif type (value) == "string" then
-          map[key] = compile (key, value)
+          map[key] = self:compile (value)
         else
           map[key] = value
         end
       end
       -- Delayed compilation of before, having injecting preamble now.
       if type (map.before) == "string" then
-        map.before = compile ("before", map.before)
+        map.before = self:compile (map.before)
       end
       return map
     end,
@@ -147,6 +145,8 @@ local parser_mt = {
     load_scalar = function (self)
       local value = self.event.value
       local tag   = self.event.tag
+      -- We'll need to adjust error line-number for PLAIN examples.
+      self.mark.style = self.event.style
       if tag then
         tag = tag:match ("^" .. TAG_PREFIX .. "(.*)$")
         if tag == "str" then
