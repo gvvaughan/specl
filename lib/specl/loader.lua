@@ -48,9 +48,7 @@ local parser_mt = {
 
     -- Compile S into a callable function.
     compile = function (self, s)
-      -- Wrap the fragment into a function that we can call later.
-      local f, errmsg = loadstring ("return function () " ..
-                          macro.substitute_tostring (s) .. "\nend", self.filename)
+      local f, errmsg = loadstring ((macro.substitute_tostring (s)))
       if f == nil then
         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
         if msg ~= nil then
@@ -58,9 +56,6 @@ local parser_mt = {
 	  if self.mark.style == "PLAIN" then line = line - 1 end
           errmsg = self.filename .. ":" .. tostring (line) .. ": " .. msg
         end
-      else
-        -- Execute the function from 'loadstring' or report an error right away.
-        f, errmsg = f ()
       end
       if errmsg ~= nil then
         io.stderr:write (errmsg .. "\n")
