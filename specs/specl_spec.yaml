@@ -30,6 +30,32 @@ describe specl:
         expect (run_spec (yaml)).
           should_match_output "%?.*PENDING expectation 1.*issue #23.*passed unexpectedly"
 
+  - context with libYAML parse error in spec file:
+    - before:
+        tmpfile = os.tmpname ()
+        h       = io.open (tmpfile, "w")
+    - after:
+        h:close ()
+        os.remove (tmpfile)
+    - it diagnoses spurious question mark: |
+        h:write (yaml .. " ?\n    garbage")
+        expect (run_spec {"--color=no", tmpfile}).
+          should_contain_error (tmpfile .. ":2:3: mapping keys are not allowed")
+    - it diagnoses spurious braces in plain scalar: |
+        h:write (yaml .. "\n    { garbage")
+        expect (run_spec {"--color=no", tmpfile}).
+          should_contain_error (tmpfile ..
+                                ":4:1: did not find expected ',' or '}'")
+    - it diagnoses spurious bracket in plain scalar: |
+        h:write (yaml .. "\n    [ garbage")
+        expect (run_spec {"--color=no", tmpfile}).
+          should_contain_error (tmpfile ..
+                                ":3:7: did not find expected ',' or ']'")
+    - it diagnoses missing colon in badly indented line: |
+        h:write (yaml .. "\nprint ':'")
+        expect (run_spec {"--color=no", tmpfile}).
+          should_contain_error (tmpfile .. ":3:1: could not find expected ':'")
+
   - context with LuaMacro parse error in macro expansion:
     - before:
         tmpfile = os.tmpname ()

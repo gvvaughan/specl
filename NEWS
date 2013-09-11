@@ -4,8 +4,9 @@ Specl NEWS - User visible changes.
 
 ** New features:
 
-  - Much improved error diagnostics for syntax errors in spec files,
-    without spurious Lua-runtime stack traces.
+  - Enormously improved error diagnostics for syntax errors in spec
+    files, reporting filename and line-number of errors and without
+    spurious Lua-runtime stack traces.
 
 ** Incompatible changes:
 

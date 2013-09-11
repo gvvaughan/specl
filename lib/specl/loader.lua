@@ -42,8 +42,9 @@ local parser_mt = {
 
     -- Raise a parse error.
     error = function (self, errmsg)
-      return error (self.filename .. ":" .. self.mark.line .. ":" ..
-                    self.mark.column .. ": " .. errmsg, 0)
+      io.stderr:write (self.filename .. ":" .. self.mark.line .. ":" ..
+                       self.mark.column .. ": " .. errmsg .. "\n")
+      os.exit (1)
     end,
 
     -- Compile S into a callable function.
@@ -80,12 +81,16 @@ local parser_mt = {
 
     -- Fetch the next event.
     parse = function (self)
-      self.event = self.next ()
+      local ok, event = pcall (self.next)
+      if not ok then
+	-- if ok is nil, then event is a parser error from libYAML.
+        self:error (event:gsub (" at document: .*$", ""))
+      end
+      self.event = event
       self.mark  = {
         line   = tostring (self.event.start_mark.line + 1),
         column = tostring (self.event.start_mark.column + 1),
       }
-      -- TODO: report parser problems here
       return self:type ()
     end,
 
