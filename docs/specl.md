@@ -784,8 +784,9 @@ runs your specifications, so provided you supply the table keys that
 {% endhighlight %}
 
 The functions `header` and `footer` are called before any expectations,
-and after all expectations, respectively.  The `stats` argument to
-`footer` is a table containing:
+and after all expectations, respectively.
+
+The `stats` argument to `footer` is a table containing:
 
 {% highlight lua %}
     stats = {
@@ -797,7 +798,18 @@ and after all expectations, respectively.  The `stats` argument to
 {% endhighlight %}
 
 You can use this to print out statistics at the end of the formatted
-output.
+output. Note that `starttime` may be the result of an earlier call to
+`os.time ()`, or if `luaposix` is installed where [Specl] can find it,
+it will be the result of an earlier call to `posix.gettimeofday ()`.
+In either case, you can pass it to `specl.util.timesince (earlier)` to
+turn it into a printable time elapsed since `earlier` (with the best
+resolution available):
+
+{% highlight lua %}
+  local util = require "specl.util"
+  print ("Time elapsed is " ..
+         util.timesince (stats.starttime) .. " seconds.")
+{% endhighlight %}
 
 The `accumulated` argument to `footer` is a string made by concatenating
 all the returned strings, if any, from other calls to the formatter API

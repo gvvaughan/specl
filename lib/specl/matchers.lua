@@ -392,7 +392,7 @@ end
 --
 -- For example:                  expect ({}).should_not_be {}
 
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.time () }
+M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
 
 local function expect (ok, actual)
   return setmetatable ({}, {

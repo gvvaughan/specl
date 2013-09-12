@@ -15,6 +15,10 @@ Specl NEWS - User visible changes.
   - Works correctly without ansicolors installed (albeit without
     displaying any color!).
 
+  - If 'luaposix' is installed where Specl can find it, the report
+    and progress formatters will use it to display the time spent
+    running specifications much more accurately.
+
 ** Incompatible changes:
 
   - Requires lyaml 4 or newer.

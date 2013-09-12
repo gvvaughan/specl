@@ -24,6 +24,24 @@ local std   = require "specl.std"
 
 local Object = std.Object
 
+local have_posix, posix = pcall (require, "posix")
+
+-- Use higher resolution timers from luaposix if available.
+local function gettimeofday ()
+  if not (have_posix and posix.timersub) then
+    return os.time ()
+  end
+  return posix.gettimeofday ()
+end
+
+local function timesince (earlier)
+  if not (have_posix and posix.timersub) then
+    return os.time () - earlier
+  end
+  local elapsed = posix.timersub (posix.gettimeofday (), earlier)
+  return (elapsed.usec / 1000000) + elapsed.sec
+end
+
 
 -- Map function F over elements of T and return a table of results.
 local function map (f, t)
@@ -170,6 +188,7 @@ local M = {
   -- Functions
   chomp          = std.string.chomp,
   concat         = concat,
+  gettimeofday   = gettimeofday,
   indent         = indent,
   nop            = nop,
   map            = map,
@@ -181,6 +200,7 @@ local M = {
   process_files  = std.io.process_files,
   slurp          = std.string.slurp,
   strip1st       = strip1st,
+  timesince      = timesince,
   tostring       = std.string.tostring,
   totable        = std.table.totable,
   type_check     = type_check,
