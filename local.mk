@@ -62,6 +62,7 @@ luaspecldir = $(luadir)/specl
 
 dist_luaspecl_DATA =					\
 	lib/specl/color.lua				\
+	lib/specl/loader.lua				\
 	lib/specl/matchers.lua				\
         lib/specl/optparse.lua				\
 	lib/specl/shell.lua				\
