@@ -12,6 +12,9 @@ Specl NEWS - User visible changes.
     files, at the expense of inaccurate line-numbers in error
     messages.
 
+  - Works correctly without ansicolors installed (albeit without
+    displaying any color!).
+
 ** Incompatible changes:
 
   - Requires lyaml 4 or newer.

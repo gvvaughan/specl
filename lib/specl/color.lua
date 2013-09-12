@@ -19,7 +19,7 @@
 -- MA 02111-1301, USA.
 
 
-local ansicolors = require "ansicolors"
+local _, ansicolors = pcall (require, "ansicolors")
 
 local h1      = "%{blue}"
 local h2      = "%{cyan}"

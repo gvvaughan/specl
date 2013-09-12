@@ -58,6 +58,8 @@ local specl  = require "specl"
 local util   = require "specl.util"
 local loader = require "specl.loader"
 
+local have_color = pcall (require, "ansicolors")
+
 
 -- Make a shallow copy of the pristine global environment, so that the
 -- state of the Specl Lua environment is not exposed to spec files.
@@ -120,7 +122,11 @@ parser:on ({"f", "format", "formatter"}, parser.required,
 _G.arg, opts = parser:parse (_G.arg)
 
 -- Option defaults.
-if opts.color == nil then opts.color = true end
+if not have_color then
+  opts.color = nil
+elseif opts.color == nil then
+  opts.color = true
+end
 
 
 -- Called by util.process_files() to concatenate YAML formatted
