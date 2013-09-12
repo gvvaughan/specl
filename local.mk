@@ -29,8 +29,23 @@ include specs/specs.mk
 ## Build. ##
 ## ------ ##
 
-docs/specl.1: $(SPECL)
-	@test -d docs || mkdir docs
+# These files are distributed in $(srcdir), and we need to be careful
+# not to regenerate them unnecessarily, as that triggers rebuilds of
+# dependers that might require tools not installed on the build machine.
+
+$(srcdir)/bin/specl: $(srcdir)/lib/specl.in
+	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
+	test -d "$$d" || $(MKDIR_P) "$$d"
+	$(AM_V_GEN)sed						\
+	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
+	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
+	  -e 's|@VERSION''@|$(VERSION)|g'			\
+	  '$(srcdir)/lib/specl.in' > '$@'
+	$(AM_V_at)chmod 755 '$@'
+
+$(srcdir)/docs/specl.1: $(SPECL)
+	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
+	test -d "$$d" || $(MKDIR_P) "$$d"
 ## Exit gracefully if specl.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\

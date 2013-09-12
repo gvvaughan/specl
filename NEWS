@@ -26,6 +26,11 @@ Specl NEWS - User visible changes.
     numbers in error-messages.  Lua string operations require byte
     offsets, which are incompatible.
 
+** Bug fixes:
+
+  - Help2man is no longer required to install specl from the
+    distribution tarball.
+
 
 * Noteworthy changes in release 8 (2013-06-26) [stable]
 

@@ -38,6 +38,5 @@ AC_PROG_SED
 
 dnl Generate output files
 SS_CONFIG_TRAVIS
-AC_CONFIG_FILES([bin/specl:lib/specl.in], [chmod 555 bin/specl])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
