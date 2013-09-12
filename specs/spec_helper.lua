@@ -29,6 +29,45 @@ end
 
 
 
+--[[ ================ ]]--
+--[[ Tmpfile manager. ]]--
+--[[ ================ ]]--
+
+
+Tmpfile = Object {
+  _type = "Tmpfile",
+
+  _init = function (self, content)
+    self.path = os.tmpname ()
+    if type (content) == "string" then
+      local fh = io.open (self.path, "w")
+      fh:write (content)
+      fh:close ()
+    end
+    return self
+  end,
+
+  dirname = function (self)
+    return self.path:gsub ("/[^/]*$", "", 1)
+  end,
+
+  basename = function (self)
+    return self.path:gsub (".*/", "")
+  end,
+
+  append = function (self, s)
+    local fh = io.open (self.path, "a")
+    fh:write (s)
+    fh:close ()
+  end,
+
+  remove = function (self)
+    os.remove (self.path)
+  end,
+}
+
+
+
 --[[ ==================== ]]--
 --[[ Additional Matchers. ]]--
 --[[ ==================== ]]--

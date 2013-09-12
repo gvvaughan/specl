@@ -32,145 +32,137 @@ describe specl:
 
   - context with libYAML parse error in spec file:
     - before:
-        tmpfile = os.tmpname ()
-        h       = io.open (tmpfile, "w")
+        tmp = Tmpfile (yaml)
     - after:
-        h:close ()
-        os.remove (tmpfile)
+        tmp:remove ()
     - it diagnoses spurious question mark: |
-        h:write (yaml .. " ?\n    garbage")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":2:3: mapping keys are not allowed")
+        tmp:append (" ?\n    garbage")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":2:3: mapping keys are not allowed")
     - it diagnoses spurious braces in plain scalar: |
-        h:write (yaml .. "\n    { garbage")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile ..
+        tmp:append ("\n    { garbage")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path ..
                                 ":4:1: did not find expected ',' or '}'")
     - it diagnoses spurious bracket in plain scalar: |
-        h:write (yaml .. "\n    [ garbage")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile ..
+        tmp:append ("\n    [ garbage")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path ..
                                 ":3:7: did not find expected ',' or ']'")
     - it diagnoses missing colon in badly indented line: |
-        h:write (yaml .. "\nprint ':'")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3:1: could not find expected ':'")
+        tmp:append ("\nprint ':'")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3:1: could not find expected ':'")
 
   - context with LuaMacro parse error in macro expansion:
     - before:
-        tmpfile = os.tmpname ()
-        h       = io.open (tmpfile, "w")
+        tmp = Tmpfile (yaml)
     - after:
-        h:close ()
-        os.remove (tmpfile)
+        tmp:remove ()
     - it diagnoses missing parenthesis in 'expect' call: |
-        h:write (yaml .. "\n    expect (fn (x ()).should_be {}")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: parse error near 'expect'")
+        tmp:append ("\n    expect (fn (x ()).should_be {}")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: parse error near 'expect'")
     - it diagnoses spurious paretheses in 'expect' call: |
-        h:write (yaml .. " |" ..
+        tmp:append (" |" ..
                  "\n    expect (fn (x ()))" ..
                  "\n      ).should_be {}")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":4: unexpected symbol near ')'")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":4: unexpected symbol near ')'")
     - it diagnoses missing parentheses before 'expect' call: |
-        h:write (yaml .. "\n    garbage ( expect (1).should_be (0) foo")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: ')' expected near 'foo'")
+        tmp:append ("\n    garbage ( expect (1).should_be (0) foo")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: ')' expected near 'foo'")
     - it diagnoses spurious parentheses before 'expect' call: |
-        h:write (yaml .. "\n    ) expect (1).should_be (0)")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: unexpected symbol near ')'")
+        tmp:append ("\n    ) expect (1).should_be (0)")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: unexpected symbol near ')'")
 
   - context with Lua error in first line of example:
     - before:
-        tmpfile = os.tmpname ()
-        h       = io.open (tmpfile, "w")
+        tmp = Tmpfile (yaml)
         example = "\n    print garbage"
     - after:
-        h:close ()
-        os.remove (tmpfile)
+        tmp:remove ()
     - it reports filename and line number for YAML plain style: |
-        h:write (yaml .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+        tmp:append (example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
     - it reports filename and line number for YAML literal style: |
-        h:write (yaml .. " |" .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+        tmp:append (" |" .. example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
     - it reports filename and line number for YAML folded style: |
-        h:write (yaml .. " >" .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+        tmp:append (" >" .. example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
-        h:write (yaml .. " '" .. example .. "'")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+        tmp:append (" '" .. example .. "'")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
-        h:write (yaml .. ' "' .. example .. '"')
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+        tmp:append (' "' .. example .. '"')
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
 
   - context with Lua error in multi-line example:
     - before:
-        tmpfile = os.tmpname ()
-        h       = io.open (tmpfile, "w")
+        tmp = Tmpfile (yaml)
         example = "\n    x=nil\n    t={}\n    print garbage"
     - after:
-        h:close ()
-        os.remove (tmpfile)
+        tmp:remove ()
     - it reports filename and line number for YAML plain style: |
-        h:write (yaml .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
+        tmp:append (example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML literal style: |
-        h:write (yaml .. " |" .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
+        tmp:append (" |" .. example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML folded style: |
-        h:write (yaml .. " >" .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
+        tmp:append (" >" .. example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
-        h:write (yaml .. " '" .. example .. "'")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
+        tmp:append (" '" .. example .. "'")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
-        h:write (yaml .. ' "' .. example .. '"')
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
+        tmp:append (' "' .. example .. '"')
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
 
   - context with Lua error in multi-example spec-file:
     - before: |
-        tmpfile = os.tmpname ()
-        h       = io.open (tmpfile, "w")
-        yaml    = yaml ..
-                  "\n- it succeeds: |\n    --\n    print 'garbage'" ..
-                  "\ndescribe y:\n- it fails:"
+        tmp = Tmpfile (yaml .. "\n" ..
+                       "- it succeeds: |\n" ..
+                       "    --\n" ..
+                       "    print 'garbage'\n" ..
+                       "describe y:\n" ..
+                       "- it fails:")
         example = "\n    print garbage"
     - after:
-        h:close ()
-        os.remove (tmpfile)
+        tmp:remove ()
     - it reports filename and line number for YAML plain style: |
-        h:write (yaml .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":8: '=' expected near 'garbage'")
+        tmp:append (example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
     - it reports filename and line number for YAML literal style: |
-        h:write (yaml .. " |" .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":8: '=' expected near 'garbage'")
+        tmp:append (" |" .. example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
     - it reports filename and line number for YAML folded style: |
-        h:write (yaml .. " >" .. example)
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":8: '=' expected near 'garbage'")
+        tmp:append (" >" .. example)
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
-        h:write (yaml .. " '" .. example .. "'")
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":8: '=' expected near 'garbage'")
+        tmp:append (" '" .. example .. "'")
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
-        h:write (yaml .. ' "' .. example .. '"')
-        expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":8: '=' expected near 'garbage'")
+        tmp:append (' "' .. example .. '"')
+        expect (run_spec {"--color=no", tmp.path}).
+          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
 
 - describe command line interface:
   - before: |
@@ -193,32 +185,26 @@ describe specl:
     - before: |
         -- Write a very basic custom formatter to a temporary file, and add
         -- its location to the lua search path.
-        tmpfile = os.tmpname ()
-        fdir    = tmpfile:gsub ("/[^/]*$", "", 1)
-        fname   = tmpfile:gsub (".*/", "")
-        f       = io.open (tmpfile, "w")
-        f:write ([[return {
+        tmp = Tmpfile [[return {
             header  = function () io.write "h" end,
             spec    = function () io.write "s" end,
             expectations = function () io.write "." end,
             footer  = function () io.write "f"; io.flush () end,
-          }]])
-        f:close ()
+          }]]
+    - after:
+        tmp:remove ()
 
-    - it formats expectations with the custom formatter:
+    - it formats expectations with the custom formatter: |
         command = {
-          "--formatter=" .. fname, "-";
-          env = { LUA_PATH = fdir .. "/?" },
+          "--formatter=" .. tmp:basename (), "-";
+          env = { LUA_PATH = tmp:dirname () .. "/?" },
           stdin = yaml,
         }
         expect (run_spec (command)).should_output "hs.f"
     - it accepts -f as an equivalent to --formatter:
         command = {
-          "-f" .. fname, "-";
-          env = { LUA_PATH = fdir .. "/?" },
+          "-f" .. tmp:basename (), "-";
+          env = { LUA_PATH = tmp:dirname () .. "/?" },
           stdin = yaml,
         }
         expect (run_spec (command)).should_output "hs.f"
-
-    - after:
-        os.remove (tmpfile)
