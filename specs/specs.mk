@@ -23,6 +23,7 @@
 
 # Override Slingshot SPECL.
 SPECL = specs/specl
+SPECL_OPTS = --unicode
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\

@@ -73,6 +73,10 @@ local parser_mt = {
 
     -- Refetch the original lua format, for accurate error line numbers.
     refetch = function (self, value, event)
+      -- Mark indices are character based, but Lua patterns are byte
+      -- based, which means refetching doesn't work in the presence of
+      -- unicode characters :(
+      if opts.unicode then return value end
       value = self.input:sub (event.start_mark.index, event.end_mark.index)
       if event.style == "DOUBLE_QUOTED" then
         value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}

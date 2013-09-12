@@ -8,15 +8,20 @@ Specl NEWS - User visible changes.
     files, reporting filename and line-number of error locations,
     and without spurious Lua-runtime stack traces.
 
+  - New '--unicode' command-line option to support unicode in spec
+    files, at the expense of inaccurate line-numbers in error
+    messages.
+
 ** Incompatible changes:
 
   - Requires lyaml 4 or newer.
 
-  - Unicode characters in spec files are no longer supported. LibYAML
-    treats them as only one byte wide when reporting the file offsets
-    used to re-extract the Lua code fragments (i.e. without YAML new-
-    line folding) Specl uses to generate correct line-numbers in
-    error-messages.
+  - Unicode characters in spec files are no longer supported by
+    default. LibYAML counts indices by character when reporting the
+    offsets used to re-extract the Lua code fragments (i.e. without
+    YAML neline folding) that Specl uses to generate correct line-
+    numbers in error-messages.  Lua string operations require byte
+    offsets, which are incompatible.
 
 
 * Noteworthy changes in release 8 (2013-06-26) [stable]
