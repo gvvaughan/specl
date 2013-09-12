@@ -4,13 +4,19 @@ Specl NEWS - User visible changes.
 
 ** New features:
 
-  - Enormously improved error diagnostics for syntax errors in spec
-    files, reporting filename and line-number of errors and without
-    spurious Lua-runtime stack traces.
+  - Vastly improved error diagnostics for syntax errors in spec
+    files, reporting filename and line-number of error locations,
+    and without spurious Lua-runtime stack traces.
 
 ** Incompatible changes:
 
   - Requires lyaml 4 or newer.
+
+  - Unicode characters in spec files are no longer supported. LibYAML
+    treats them as only one byte wide when reporting the file offsets
+    used to re-extract the Lua code fragments (i.e. without YAML new-
+    line folding) Specl uses to generate correct line-numbers in
+    error-messages.
 
 
 * Noteworthy changes in release 8 (2013-06-26) [stable]

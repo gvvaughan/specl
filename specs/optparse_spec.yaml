@@ -6,9 +6,9 @@ specify optparse:
     OptionParser = require "specl.optparse"
 
     help = [[
-    parseme (specl check) 0α1
+    parseme (specl check) 0a1
 
-    Copyright © 2013 Gary V. Vaughan
+    Copyright (C) 2013 Gary V. Vaughan
     This test program comes with ABSOLUTELY NO WARRANTY.
 
     Usage: parseme [<options>] <file>...
@@ -43,7 +43,7 @@ specify optparse:
   - it recognises the program name:
       expect (parser.program).should_be "parseme"
   - it recognises the version number:
-      expect (parser.version).should_be "0α1"
+      expect (parser.version).should_be "0a1"
   - it recognises the version text:
       expect (parser.versiontext).
         should_match "^parseme .*Copyright .*NO WARRANTY%."

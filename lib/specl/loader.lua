@@ -51,17 +51,16 @@ local parser_mt = {
     compile = function (self, s)
       local f, errmsg = macro.substitute_tostring (s)
       if f == nil then
-	-- Replace the error message from macro; it's just internal gunk.
+        -- Replace the error message from macro; it's just internal gunk.
         errmsg = self.filename .. ":" .. tostring (self.mark.line) ..
-	         ": parse error near 'expect', while collecting arguments"
+                 ": parse error near 'expect', while collecting arguments"
       else
         f, errmsg = loadstring (f)
       end
       if f == nil then
         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
         if msg ~= nil then
-          line = line + self.mark.line
-	  if self.mark.style == "PLAIN" then line = line - 1 end
+          line = line + self.mark.line - 1
           errmsg = self.filename .. ":" .. tostring (line) .. ": " .. msg
         end
       end
@@ -70,6 +69,21 @@ local parser_mt = {
         os.exit (1)
       end
       return f
+    end,
+
+    -- Refetch the original lua format, for accurate error line numbers.
+    refetch = function (self, value, event)
+      value = self.input:sub (event.start_mark.index, event.end_mark.index)
+      if event.style == "DOUBLE_QUOTED" then
+        value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}
+      elseif event.style == "SINGLE_QUOTED" then
+        value = table.concat {value:match ([[^(%s*)'(.-)'%s*$]])}
+      elseif event.style == "LITERAL" then
+        value = table.concat {value:match ([[^(%s*)[|](.-)%s*$]])}
+      elseif event.style == "FOLDED" then
+        value = table.concat {value:match ([[^(%s*)>(.-)%s*$]])}
+      end
+      return value
     end,
 
     -- Save node in the anchor table for reference in future ALIASes.
@@ -83,7 +97,7 @@ local parser_mt = {
     parse = function (self)
       local ok, event = pcall (self.next)
       if not ok then
-	-- if ok is nil, then event is a parser error from libYAML.
+        -- if ok is nil, then event is a parser error from libYAML.
         self:error (event:gsub (" at document: .*$", ""))
       end
       self.event = event
@@ -105,17 +119,18 @@ local parser_mt = {
       while true do
         local key = self:load_node ()
         if key == nil then break end
-        local value = self:load_node ()
+        local value, event = self:load_node ()
         if value == nil then
           return self:error ("unexpected " .. self:type () .. " event")
         end
         if key == "before" then
           -- Be careful not to overwrite injected preamble.
+          value = self:refetch (value, event)
           map.before = table.concat {map.before or "", value}
         elseif value == "" then
           map[key] = self:compile ("pending ()")
         elseif type (value) == "string" then
-          map[key] = self:compile (value)
+          map[key] = self:compile (self:refetch (value, event))
         else
           map[key] = value
         end
@@ -150,8 +165,6 @@ local parser_mt = {
     load_scalar = function (self)
       local value = self.event.value
       local tag   = self.event.tag
-      -- We'll need to adjust error line-number for PLAIN examples.
-      self.mark.style = self.event.style
       if tag then
         tag = tag:match ("^" .. TAG_PREFIX .. "(.*)$")
         if tag == "str" then
@@ -174,7 +187,7 @@ local parser_mt = {
         end
       end
       self:add_anchor (value)
-      return value
+      return value, self.event
     end,
 
     load_alias = function (self)
@@ -211,6 +224,7 @@ local function Parser (filename, s)
   local object = {
     anchors  = {},
     filename = filename:gsub ("^%./", ""),
+    input    = s,
     mark     = { line = "0", column = "0" },
     next     = yaml.parser (s),
 

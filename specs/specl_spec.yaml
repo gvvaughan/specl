@@ -112,7 +112,6 @@ describe specl:
           should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
 
   - context with Lua error in multi-line example:
-    # Note that most SCALAR styles fold newlines...
     - before:
         tmpfile = os.tmpname ()
         h       = io.open (tmpfile, "w")
@@ -123,7 +122,7 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         h:write (yaml .. example)
         expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         h:write (yaml .. " |" .. example)
         expect (run_spec {"--color=no", tmpfile}).
@@ -131,15 +130,15 @@ describe specl:
     - it reports filename and line number for YAML folded style: |
         h:write (yaml .. " >" .. example)
         expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         h:write (yaml .. " '" .. example .. "'")
         expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         h:write (yaml .. ' "' .. example .. '"')
         expect (run_spec {"--color=no", tmpfile}).
-          should_contain_error (tmpfile .. ":3: '=' expected near 'garbage'")
+          should_contain_error (tmpfile .. ":5: '=' expected near 'garbage'")
 
   - context with Lua error in multi-example spec-file:
     - before: |
