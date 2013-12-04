@@ -151,10 +151,15 @@ local Matcher = Object {
 
 
 -- Only allow Matcher objects to be assigned to a slot in this table.
-local matchers = setmetatable ({}, {
+-- The actual entries are stored in a subtable to ensure that __newindex
+-- always fires, the type of new assignments is always checked, and the
+-- name field is always set.
+local matchers = setmetatable ({content = {}}, {
+  __index = function (self, name) return rawget (self.content, name) end,
+
   __newindex = function (self, name, matcher)
     util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
-    rawset (self, name, matcher)
+    rawset (self.content, name, matcher)
   end,
 })
 
