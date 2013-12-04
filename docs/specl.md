@@ -455,7 +455,7 @@ an expectation succeeds only if none of the alternatives match:
 
 [multiple matches with all_of]: #272_multiple_matches_with_all_of
 
-When you need to ensure that several matches succed, [Specl][] provides
+When you need to ensure that several matches succeed, [Specl][] provides
 the `all_of` adaptor:
 
 {% highlight lua %}
