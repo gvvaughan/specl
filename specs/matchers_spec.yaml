@@ -6,7 +6,7 @@ before: |
   fail_1   = "\n0 passed, 0 pending, and 1 failed"
   pass_all = "\nAll expectations met"
 
-describe matchers:
+describe matcher:
 - before:
     deep = "({{ 'subtable 1', {'sub-subtable'} }, { 'subtable 2' }})"
 
@@ -20,7 +20,7 @@ describe matchers:
     expect (expect (1).should_not_be.the_thing_that ()).
       should_error "unknown 'the_thing_that' adaptor with 'should_not_be'"
 
-- describe be matcher:
+- describe be:
   - it displays expected and actual output for failures:
       yaml = preamble .. "(1).should_be 'one'"
       expect (run_spec (yaml)).
@@ -76,7 +76,7 @@ describe matchers:
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
-- describe equal matcher:
+- describe equal:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('str').should_equal {'table'}"
       expect (run_spec (yaml)).
@@ -193,7 +193,7 @@ describe matchers:
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
-- describe contain matcher:
+- describe contain:
   - it diagnoses incompatible arguments:
       expect (expect (function () end).should_contain "nothing").
         should_error "string, table or object expected"
@@ -533,7 +533,7 @@ describe matchers:
           expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
-- describe match matcher:
+- describe match:
   - it diagnoses non-string arguments:
       expect (expect ({"a table"}).should_match {}).
         should_error "string expected"
@@ -592,7 +592,7 @@ describe matchers:
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
 
-- describe error matcher:
+- describe error:
   - it displays expected and actual output for failures: |
       yaml = preamble .. "(error 'cheese').should_error 'ham'"
       expect (run_spec (yaml)).
@@ -668,7 +668,7 @@ describe matchers:
                "any_of {'fail', 'error', 'bogus'}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
 
-- describe custom adaptor:
+- describe using custom adaptor:
   - before: |
       preamble = [[before: |
         require "spec_helper"
@@ -721,5 +721,3 @@ describe matchers:
     - it fails if both tables are empty:
         yaml = preamble .. "({}).should_not_equal.the_size_of {}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
-
-
