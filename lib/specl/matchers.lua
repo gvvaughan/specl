@@ -83,51 +83,54 @@ local Matcher = Object {
   _type = "Matcher",
 
   _init = function (self, parms)
-    local matchp = parms[1]
-    util.type_check ("Matcher", {matchp}, {"function"})
+    self.matchp = parms[1]
+    util.type_check ("Matcher", {self.matchp}, {"function"})
 
     -- Overwrite defaults with specified values.
     self = merge_hash (self, parms)
 
-    -- This wrapper function is called to respond to `should_`s.
-    self["match?"] = function (name, actual, expect, ...)
-      util.type_check (name, {actual}, {self.actual_type})
-
-      -- Pass all parameters to both formatters!
-      local m = "expecting" .. self.format_expect (expect, actual, ...) ..
-                "but got" .. self.format_actual (actual, expect, ...)
-      return matchp (actual, expect, ...), m
-    end
-
-    self["all_of?"] = function (name, actual, alternatives, ...)
-      util.type_check (name, {actual}, {self.actual_type})
-      util.type_check (name .. ".all_of", {alternatives}, {"#table"})
-
-      local success
-      for _, expect in ipairs (alternatives) do
-        success = matchp (actual, expect, ...)
-        if not success then break end
-      end
-
-      return success, alternatives_msg (self, "all of", alternatives,
-                                        actual, expect, ...)
-    end
-
-    self["any_of?"] = function (name, actual, alternatives, ...)
-      util.type_check (name, {actual}, {self.actual_type})
-      util.type_check (name .. ".any_of", {alternatives}, {"#table"})
-
-      local success
-      for _, expect in ipairs (alternatives) do
-        success = matchp (actual, expect, ...)
-        if success then break end
-      end
-
-      return success, alternatives_msg (self, "any of", alternatives,
-                                        actual, expect, ...)
-    end
-
     return self
+  end,
+
+  -- Respond to `should_`s and `should_not`s.
+  match = function (self, actual, expect, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+
+    -- Pass all parameters to both formatters!
+    local m = "expecting" .. self.format_expect (expect, actual, ...) ..
+              "but got" .. self.format_actual (actual, expect, ...)
+    return self.matchp (actual, expect, ...), m
+  end,
+
+
+  -- Adaptors:
+
+  ["all_of?"] = function (self, actual, alternatives, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+    util.type_check (self.name .. ".all_of", {alternatives}, {"#table"})
+
+    local success
+    for _, expect in ipairs (alternatives) do
+      success = self.matchp (actual, expect, ...)
+      if not success then break end
+    end
+
+    return success, alternatives_msg (self, "all of", alternatives,
+                                      actual, expect, ...)
+  end,
+
+  ["any_of?"] = function (self, actual, alternatives, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+    util.type_check (self.name .. ".any_of", {alternatives}, {"#table"})
+
+    local success
+    for _, expect in ipairs (alternatives) do
+      success = self.matchp (actual, expect, ...)
+      if success then break end
+    end
+
+    return success, alternatives_msg (self, "any of", alternatives,
+                                      actual, expect, ...)
   end,
 
   -- Defaults:
@@ -160,6 +163,7 @@ local matchers = setmetatable ({content = {}}, {
   __newindex = function (self, name, matcher)
     util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
     rawset (self.content, name, matcher)
+    rawset (matcher, "name", name)
   end,
 })
 
@@ -409,7 +413,7 @@ local function expect (ok, actual)
         matcher_root = matcher_name:sub (8)
       end
 
-      local match = matchers[matcher_root]
+      local matcher = matchers[matcher_root]
 
       local function score (success, message)
         local pending
@@ -435,28 +439,28 @@ local function expect (ok, actual)
         })
       end
 
-      -- Returns a functable:
-      return setmetatable ({
-        --   (i) with `all_of` or `any_of` to respond to, e.g.:
-        --       | expect (foo).should_be.any_of {bar, baz, quux}
-        all_of = function (alternatives)
-          score (match["all_of?"] (matcher_root, actual, alternatives, ok))
-        end,
-
-        any_of = function (alternatives)
-          score (match["any_of?"] (matcher_root, actual, alternatives, ok))
-        end,
-      }, {
-        --  (ii) and a `__call` metamethod to respond to:
-        --       | expect (foo).should_be (bar)
+      -- Returns a functable...
+      return setmetatable ({}, {
+        --     (i) ...with a `__call` metamethod to respond to:
+        --         | expect (foo).should_be (bar)
         __call = function (_, expected)
-          score (match["match?"] (matcher_root, actual, expected, ok))
+          score (matcher:match (actual, expected, ok))
         end,
 
-        -- (iii) throw an error for unsupported modifiers.
         __index = function (_, adaptor_name)
-          error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-                 matcher_name .. "'")
+          --  (ii) ...or else dynamic adapator lookup in the matcher object:
+          --       | expect (foo).should_be.any_of {bar, baz, quux}
+	  adaptor = matcher[adaptor_name .. "?"]
+          if adaptor then
+	    return function (alternatives)
+              score (adaptor (matcher, actual, alternatives, ok))
+	    end
+
+          -- (iii) otherwise throw an error for unknown adaptors:
+          else
+            error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
+                   matcher_name .. "'")
+          end
         end,
       })
     end

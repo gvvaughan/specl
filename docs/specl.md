@@ -613,6 +613,99 @@ manual).
 Adding custom matcher with this API automatically handles lookups
 with `should_` and inverting matchers with the `not_` string.
 
+#### 2.8.1. Custom Adaptors
+
+[custom adaptors]: #281-custom-adaptors
+
+When you create a custom matcher, it can often improve the
+expressiveness of your spec files to allow additional custom adaptors
+that are specific to a particular Matcher object (and other Matchers
+cloned from it).
+
+Any `Matcher` based object method named with a trailing question-mark
+will be called automatically if that matcher is invoked with an
+equivalent adaptor name. For example, the built in adaptors, `all_of`
+and `any_of` are implemented as methods called `all_of?` and `any_of?`
+on the base `Matcher` object:
+
+{% highlight lua %}
+    Matcher = Object {
+      ...
+      ["all_of?"] = function (self, actual, alternatives, ...) ... end,
+      ["any_of?"] = function (self, actual, alternatives, ...) ... end,
+      ...
+{% endhighlight %}
+
+To add a custom adaptor to `be_again`, we simply define the custom
+adaptor method in the same way.  For consistency with the built in
+adaptors, I strongly recommend that you perform type checks against the
+`Matcher`'s `actual_type` field:
+
+{% highlight lua %}
+    local util = require "specl.util"
+
+    matchers.matchers.be_again = Matcher {
+      ...
+      ["the_same_size_as?"] = function (self, actual, expected, ...)
+        util.type_check ("expect", {actual}, {self.actual_type})
+        util.type_check ("the_same_size_as", {expected}, {"#table"})
+
+        return (#actual == #expected),
+          "expecting a table the same size as" ..
+          self.format_expect (expected, actual, ...) .. "but got" ..
+          self.format_actual (actual, expected, ...)
+      end,
+      ...
+{% endhighlight %}
+
+The utility function `type_check` checks that the types of each element
+of the table in argument 2 match one of the corresponding type names
+from argument 3, or else raise an error for mismatched arguments using
+the name given in argument 1.  So the first call to `type_check`
+enforces that `actual`, the argument to `"expect"`, matches one of the
+types listed in the object's `actual_type` field; and the next call
+enforces that `expected`, the argument to `"the_same_size_as"`, is a
+non-empty table. See the API documentation for more details of how to
+use `type_check`.
+
+To make this adaptor work properly with [Specl][], it must return a
+boolean decribing whether the adaptor matched successfully, followed by
+an error message that specl will use if the overall expectation failed
+(which can happen even when we return `true`, if the expectation uses
+`should_not`).  Again, we use the `Matcher` object's format functions to
+ensure that any specialisations of this particular object will continue
+to behave properly with custom `format_` functions too.
+
+There is nothing sacred about the built in matchers, so feel free to add
+additional adaptors to the existing `Matcher` objects too:
+
+{% highlight lua %}
+    local matchers = (require "specl.matchers").matchers
+
+    for _, m in pairs (matchers) do
+      m["the_same_size_as?"] = function (self, actual, expect, ...)
+        ...
+      end
+    end
+{% endhighlight %}
+
+And then [Specl][] will support expectations such as:
+
+{% highlight lua %}
+    - transform:
+      - it remains the same size:
+          expect (transform (subject)).
+            should_be.the_same_size_as (subject)
+{% endhighlight %}
+    
+Some adaptors (such as the `any_of` built in adaptor) need access to the
+match function normally used by a plain matcher (i.e. without an
+adaptor) to compare the result of the `expect` call (`actual`) against
+each of the alternatives in a table passed to the adaptor (`expected`).
+That function is stored as a matcher method that can be accessed from
+the adaptor method with `self.matchp`.
+
+
 
 ## 3. Environments
 

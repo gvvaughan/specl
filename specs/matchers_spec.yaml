@@ -667,3 +667,59 @@ describe matchers:
         yaml = preamble .. "(error 'error message').should_not_error." ..
                "any_of {'fail', 'error', 'bogus'}"
         expect (run_spec (yaml)).should_contain_output (fail_1)
+
+- describe custom adaptor:
+  - before: |
+      preamble = [[before: |
+        require "spec_helper"
+        local matchers = (require "specl.matchers").matchers
+        local util     = require "specl.util"
+
+        matchers.equal["the_size_of?"] = function (self, actual, expected, ...)
+          util.type_check ("expect", {actual}, {"table"})
+          util.type_check ("the_same_size_as", {expected}, {"table"})
+          return (#actual == #expected),
+            "expecting a table the same size as" ..
+            self.format_expect (expected, actual, ...) .. "but got" ..
+            self.format_actual (actual, expected, ...)
+        end
+      ]] .. "\n" .. preamble
+
+  - it diagnoses incompatible expect arguments:
+      yaml = preamble .. "(1).should_equal.the_size_of {}"
+      expect (run_spec (yaml)).should_contain_error "table expected"
+  - it diagnoses incompatible expect arguments:
+      yaml = preamble .. "({}).should_equal.the_size_of (1)"
+      expect (run_spec (yaml)).should_contain_error "table expected"
+  - it diagnoses unsupported matchers:
+      yaml = preamble .. "({}).should_contain.the_size_of ({})"
+      expect (run_spec (yaml)).
+        should_contain_error "unknown 'the_size_of' adaptor with 'should_contain'"
+  - it displays the expected and actual output for failures:
+      yaml = preamble .. "({1, 2, 3}).should_equal.the_size_of {'one'}"
+      expect (run_spec (yaml)).
+        should_contain_output "expecting a table the same size as "
+
+  - context when called normally:
+    - it succeeds if both tables are empty:
+        yaml = preamble .. "({}).should_equal.the_size_of {}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it succeeds if both tables are the same size:
+        yaml = preamble .. "({1, 2}).should_equal.the_size_of {{3}, 'four'}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it fails if the tables are not the same size:
+        yaml = preamble .. "({1, 2}).should_equal.the_size_of {{3, 'four'}}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+  - context when called with not_ prefix:
+    - it succeeds if the tables are not the same size:
+        yaml = preamble .. "({1, 2}).should_not_equal.the_size_of {{3, 'four'}}"
+        expect (run_spec (yaml)).should_contain_output (pass_all)
+    - it fails if both tables are the same size:
+        yaml = preamble .. "({1, 2}).should_not_equal.the_size_of {{3}, 'four'}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+    - it fails if both tables are empty:
+        yaml = preamble .. "({}).should_not_equal.the_size_of {}"
+        expect (run_spec (yaml)).should_contain_output (fail_1)
+
+

@@ -8,6 +8,9 @@ Specl NEWS - User visible changes.
     files, reporting filename and line-number of error locations,
     and without spurious Lua-runtime stack traces.
 
+  - Support for custom per-matcher adaptors. See docs/specl.md for
+    documentation.
+
   - New '--unicode' command-line option to support unicode in spec
     files, at the expense of inaccurate line-numbers in error
     messages.
