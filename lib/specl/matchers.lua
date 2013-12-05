@@ -326,7 +326,7 @@ matchers.contain = Matcher {
     end
 
     -- Coerce an object to a table.
-    if type (actual) == "table" and Object.type (actual) ~= "table" then
+    if util.type (actual) == "object" then
       actual = util.totable (actual)
     end
 
@@ -349,7 +349,7 @@ matchers.contain = Matcher {
   format_actual = function (actual)
     if type (actual) == "string" then
       return " " .. q (actual)
-    elseif Object.type (actual) ~= "table" then
+    elseif util.type (actual) == "object" then
       return ":" .. reformat (util.prettytostring (util.totable (actual), "  "))
     else
       return ":" .. reformat (util.prettytostring (actual, "  "))
@@ -357,16 +357,15 @@ matchers.contain = Matcher {
   end,
 
   format_expect = function (expect, actual)
-    if type (actual) == "string" and type (expect) == "string" then
+    if type (expect) == "string" and type (actual) == "string" then
       return " string containing " .. q(expect) .. ", "
     else
-      return " table containing " .. q(expect) .. ", "
+      return " " .. Object.type (actual) .. " containing " .. q(expect) .. ", "
     end
   end,
 
   format_alternatives = function (adaptor, alternatives, actual)
-    return " " .. type (actual) .. " containing " ..
-           adaptor .. " " ..
+    return " " .. Object.type (actual) .. " containing " .. adaptor .. " " ..
            concat (alternatives, adaptor, util.QUOTED) .. ", "
   end,
 }

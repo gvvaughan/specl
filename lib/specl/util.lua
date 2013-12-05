@@ -78,6 +78,16 @@ local function concat (alternatives, infix, quoted)
 end
 
 
+-- Simplified Object.type, that just returns "object" for non-primitive
+-- types, or else the primitive type name.
+local function xtype (x)
+  if type (x) == "table" and Object.type (x) ~= "table" then
+    return "object"
+  end
+  return type (x)
+end
+
+
 -- Write a function call type error similar to how Lua core does it.
 local function type_error (name, i, arglist, typelist)
   local actual = "no value"
@@ -182,12 +192,12 @@ local M = {
   -- Functions
   chomp          = std.string.chomp,
   concat         = concat,
+  escape_pattern = std.string.escape_pattern,
   gettimeofday   = gettimeofday,
   indent         = indent,
   nop            = nop,
   map            = map,
   merge          = std.table.merge,
-  escape_pattern = std.string.escape_pattern,
   Object         = std.Object,
   prettytostring = std.string.prettytostring,
   princ          = princ,
@@ -197,6 +207,7 @@ local M = {
   timesince      = timesince,
   tostring       = std.string.tostring,
   totable        = std.table.totable,
+  type           = xtype,
   type_check     = type_check,
   writc          = writc,
 }

@@ -433,7 +433,7 @@ describe matcher:
     - it displays expected and actual output for failures: |
         yaml = preamble .. "_contain 'nothing'"
         expect (run_spec (yaml)).
-          should_match_output ("expecting table containing \"nothing\", but got:\n" ..
+          should_match_output ("expecting Process containing \"nothing\", but got:\n" ..
                                 "%s*| %{\n" ..
                                 "%s*|%s*errout = \"bad\",\n" ..
                                 "%s*|%s*output = \"good\",\n" ..
@@ -442,7 +442,7 @@ describe matcher:
     - it displays all expected and actual output for all_of failures:
         yaml = preamble ..  "_contain.all_of {'1', 'bad'}"
         expect (run_spec (yaml)).
-          should_match_output ('expecting table containing all of "1" and "bad", but got:\n' ..
+          should_match_output ('expecting Process containing all of "1" and "bad", but got:\n' ..
                                 "%s*| %{\n" ..
                                 "%s*|%s*errout = \"bad\",\n" ..
                                 "%s*|%s*output = \"good\",\n" ..
@@ -451,7 +451,7 @@ describe matcher:
     - it displays all expected and actual output for any_of failures:
         yaml = preamble ..  "_contain.any_of {'0', 0, 'zero'}"
         expect (run_spec (yaml)).
-          should_match_output ('expecting table containing any of "0", 0 or "zero", but got:\n' ..
+          should_match_output ('expecting Process containing any of "0", 0 or "zero", but got:\n' ..
                                 "%s*| %{\n" ..
                                 "%s*|%s*errout = \"bad\",\n" ..
                                 "%s*|%s*output = \"good\",\n" ..

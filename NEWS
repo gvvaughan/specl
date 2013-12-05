@@ -33,6 +33,10 @@ Specl NEWS - User visible changes.
     numbers in error-messages.  Lua string operations require byte
     offsets, which are incompatible.
 
+  - When using std.objects, the contain matcher now displays the
+    expected object type name (rather than just: "table") from the
+    FAIL report.
+
 ** Bug fixes:
 
   - Help2man is no longer required to install specl from the
