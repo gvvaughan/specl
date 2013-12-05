@@ -121,7 +121,7 @@ local function type_check (name, arglist, typelist)
       local ok = false
       for _, check in ipairs (v) do
         if check == "#table" then
-          if #arglist[i] > 0 and a == "table" then
+          if a == "table" and #arglist[i] > 0 then
             ok = true
             break
           end
