@@ -80,18 +80,12 @@ end
 
 -- Write a function call type error similar to how Lua core does it.
 local function type_error (name, i, arglist, typelist)
-  local expected = typelist[i]
   local actual = "no value"
-
   if arglist[i] then actual = Object.type (arglist[i]) end
 
-  if typelist[i] == "#table" then
-    error ("bad argument #" .. tostring (i) .. " to '" .. name ..
-           "' (non-empty table expected, got {})", 3)
-  elseif Object.type (typelist[i]) == "table" then
-    -- format as, eg: "number, string or table"
-    expected = concat (typelist[i], " or ")
-  end
+  local expected = typelist[i]
+  if Object.type (expected) ~= "table" then expected = {expected} end
+  expected = concat (expected, " or "):gsub ("#table", "non-empty table")
 
   error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
          expected .. " expected, got " .. actual .. ")", 3)
