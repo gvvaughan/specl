@@ -19,10 +19,13 @@
 -- MA 02111-1301, USA.
 
 local color = require "specl.color"
+local std   = require "specl.std"
 local util  = require "specl.util"
 
-local Object, prettytostring, totable =
-      util.Object, util.prettytostring, util.totable
+local Object         = std.Object
+local prettytostring = std.string.prettytostring
+local clone, empty, size, totable =
+      std.table.clone, std.table.empty, std.table.size, std.table.totable
 
 local M = {}
 
@@ -52,7 +55,9 @@ end
 -- Call util.concat with an infix appropriate to ADAPTOR.
 local function concat (alternatives, adaptor, quoted)
   local infix
-  if adaptor == "all of" then
+  if adaptor == "a permutation of" then
+    infix = " and "
+  elseif adaptor == "all of" then
     infix = " and "
   elseif adaptor == "any of" then
     infix = " or "
@@ -345,6 +350,41 @@ matchers.contain = Matcher {
     return false
   end,
 
+  -- Additional adaptor to match unordered tables (and strings!).
+  ["a_permutation_of?"] = function (self, actual, expected, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+    util.type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
+
+    -- calculate failure output before coercing strings into tables
+    local msg = "expecting" ..
+                self.format_alternatives ("a permutation of", expected, actual, ...) ..
+                "but got" .. self.format_actual (actual, expect, ...)
+
+    if Object.type (actual) ~= "table" then actual = totable (actual) end
+    if Object.type (expected) ~= "table" then expected = totable (expected) end
+
+    if size (actual) == size (expected) then
+      -- first, check whether expected values are a permutation of actual keys
+      local unseen = clone (actual)
+      for _, search in pairs (expected) do unseen[search] = nil end
+      if empty (unseen) then return true, msg end
+
+      -- else, check whether expected values are a permutation of actual values
+      unseen = clone (actual)
+      for _, search in pairs (expected) do
+        for k, v in pairs (unseen) do
+          if objcmp (v, search) then
+            unseen[k] = nil
+            break -- only remove one occurrence per search value!
+          end
+        end
+      end
+      if empty (unseen) then return true, msg end
+    end
+
+    return false, msg
+  end,
+
   actual_type   = {"string", "table", "object"},
 
   format_actual = function (actual)
@@ -366,8 +406,13 @@ matchers.contain = Matcher {
   end,
 
   format_alternatives = function (adaptor, alternatives, actual)
-    return " " .. Object.type (actual) .. " containing " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+    if type (alternatives) == "string" then
+      alternatives = ("%q"):format (alternatives)
+    else
+      alternatives = concat (alternatives, adaptor, util.QUOTED)
+    end
+    return " " .. Object.type (actual) .. " containing " ..
+           adaptor .. " " .. alternatives .. ", "
   end,
 }
 

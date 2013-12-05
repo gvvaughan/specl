@@ -11,6 +11,17 @@ Specl NEWS - User visible changes.
   - Support for custom per-matcher adaptors. See docs/specl.md for
     documentation.
 
+  - New 'a_permutation_of' adaptor for contain matcher, that allows
+    expectations for operations that are inherently unordered:
+
+      t = {}
+      for _, v in pairs (a_big_table) do t[#t + 1] = v end
+      expect (a_big_table).should_contain.a_permutation_of (t)
+
+    It will fail unless the same set of elements are present in the
+    expect argument values, or the expect argument keys; like the
+    other 'contain' adaptors it works with strings and objects too.
+
   - New '--unicode' command-line option to support unicode in spec
     files, at the expense of inaccurate line-numbers in error
     messages.

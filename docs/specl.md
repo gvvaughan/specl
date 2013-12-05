@@ -486,6 +486,32 @@ supplied elements, it is far better to use:
     expect ({non_boolean_result}).should_not_contain.any_of {true, false}
 {% endhighlight %}
 
+#### 2.7.3. Unordered matching with a_permutation_of
+
+[unordered matching with a_permutation_of]: #273_unordered_matching_with_a_permutation_of
+
+While [Specl][] makes every effort to maintain ordering of elements in
+the tables (and objects) it uses, there are times when you really want
+to check the contents of an inherently unordered expectation - say,
+that `pairs` returns all the elements of a set containing functions
+which can't be guaranteed to have the same sort order on every run.
+
+{% highlight lua %}
+    fn_set, elements = {math.sin=true, math.cos=true, math.tan=true}, {}
+    for fn in pairs (fn_set) do elements[#elements + 1] = fn end
+    expect (elements).should_contain.permutation_of (fn_set)
+{% endhighlight %}
+
+In this example, sorting `elements` before comparing them is dangerous,
+because we can't know what order the addresses of the functions it
+contains will have been assigned by [Lua][], but using `permutation_of`
+here guarantees that `elements` contains the same elements as `fn_set`
+irrespective of order.
+
+Prior to the introduction of `a_permutation_of`, `all_of` was the nearest
+equivalent functionality - but `all_of` will not complain if `elements`
+has even more elements than what it `should_contain` at the time of
+comparison.
 
 ### 2.8. Custom Matchers
 

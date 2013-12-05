@@ -1,4 +1,7 @@
 TODO:
+- improve output of tables in results:
+    expecting a permutation of "five", 2 and 1, but got {1=1, 2=2, 3="five"} bzzt
+    expecting a permutation of "five", 2 and 1, but got {1, 2, "five"} ding ding ding!
 - add a have matcher, with support for items etc
     expect (set).should_have (10).members
     expect (coven).should_have (13).witches
