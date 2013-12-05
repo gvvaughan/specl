@@ -190,7 +190,7 @@ end
 
 
 -- Reformat a list of alternatives into "
--- | %{match}as many lines of <list>[1] as previded%{reset}
+-- | %{match}as many lines of <list>[1] as provided%{reset}
 -- or:
 -- | %{match}lines from <list>[2]%}reset}
 -- " etc.
