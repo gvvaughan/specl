@@ -55,8 +55,8 @@ exec "$LUA" "$0" "$@"
 _G._SPEC = true
 
 local specl  = require "specl"
-local util   = require "specl.util"
 local loader = require "specl.loader"
+local std    = require "specl.std"
 
 local have_color = pcall (require, "ansicolors")
 
@@ -129,11 +129,11 @@ elseif opts.color == nil then
 end
 
 
--- Called by util.process_files() to concatenate YAML formatted
+-- Called by std.io.process_files() to concatenate YAML formatted
 -- specifications in each <filename>
 local specs = {}
 function slurp (filename)
-  local s, errmsg = util.slurp ()
+  local s, errmsg = std.string.slurp ()
   if errmsg ~= nil then
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
@@ -142,6 +142,6 @@ function slurp (filename)
 end
 
 
-util.process_files (slurp)
+std.io.process_files (slurp)
 
 os.exit (specl.run (specs, sandbox))

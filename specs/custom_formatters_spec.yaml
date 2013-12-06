@@ -19,10 +19,11 @@ describe custom formatters:
       -- Write a custom formatter to a temporary file, with overrides from T.
       function formatter (t)
         local f = io.open (tmpfile, "w")
+        f:write "local tostring = (require 'specl.std').string.tostring\n"
         f:write "local util = require 'specl.util'\n"
         f:write "return {\n"
         for _, k in ipairs {"header", "spec", "expectations", "footer"} do
-          local fn = "function (_, a) print (util.tostring (a)) end"
+          local fn = "function (_, a) print (tostring (a)) end"
           if t[k] then
             fn = t[k]
           elseif k ~= "footer" then

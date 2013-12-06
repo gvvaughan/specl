@@ -1,7 +1,7 @@
 local hell = require "specl.shell"
-local util = require "specl.util"
+local std  = require "specl.std"
 
-local Object = util.Object
+local Object = std.Object
 
 function run_spec (params)
   local SPECL = "specs/specl --color=no"

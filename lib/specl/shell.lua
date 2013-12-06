@@ -21,9 +21,11 @@
 -- Additional commands useful for writing command-line specs.
 
 local matchers = require "specl.matchers"
+local std      = require "specl.std"
 local util     = require "specl.util"
 
-local Object   = util.Object
+local Object   = std.Object
+local escape_pattern = std.string.escape_pattern
 
 local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"
@@ -246,7 +248,7 @@ do
   -- Matches if the output of a process contains <expect>.
   matchers.contain_output = Matcher {
     function (actual, expect)
-      return (string.match (actual.output, util.escape_pattern (expect)) ~= nil)
+      return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
     actual_type   = "Process",
@@ -265,7 +267,7 @@ do
   -- Matches if the error output of a process contains <expect>.
   matchers.contain_error = Matcher {
     function (actual, expect)
-      return (string.match (actual.errout, util.escape_pattern (expect)) ~= nil)
+      return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
     actual_type   = "Process",

@@ -22,8 +22,9 @@ local color = require "specl.color"
 local std   = require "specl.std"
 local util  = require "specl.util"
 
-local Object         = std.Object
-local prettytostring = std.string.prettytostring
+local Object = std.Object
+local chomp, escape_pattern, prettytostring, tostring =
+      std.string.chomp, std.string.escape_pattern, std.string.prettytostring, std.string.tostring
 local clone, empty, size, totable =
       std.table.clone, std.table.empty, std.table.size, std.table.totable
 
@@ -48,7 +49,7 @@ local function q (obj)
   if type (obj) == "string" then
     return ("%q"):format (obj)
   end
-  return util.tostring (obj)
+  return tostring (obj)
 end
 
 
@@ -176,8 +177,8 @@ local matchers = setmetatable ({content = {}}, {
 
 -- color sequences escaped for use as literal strings in Lua patterns.
 local escape = {
-  reset = util.escape_pattern (color.reset),
-  match = util.escape_pattern (color.match),
+  reset = escape_pattern (color.reset),
+  match = escape_pattern (color.match),
 }
 
 
@@ -189,7 +190,7 @@ local function _reformat (text, prefix)
   text = text or ""
   prefix = prefix or "| "
   return "\n" .. prefix .. color.match ..
-         util.chomp (text):gsub ("\n",
+         chomp (text):gsub ("\n",
            escape.reset .. "\n" .. prefix .. escape.match) ..
          color.reset
 end
@@ -218,7 +219,7 @@ local function reformat (list, adaptor, prefix)
     s = s .. infix .. _reformat (expect, prefix) .. "\n"
   end
   -- strip the spurious <infix> from the start of the string.
-  return s:gsub ("^" .. util.escape_pattern (infix), "")
+  return s:gsub ("^" .. escape_pattern (infix), "")
 end
 
 
@@ -274,7 +275,7 @@ matchers.error = Matcher {
   function (actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
-        ok = not actual:match (".*" .. util.escape_pattern (expect) .. ".*")
+        ok = not actual:match (".*" .. escape_pattern (expect) .. ".*")
       end
     end
     return not ok
@@ -328,7 +329,7 @@ matchers.contain = Matcher {
   function (actual, expect)
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
-      return (actual:match (util.escape_pattern (expect)) ~= nil)
+      return (actual:match (escape_pattern (expect)) ~= nil)
     end
 
     -- Coerce an object to a table.
@@ -524,7 +525,7 @@ end
 --[[ ----------------- ]]--
 
 
-return util.merge (M, {
+return std.table.merge (M, {
   -- Prototypes:
   Matcher   = Matcher,
 
