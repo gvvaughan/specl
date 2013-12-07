@@ -33,14 +33,30 @@ include specs/specs.mk
 # not to regenerate them unnecessarily, as that triggers rebuilds of
 # dependers that might require tools not installed on the build machine.
 
-$(srcdir)/bin/specl: $(srcdir)/lib/specl.in
+specl_DEPS = $(dist_lua_DATA) $(dist_luaspecl_DATA) $(dist_luaformatter_DATA)
+
+$(srcdir)/bin/specl: $(srcdir)/lib/specl.in $(specl_DEPS)
 	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
 	test -d "$$d" || $(MKDIR_P) "$$d"
 	$(AM_V_GEN)sed						\
 	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
 	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
 	  -e 's|@VERSION''@|$(VERSION)|g'			\
+	  -e '/^]]SH/q'						\
 	  '$(srcdir)/lib/specl.in' > '$@'
+	$(AM_V_at)for f in $(specl_DEPS); do			\
+	  m=`echo "$$f" |sed -e 's|^lib/||' -e 's|/|.|g' -e 's|\.lua$$||'`; \
+	  { echo 'package.preload["'"$$m"'"] = (function ()';	\
+	    cat $$f;						\
+	    echo "end)";					\
+	  } >> '$@';						\
+	done
+	$(AM_V_at)sed						\
+	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
+	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
+	  -e 's|@VERSION''@|$(VERSION)|g'			\
+	  -e '1,/^]]SH/d'					\
+	  '$(srcdir)/lib/specl.in' >> '$@'
 	$(AM_V_at)chmod 755 '$@'
 
 $(srcdir)/docs/specl.1: $(SPECL)

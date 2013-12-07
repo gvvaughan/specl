@@ -97,24 +97,36 @@ local function initenv (env)
   --     can find all the symbols it needs without digging through nested
   --     sandbox environments.
   env.require = function (f)
-    local h, filename
+    local fn, errmsg = package.preload[f], "could not load " .. f
 
-    for path in string.gmatch (package.path .. ";", "([^;]*);") do
-      filename = path:gsub ("%?", (f:gsub ("%.", "/")))
-      h = io.open (filename, "rb")
-      if h then break end
+    if fn == nil then
+      local h, filename
+
+      for path in string.gmatch (package.path .. ";", "([^;]*);") do
+        filename = path:gsub ("%?", (f:gsub ("%.", "/")))
+        h = io.open (filename, "rb")
+        if h then break end
+      end
+
+      -- Manually load into a local function, if we found it.
+      if h ~= nil then
+	local s = h:read "*a"
+        h:close ()
+
+        if s ~= nil then fn, errmsg = loadstring (s, filename) end
+
+        if errmsg ~= nil then error (errmsg) end
+
+	if f:match "spec_helper" == nil and f:match "^lua_......$" == nil then
+	  package.preload[f] = fn
+	end
+      end
     end
 
-    -- Manually load into the local environment if we found it.
-    if h ~= nil then
-      local fn, errmsg = loadstring (h:read "*a", filename)
-      h:close ()
-
-      if fn == nil then error (errmsg) end
-
+    if fn ~= nil then
       -- Ensure any global symbols arrive in <env>.
       setfenv (fn, env)
-      local import = fn ()
+      fn ()
     end
 
     -- Return the package.loaded result.
