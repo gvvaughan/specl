@@ -29,7 +29,14 @@ local null       = { type = "LYAML null" }
 
 
 -- Capture errors thrown by expectations.
-macro.define 'expect(expr)  _expect (pcall (function () return expr end))'
+macro.define ("expect", function (get)
+  if get:peek (1) == "(" then
+    get:expecting "("
+    local expr = get:upto ")"
+    return "_expect (pcall (function () return " .. tostring (expr) .. " end))"
+  end
+  return nil, true -- pass through other references
+end)
 
 
 -- Metatable for Parser objects.
