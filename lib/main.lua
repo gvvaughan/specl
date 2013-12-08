@@ -1,58 +1,22 @@
-#! /bin/sh
-SH=--[[                                             # -*- mode: lua; -*-
-## Specification testing framework.
-##
-## Copyright (c) 2013 Free Software Foundation, Inc.
-## Written by Gary V. Vaughan, 2013
-##
-## This program is free software; you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 3, or (at your option)
-## any later version.
-##
-## This program is distributed in the hope that it will be useful, but
-## WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-## General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program; see the file COPYING.  If not, write to the
-## Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
-## MA 02111-1301, USA.
-
-# If LUA is not set, search PATH for something suitable.
-test -n "$LUA" || {
-  # Check that the supplied binary is executable and returns a compatible
-  # Lua version number.
-  func_vercheck ()
-  {
-    test -x "$1" && {
-      case `$1 -e 'print (_VERSION)' 2>/dev/null` in
-        *"Lua "5\.[12]*) LUA=$1 ;;
-      esac
-    }
-  }
-
-  save_IFS="$IFS"
-  LUA=
-  for x in lua lua5.2 lua5.1; do
-    IFS=:
-    for dir in $PATH; do
-      IFS="$save_IFS"
-      func_vercheck "$dir/$x"
-      test -n "$LUA" && break
-    done
-    IFS="$save_IFS"
-    test -n "$LUA" && break
-  done
-}
-
-# Reexecute using the interpreter suppiled in LUA, or found above.
-exec "$LUA" "$0" "$@"
-]]SH
-
--- Notify modules that specifications are being checked.
-_G._SPEC = true
+-- Specification testing framework.
+--
+-- Copyright (c) 2013 Free Software Foundation, Inc.
+-- Written by Gary V. Vaughan, 2013
+--
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
 
 local specl  = require "specl"
 local loader = require "specl.loader"
