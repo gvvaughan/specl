@@ -723,7 +723,7 @@ And then [Specl][] will support expectations such as:
           expect (transform (subject)).
             should_be.the_same_size_as (subject)
 {% endhighlight %}
-    
+
 Some adaptors (such as the `any_of` built in adaptor) need access to the
 match function normally used by a plain matcher (i.e. without an
 adaptor) to compare the result of the `expect` call (`actual`) against
