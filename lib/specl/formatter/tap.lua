@@ -3,7 +3,7 @@
 
 local util = require "specl.util"
 
-local map, nop, strip1st = util.map, util.nop, util.strip1st
+from util import map, nop, strip1st
 
 local curr_test = 0
 

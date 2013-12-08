@@ -22,8 +22,7 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local indent, map, nop, princ, strip1st, timesince =
-  util.indent, util.map, util.nop, util.princ, util.strip1st, util.timesince
+from util import indent, map, nop, princ, strip1st, timesince
 
 
 local function tabulate (descriptions)

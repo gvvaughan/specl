@@ -33,6 +33,9 @@ include specs/specs.mk
 # not to regenerate them unnecessarily, as that triggers rebuilds of
 # dependers that might require tools not installed on the build machine.
 
+LUAM_OPTS = -llarch.from -d
+LUAM_ENV = LUA_PATH="./lib/?.lua;$(LUA_PATH)"
+
 specl_DEPS = $(dist_lua_DATA) $(dist_luaspecl_DATA) $(dist_luaformatter_DATA)
 
 $(srcdir)/bin/specl: $(srcdir)/lib/specl.in $(specl_DEPS)
@@ -47,7 +50,7 @@ $(srcdir)/bin/specl: $(srcdir)/lib/specl.in $(specl_DEPS)
 	$(AM_V_at)for f in $(specl_DEPS); do			\
 	  m=`echo "$$f" |sed -e 's|^lib/||' -e 's|/|.|g' -e 's|\.lua$$||'`; \
 	  { echo 'package.preload["'"$$m"'"] = (function ()';	\
-	    cat $$f;						\
+	    $(LUAM_ENV) $(LUAM) $(LUAM_OPTS) $$f;		\
 	    echo "end)";					\
 	  } >> '$@';						\
 	done

@@ -24,8 +24,8 @@ local matchers = require "specl.matchers"
 local std      = require "specl.std"
 local util     = require "specl.util"
 
-local Object   = std.Object
-local escape_pattern = std.string.escape_pattern
+from std        import Object
+from std.string import escape_pattern
 
 local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"

@@ -22,7 +22,7 @@
 local color = require "specl.color"
 local std   = require "specl.std"
 
-local Object = std.Object
+from std import Object
 
 local have_posix, posix = pcall (require, "posix")
 

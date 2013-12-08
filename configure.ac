@@ -32,6 +32,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 dnl Check for programs
 AC_PATH_PROG([HELP2MAN], [help2man], [false])
 AC_PATH_PROG([SPECL], [specl], [false])
+AC_PATH_PROG([LUAM], [luam], [false])
 AX_PROG_LUA([5.1], [5.3])
 AC_PROG_EGREP
 AC_PROG_SED

@@ -22,8 +22,7 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local map, nop, princ, strip1st, timesince, writc =
-  util.map, util.nop, util.princ, util.strip1st, util.timesince, util.writc
+from util import map, nop, princ, strip1st, timesince, writc
 
 
 -- Use '>' as a marker for currently executing expectation.
