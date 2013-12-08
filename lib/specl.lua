@@ -142,7 +142,7 @@ local run_examples, run_contexts, run
 function run_examples (examples, descriptions, env)
   local block = function (example, blockenv)
     local metatable = { __index = blockenv }
-    local fenv = { _expect = matchers.expect, pending = matchers.pending }
+    local fenv = { expect = matchers.expect, pending = matchers.pending }
 
     setmetatable (fenv, metatable)
     initenv (fenv)
@@ -231,10 +231,5 @@ local M = {
   run       = run,
 }
 
-
-if _G._SPEC then
-  -- Give specs access to some additional private access points.
-  M._expect = matchers.expect
-end
 
 return M
