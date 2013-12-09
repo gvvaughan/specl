@@ -60,4 +60,4 @@ script:
   - $LUAROCKS make $ROCKSPEC LUA="$LUA"
   # Use bin/specl if we built it, or else the specl rock we just installed.
   - test -f "$SPECL" || SPECL=luarocks/bin/specl;
-    make check SPECL="$SPECL" V=1
+    LUA_PATH=`pwd`'/lib/?.lua;'"${LUA_PATH-;}" make check SPECL="$SPECL" V=1
