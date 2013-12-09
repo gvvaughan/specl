@@ -62,7 +62,7 @@ $(srcdir)/bin/specl: $(srcdir)/lib/specl.in $(specl_DEPS)
 	  '$(srcdir)/lib/specl.in' >> '$@'
 	$(AM_V_at)chmod 755 '$@'
 
-$(srcdir)/docs/specl.1: $(SPECL)
+$(srcdir)/doc/specl.1: $(SPECL)
 	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
 	test -d "$$d" || $(MKDIR_P) "$$d"
 ## Exit gracefully if specl.1 is not writeable, such as during distcheck!
@@ -84,7 +84,7 @@ mkrockspecs_args = --module-dir $(srcdir)/lib
 ## Installation. ##
 ## ------------- ##
 
-man_MANS += docs/specl.1
+man_MANS += doc/specl.1
 
 dist_bin_SCRIPTS += bin/specl
 
@@ -118,7 +118,7 @@ dist_luaformatter_DATA =				\
 ## ------------- ##
 
 EXTRA_DIST +=						\
-	docs/specl.1					\
+	doc/specl.1					\
 	lib/specl.in					\
 	$(NOTHING_ELSE)
 
@@ -141,5 +141,5 @@ CLEANFILES +=						\
 	$(NOTHING_ELSE)
 
 DISTCLEANFILES +=					\
-	docs/specl.1					\
+	doc/specl.1					\
 	$(NOTHING_ELSE)
