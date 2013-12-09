@@ -21,7 +21,7 @@
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = 6c0ba1b6146ad175724939ecf6852f0f
+old_NEWS_hash = 30422a3d540a64f4a593d45cd41960e4
 
 include specs/specs.mk
 
