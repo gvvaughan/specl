@@ -22,8 +22,7 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local map, nop, princ, strip1st, writc =
-      util.map, util.nop, util.princ, util.strip1st, util.writc
+from util import map, nop, princ, strip1st, timesince, writc
 
 
 -- Use '>' as a marker for currently executing expectation.
@@ -133,7 +132,8 @@ local function footer (stats, reports)
            pendcolor .. stats.pend .. " pending" .. color.reset .. ", " ..
            "and " .. failcolor .. stats.fail .. " failed" .. color.reset)
   end
-  princ (" in " .. color.clock ..  (os.time () - stats.starttime) ..
+  princ (" in " .. color.clock ..
+         tostring (timesince (stats.starttime)) ..
          " seconds" .. color.reset .. ".")
 end
 

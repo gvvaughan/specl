@@ -22,8 +22,7 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local indent, map, nop, princ, strip1st =
-      util.indent, util.map, util.nop, util.princ, util.strip1st
+from util import indent, map, nop, princ, strip1st, timesince
 
 
 local function tabulate (descriptions)
@@ -173,8 +172,8 @@ local function footer (stats, reports)
   princ (passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
          pendcolor   .. stats.pend .. " pending" .. color.reset .. " and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
-         color.clock .. (os.time () - stats.starttime) .. " seconds" ..
-         color.reset .. ".")
+         color.clock .. tostring (timesince (stats.starttime)) ..
+         " seconds" .. color.reset .. ".")
 end
 
 

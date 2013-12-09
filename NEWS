@@ -1,5 +1,59 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 9 (2013-12-09) [stable]
+
+** New features:
+
+  - Vastly improved error diagnostics for syntax errors in spec
+    files, reporting filename and line-number of error locations,
+    and without spurious Lua-runtime stack traces.
+
+  - Support for custom per-matcher adaptors. See docs/specl.md for
+    documentation.
+
+  - New 'a_permutation_of' adaptor for contain matcher, that allows
+    expectations for operations that are inherently unordered:
+
+      t = {}
+      for _, v in pairs (a_big_table) do t[#t + 1] = v end
+      expect (a_big_table).should_contain.a_permutation_of (t)
+
+    It will fail unless the same set of elements are present in the
+    expect argument values, or the expect argument keys; like the
+    other 'contain' adaptors it works with strings and objects too.
+
+  - New '--unicode' command-line option to support unicode in spec
+    files, at the expense of inaccurate line-numbers in error
+    messages.
+
+  - Works correctly without ansicolors installed (albeit without
+    displaying any color!).
+
+  - If 'luaposix' is installed where Specl can find it, the report
+    and progress formatters will use it to display the time spent
+    running specifications much more accurately.
+
+** Incompatible changes:
+
+  - Requires lyaml 4 or newer.
+
+  - Unicode characters in spec files are no longer supported by
+    default. LibYAML counts indices by character when reporting the
+    offsets used to re-extract the Lua code fragments (i.e. without
+    YAML neline folding) that Specl uses to generate correct line-
+    numbers in error-messages.  Lua string operations require byte
+    offsets, which are incompatible.
+
+  - When using std.objects, the contain matcher now displays the
+    expected object type name (rather than just: "table") from the
+    FAIL report.
+
+** Bug fixes:
+
+  - Help2man is no longer required to install specl from the
+    distribution tarball.
+
+
 * Noteworthy changes in release 8 (2013-06-26) [stable]
 
 ** New features:

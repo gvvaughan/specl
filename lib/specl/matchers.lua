@@ -19,9 +19,12 @@
 -- MA 02111-1301, USA.
 
 local color = require "specl.color"
+local std   = require "specl.std"
 local util  = require "specl.util"
 
-local Object = util.Object
+from std        import Object
+from std.string import chomp, escape_pattern, prettytostring, tostring
+from std.table  import clone, empty, size, totable
 
 local M = {}
 
@@ -44,14 +47,16 @@ local function q (obj)
   if type (obj) == "string" then
     return ("%q"):format (obj)
   end
-  return util.tostring (obj)
+  return tostring (obj)
 end
 
 
 -- Call util.concat with an infix appropriate to ADAPTOR.
 local function concat (alternatives, adaptor, quoted)
   local infix
-  if adaptor == "all of" then
+  if adaptor == "a permutation of" then
+    infix = " and "
+  elseif adaptor == "all of" then
     infix = " and "
   elseif adaptor == "any of" then
     infix = " or "
@@ -83,51 +88,54 @@ local Matcher = Object {
   _type = "Matcher",
 
   _init = function (self, parms)
-    local matchp = parms[1]
-    util.type_check ("Matcher", {matchp}, {"function"})
+    self.matchp = parms[1]
+    util.type_check ("Matcher", {self.matchp}, {"function"})
 
     -- Overwrite defaults with specified values.
     self = merge_hash (self, parms)
 
-    -- This wrapper function is called to respond to `should_`s.
-    self["match?"] = function (name, actual, expect, ...)
-      util.type_check (name, {actual}, {self.actual_type})
-
-      -- Pass all parameters to both formatters!
-      local m = "expecting" .. self.format_expect (expect, actual, ...) ..
-                "but got" .. self.format_actual (actual, expect, ...)
-      return matchp (actual, expect, ...), m
-    end
-
-    self["all_of?"] = function (name, actual, alternatives, ...)
-      util.type_check (name, {actual}, {self.actual_type})
-      util.type_check (name .. ".all_of", {alternatives}, {"#table"})
-
-      local success
-      for _, expect in ipairs (alternatives) do
-        success = matchp (actual, expect, ...)
-        if not success then break end
-      end
-
-      return success, alternatives_msg (self, "all of", alternatives,
-                                        actual, expect, ...)
-    end
-
-    self["any_of?"] = function (name, actual, alternatives, ...)
-      util.type_check (name, {actual}, {self.actual_type})
-      util.type_check (name .. ".any_of", {alternatives}, {"#table"})
-
-      local success
-      for _, expect in ipairs (alternatives) do
-        success = matchp (actual, expect, ...)
-        if success then break end
-      end
-
-      return success, alternatives_msg (self, "any of", alternatives,
-                                        actual, expect, ...)
-    end
-
     return self
+  end,
+
+  -- Respond to `should_`s and `should_not`s.
+  match = function (self, actual, expect, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+
+    -- Pass all parameters to both formatters!
+    local m = "expecting" .. self.format_expect (expect, actual, ...) ..
+              "but got" .. self.format_actual (actual, expect, ...)
+    return self.matchp (actual, expect, ...), m
+  end,
+
+
+  -- Adaptors:
+
+  ["all_of?"] = function (self, actual, alternatives, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+    util.type_check (self.name .. ".all_of", {alternatives}, {"#table"})
+
+    local success
+    for _, expect in ipairs (alternatives) do
+      success = self.matchp (actual, expect, ...)
+      if not success then break end
+    end
+
+    return success, alternatives_msg (self, "all of", alternatives,
+                                      actual, expect, ...)
+  end,
+
+  ["any_of?"] = function (self, actual, alternatives, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+    util.type_check (self.name .. ".any_of", {alternatives}, {"#table"})
+
+    local success
+    for _, expect in ipairs (alternatives) do
+      success = self.matchp (actual, expect, ...)
+      if success then break end
+    end
+
+    return success, alternatives_msg (self, "any of", alternatives,
+                                      actual, expect, ...)
   end,
 
   -- Defaults:
@@ -151,18 +159,24 @@ local Matcher = Object {
 
 
 -- Only allow Matcher objects to be assigned to a slot in this table.
-local matchers = setmetatable ({}, {
+-- The actual entries are stored in a subtable to ensure that __newindex
+-- always fires, the type of new assignments is always checked, and the
+-- name field is always set.
+local matchers = setmetatable ({content = {}}, {
+  __index = function (self, name) return rawget (self.content, name) end,
+
   __newindex = function (self, name, matcher)
     util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
-    rawset (self, name, matcher)
+    rawset (self.content, name, matcher)
+    rawset (matcher, "name", name)
   end,
 })
 
 
 -- color sequences escaped for use as literal strings in Lua patterns.
 local escape = {
-  reset = util.escape_pattern (color.reset),
-  match = util.escape_pattern (color.match),
+  reset = escape_pattern (color.reset),
+  match = escape_pattern (color.match),
 }
 
 
@@ -174,14 +188,14 @@ local function _reformat (text, prefix)
   text = text or ""
   prefix = prefix or "| "
   return "\n" .. prefix .. color.match ..
-         util.chomp (text):gsub ("\n",
+         chomp (text):gsub ("\n",
            escape.reset .. "\n" .. prefix .. escape.match) ..
          color.reset
 end
 
 
 -- Reformat a list of alternatives into "
--- | %{match}as many lines of <list>[1] as previded%{reset}
+-- | %{match}as many lines of <list>[1] as provided%{reset}
 -- or:
 -- | %{match}lines from <list>[2]%}reset}
 -- " etc.
@@ -203,7 +217,7 @@ local function reformat (list, adaptor, prefix)
     s = s .. infix .. _reformat (expect, prefix) .. "\n"
   end
   -- strip the spurious <infix> from the start of the string.
-  return s:gsub ("^" .. util.escape_pattern (infix), "")
+  return s:gsub ("^" .. escape_pattern (infix), "")
 end
 
 
@@ -219,8 +233,8 @@ local function objcmp (o1, o2)
   if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
 
   -- compare std.Objects according to table contents
-  if type1 ~= "table" then o1 = util.totable (o1) end
-  if type2 ~= "table" then o2 = util.totable (o2) end
+  if type1 ~= "table" then o1 = totable (o1) end
+  if type2 ~= "table" then o2 = totable (o2) end
 
   for k, v in pairs (o1) do
     if o2[k] == nil or not objcmp (v, o2[k]) then return false end
@@ -259,7 +273,7 @@ matchers.error = Matcher {
   function (actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
-        ok = not actual:match (".*" .. util.escape_pattern (expect) .. ".*")
+        ok = not actual:match (".*" .. escape_pattern (expect) .. ".*")
       end
     end
     return not ok
@@ -313,12 +327,12 @@ matchers.contain = Matcher {
   function (actual, expect)
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
-      return (actual:match (util.escape_pattern (expect)) ~= nil)
+      return (actual:match (escape_pattern (expect)) ~= nil)
     end
 
     -- Coerce an object to a table.
-    if type (actual) == "table" and Object.type (actual) ~= "table" then
-      actual = util.totable (actual)
+    if util.type (actual) == "object" then
+      actual = totable (actual)
     end
 
     if type (actual) == "table" then
@@ -335,30 +349,69 @@ matchers.contain = Matcher {
     return false
   end,
 
+  -- Additional adaptor to match unordered tables (and strings!).
+  ["a_permutation_of?"] = function (self, actual, expected, ...)
+    util.type_check (self.name, {actual}, {self.actual_type})
+    util.type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
+
+    -- calculate failure output before coercing strings into tables
+    local msg = "expecting" ..
+                self.format_alternatives ("a permutation of", expected, actual, ...) ..
+                "but got" .. self.format_actual (actual, expect, ...)
+
+    if Object.type (actual) ~= "table" then actual = totable (actual) end
+    if Object.type (expected) ~= "table" then expected = totable (expected) end
+
+    if size (actual) == size (expected) then
+      -- first, check whether expected values are a permutation of actual keys
+      local unseen = clone (actual)
+      for _, search in pairs (expected) do unseen[search] = nil end
+      if empty (unseen) then return true, msg end
+
+      -- else, check whether expected values are a permutation of actual values
+      unseen = clone (actual)
+      for _, search in pairs (expected) do
+        for k, v in pairs (unseen) do
+          if objcmp (v, search) then
+            unseen[k] = nil
+            break -- only remove one occurrence per search value!
+          end
+        end
+      end
+      if empty (unseen) then return true, msg end
+    end
+
+    return false, msg
+  end,
+
   actual_type   = {"string", "table", "object"},
 
   format_actual = function (actual)
     if type (actual) == "string" then
       return " " .. q (actual)
-    elseif Object.type (actual) ~= "table" then
-      return ":" .. reformat (util.prettytostring (util.totable (actual), "  "))
+    elseif util.type (actual) == "object" then
+      return ":" .. reformat (prettytostring (totable (actual), "  "))
     else
-      return ":" .. reformat (util.prettytostring (actual, "  "))
+      return ":" .. reformat (prettytostring (actual, "  "))
     end
   end,
 
   format_expect = function (expect, actual)
-    if type (actual) == "string" and type (expect) == "string" then
+    if type (expect) == "string" and type (actual) == "string" then
       return " string containing " .. q(expect) .. ", "
     else
-      return " table containing " .. q(expect) .. ", "
+      return " " .. Object.type (actual) .. " containing " .. q(expect) .. ", "
     end
   end,
 
   format_alternatives = function (adaptor, alternatives, actual)
-    return " " .. type (actual) .. " containing " ..
-           adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+    if type (alternatives) == "string" then
+      alternatives = ("%q"):format (alternatives)
+    else
+      alternatives = concat (alternatives, adaptor, util.QUOTED)
+    end
+    return " " .. Object.type (actual) .. " containing " ..
+           adaptor .. " " .. alternatives .. ", "
   end,
 }
 
@@ -392,7 +445,7 @@ end
 --
 -- For example:                  expect ({}).should_not_be {}
 
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = os.time () }
+M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
 
 local function expect (ok, actual)
   return setmetatable ({}, {
@@ -404,7 +457,7 @@ local function expect (ok, actual)
         matcher_root = matcher_name:sub (8)
       end
 
-      local match = matchers[matcher_root]
+      local matcher = matchers[matcher_root]
 
       local function score (success, message)
         local pending
@@ -430,28 +483,28 @@ local function expect (ok, actual)
         })
       end
 
-      -- Returns a functable:
-      return setmetatable ({
-        --   (i) with `all_of` or `any_of` to respond to, e.g.:
-        --       | expect (foo).should_be.any_of {bar, baz, quux}
-        all_of = function (alternatives)
-          score (match["all_of?"] (matcher_root, actual, alternatives, ok))
-        end,
-
-        any_of = function (alternatives)
-          score (match["any_of?"] (matcher_root, actual, alternatives, ok))
-        end,
-      }, {
-        --  (ii) and a `__call` metamethod to respond to:
-        --       | expect (foo).should_be (bar)
+      -- Returns a functable...
+      return setmetatable ({}, {
+        --     (i) ...with a `__call` metamethod to respond to:
+        --         | expect (foo).should_be (bar)
         __call = function (_, expected)
-          score (match["match?"] (matcher_root, actual, expected, ok))
+          score (matcher:match (actual, expected, ok))
         end,
 
-        -- (iii) throw an error for unsupported modifiers.
         __index = function (_, adaptor_name)
-          error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-                 matcher_name .. "'")
+          --  (ii) ...or else dynamic adapator lookup in the matcher object:
+          --       | expect (foo).should_be.any_of {bar, baz, quux}
+	  adaptor = matcher[adaptor_name .. "?"]
+          if adaptor then
+	    return function (alternatives)
+              score (adaptor (matcher, actual, alternatives, ok))
+	    end
+
+          -- (iii) otherwise throw an error for unknown adaptors:
+          else
+            error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
+                   matcher_name .. "'")
+          end
         end,
       })
     end
@@ -470,7 +523,7 @@ end
 --[[ ----------------- ]]--
 
 
-return util.merge (M, {
+return std.table.merge (M, {
   -- Prototypes:
   Matcher   = Matcher,
 

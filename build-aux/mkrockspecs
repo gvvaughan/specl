@@ -81,6 +81,14 @@ local function opterr (msg)
   os.exit (2)
 end
 
+local function die (msg)
+  msg:gsub ("([^\n]+)\n?",
+            function ()
+              io.stderr:write (prog.name .. ": error: " .. msg.. "\n")
+	    end)
+  os.exit (1)
+end
+
 prog["--help"] = function ()
   print (usage .. [[
 
@@ -104,7 +112,7 @@ Report bugs to http://github.com/gvvaughan/slingshot/issues.]])
 end
 
 prog["--version"] = function ()
-  print [[mkrockspecs (slingshot) 3
+  print [[mkrockspecs (slingshot) 6
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2013, Gary V. Vaughan
@@ -172,19 +180,39 @@ local conf     = arg[4] or "rockspec.conf"
 --[[ Helper functions. ]]--
 --[[ ================= ]]--
 
-files = {}
-local function tree (root)
-  local p = io.popen ("ls -1 " .. root .. " 2>/dev/null")
+local ok, posix = pcall (require, "posix")
 
-  if p ~= nil then
-    local f = p:read "*l"
-    while f ~= nil do
+files = {}
+
+if ok then
+  -- faster version if luaposix is available
+  function tree (root)
+    for f in posix.files (root) do
+      local path = root .. "/" .. f
       if f:match ("%.lua$") then
-        table.insert (files, root .. "/" .. f)
-      else
-        tree (root .. "/" .. f)
+        table.insert (files, path)
+      elseif f == "." or f == ".." then
+        -- don't go into a loop
+      elseif posix.stat (path, "type") == "directory" then
+        tree (path)
       end
-      f = p:read "*l"
+    end
+  end
+else
+  -- fallback version that executes ls in subshells
+  function tree (root)
+    local p = io.popen ("ls -1 " .. root .. " 2>/dev/null")
+
+    if p ~= nil then
+      local f = p:read "*l"
+      while f ~= nil do
+        if f:match ("%.lua$") then
+          table.insert (files, root .. "/" .. f)
+        else
+          tree (root .. "/" .. f)
+        end
+        f = p:read "*l"
+      end
     end
   end
 end
@@ -241,6 +269,8 @@ if spec.source ~= nil then
   url = spec.source.url
 elseif spec.description ~= nil then
   url = spec.description.homepage
+else
+  die (conf .. ": could not find source.url or description.homepage")
 end
 url = url:gsub ("^[a-z]*://", ""):gsub ("%.git$", "")
 
@@ -267,24 +297,28 @@ if type (spec.external_dependencies) == "table" then
 end
 
 -- If we have a module root, use the luarocks "builtin" type.
-if prog.opts.module_root ~= nil and version ~= "scm" and version ~= "git" then
-  default.build = {
-    type = "builtin",
-    modules = loadmap (prog.opts.module_root),
-  }
-else
-  default.build = {
-    type = "command",
-    build_command = "./configure " ..
-      "LUA='$(LUA)' LUA_INCLUDE='-I$(LUA_INCDIR)' " .. configure_flags ..
-      "--prefix='$(PREFIX)' --libdir='$(LIBDIR)' --datadir='$(LUADIR)' " ..
-      "&& make clean all",
-    install_command = "make install luadir='$(LUADIR)'",
-    copy_directories = {},
-  }
+if version ~= "scm" and version ~= "git" then
+  if prog.opts.module_root ~= nil then
+    default.build = {
+      type = "builtin",
+      modules = loadmap (prog.opts.module_root),
+    }
+  elseif spec.build ~= nil and spec.build.modules ~= nil then
+    default.build = { type = "builtin" }
+  end
 end
 
--- Additional spec-type dependenent values.
+default.build = default.build or {
+  type = "command",
+  build_command = "./configure " ..
+    "LUA='$(LUA)' LUA_INCLUDE='-I$(LUA_INCDIR)' " .. configure_flags ..
+    "--prefix='$(PREFIX)' --libdir='$(LIBDIR)' --datadir='$(LUADIR)' " ..
+    "&& make clean all",
+  install_command = "make install luadir='$(LUADIR)'",
+  copy_directories = {},
+}
+
+-- Additional spec-type dependent values.
 spec.source = spec.source or {}
 if version ~= "scm" and version ~= "git" then
   spec.source.url = "http://" .. url .. "/archive/release-v" .. version .. ".zip"
@@ -292,6 +326,7 @@ if version ~= "scm" and version ~= "git" then
 else
   spec.source.url = "git://" .. url .. ".git"
   default.build.build_command = "./bootstrap && " .. default.build.build_command
+  spec.build.modules = nil
 end
 
 
@@ -323,18 +358,27 @@ local function format (x, indent)
       return "{}"
     else
       local s = "{\n"
-      for i, v in pairs (x) do
-        if type (i) ~= "number" then
-          s = s .. indent
-          if i:match ("[^_%w]") then
-            -- wrap keys with non-%w chars in square brackets
-            s = s .. '["' .. i .. '"]'
-          else
-            s = s .. i
-          end
-          s = s .. " = " .. format (v, indent .. "  ") .. ",\n"
-        end
+
+      -- Collect and sort non-numeric keys first.
+      keys = {}
+      for k in pairs (x) do
+        if type (k) ~= "number" then table.insert (keys, k) end
       end
+      table.sort (keys, function (a, b) return tostring (a) < tostring (b) end)
+
+      -- Display non-numeric key pairs in sort order.
+      for _, k in ipairs (keys) do
+        s = s .. indent
+        if k:match ("[^_%w]") then
+          -- wrap keys with non-%w chars in square brackets
+          s = s .. '["' .. k .. '"]'
+        else
+          s = s .. k
+        end
+        s = s .. " = " .. format (x[k], indent .. "  ") .. ",\n"
+      end
+
+      -- And numeric key pairs last.
       for i, v in ipairs (x) do
         s = s .. indent .. format (v, indent .. "  ") .. ",\n"
       end

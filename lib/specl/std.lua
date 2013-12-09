@@ -92,12 +92,28 @@ local function clone_rename (map, t)
 end
 
 
+-- Return whether table is empty.
+local function empty (t)
+  return not next (t)
+end
+
+
 -- Merge one table into another. Merge <u> into <t>.
 local function merge (t, u)
   for k, v in pairs (u) do
     t[k] = v
   end
   return t
+end
+
+
+-- Find the number of elements in a table.
+local function size (t)
+  local n = 0
+  for _ in pairs (t) do
+    n = n + 1
+  end
+  return n
 end
 
 
@@ -108,6 +124,10 @@ local function totable (x)
     return m (x)
   elseif type (x) == "table" then
     return x
+  elseif type (x) == "string" then
+    local t = {}
+    x:gsub (".", function (c) t[#t + 1] = c end)
+    return t
   else
     return nil
   end
@@ -117,7 +137,9 @@ end
 std.table = {
   clone        = clone,
   clone_rename = clone_rename,
+  empty        = empty,
   merge        = merge,
+  size         = size,
   totable      = totable,
 }
 

@@ -21,7 +21,7 @@
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = 6669649f776eeb4ee02d6a74a69ca04c
+old_NEWS_hash = 6c0ba1b6146ad175724939ecf6852f0f
 
 include specs/specs.mk
 
@@ -29,8 +29,30 @@ include specs/specs.mk
 ## Build. ##
 ## ------ ##
 
-docs/specl.1: $(SPECL)
-	@test -d docs || mkdir docs
+LARCH     = $(srcdir)/build-aux/larch
+
+LUAM_OPTS = -llarch.from -d
+LUAM_ENV  = LUA_PATH="$(srcdir)/lib/?.lua;$(LUA_PATH)"
+
+# These files are distributed in $(srcdir), and we need to be careful
+# not to regenerate them unnecessarily, as that triggers rebuilds of
+# dependers that might require tools not installed on the build machine.
+
+$(srcdir)/bin/specl: $(dist_noinst_DATA)
+	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
+	test -d "$$d" || $(MKDIR_P) "$$d"
+	$(AM_V_GEN)$(LARCH) -e 'require "main"' $(dist_noinst_DATA) \
+	| sed							\
+	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
+	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
+	  -e 's|@VERSION''@|$(VERSION)|g' > '$@T'
+	$(AM_V_at)$(LUAM_ENV) $(LUAM) $(LUAM_OPTS) '$@T' > '$@'
+	$(AM_V_at)rm -f '$@T'
+	$(AM_V_at)chmod 755 '$@'
+
+$(srcdir)/doc/specl.1: $(SPECL)
+	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
+	test -d "$$d" || $(MKDIR_P) "$$d"
 ## Exit gracefully if specl.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
@@ -42,39 +64,28 @@ docs/specl.1: $(SPECL)
 	    $(SPECL);					\
 	fi
 
-## Use a builtin rockspec build with root at $(srcdir)/lib
-mkrockspecs_args = --module-dir $(srcdir)/lib
-
 
 ## ------------- ##
 ## Installation. ##
 ## ------------- ##
 
-man_MANS += docs/specl.1
+man_MANS += doc/specl.1
 
 dist_bin_SCRIPTS += bin/specl
 
-dist_lua_DATA +=					\
+dist_noinst_DATA =					\
+	lib/main.lua					\
 	lib/specl.lua					\
-	$(NOTHING_ELSE)
-
-luaspecldir = $(luadir)/specl
-
-dist_luaspecl_DATA =					\
 	lib/specl/color.lua				\
+	lib/specl/formatter/progress.lua		\
+	lib/specl/formatter/report.lua			\
+	lib/specl/formatter/tap.lua			\
+	lib/specl/loader.lua				\
 	lib/specl/matchers.lua				\
         lib/specl/optparse.lua				\
 	lib/specl/shell.lua				\
 	lib/specl/std.lua				\
 	lib/specl/util.lua				\
-	$(NOTHING_ELSE)
-
-luaformatterdir = $(luaspecldir)/formatter
-
-dist_luaformatter_DATA =				\
-	lib/specl/formatter/progress.lua		\
-	lib/specl/formatter/report.lua			\
-	lib/specl/formatter/tap.lua			\
 	$(NOTHING_ELSE)
 
 
@@ -83,8 +94,7 @@ dist_luaformatter_DATA =				\
 ## ------------- ##
 
 EXTRA_DIST +=						\
-	docs/specl.1					\
-	lib/specl.in					\
+	doc/specl.1					\
 	$(NOTHING_ELSE)
 
 release_extra_dist =					\
@@ -106,5 +116,5 @@ CLEANFILES +=						\
 	$(NOTHING_ELSE)
 
 DISTCLEANFILES +=					\
-	docs/specl.1					\
+	doc/specl.1					\
 	$(NOTHING_ELSE)

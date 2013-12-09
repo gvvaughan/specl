@@ -22,7 +22,25 @@
 local color = require "specl.color"
 local std   = require "specl.std"
 
-local Object = std.Object
+from std import Object
+
+local have_posix, posix = pcall (require, "posix")
+
+-- Use higher resolution timers from luaposix if available.
+local function gettimeofday ()
+  if not (have_posix and posix.timersub) then
+    return os.time ()
+  end
+  return posix.gettimeofday ()
+end
+
+local function timesince (earlier)
+  if not (have_posix and posix.timersub) then
+    return os.time () - earlier
+  end
+  local elapsed = posix.timersub (posix.gettimeofday (), earlier)
+  return (elapsed.usec / 1000000) + elapsed.sec
+end
 
 
 -- Map function F over elements of T and return a table of results.
@@ -60,20 +78,24 @@ local function concat (alternatives, infix, quoted)
 end
 
 
+-- Simplified Object.type, that just returns "object" for non-primitive
+-- types, or else the primitive type name.
+local function xtype (x)
+  if type (x) == "table" and Object.type (x) ~= "table" then
+    return "object"
+  end
+  return type (x)
+end
+
+
 -- Write a function call type error similar to how Lua core does it.
 local function type_error (name, i, arglist, typelist)
-  local expected = typelist[i]
   local actual = "no value"
-
   if arglist[i] then actual = Object.type (arglist[i]) end
 
-  if typelist[i] == "#table" then
-    error ("bad argument #" .. tostring (i) .. " to '" .. name ..
-           "' (non-empty table expected, got {})", 3)
-  elseif Object.type (typelist[i]) == "table" then
-    -- format as, eg: "number, string or table"
-    expected = concat (typelist[i], " or ")
-  end
+  local expected = typelist[i]
+  if Object.type (expected) ~= "table" then expected = {expected} end
+  expected = concat (expected, " or "):gsub ("#table", "non-empty table")
 
   error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
          expected .. " expected, got " .. actual .. ")", 3)
@@ -103,7 +125,7 @@ local function type_check (name, arglist, typelist)
       local ok = false
       for _, check in ipairs (v) do
         if check == "#table" then
-          if #arglist[i] > 0 and a == "table" then
+          if a == "table" and #arglist[i] > 0 then
             ok = true
             break
           end
@@ -168,21 +190,15 @@ local M = {
   QUOTED         = true,
 
   -- Functions
-  chomp          = std.string.chomp,
   concat         = concat,
+  gettimeofday   = gettimeofday,
   indent         = indent,
   nop            = nop,
   map            = map,
-  merge          = std.table.merge,
-  escape_pattern = std.string.escape_pattern,
-  Object         = std.Object,
-  prettytostring = std.string.prettytostring,
   princ          = princ,
-  process_files  = std.io.process_files,
-  slurp          = std.string.slurp,
   strip1st       = strip1st,
-  tostring       = std.string.tostring,
-  totable        = std.table.totable,
+  timesince      = timesince,
+  type           = xtype,
   type_check     = type_check,
   writc          = writc,
 }

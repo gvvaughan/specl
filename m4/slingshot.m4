@@ -20,9 +20,12 @@ dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # --------------------------
 # Generate .travis.yml, ensuring LUAROCKS are installed.
 AC_DEFUN([SS_CONFIG_TRAVIS], [
-  # Luadoc only works with Lua 5.1, so must be installed with care.
-  LUADOC_FALSE=#
-  AC_SUBST(LUADOC_FALSE)
+  # Luadoc only works with Lua 5.1, and LDoc works better with Lua 5.1 on
+  # Travis, so must they be installed with care...
+  GENDOC_FALSE=#
+  AC_SUBST(GENDOC_FALSE)
+  GENDOC=
+  AC_SUBST(GENDOC)
 
   SPECL_MIN=${SPECL_MIN-"5"}
   AC_SUBST([SPECL_MIN])
@@ -33,8 +36,9 @@ AC_DEFUN([SS_CONFIG_TRAVIS], [
   for _ss_rock in lyaml $1; do
     # Enable associated .travis sections for special rocks.
     case $_ss_rock in
-      luadoc)
-        LUADOC_FALSE=-
+      luadoc|ldoc)
+        GENDOC=$_ss_rock
+        GENDOC_FALSE=-
         continue
         ;;
     esac
@@ -42,10 +46,17 @@ AC_DEFUN([SS_CONFIG_TRAVIS], [
     case $EXTRA_ROCKS in
       *" $_ss_rock;"*) ;; # ignore duplicates
       *)
-        EXTRA_ROCKS="$EXTRA_ROCKS"' $LUAROCKS install '"$_ss_rock;"
+        test "x$PACKAGE_NAME" != "x$_ss_rock" \
+            && EXTRA_ROCKS="$EXTRA_ROCKS"' $LUAROCKS install '"$_ss_rock;"
         ;;
     esac
   done
+
+  # Avoid empty travis commands.
+  test "x$EXTRA_ROCKS" != "x-" || EXTRA_ROCKS='# No extra rocks needed here;'
+
   AC_SUBST([EXTRA_ROCKS])
-  AC_CONFIG_FILES([.travis.yml:travis.yml.in])
+  AC_CONFIG_FILES([.travis.yml:travis.yml.in], [
+    # Remove trailing blanks so as not to trip sc_trailing_blank in syntax check
+    sed 's|  *$||' < .travis.yml > ss_tmp && mv ss_tmp .travis.yml; rm -f ss_tmp])
 ])

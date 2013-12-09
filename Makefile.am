@@ -49,6 +49,7 @@ bin_SCRIPTS		=
 check_local		=
 dist_bin_SCRIPTS	=
 dist_lua_DATA		=
+doc_DATA		=
 install_exec_hooks	=
 lib_LTLIBRARIES		=
 man_MANS		=
