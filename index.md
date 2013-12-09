@@ -455,7 +455,7 @@ an expectation succeeds only if none of the alternatives match:
 
 [multiple matches with all_of]: #272_multiple_matches_with_all_of
 
-When you need to ensure that several matches succed, [Specl][] provides
+When you need to ensure that several matches succeed, [Specl][] provides
 the `all_of` adaptor:
 
 {% highlight lua %}
@@ -486,6 +486,32 @@ supplied elements, it is far better to use:
     expect ({non_boolean_result}).should_not_contain.any_of {true, false}
 {% endhighlight %}
 
+#### 2.7.3. Unordered matching with a_permutation_of
+
+[unordered matching with a_permutation_of]: #273_unordered_matching_with_a_permutation_of
+
+While [Specl][] makes every effort to maintain ordering of elements in
+the tables (and objects) it uses, there are times when you really want
+to check the contents of an inherently unordered expectation - say,
+that `pairs` returns all the elements of a set containing functions
+which can't be guaranteed to have the same sort order on every run.
+
+{% highlight lua %}
+    fn_set, elements = {math.sin=true, math.cos=true, math.tan=true}, {}
+    for fn in pairs (fn_set) do elements[#elements + 1] = fn end
+    expect (elements).should_contain.permutation_of (fn_set)
+{% endhighlight %}
+
+In this example, sorting `elements` before comparing them is dangerous,
+because we can't know what order the addresses of the functions it
+contains will have been assigned by [Lua][], but using `permutation_of`
+here guarantees that `elements` contains the same elements as `fn_set`
+irrespective of order.
+
+Prior to the introduction of `a_permutation_of`, `all_of` was the nearest
+equivalent functionality - but `all_of` will not complain if `elements`
+has even more elements than what it `should_contain` at the time of
+comparison.
 
 ### 2.8. Custom Matchers
 
@@ -612,6 +638,99 @@ manual).
 
 Adding custom matcher with this API automatically handles lookups
 with `should_` and inverting matchers with the `not_` string.
+
+#### 2.8.1. Custom Adaptors
+
+[custom adaptors]: #281-custom-adaptors
+
+When you create a custom matcher, it can often improve the
+expressiveness of your spec files to allow additional custom adaptors
+that are specific to a particular Matcher object (and other Matchers
+cloned from it).
+
+Any `Matcher` based object method named with a trailing question-mark
+will be called automatically if that matcher is invoked with an
+equivalent adaptor name. For example, the built in adaptors, `all_of`
+and `any_of` are implemented as methods called `all_of?` and `any_of?`
+on the base `Matcher` object:
+
+{% highlight lua %}
+    Matcher = Object {
+      ...
+      ["all_of?"] = function (self, actual, alternatives, ...) ... end,
+      ["any_of?"] = function (self, actual, alternatives, ...) ... end,
+      ...
+{% endhighlight %}
+
+To add a custom adaptor to `be_again`, we simply define the custom
+adaptor method in the same way.  For consistency with the built in
+adaptors, I strongly recommend that you perform type checks against the
+`Matcher`'s `actual_type` field:
+
+{% highlight lua %}
+    local util = require "specl.util"
+
+    matchers.matchers.be_again = Matcher {
+      ...
+      ["the_same_size_as?"] = function (self, actual, expected, ...)
+        util.type_check ("expect", {actual}, {self.actual_type})
+        util.type_check ("the_same_size_as", {expected}, {"#table"})
+
+        return (#actual == #expected),
+          "expecting a table the same size as" ..
+          self.format_expect (expected, actual, ...) .. "but got" ..
+          self.format_actual (actual, expected, ...)
+      end,
+      ...
+{% endhighlight %}
+
+The utility function `type_check` checks that the types of each element
+of the table in argument 2 match one of the corresponding type names
+from argument 3, or else raise an error for mismatched arguments using
+the name given in argument 1.  So the first call to `type_check`
+enforces that `actual`, the argument to `"expect"`, matches one of the
+types listed in the object's `actual_type` field; and the next call
+enforces that `expected`, the argument to `"the_same_size_as"`, is a
+non-empty table. See the API documentation for more details of how to
+use `type_check`.
+
+To make this adaptor work properly with [Specl][], it must return a
+boolean decribing whether the adaptor matched successfully, followed by
+an error message that specl will use if the overall expectation failed
+(which can happen even when we return `true`, if the expectation uses
+`should_not`).  Again, we use the `Matcher` object's format functions to
+ensure that any specialisations of this particular object will continue
+to behave properly with custom `format_` functions too.
+
+There is nothing sacred about the built in matchers, so feel free to add
+additional adaptors to the existing `Matcher` objects too:
+
+{% highlight lua %}
+    local matchers = (require "specl.matchers").matchers
+
+    for _, m in pairs (matchers) do
+      m["the_same_size_as?"] = function (self, actual, expect, ...)
+        ...
+      end
+    end
+{% endhighlight %}
+
+And then [Specl][] will support expectations such as:
+
+{% highlight lua %}
+    - transform:
+      - it remains the same size:
+          expect (transform (subject)).
+            should_be.the_same_size_as (subject)
+{% endhighlight %}
+
+Some adaptors (such as the `any_of` built in adaptor) need access to the
+match function normally used by a plain matcher (i.e. without an
+adaptor) to compare the result of the `expect` call (`actual`) against
+each of the alternatives in a table passed to the adaptor (`expected`).
+That function is stored as a matcher method that can be accessed from
+the adaptor method with `self.matchp`.
+
 
 
 ## 3. Environments
@@ -784,8 +903,9 @@ runs your specifications, so provided you supply the table keys that
 {% endhighlight %}
 
 The functions `header` and `footer` are called before any expectations,
-and after all expectations, respectively.  The `stats` argument to
-`footer` is a table containing:
+and after all expectations, respectively.
+
+The `stats` argument to `footer` is a table containing:
 
 {% highlight lua %}
     stats = {
@@ -797,7 +917,18 @@ and after all expectations, respectively.  The `stats` argument to
 {% endhighlight %}
 
 You can use this to print out statistics at the end of the formatted
-output.
+output. Note that `starttime` may be the result of an earlier call to
+`os.time ()`, or if `luaposix` is installed where [Specl] can find it,
+it will be the result of an earlier call to `posix.gettimeofday ()`.
+In either case, you can pass it to `specl.util.timesince (earlier)` to
+turn it into a printable time elapsed since `earlier` (with the best
+resolution available):
+
+{% highlight lua %}
+  local util = require "specl.util"
+  print ("Time elapsed is " ..
+         util.timesince (stats.starttime) .. " seconds.")
+{% endhighlight %}
 
 The `accumulated` argument to `footer` is a string made by concatenating
 all the returned strings, if any, from other calls to the formatter API
