@@ -1,7 +1,7 @@
 # Local Make rules.
-#
-# Copyright (C) 2013 Gary V. Vaughan
 # Written by Gary V. Vaughan, 2013
+#
+# Copyright (C) 2013-2014 Gary V. Vaughan
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -22,6 +22,11 @@
 ## ---------- ##
 
 old_NEWS_hash = 30422a3d540a64f4a593d45cd41960e4
+
+update_copyright_env = \
+	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
+	UPDATE_COPYRIGHT_USE_INTERVALS=1 \
+	UPDATE_COPYRIGHT_FORCE=1
 
 include specs/specs.mk
 

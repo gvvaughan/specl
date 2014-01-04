@@ -1,7 +1,7 @@
 -- Parse and process command line options.
---
--- Copyright (C) 2013 Gary V. Vaughan
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (C) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by

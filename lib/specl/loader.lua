@@ -1,7 +1,7 @@
 -- Load Specl spec-files into native Lua tables.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
