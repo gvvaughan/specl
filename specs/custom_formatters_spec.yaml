@@ -34,7 +34,7 @@ describe custom formatters:
         f:write "}\n"
         f:close ()
         local d, f = tmpfile:match "^(.*)/([^/]*)$"
-        return {"-f" .. f, env = {LUA_PATH = d .. "/?"}, stdin = t.yaml}
+        return {"-f" .. f, env = {LUA_PATH = d .. "/?;;"}, stdin = t.yaml}
       end
 
   - after:
