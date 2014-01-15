@@ -102,15 +102,6 @@ EXTRA_DIST +=						\
 	doc/specl.1					\
 	$(NOTHING_ELSE)
 
-release_extra_dist =					\
-	.autom4te.cfg					\
-	.travis.yml					\
-	GNUmakefile					\
-	bootstrap					\
-	local.mk					\
-	travis.yml.in					\
-	$(NOTHING_ELSE)
-
 
 ## ------------ ##
 ## Maintenance. ##
