@@ -1,4 +1,87 @@
+2014-01-15  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 10
+	* NEWS: Record release date.
+
+	slingshot: sync with upstream.
+	* slingshot: Sync with upstream.
+	* bootstrap: Sync with slingshot.
+	* .travis.yml: Regenerate.
+
+	configury: don't regenerate specl.1 after configure.
+	* local.mk ($(srcdir)/doc/specl.1): Depend on $(srcdir)/bin/specl
+	instead of generated specs/specl.  Add $(LUAM_ENV) to help2man
+	invocation, and call $(srcdir)/bin/specl instead of $(SPECL).
+
+	configury: no need to duplicate release_extra_dist in local.mk.
+	* local.mk (release_extra_dist): Remove.
+
+2014-01-07  Gary V. Vaughan  <gary@gnu.org>
+
+	specl/shell: manually pass package.path in remaining hell.spawn(specl) specs.
+	* specs/custom_formatters_spec.yaml (formatter): In case we're
+	using modules not on the system Lua package path, make sure to
+	manually pass our package.path to inferior specl spawn.
+	* specs/specl_spec.yaml: Likewise.
+
+2014-01-06  Gary V. Vaughan  <gary@gnu.org>
+
+	configury: bump release number to 10.
+	* configure.ac (AC_INIT): Bump release number to 10.
+
+	specl/shell: don't force specl's LUA_PATH on subprocesses.
+	Forcing Specl's internal package.path into a subprocess'
+	environment will break if the subprocess invokes a Lua
+	interpreter with a different package.path, especially for a
+	different Lua version.
+	* lib/specl/shell.lua (Command._init): Remove LUA_PATH setting.
+	* specs/spec_helper.lua (run_spec): Pass through LUA_PATH for
+	inferior Specl processes that `require "spec_helper"`.
+	* specs/custom_formatters_spec.yaml, specs/specl_spec.yaml:
+	Add trailing ";;" so we don't override the system package.path.
+	* NEWS: Update.
+
+2014-01-05  Gary V. Vaughan  <gary@gnu.org>
+
+	slingshot: sync with upstream.
+	Fix the annoying contest.sed file dropping bug.
+	* slingshot: Sync with upstream.
+	* bootstrap: Sync with slingshot.
+
+2014-01-04  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: update copyright notices to include 2014.
+	* .x-update-copyright: New file. Exclude files not owned by this
+	project from update-copyright rules.
+	* bootstrap.conf (slingshot_files): Add update-copyright.
+	* .gitignore: Update accordingly.
+	* local.mk (update_copyright_env): Settings for update-copyright.
+	* bootstrap.conf, build-aux/larch, configure.ac,
+	lib/larch/from.lua, lib/main.lua, lib/specl.lua,
+	lib/specl/color.lua, lib/specl/formatter/progress.lua,
+	lib/specl/formatter/report.lua, lib/specl/loader.lua,
+	lib/specl/matchers.lua, lib/specl/optparse.lua,
+	lib/specl/shell.lua, lib/specl/util.lua, local.mk,
+	specs/specs.mk: Bump copyright year.
+
+	slingshot: sync with upstream, and simplify accordingly.
+	* slingshot: Sync with upstream.
+	* bootstrap: Update from slingshot.
+	* bootstrap.slingshot: Remove.  No longer required.
+	* bootstrap.conf: Remove bootstrap.slingshot boilerplate.
+	(func_ensure_changelog, specl_force_readme): Remove. Automated by
+	slingshot now.
+
 2013-12-09  Gary V. Vaughan  <gary@gnu.org>
+
+	slingshot: sync with upstream.
+	* slingshot: Pick up latest release with fixes for running tests
+	on installed packages with inlined sources.
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 9
 	* NEWS: Record release date.

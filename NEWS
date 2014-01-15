@@ -1,5 +1,14 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 10 (2014-01-15) [stable]
+
+** Bug fixes:
+
+  - Using specl.shell when Specl itself and the process being
+    spawned require different versions of Lua no longer crashes
+    with corrupted shared package.path settings.
+
+
 * Noteworthy changes in release 9 (2013-12-09) [stable]
 
 ** New features:

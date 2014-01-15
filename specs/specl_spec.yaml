@@ -197,14 +197,14 @@ describe specl:
     - it formats expectations with the custom formatter: |
         command = {
           "--formatter=" .. tmp:basename (), "-";
-          env = { LUA_PATH = tmp:dirname () .. "/?" },
+          env = { LUA_PATH = tmp:dirname () .. "/?;" .. package.path },
           stdin = yaml,
         }
         expect (run_spec (command)).should_output "hs.f"
     - it accepts -f as an equivalent to --formatter:
         command = {
           "-f" .. tmp:basename (), "-";
-          env = { LUA_PATH = tmp:dirname () .. "/?" },
+          env = { LUA_PATH = tmp:dirname () .. "/?;" .. package.path },
           stdin = yaml,
         }
         expect (run_spec (command)).should_output "hs.f"

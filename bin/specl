@@ -33,9 +33,9 @@ exec "$LUA" "$0" "$@"
 
 package.preload["main"] = (function ()
 -- Specification testing framework.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ for k, v in pairs (_G) do sandbox[k] = v end
 local OptionParser = require "specl.optparse"
 
 local parser = OptionParser [[
-specl (Specl) 9
+specl (Specl) 10
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2013, Gary V. Vaughan
@@ -147,9 +147,9 @@ os.exit (specl.run (specs, sandbox))
 end)
 package.preload["specl"] = (function ()
 -- Specification testing framework.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -385,9 +385,9 @@ return M
 end)
 package.preload["specl.color"] = (function ()
 -- Conditional ANSI coloration.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -467,9 +467,9 @@ return setmetatable (colormap, {
 end)
 package.preload["specl.formatter.progress"] = (function ()
 -- Short progress-bar style expectation formatter.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -624,9 +624,9 @@ return M
 end)
 package.preload["specl.formatter.report"] = (function ()
 -- Long report style expectation formatter.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -879,9 +879,9 @@ return M
 end)
 package.preload["specl.loader"] = (function ()
 -- Load Specl spec-files into native Lua tables.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -1178,9 +1178,9 @@ return M
 end)
 package.preload["specl.matchers"] = (function ()
 -- Specification matchers.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -1720,9 +1720,9 @@ return std.table.merge (M, {
 end)
 package.preload["specl.optparse"] = (function ()
 -- Parse and process command line options.
---
--- Copyright (C) 2013 Gary V. Vaughan
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (C) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -2127,9 +2127,9 @@ return setmetatable (M, {
 end)
 package.preload["specl.shell"] = (function ()
 -- Shell and file helpers.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -2186,20 +2186,14 @@ local Command = Object {
     -- and environment is already set in time for embedded references.
     self.cmd = "sh -c " .. shell_quote (self.cmd)
 
-    -- Make sure package search path is passed through.
-    env = env or {}
-    if env.LUA_PATH then
-      env.LUA_PATH = env.LUA_PATH .. ";" .. package.path
-    else
-      env.LUA_PATH = package.path
-    end
-
     -- Use 'env' shell command to set environment variables.
     local t = {}
-    for k, v in pairs (env) do
+    for k, v in pairs (env or {}) do
       table.insert (t, k .. "=" .. shell_quote (v))
     end
-    self.cmd = "env " .. table.concat (t, " ") .. " " .. self.cmd
+    if #t > 0 then
+      self.cmd = "env " .. table.concat (t, " ") .. " " .. self.cmd
+    end
 
     if stdin then
       self.cmd = "printf '%s\\n' " .. shell_quote (stdin):gsub ("\n", "' '") ..
@@ -2934,9 +2928,9 @@ return std
 end)
 package.preload["specl.util"] = (function ()
 -- Miscellaneous utility functions.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by

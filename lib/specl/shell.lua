@@ -1,7 +1,7 @@
 -- Shell and file helpers.
---
--- Copyright (c) 2013 Free Software Foundation, Inc.
 -- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -58,20 +58,14 @@ local Command = Object {
     -- and environment is already set in time for embedded references.
     self.cmd = "sh -c " .. shell_quote (self.cmd)
 
-    -- Make sure package search path is passed through.
-    env = env or {}
-    if env.LUA_PATH then
-      env.LUA_PATH = env.LUA_PATH .. ";" .. package.path
-    else
-      env.LUA_PATH = package.path
-    end
-
     -- Use 'env' shell command to set environment variables.
     local t = {}
-    for k, v in pairs (env) do
+    for k, v in pairs (env or {}) do
       table.insert (t, k .. "=" .. shell_quote (v))
     end
-    self.cmd = "env " .. table.concat (t, " ") .. " " .. self.cmd
+    if #t > 0 then
+      self.cmd = "env " .. table.concat (t, " ") .. " " .. self.cmd
+    end
 
     if stdin then
       self.cmd = "printf '%s\\n' " .. shell_quote (stdin):gsub ("\n", "' '") ..

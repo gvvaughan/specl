@@ -1,7 +1,7 @@
 dnl configure.ac
-dnl
-dnl Copyright (c) 2013 Free Software Foundation, Inc.
 dnl Written by Gary V. Vaughan, 2013
+dnl
+dnl Copyright (c) 2013-2014 Gary V. Vaughan
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published
@@ -19,7 +19,7 @@ dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
 AC_PREREQ([2.68])
 
 dnl Initialise autoconf and automake
-AC_INIT([Specl], [9], [http://github.com/gvvaughan/specl/issues])
+AC_INIT([Specl], [10], [http://github.com/gvvaughan/specl/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 

@@ -1,7 +1,7 @@
 # Local Make rules.
-#
-# Copyright (C) 2013 Gary V. Vaughan
 # Written by Gary V. Vaughan, 2013
+#
+# Copyright (C) 2013-2014 Gary V. Vaughan
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -21,7 +21,12 @@
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = 6c0ba1b6146ad175724939ecf6852f0f
+old_NEWS_hash = 30422a3d540a64f4a593d45cd41960e4
+
+update_copyright_env = \
+	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
+	UPDATE_COPYRIGHT_USE_INTERVALS=1 \
+	UPDATE_COPYRIGHT_FORCE=1
 
 include specs/specs.mk
 
@@ -50,18 +55,19 @@ $(srcdir)/bin/specl: $(dist_noinst_DATA)
 	$(AM_V_at)rm -f '$@T'
 	$(AM_V_at)chmod 755 '$@'
 
-$(srcdir)/doc/specl.1: $(SPECL)
+$(srcdir)/doc/specl.1: $(srcdir)/bin/specl
 	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
 	test -d "$$d" || $(MKDIR_P) "$$d"
 ## Exit gracefully if specl.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
+	  $(LUAM_ENV)					\
 	  builddir='$(builddir)'			\
 	  $(HELP2MAN)					\
 	    '--output=$@'				\
 	    '--no-info'					\
 	    '--name=Specl'				\
-	    $(SPECL);					\
+	    $(srcdir)/bin/specl;			\
 	fi
 
 
@@ -95,15 +101,6 @@ dist_noinst_DATA =					\
 
 EXTRA_DIST +=						\
 	doc/specl.1					\
-	$(NOTHING_ELSE)
-
-release_extra_dist =					\
-	.autom4te.cfg					\
-	.travis.yml					\
-	GNUmakefile					\
-	bootstrap					\
-	local.mk					\
-	travis.yml.in					\
 	$(NOTHING_ELSE)
 
 

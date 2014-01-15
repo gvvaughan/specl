@@ -6,7 +6,7 @@ SH=--[[                                             # -*- mode: lua; -*-
 ## terms of the MIT license reproduced below.
 
 ## ====================================================================
-## Copyright (C) 2013 Gary V. Vaughan
+## Copyright (C) 2013-2014 Gary V. Vaughan
 ##
 ## Permission is hereby granted, free of charge, to any person
 ## obtaining a copy of this software and associated documentation
@@ -28,6 +28,27 @@ SH=--[[                                             # -*- mode: lua; -*-
 ## WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ## ====================================================================
 
+
+_lua_version_re='"Lua 5."[12]*'
+_lua_binaries='lua lua5.2 lua52 lua5.1 lua51'
+
+export LUA_INIT
+export LUA_INIT_5_2
+export LUA_PATH
+export LUA_CPATH
+
+# Be Bourne compatible
+if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
+  emulate sh
+  NULLCMD=:
+  # Zsh 3.x and 4.x performs word splitting on ${1+"$@"}, which
+  # is contrary to our usage.  Disable this feature.
+  alias -g '${1+"$@"}'='"$@"'
+  setopt NO_GLOB_SUBST
+else
+  case `(set -o) 2>/dev/null` in *posix*) set -o posix;; esac
+fi
+
 # If LUA is not set, search PATH for something suitable.
 test -n "$LUA" || {
   # Check that the supplied binary is executable and returns a compatible
@@ -35,15 +56,17 @@ test -n "$LUA" || {
   func_vercheck ()
   {
     test -x "$1" && {
-      case `$1 -e 'print (_VERSION)' 2>/dev/null` in
-        "Lua 5."[12]) LUA=$1 ;;
-      esac
+      eval 'case `'$1' -e "print (_VERSION)" 2>/dev/null` in
+        '"$_lua_version_re"') LUA='$1' ;;
+      esac'
     }
   }
 
+  progname=`echo "$0" |${SED-sed} 's|.*/||'`
+
   save_IFS="$IFS"
   LUA=
-  for x in lua lua5.2 lua5.1; do
+  for x in $_lua_binaries; do
     IFS=:
     for dir in $PATH; do
       IFS="$save_IFS"
@@ -52,8 +75,17 @@ test -n "$LUA" || {
     done
     IFS="$save_IFS"
     test -n "$LUA" && break
+    e="${e+$e\n}$progname: command not found on PATH: $x"
   done
 }
+
+test -n "$LUA" || {
+  printf "${e+$e\n}$progname: retry after 'export LUA=/path/to/lua'\n" >&2
+  exit 1
+}
+
+LUA_INIT=
+LUA_INIT_5_2=
 
 # Reexecute using the interpreter suppiled in LUA, or found above.
 exec "$LUA" "$0" "$@"
@@ -105,6 +137,7 @@ rockspec if the default "-1" revision was released with errors.
 
       --help             print this help, then exit
       --version          print version number, then exit
+  -b, --branch=BRANCH    make git rockspec use BRANCH
   -m, --module-dir=ROOT  directory of lua-files for builtin build type
 
 Report bugs to http://github.com/gvvaughan/slingshot/issues.]])
@@ -132,6 +165,18 @@ prog["--module-dir"] = function (arglist, i)
 end
 
 prog["-m"] = prog["--module-dir"]
+
+prog["--branch"] = function (arglist, i)
+  local opt = arglist[i]
+  if i + 1 > #arglist then
+    opterr ("option '" .. opt .. "' requires an argument")
+  end
+
+  prog.opts.branch = arglist[i + 1]
+  return i + 1
+end
+
+prog["-b"] = prog["--branch"]
 
 local nonopts
 local i = 0
@@ -320,12 +365,28 @@ default.build = default.build or {
 
 -- Additional spec-type dependent values.
 spec.source = spec.source or {}
+spec.build  = spec.build  or {}
 if version ~= "scm" and version ~= "git" then
   spec.source.url = "http://" .. url .. "/archive/release-v" .. version .. ".zip"
   spec.source.dir = package .. "-release-v" .. version
 else
   spec.source.url = "git://" .. url .. ".git"
+  spec.source.branch = prog.opts.branch
   default.build.build_command = "./bootstrap && " .. default.build.build_command
+
+  -- luarocks git checkouts omit the .git directory, which is where the
+  -- slingshot submodule revision is stored, so we have to transform into
+  -- a sparse-checkout, and manually pull the slingshot revision :(
+  if package ~= "slingshot" then
+    default.build.build_command =
+      "test -d slingshot || { " ..
+        "git init; " ..
+        "git config core.sparseCheckout true; " ..
+        "git remote add -f origin " .. spec.source.url .. "; " ..
+        "echo slingshot > .git/info/sparse-checkout; " ..
+        "git checkout " .. (prog.opts.branch or "master") .. "; " ..
+      "}; " .. default.build.build_command
+  end
   spec.build.modules = nil
 end
 

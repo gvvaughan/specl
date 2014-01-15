@@ -8,7 +8,11 @@ function run_spec (params)
 
   -- If params is a string, it is the input text for the subprocess.
   if type (params) == "string" then
-    return hell.spawn {SPECL; stdin = params}
+    return hell.spawn {
+      SPECL;
+      stdin = params,
+      env = { LUA_PATH=package.path },
+    }
   end
 
   -- If params is a table, fill in the gaps in parameters it names.
@@ -21,7 +25,11 @@ function run_spec (params)
       cmd = SPECL .. " " .. cmd
     end
 
-    return hell.spawn {cmd; env = params.env, stdin = params.stdin}
+    -- Must pass our package.path through to inferior Specl process.
+    local env = params.env or {}
+    env.LUA_PATH = env.LUA_PATH or package.path
+
+    return hell.spawn {cmd; env = env, stdin = params.stdin}
   end
 
   error ("run_spec was expecting a string or table, but got a "..type (params))

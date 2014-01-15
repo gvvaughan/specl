@@ -1,7 +1,7 @@
 # Slingshot release rules for GNU Make.
 
 # ======================================================================
-# Copyright (C) 2001-2013 Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 Free Software Foundation, Inc.
 # Originally by Jim Meyering, Simon Josefsson, Eric Blake,
 #               Akim Demaille, Gary V. Vaughan, and others.
 # This version by Gary V. Vaughan, 2013.
@@ -108,7 +108,6 @@ release_extra_dist ?=					\
 	GNUmakefile					\
 	bootstrap					\
 	bootstrap.conf					\
-	bootstrap.slingshot				\
 	local.mk					\
 	$(_travis_yml)					\
 	$(NOTHING_ELSE)
@@ -374,7 +373,7 @@ announce_emails ?= lua-l@lists.lua.org
 rockspec_emails ?= luarocks-developers@lists.sourceforge.net
 
 .PHONY: mail
-mail:
+mail: rockspecs
 	$(AM_V_at)cat ~/announce-$(my_distdir)				\
 	  | mail -s '[ANN] $(PACKAGE) $(VERSION) released' --		\
 	    $(announce_emails)
