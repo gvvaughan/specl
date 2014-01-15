@@ -21,7 +21,7 @@ build = {
   type = "command",
   ["copy_directories"] = {
     "bin",
-    "docs",
+    "doc",
   },
   ["install_command"] = "make install luadir='$(LUADIR)'",
 }
