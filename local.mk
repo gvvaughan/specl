@@ -28,6 +28,14 @@ update_copyright_env = \
 	UPDATE_COPYRIGHT_USE_INTERVALS=1 \
 	UPDATE_COPYRIGHT_FORCE=1
 
+
+## ------------- ##
+## Declarations. ##
+## ------------- ##
+
+dist_noinst_SCRIPTS	=
+dist_noinst_DATA	=
+
 include specs/specs.mk
 
 ## ------ ##
@@ -79,7 +87,7 @@ man_MANS += doc/specl.1
 
 dist_bin_SCRIPTS += bin/specl
 
-dist_noinst_DATA =					\
+dist_noinst_DATA +=					\
 	lib/main.lua					\
 	lib/specl.lua					\
 	lib/specl/color.lua				\
@@ -98,6 +106,12 @@ dist_noinst_DATA =					\
 ## ------------- ##
 ## Distribution. ##
 ## ------------- ##
+
+dist_noinst_SCRIPTS += build-aux/larch
+
+dist_noinst_DATA +=					\
+	lib/larch/from.lua				\
+	$(NOTHING_ELSE)
 
 EXTRA_DIST +=						\
 	doc/specl.1					\
