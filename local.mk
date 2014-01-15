@@ -55,18 +55,19 @@ $(srcdir)/bin/specl: $(dist_noinst_DATA)
 	$(AM_V_at)rm -f '$@T'
 	$(AM_V_at)chmod 755 '$@'
 
-$(srcdir)/doc/specl.1: $(SPECL)
+$(srcdir)/doc/specl.1: $(srcdir)/bin/specl
 	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
 	test -d "$$d" || $(MKDIR_P) "$$d"
 ## Exit gracefully if specl.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
 	then						\
+	  $(LUAM_ENV)					\
 	  builddir='$(builddir)'			\
 	  $(HELP2MAN)					\
 	    '--output=$@'				\
 	    '--no-info'					\
 	    '--name=Specl'				\
-	    $(SPECL);					\
+	    $(srcdir)/bin/specl;			\
 	fi
 
 
