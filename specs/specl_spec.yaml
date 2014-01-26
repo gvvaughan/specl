@@ -87,23 +87,23 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         tmp:append (example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         tmp:append (" |" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML folded style: |
         tmp:append (" >" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         tmp:append (" '" .. example .. "'")
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         tmp:append (' "' .. example .. '"')
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":3: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":3: .* near 'garbage'")
 
   - context with Lua error in multi-line example:
     - before:
@@ -114,23 +114,23 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         tmp:append (example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         tmp:append (" |" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML folded style: |
         tmp:append (" >" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         tmp:append (" '" .. example .. "'")
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         tmp:append (' "' .. example .. '"')
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":5: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":5: .* near 'garbage'")
 
   - context with Lua error in multi-example spec-file:
     - before: |
@@ -146,23 +146,23 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         tmp:append (example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         tmp:append (" |" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML folded style: |
         tmp:append (" >" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         tmp:append (" '" .. example .. "'")
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         tmp:append (' "' .. example .. '"')
         expect (run_spec {"--color=no", tmp.path}).
-          should_contain_error (tmp.path .. ":8: '=' expected near 'garbage'")
+          should_match_error (tmp.path .. ":8: .* near 'garbage'")
 
 - describe command line interface:
   - before: |
