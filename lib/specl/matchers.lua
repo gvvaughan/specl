@@ -228,6 +228,9 @@ local function objcmp (o1, o2)
   -- equal, then they *are* the same... no need for more checking.
   if o1 == o2 then return true end
 
+  -- Non-table types at this point must differ.
+  if type (o1) ~= "table" or type (o2) ~= "table" then return false end
+
   -- cache extended types
   local type1, type2 = Object.type (o1), Object.type (o2)
 
