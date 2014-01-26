@@ -223,27 +223,46 @@ end
 
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
+  -- If they are the same object (number, interned string, table etc),
+  -- or they shara a metatable with an __eq metamethod that says they
+  -- equal, then they *are* the same... no need for more checking.
+  if o1 == o2 then return true end
+
   -- cache extended types
   local type1, type2 = Object.type (o1), Object.type (o2)
 
   -- different types are unequal
   if type1 ~= type2 then return false end
 
-  -- core types can be compared directly
-  if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
-
   -- compare std.Objects according to table contents
   if type1 ~= "table" then o1 = totable (o1) end
   if type2 ~= "table" then o2 = totable (o2) end
 
+  local subcomps = {}  -- keys requiring a recursive comparison
   for k, v in pairs (o1) do
-    if o2[k] == nil or not objcmp (v, o2[k]) then return false end
+    if o2[k] == nil then return false end
+    if v ~= o2[k] then
+      if type (v) ~= "table" then return false end
+      -- only require recursive comparisons for mismatched values
+      table.insert (subcomps, k)
+    end
   end
   -- any keys in o2, not already compared above denote a mismatch!
-  for k, _ in pairs (o2) do
+  for k in pairs (o2) do
     if o1[k] == nil then return false end
   end
-  return true
+  if #subcomps == 0 then return true end
+  if #subcomps > 1 then
+    -- multiple table-valued keys remain, so we have to recurse
+    for _, k in ipairs (subcomps) do
+      assert (o1[k] ~= nil and o2[k] ~= nil)
+      if not objcmp (o1[k], o2[k]) then return false end
+    end
+    return true
+  end
+  -- use a tail call for arbitrary depth single-key subcomparison
+  local _, k = next (subcomps)
+  return objcmp (o1[k], o2[k])
 end
 
 

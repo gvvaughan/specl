@@ -2,6 +2,12 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features:
+
+  - Built-in matchers compare nested tables and objects in about 25% of
+    the time required previously, and is optimised for tail-call
+    elimination for non-tree like structures.
+
 
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 
