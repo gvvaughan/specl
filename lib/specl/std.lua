@@ -321,10 +321,29 @@ std.strbuf = std.Object {
 
 
 
+--[[ ----------- ]]--
+--[[ std.package ]]--
+--[[ ----------- ]]--
+
+local M = {}
+
+--- Make named constants for `package.config`
+M.dirsep, M.pathsep, M.path_mark, M.execdir, M.igmark =
+  string.match (package.config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
+std.package = M
+
+
+
 --[[ ------ ]]--
 --[[ std.io ]]--
 --[[ ------ ]]--
 
+
+-- Concatenate one or more directories and a filename into a path.
+local function catfile (...)
+  return table.concat ({...}, std.package.dirsep)
+end
 
 -- Process files specified on the command-line.
 local function process_files (fn)
@@ -343,6 +362,7 @@ end
 
 
 std.io = {
+  catfile       = catfile,
   process_files = process_files,
 }
 
