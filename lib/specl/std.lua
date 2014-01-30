@@ -98,6 +98,16 @@ local function empty (t)
 end
 
 
+--- Invert a table.
+local function invert (t)
+  local i = {}
+  for k, v in pairs (t) do
+    i[v] = k
+  end
+  return i
+end
+
+
 -- Merge one table into another. Merge <u> into <t>.
 local function merge (t, u)
   for k, v in pairs (u) do
@@ -138,6 +148,7 @@ std.table = {
   clone        = clone,
   clone_rename = clone_rename,
   empty        = empty,
+  invert       = invert,
   merge        = merge,
   size         = size,
   totable      = totable,
@@ -257,6 +268,7 @@ local function tablify (object)
   return t
 end
 
+
 -- Metatable for objects
 local metatable = {
   _type = "Object",
@@ -321,20 +333,6 @@ std.strbuf = std.Object {
 
 
 
---[[ ----------- ]]--
---[[ std.package ]]--
---[[ ----------- ]]--
-
-local M = {}
-
---- Make named constants for `package.config`
-M.dirsep, M.pathsep, M.path_mark, M.execdir, M.igmark =
-  string.match (package.config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
-
-std.package = M
-
-
-
 --[[ ------ ]]--
 --[[ std.io ]]--
 --[[ ------ ]]--
@@ -344,6 +342,19 @@ std.package = M
 local function catfile (...)
   return table.concat ({...}, std.package.dirsep)
 end
+
+
+-- Remove leading directories from `path`.
+local function basename (path)
+  return path:gsub (catfile ("^.*", ""), "")
+end
+
+
+-- Remove trailing filename from `path`.
+local function dirname (path)
+  return path:gsub (catfile ("", "[^", "]*$"), "")
+end
+
 
 -- Process files specified on the command-line.
 local function process_files (fn)
@@ -362,7 +373,9 @@ end
 
 
 std.io = {
+  basename      = basename,
   catfile       = catfile,
+  dirname       = dirname,
   process_files = process_files,
 }
 
@@ -522,6 +535,85 @@ std.string = {
   split          = split,
   tostring       = tostring,
 }
+
+
+
+--[[ ----------- ]]--
+--[[ std.package ]]--
+--[[ ----------- ]]--
+
+local M = {}
+
+
+--- Make named constants for `package.config`
+M.dirsep, M.pathsep, M.path_mark, M.execdir, M.igmark =
+  string.match (package.config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
+
+-- Looks for a path segment match of `patt` in `pathstrings`.
+-- A third, optional numerical argument `init` specifies what element to
+-- start the search at; its default value is 1 and can be negative.  A
+-- value of true as a fourth optional argument `plain` turns off the
+-- pattern matching facilities, so the function does a plain "find
+-- substring" operation, with no characters in `patt` being considered
+-- magic.  Note that if `plain` is given, then `init` must be given as
+-- well.
+-- If it finds a match, then `find` returns the element index of
+-- `pathstrings` where this match occurs, and the full text of the
+-- matching element; otherwise it returns nil.
+local function find (pathstrings, patt, init, plain)
+  local paths = split (pathstrings, M.pathsep)
+  if plain then patt = escape_pattern (patt) end
+  init = init or 1
+  if init < 0 then init = #paths - init end
+  for i = init, #paths do
+    if paths[i]:find (patt) then return i, paths[i] end
+  end
+end
+
+
+-- Normalize a path list by removing redundant `.` and `..` sections,
+-- and keeping only the first instance of duplicate elements.  Each
+-- argument can contain any number of package.pathsep delimited
+-- segments.
+local function normalize (...)
+  local i, paths, pathstrings = 1, {}, table.concat ({...}, M.pathsep)
+  for _, path in ipairs (split (pathstrings, M.pathsep)) do
+    path = path:
+      gsub (catfile ("^[^", "]"), catfile (".", "%0")):
+      gsub (catfile ("", "%.", ""), M.dirsep):
+      gsub (catfile ("", "[^", "]+", "%.%.", ""), M.dirsep)
+    if not paths[path] then
+      paths[path], i = i, i + 1
+    end
+  end
+  return table.concat (invert (paths), M.pathsep)
+end
+
+
+-- Like table.insert, for paths.
+local function insert (pathstrings, ...)
+  local paths = split (pathstrings, M.pathsep)
+  table.insert (paths, ...)
+  return table.concat (paths, M.pathsep)
+end
+
+
+-- Like table.remove, for paths.
+local function remove (pathstrings, ...)
+  local paths = split (pathstrings, M.pathsep)
+  table.remove (paths, ...)
+  return table.concat (paths, M.pathsep)
+end
+
+
+std.package = merge (M, {
+  find      = find,
+  insert    = insert,
+  normalize = normalize,
+  remove    = remove,
+})
+
 
 
 --[[ ----------------- ]]--
