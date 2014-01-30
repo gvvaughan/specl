@@ -22,8 +22,11 @@
 -- Use the simple progress formatter by default.  Can be changed by run().
 local formatter  = require "specl.formatter.progress"
 local matchers   = require "specl.matchers"
+local std        = require "specl.std"
 local util       = require "specl.util"
 
+
+from std.string import slurp, split
 
 
 --[[ ================================= ]]--
@@ -76,13 +79,29 @@ local function accumulator (holder, arg)
 end
 
 
+-- Access to core functions that we override to run within nested
+-- function environments.
+local core = {
+  load       = load,
+  loadfile   = loadfile,
+  loadstring = loadstring,
+  require    = require,
+}
+
+
+-- A map of module name to global symbol side effects.
+-- We keep track of these so that they can be injected into an
+-- execution environment that requires a module.
+local sidefx = {}
+
+
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
 local function initenv (env)
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
-      local fn = env.specl["_" .. intercept] (...)
+      local fn = core[intercept] (...)
       return function ()
         setfenv (fn, env)
         return fn ()
@@ -90,47 +109,52 @@ local function initenv (env)
     end
   end
 
-  -- Manually walk the package path, and `loadstring(f)` what we find...
-  --   * setfenv prior to running loadstring returned function, which
-  --     imports any global symbols from <f> into the local env;
-  --   * (re)load the module with the system loader so that specl itself
-  --     can find all the symbols it needs without digging through nested
-  --     sandbox environments.
-  env.require = function (f)
-    local fn, errmsg = package.preload[f], "could not load " .. f
+  -- For a not-yet-{pre,}loaded module, try to find it on `package.path`
+  -- and load it with `loadstring`, so that any symbols that leak out
+  -- (the side effects) are cached, and then copied into the example
+  -- block environment, for this and subsequent examples that load it.
+  env.require = function (m)
+    local errmsg, import, loaded, loadfn
 
-    if fn == nil then
-      local h, filename
+    -- We can have a spec_helper.lua in each spec directory, so don't
+    -- cache the side effects of a random one!
+    if m ~= "spec_helper" then
+      loaded, loadfn = package.loaded[m], package.preload[m]
+      import = sidefx[m]
+    end
 
-      for path in string.gmatch (package.path .. ";", "([^;]*);") do
-        filename = path:gsub ("%?", (f:gsub ("%.", "/")))
-        h = io.open (filename, "rb")
-        if h then break end
+    if import == nil then
+      -- Not preloaded, so search package.path.
+      if loadfn == nil then
+        for _, path in pairs (split (package.path, ";")) do
+          local filename = path:gsub ("%?", (m:gsub ("%.", "/")))
+          local s = slurp (filename)
+          if s ~= nil then
+            loadfn, errmsg = loadstring (s, filename)
+	    break
+          end
+        end
       end
+      if errmsg ~= nil then return error (errmsg) end
 
-      -- Manually load into a local function, if we found it.
-      if h ~= nil then
-	local s = h:read "*a"
-        h:close ()
-
-        if s ~= nil then fn, errmsg = loadstring (s, filename) end
-
-        if errmsg ~= nil then error (errmsg) end
-
-	if f:match "spec_helper" == nil and f:match "^lua_......$" == nil then
-	  package.preload[f] = fn
-	end
+      -- Capture side effects.
+      if loadfn ~= nil then
+        import = setmetatable ({}, {__index = env})
+        setfenv (loadfn, import)
+        loaded = loadfn ()
       end
     end
 
-    if fn ~= nil then
-      -- Ensure any global symbols arrive in <env>.
-      setfenv (fn, env)
-      fn ()
+    -- Import side effects into example block environment.
+    for name, value in pairs (import or {}) do
+      env[name] = value
     end
 
-    -- Return the package.loaded result.
-    return env.specl._require (f)
+    sidefx[m] = import
+    package.loaded[m] = package.loaded[m] or loaded or nil
+
+    -- Use the system require if loadstring failed (e.g. C module).
+    return package.loaded[m] or core.require (m)
   end
 end
 
@@ -202,15 +226,6 @@ end
 -- Run SPECS, according to OPTS and ENV.
 function run (specs, env)
   formatter = opts.formatter or formatter
-
-  env.specl = {
-    -- Environment access to core functions that we override to
-    -- run within nested function environment later.
-    _load       = load,
-    _loadfile   = loadfile,
-    _loadstring = loadstring,
-    _require    = require,
-  }
 
   -- Run compiled specs, in order.
   accumulator (formatter, formatter.header (matchers.stats))

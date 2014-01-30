@@ -400,6 +400,14 @@ local function slurp (h)
 end
 
 
+--- Split a string at a given separator.
+local function split (s, sep)
+  local l, s, p = {}, s .. sep, "(.-)" .. escape_pattern (sep)
+  string.gsub (s, p, function (cap) l[#l + 1] = cap end)
+  return l
+end
+
+
 -- Turn tables into strings with recursion detection.
 local function render (x, open, close, elem, pair, sep, roots)
   local function stop_roots (x)
@@ -511,6 +519,7 @@ std.string = {
   prettytostring = prettytostring,
   render         = render,
   slurp          = slurp,
+  split          = split,
   tostring       = tostring,
 }
 
