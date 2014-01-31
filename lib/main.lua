@@ -21,6 +21,7 @@
 local specl  = require "specl"
 local loader = require "specl.loader"
 local std    = require "specl.std"
+local util   = require "specl.util"
 
 local have_color = pcall (require, "ansicolors")
 
@@ -52,8 +53,10 @@ Develop and run BDD specs written in Lua for RSpec style workflow, by
 verifying specification expectations read from given FILEs or standard
 input, and reporting the results on standard output.
 
-If no FILE is listed, or where '-' is given as a FILE, then read from
-standard input.
+If no FILE is listed, then run specifications for all files from the
+'specs/' directory with names ending in '.yaml'.
+
+Where '-' is given as a FILE, then read from standard input.
 
       --help            print this help, then exit
       --version         print version number, then exit
@@ -90,6 +93,19 @@ if not have_color then
   opts.color = nil
 elseif opts.color == nil then
   opts.color = true
+end
+
+if #_G.arg == 0 then
+  _G.arg = util.map (function (f) return f:match "_spec%.yaml$" and f or nil end,
+                     util.files "specs")
+end
+
+if #_G.arg == 0 then
+  if pcall (require, "posix") then
+    return parser:opterr "could not find spec files in './specs/'"
+  else
+    return parser:opterr "install luaposix to autoload spec files from './specs/'"
+  end
 end
 
 

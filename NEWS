@@ -18,6 +18,16 @@ Specl NEWS - User visible changes.
     set `package.path` and `package.cpath` to find the code being specced
     out in a 'spec_helper.lua' in each directory containing spec files.
 
+  - When invoked with no filename arguments, `specl` will check all your
+    specifications, as long as they have names ending in `_spec.yaml` and
+    are kept in or somewhere below the `specs/` directory of your project.
+
+** Incompatible changes:
+
+  - Invoking `specl` with no filename arguments no longer reads specs
+    from standard input.  You must explicitly pass a "-" argument to get
+    that behaviour.
+
 
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 

@@ -1013,11 +1013,24 @@ Given a spec-file or two, along with the implementation of the code
 being checked against those specifications, you run [Specl][] inside the
 project directory using the provided `specl` command.
 
-The `specl` command expects a list of spec-files to follow, and is
-usually called like this:
+The `specl` command expects spec-files to be kept in a top-level
+directory named `specs/`, and to have names ending in `_spec.yaml. As
+long as you follow that format, invoking `specl` will find and check
+all the matching spec-files automatically.
+
+%{ highlight bash %}
+    specl
+%{ endhighlight %}
+
+Once you have accumulated a large collection of spec-files, you might
+only need to check a selection of specs relevent to the files you are
+working on.  As long as you follow the best practice of putting specs
+for, say, a source file named `foo/bar/baz.lua` in a spec-file named
+`specs/foo/bar/baz_spec.yaml`, you can list just the specs that are
+named for the list of files you're working on, like this:
 
 {% highlight bash %}
-    specl specs/*_spec.yaml
+    specl specs/foo_spec.yaml specs/bar/*_spec.yaml
 {% endhighlight %}
 
 The output will display results using the default `progress` formatter.

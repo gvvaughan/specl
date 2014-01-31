@@ -12,7 +12,7 @@ function run_spec (params)
   -- If params is a string, it is the input text for the subprocess.
   if type (params) == "string" then
     return hell.spawn {
-      SPECL, "--color=no";
+      SPECL, "--color=no", "-";
       stdin = params,
       env = { LUA_PATH=package.path },
     }
@@ -25,7 +25,7 @@ function run_spec (params)
 
     -- But is just options to specl if it begins with a '-'.
     if cmd:sub (1, 1) == "-" then
-      cmd = SPECL .. " --color=no " .. cmd
+      cmd = SPECL .. " --color=no " .. cmd .. " -"
     end
 
     -- Must pass our package.path through to inferior Specl process.

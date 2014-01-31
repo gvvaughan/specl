@@ -26,6 +26,33 @@ from std import Object
 
 local have_posix, posix = pcall (require, "posix")
 
+
+local files -- forward declaration
+
+if have_posix then
+
+  files = function (root)
+    local t = {}
+    for _, file in ipairs (posix.dir (root)) do
+      if file ~= "." and file ~= ".." then
+        local path = std.io.catfile (root, file)
+        if posix.stat (path).type == "directory" then
+          t = std.table.merge (t, files (path))
+        else
+          t[#t + 1] = path
+        end
+      end
+    end
+    return t
+  end
+
+else
+
+  files = function () return {} end
+
+end
+
+
 -- Use higher resolution timers from luaposix if available.
 local function gettimeofday ()
   if not (have_posix and posix.timersub) then
@@ -191,6 +218,7 @@ local M = {
 
   -- Functions
   concat         = concat,
+  files          = files,
   gettimeofday   = gettimeofday,
   indent         = indent,
   nop            = nop,
