@@ -825,15 +825,24 @@ Oftentimes, spec files can become crowded with so much setup code that
 the actual specifications can get lost in the noise.  In this case, it
 helps the clarity of the specification files, and the helper code too,
 if you move as much of it as appropriate into a separate file, usually
-called `spec_helper.lua`, and require that from the top-level `before`
-function:
+called `spec_helper.lua`.
+
+[Specl][] automatically loads the `spec_helper.lua` file from the same
+directory as the spec file being loaded.  Thus, any global symbols set by
+`spec_helper.lua` are available to all the spec files it shares a
+directory with.
+
+Almost always, there is a `spec_helper.lua` that sets up the Lua
+`package.path` and `package.cpath` to the relative paths from the
+top-level project directory so that you can run `specl` directly from
+the command line in that directory without needing a wrapper script or
+special `make` rules to set them on each invocation:
 
 {% highlight lua %}
-    before:
-      require "spec_helper"
+local std = require 'specl.std'
+local path = std.io.catfile ("lib", "?.lua")
 
-    describe module behaviour:
-    ...
+package.path = std.package.normalize (path, package.path)
 {% endhighlight %}
 
 

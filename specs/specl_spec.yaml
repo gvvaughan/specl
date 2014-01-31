@@ -1,6 +1,3 @@
-before:
-  require "spec_helper"
-
 describe specl:
 - describe spec-file format:
   - before: |

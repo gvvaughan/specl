@@ -1,7 +1,4 @@
 before: |
-  require "specl.shell"
-  require "spec_helper"
-
   preamble = "before: hell = require 'specl.shell'\nit fails: expect "
   fail_1   = "\n0 passed, 0 pending, and 1 failed"
   pass_all = "\nAll expectations met"
@@ -787,7 +784,6 @@ describe matcher:
 - describe using custom adaptor:
   - before: |
       preamble = [[before: |
-        require "spec_helper"
         local matchers = (require "specl.matchers").matchers
         local util     = require "specl.util"
 

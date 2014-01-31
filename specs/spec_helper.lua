@@ -1,15 +1,18 @@
 local hell = require "specl.shell"
 local std  = require "specl.std"
+local path = std.io.catfile ("lib", std.package.path_mark .. ".lua")
+
+package.path = std.package.normalize (path, package.path)
 
 local Object = std.Object
 
 function run_spec (params)
-  local SPECL = "specs/specl --color=no"
+  local SPECL = os.getenv ("SPECL") or "bin/specl"
 
   -- If params is a string, it is the input text for the subprocess.
   if type (params) == "string" then
     return hell.spawn {
-      SPECL;
+      SPECL, "--color=no";
       stdin = params,
       env = { LUA_PATH=package.path },
     }
@@ -22,7 +25,7 @@ function run_spec (params)
 
     -- But is just options to specl if it begins with a '-'.
     if cmd:sub (1, 1) == "-" then
-      cmd = SPECL .. " " .. cmd
+      cmd = SPECL .. " --color=no " .. cmd
     end
 
     -- Must pass our package.path through to inferior Specl process.

@@ -1,6 +1,6 @@
 local hell = require "specl.shell"
 
-local SPECL = "specs/specl"
+local SPECL = os.getenv ("SPECL") or "bin/specl"
 
 function run_spec (yaml, ...)
   return hell.spawn {

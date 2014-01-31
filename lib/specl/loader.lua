@@ -20,8 +20,10 @@
 
 
 local macro = require "macro"
-local util  = require "specl.util"
 local yaml  = require "yaml"
+
+local std   = require "specl.std"
+local util  = require "specl.util"
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
@@ -233,17 +235,26 @@ local parser_mt = {
 
 -- Parser object constructor.
 local function Parser (filename, s)
+  local dir  = std.io.dirname (filename)
+  local path = std.package.normalize (
+    std.io.catfile (dir, std.package.path_mark .. ".lua"))
+
   local object = {
     anchors  = {},
-    filename = filename:gsub ("^%./", ""),
     input    = s,
     mark     = { line = "0", column = "0" },
     next     = yaml.parser (s),
 
+    -- strip leading './'
+    filename = filename:gsub (std.io.catfile ("^%.", ""), ""),
+
     -- Used to simplify requiring from the spec file directory.
-    preamble = "package.path = \"" ..
-               filename:gsub ("[^/]+$", "?.lua;") ..
-               "\" .. package.path\n",
+    preamble = string.format ([[
+      package.path = require "specl.std".package.normalize ("%s", package.path)
+
+      -- Autoload spec_helper from spec-file directory, if any.
+      pcall (require, "spec_helper")
+    ]], path)
   }
   return setmetatable (object, parser_mt)
 end

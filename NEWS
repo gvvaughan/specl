@@ -8,6 +8,16 @@ Specl NEWS - User visible changes.
     the time required previously, and is optimised for tail-call
     elimination for non-tree like structures.
 
+  - Specl now loads a 'spec_helper.lua' from the same directory as the
+    spec file being executed into the example environment automatically,
+    so there's no need to manually require it from a `before:` block in
+    each spec file any more.
+
+  - You can easily run Specl from the top of your source tree without
+    any special LUA_PATH munging in Makefiles or wrapper scripts. Just
+    set `package.path` and `package.cpath` to find the code being specced
+    out in a 'spec_helper.lua' in each directory containing spec files.
+
 
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 
