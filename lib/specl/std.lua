@@ -599,6 +599,16 @@ local function insert (pathstrings, ...)
 end
 
 
+-- Call `fn` with each path in `pathstrings`, or until `fn` returns
+-- non-nil.
+local function mappath (pathstrings, fn, ...)
+  for _, path in ipairs (split (pathstrings, M.pathsep)) do
+    local r = fn (path, ...)
+    if r ~= nil then return r end
+  end
+end
+
+
 -- Like table.remove, for paths.
 local function remove (pathstrings, ...)
   local paths = split (pathstrings, M.pathsep)
@@ -610,6 +620,7 @@ end
 std.package = merge (M, {
   find      = find,
   insert    = insert,
+  mappath   = mappath,
   normalize = normalize,
   remove    = remove,
 })

@@ -126,14 +126,14 @@ local function initenv (env)
     if import == nil then
       -- Not preloaded, so search package.path.
       if loadfn == nil then
-        for _, path in pairs (split (package.path, ";")) do
+        std.package.mappath (package.path, function (path)
           local filename = path:gsub ("%?", (m:gsub ("%.", "/")))
           local s = slurp (filename)
           if s ~= nil then
             loadfn, errmsg = loadstring (s, filename)
-	    break
+	    return "break"
           end
-        end
+        end)
       end
       if errmsg ~= nil then return error (errmsg) end
 
