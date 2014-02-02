@@ -869,6 +869,10 @@ a one line summary follows:
     ......
     All expectations met in 0.00233 seconds.
 
+In verbose mode (see [Command Line][]), a longer description of any
+pending or failing examples is displayed, along with the file and line
+location of each.
+
 ### 4.2. Report Formatter
 
 [report formatter]: #42_report_formatter
@@ -890,9 +894,13 @@ more detailed summary.
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
 
-Failed expectations are reported inline, and again in the footer with a
-long header from the associated nested descriptions, making a failing
-example easy to find within a large spec-file.
+Failing and pending expectations are annotated inline, and again with
+more detail in the summary footer.
+
+In verbose mode (see [Command Line][]), the inline annotations are
+expanded to the more detailed summary format, and both inline and
+summary reports give the file and line number of each, making a
+particular example easy to find within a large spec-file.
 
 ### 4.3. Custom Formatters
 
@@ -976,6 +984,9 @@ a similar table of nested descriptions as were passed to `spec`:
 
 {% highlight lua %}
     status = {
+      filename = "name of spec-file",
+      line     = nn,
+
       expectations = {
         {
           pending = (nil|true),
@@ -987,6 +998,9 @@ a similar table of nested descriptions as were passed to `spec`:
       ispending = (nil|true),
     }
 {% endhighlight %}
+
+The `filename` and `line` fields hold the filename and line-number from
+which the example being reported came.
 
 The outer `ispending` field will be set to `true` if the entire example
 is pending - that is, if it has no example code, save perhaps a call to

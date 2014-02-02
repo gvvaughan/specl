@@ -95,6 +95,10 @@ local core = {
 local sidefx = {}
 
 
+-- Name of current file.
+local filename
+
+
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
@@ -172,33 +176,38 @@ function run_examples (examples, descriptions, env)
     initenv (fenv)
 
     if examples.before ~= nil then
-      setfenv (examples.before, fenv)
-      examples.before ()
+      setfenv (examples.before.example, fenv)
+      examples.before.example ()
     end
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
-    if type (definition) == "table" then
-      -- A nested context, revert back to run_contexts.
-      run_contexts (example, descriptions, fenv)
-
-    elseif type (definition) == "function" then
+    if definition.example then
       -- An example, execute it in a clean new sub-environment.
       table.insert (descriptions, description)
 
       matchers.init ()
 
-      setfenv (definition, fenv)
-      definition ()
-      accumulator (formatter,
-                   formatter.expectations (matchers.status (), descriptions))
+      setfenv (definition.example, fenv)
+      definition.example ()
+
+      local status = std.table.merge ({
+        filename = filename,
+	line     = definition.line,
+      }, matchers.status ())
+      accumulator (formatter, formatter.expectations (status, descriptions))
+
       table.remove (descriptions)
+
+    else
+      -- A nested context, revert back to run_contexts.
+      run_contexts (example, descriptions, fenv)
     end
 
     if examples.after ~= nil then
-      setfenv (examples.after, fenv)
-      examples.after ()
+      setfenv (examples.after.example, fenv)
+      examples.after.example ()
     end
   end
 
@@ -230,7 +239,8 @@ function run (specs, env)
   -- Run compiled specs, in order.
   accumulator (formatter, formatter.header (matchers.stats))
   for _, spec in ipairs (specs) do
-    run_examples (spec, {}, env)
+    filename = spec.filename
+    run_examples (spec.examples, {}, env)
   end
   formatter.footer (matchers.stats, formatter.accumulated)
   return matchers.stats.fail ~= 0 and 1 or 0

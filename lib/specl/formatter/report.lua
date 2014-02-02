@@ -54,15 +54,22 @@ local function expectations (status, descriptions)
   local reports = { fail = "", pend = "" }
   local counts  = { fail = 0, pend = 0, unexpected = 0 }
 
+  local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
+
   if next (status.expectations) then
     local details = ""
 
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
-        local pend = "  " .. color.pend ..
+        local pend = "  "
+	if opts.verbose then
+	  pend = pend .. fileline .. i .. ": " .. color.reset
+        end
+        pend = pend .. color.pend ..
               "PENDING expectation " ..  i .. color.reset .. ": " ..
               color.warn .. expectation.pending
+
         if expectation.status == true then
           counts.unexpected = counts.unexpected + 1
 
@@ -85,10 +92,17 @@ local function expectations (status, descriptions)
       elseif expectation.status == false then
         counts.fail = counts.fail + 1
 
-        local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. color.reset .. ": " ..  expectation.message
-        reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
+        local fail
+	if opts.verbose then
+	  fail = "  " .. fileline .. i.. ": " .. color.reset .. color.fail ..
+		 "FAILED expectation " .. i .. color.reset .. ":\n" ..
+	         expectation.message
+	else
+          fail = "  " .. color.fail .. "FAILED expectation " .. i ..
+	         color.reset .. ": " .. expectation.message
+	end
 
+        reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
         if opts.verbose then
           details = details .. "\n" .. spaces .. fail:gsub ("\n", "%0  " .. spaces)
         end

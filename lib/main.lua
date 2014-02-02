@@ -118,7 +118,10 @@ function slurp (filename)
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
   end
-  specs[#specs + 1] = loader.load (filename, s)
+  specs[#specs + 1] = {
+    filename = filename,
+    examples = loader.load (filename, s),
+  }
 end
 
 

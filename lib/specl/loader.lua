@@ -128,8 +128,13 @@ local parser_mt = {
       self:add_anchor (map)
       -- Inject the preamble into before node of the outermost map.
       if self.preamble then
-        map.before, self.preamble = self.preamble, nil
+        map.before = {
+	  example = self.preamble,
+	  line    = 0,
+	}
+	self.preamble = nil
       end
+
       while true do
         local key = self:load_node ()
         if key == nil then break end
@@ -140,18 +145,27 @@ local parser_mt = {
         if key == "before" then
           -- Be careful not to overwrite injected preamble.
           value = self:refetch (value, event)
-          map.before = table.concat {map.before or "", value}
+          map.before = {
+	    example = table.concat {map.before and map.before.example or "", value},
+	    line    = self.mark.line,
+	  }
         elseif value == "" then
-          map[key] = self:compile ("pending ()")
+          map[key] = {
+	    example = self:compile ("pending ()"),
+	    line    = self.mark.line,
+	  }
         elseif type (value) == "string" then
-          map[key] = self:compile (self:refetch (value, event))
+          map[key] = {
+            example = self:compile (self:refetch (value, event)),
+	    line    = self.mark.line,
+	  }
         else
           map[key] = value
         end
       end
       -- Delayed compilation of before, having injecting preamble now.
-      if type (map.before) == "string" then
-        map.before = self:compile (map.before)
+      if map.before and type (map.before.example) == "string" then
+        map.before.example = self:compile (map.before.example)
       end
       return map
     end,

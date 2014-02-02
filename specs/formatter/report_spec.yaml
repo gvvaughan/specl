@@ -153,17 +153,73 @@ describe report:
     - it reports the pending example:
         expect (run_spec (yaml, args)).
         should_match_output ", 1 pending "
-    - it appends pending suffix to the example output: |
+    - it appends pending summary to the example output: |
         expect (run_spec (yaml, args)).
         should_match_output (
           "report\n" ..
           "  is pending\n" ..
-          "    PENDING expectation 1: see issue 123\n"
+          "    %-:3:1: PENDING expectation 1: see issue 123\n"
         )
     - it lists pending example in report summary: |
         expect (run_spec (yaml, args)).
         should_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending:\n" ..
-          "  PENDING expectation 1: see issue 123\n"
+          "  %-:3:1: PENDING expectation 1: see issue 123\n"
+        )
+
+- context with failing expectation:
+  - before:
+      yaml = "describe report:\n" ..
+             "- it is failing:\n" ..
+             "    expect (1).should_be (0)\n"
+
+  - context in non-verbose mode:
+    - it exits with non-zero status:
+        expect (run_spec (yaml, args)).should_not_exit (0)
+    - it reports 0% expectations met:
+        expect (run_spec (yaml, args)).
+          should_contain_output "Met 0.00% of 1 expectations."
+    - it reports the failing example:
+        expect (run_spec (yaml, args)).
+          should_match_output " 1 failed "
+    - it appends failing suffix to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is failing %(1 failing%)\n"
+        )
+    - it lists failing example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of failed expectations:\n" ..
+          "%- report is failing:\n" ..
+          "  FAILED expectation 1: expecting exactly 0, but got 1\n"
+        )
+
+  - context in verbose mode:
+    - before: args = "-v"
+    - it exits with non-zero status:
+        expect (run_spec (yaml, args)).should_not_exit (0)
+    - it reports 0% expectations met:
+        expect (run_spec (yaml, args)).
+          should_contain_output "Met 0.00% of 1 expectations."
+    - it reports the failing example:
+        expect (run_spec (yaml, args)).
+          should_match_output " 1 failed "
+    - it appends failing summary to the example output: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "report\n" ..
+          "  is failing\n" ..
+          "    %-:3:1: FAILED expectation 1:\n" ..
+          "    expecting exactly 0, but got 1\n"
+        )
+    - it lists failing example in report summary: |
+        expect (run_spec (yaml, args)).
+        should_match_output (
+          "Summary of failed expectations:\n" ..
+          "%- report is failing:\n" ..
+          "  %-:3:1: FAILED expectation 1:\n" ..
+          "  expecting exactly 0, but got 1\n"
         )

@@ -22,6 +22,9 @@ Specl NEWS - User visible changes.
     specifications, as long as they have names ending in `_spec.yaml` and
     are kept in or somewhere below the `specs/` directory of your project.
 
+  - The report and progress formatters now display file:line:expectation:
+    annotations for failed and pending expectations in verbose mode (-v).
+
 ** Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs

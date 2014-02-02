@@ -39,12 +39,18 @@ local function expectations (status, descriptions)
 
   io.write ("\08")
 
+  local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
+
   if next (status.expectations) then
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
-        reports.pend = reports.pend .. "\n  " ..
-          color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
+        reports.pend = reports.pend .. "\n  "
+	if opts.verbose then
+	  reports.pend = reports.pend .. fileline .. i .. ": " .. color.reset
+	end
+        reports.pend = reports.pend ..
+	  color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
 
         reports.pend = reports.pend .. color.warn .. expectation.pending
 
@@ -65,8 +71,16 @@ local function expectations (status, descriptions)
       else
         writc (color.bad .. "F")
 
-        local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. color.reset .. ": " ..  expectation.message
+        local fail
+	if opts.verbose then
+	  fail = "  " .. fileline .. i.. ": " .. color.reset .. color.fail ..
+		 "FAILED expectation " .. i .. color.reset .. ":\n" ..
+	         expectation.message
+	else
+          fail = "  " .. color.fail .. "FAILED expectation " .. i ..
+	         color.reset .. ": " .. expectation.message
+	end
+
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
       end
     end
