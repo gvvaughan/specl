@@ -18,8 +18,8 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-local specl  = require "specl"
 local loader = require "specl.loader"
+local runner = require "specl.runner"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
@@ -127,4 +127,4 @@ end
 
 std.io.process_files (slurp)
 
-os.exit (specl.run (specs, sandbox))
+os.exit (runner.run (specs, sandbox))

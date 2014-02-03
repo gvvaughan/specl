@@ -89,7 +89,6 @@ dist_bin_SCRIPTS += bin/specl
 
 dist_noinst_DATA +=					\
 	lib/main.lua					\
-	lib/specl.lua					\
 	lib/specl/color.lua				\
 	lib/specl/formatter/progress.lua		\
 	lib/specl/formatter/report.lua			\
@@ -97,6 +96,7 @@ dist_noinst_DATA +=					\
 	lib/specl/loader.lua				\
 	lib/specl/matchers.lua				\
         lib/specl/optparse.lua				\
+	lib/specl/runner.lua				\
 	lib/specl/shell.lua				\
 	lib/specl/std.lua				\
 	lib/specl/util.lua				\
