@@ -31,7 +31,6 @@ specl_SPECS =						\
 	$(srcdir)/specs/custom_formatters_spec.yaml	\
 	$(srcdir)/specs/formatter/report_spec.yaml	\
 	$(srcdir)/specs/matchers_spec.yaml		\
-	$(srcdir)/specs/optparse_spec.yaml		\
 	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/specl_spec.yaml			\
 	$(NOTHING_ELSE)
