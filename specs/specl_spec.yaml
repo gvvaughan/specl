@@ -205,3 +205,40 @@ describe specl:
           stdin = yaml,
         }
         expect (run_spec (command)).should_output "hs.f"
+
+  - context when filtering by line number:
+    - before: |
+        yaml = "specify specl:\n" ..
+               "- it passes:\n" ..
+               "    expect (1).should_be (1)\n" ..
+               "- it fails:\n" ..
+               "    expect (1).should_be (0)\n" ..
+               "- it hasn't decided yet:\n"
+
+    - it reports failing line number in verbose mode: |
+        expect (run_spec {"-v", stdin = yaml}).
+          should_contain_output "  -:5:1: FAILED expectation 1"
+    - it runs all examples without a line filter:
+        expect (run_spec {"-v", stdin = yaml}).
+          should_contain_output "\n1 passed, 1 pending, and 1 failed "
+    - it runs only the failing example with a matching line filter:
+        expect (run_spec {"-v", "+5", stdin = yaml}).
+          should_contain_output "\n0 passed, 0 pending, and 1 failed "
+    - it accepts multiple line numbers before the filtered spec file:
+        expect (run_spec {"-v", "+3", "+5", stdin = yaml}).
+          should_contain_output "\n1 passed, 0 pending, and 1 failed "
+    - it only filters the immediately following spec file: |
+        tmp = Tmpfile (yaml .. "    expect (0).should_be (0)\n")
+        expect (run_spec {"-v", "+3", tostring (tmp), stdin = yaml}).
+          should_contain_output "\n2 passed, 1 pending, and 1 failed "
+        expect (run_spec {"-v", "+5", tostring (tmp), stdin = yaml}).
+          should_contain_output "\n1 passed, 1 pending, and 2 failed "
+        expect (run_spec {"-v", "+7", tostring (tmp), stdin = yaml}).
+          should_contain_output "\n2 passed, 1 pending, and 1 failed "
+        expect (run_spec {"-v", tostring (tmp), "+3", stdin = yaml}).
+          should_contain_output "\n3 passed, 0 pending, and 1 failed "
+        expect (run_spec {"-v", tostring (tmp), "+5", stdin = yaml}).
+          should_contain_output "\n2 passed, 0 pending, and 2 failed "
+        expect (run_spec {"-v", tostring (tmp), "+6", stdin = yaml}).
+          should_contain_output "\n2 passed, 1 pending, and 1 failed "
+        tmp:remove ()

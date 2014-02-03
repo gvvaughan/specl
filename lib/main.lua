@@ -65,6 +65,18 @@ Where '-' is given as a FILE, then read from standard input.
       --unicode         allow unicode in spec files
   -v, --verbose         request verbose formatter output
 
+Filtering:
+
+  +NN                   check only the example at line NN in next FILE
+
+You can specify +NN (where NN is a line number) multiple times for the
+next specified FILE, or interspersed to specify different line filters
+for different FILEs. Specifying any number of +NN will prevent all
+specifications in that file except those selected by a +NN filter from
+being checked. If +NN is not the first line of an example (as would be
+displayed by a failing example in verbose mode), the option selects no
+examples.
+
 Due to a shortcoming in libYAML, unicode characters in any passed FILE
 prevent Specl from working. The '--unicode' option works around that
 shortcoming, but any error messages caused by Lua code in FILE will
@@ -109,22 +121,50 @@ if #_G.arg == 0 then
 end
 
 
--- Called by std.io.process_files() to concatenate YAML formatted
--- specifications in each <filename>
+-- Collect compiles specs here.
 local specs = {}
-function slurp (filename)
+
+-- Accumulate line filters (+nn args) here.
+local filters
+
+
+-- Process files specified on the command-line.
+local function process_args (fn)
+  for i, v in ipairs (arg) do
+    local line = v:match "^%+(%d+)$"
+    if line ~= nil then
+      filters = filters or {}
+      filters[line] = true
+
+    elseif v == "-" then
+      io.input (io.stdin)
+      fn (v, i)
+
+    else
+      io.input (v)
+      fn (v, i)
+    end
+  end
+end
+
+
+-- Called by process_args() to concatenate YAML formatted
+-- specifications in each <arg>
+local function compile (arg)
   local s, errmsg = std.string.slurp ()
   if errmsg ~= nil then
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
   end
   specs[#specs + 1] = {
-    filename = filename,
-    examples = loader.load (filename, s),
+    filename = arg,
+    examples = loader.load (arg, s),
+    filters  = filters,
   }
+  filters = nil
 end
 
 
-std.io.process_files (slurp)
+process_args (compile)
 
 os.exit (runner.run (specs, sandbox))

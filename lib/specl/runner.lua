@@ -98,6 +98,9 @@ local sidefx = {}
 -- Name of current file.
 local filename
 
+-- Filters for current file.
+local filters
+
 
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
@@ -184,21 +187,27 @@ function run_examples (examples, descriptions, env)
     local description, definition = next (example)
 
     if definition.example then
-      -- An example, execute it in a clean new sub-environment.
-      table.insert (descriptions, description)
 
-      matchers.init ()
+      -- An example, execute it in a clean new sub-environment; as long
+      -- as there are no filters, or the filters for the source line of
+      -- this definition is true.
 
-      setfenv (definition.example, fenv)
-      definition.example ()
+      if filters == nil or filters[definition.line] == true then
+        table.insert (descriptions, description)
 
-      local status = std.table.merge ({
-        filename = filename,
-	line     = definition.line,
-      }, matchers.status ())
-      accumulator (formatter, formatter.expectations (status, descriptions))
+        matchers.init ()
 
-      table.remove (descriptions)
+        setfenv (definition.example, fenv)
+        definition.example ()
+
+        local status = std.table.merge ({
+          filename = filename,
+	  line     = definition.line,
+        }, matchers.status ())
+        accumulator (formatter, formatter.expectations (status, descriptions))
+
+        table.remove (descriptions)
+      end
 
     else
       -- A nested context, revert back to run_contexts.
@@ -240,6 +249,7 @@ function run (specs, env)
   accumulator (formatter, formatter.header (matchers.stats))
   for _, spec in ipairs (specs) do
     filename = spec.filename
+    filters  = spec.filters
     run_examples (spec.examples, {}, env)
   end
   formatter.footer (matchers.stats, formatter.accumulated)

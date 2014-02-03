@@ -25,6 +25,15 @@ Specl NEWS - User visible changes.
   - The report and progress formatters now display file:line:expectation:
     annotations for failed and pending expectations in verbose mode (-v).
 
+  - You can filter out all but the examples at specified line numbers,
+    presumably matching a number from a failed or pending expectation
+    output in verbose mode, with as many `+NN` as necessary.  For
+    example, to check all the specs in files `1_spec.yaml` and
+    `3_spec.yaml` but only the examples starting at lines 44 and 48 of
+    `2_spec.yaml`, you could execute:
+
+        specl 1_spec.yaml +44 +48 2_spec.yaml 3_spec.yaml
+
 ** Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs

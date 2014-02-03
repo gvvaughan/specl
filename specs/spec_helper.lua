@@ -58,6 +58,10 @@ Tmpfile = Object {
     return self
   end,
 
+  __tostring = function (self)
+    return self.path
+  end,
+
   dirname = function (self)
     return self.path:gsub ("/[^/]*$", "", 1)
   end,
