@@ -406,17 +406,23 @@ Oftentimes, in your specification you need to check that an expectation
 does **not** match a particular outcome, and [Specl][] has you covered
 there too. Rather than implement another set of matchers to do that
 though, you can just insert `not_` right in the matcher method name.
+
+You can write `not_` either before or after `to_`, whichever you find
+most readable. Some people are annoyed by split infinitives, but
+[Specl][] is not as grumpy as that, and will happily accept `to_not_`
+or `not_to_` as entirely equivalent.
+
 [Specl][] will still call the matcher according to the root name (see
 [Matchers][]), but inverts the result of the comparison before reporting
 a pass or fail:
 
 {% highlight lua %}
-    expect ({}).to_not_be ({})
-    expect (tostring (hex)).to_not_contain ("[g-zG-Z]")
-    expect (next {}).to_not_error ()
+    expect ({}).not_to_be ({})
+    expect (tostring (hex)).not_to_contain ("[g-zG-Z]")
+    expect (next {}).not_to_error ()
 {% endhighlight %}
 
-Note that the last `to_not_error` example doesn't pass the error
+Note that the last `not_to_error` example doesn't pass the error
 message substring that _to not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
@@ -448,7 +454,7 @@ Conversely, as you might expect, when you combine `any_of` with `not`,
 an expectation succeeds only if none of the alternatives match:
 
 {% highlight lua %}
-    expect (type "x").to_not_be.any_of {"table", "nil"}
+    expect (type "x").not_to_be.any_of {"table", "nil"}
 {% endhighlight %}
 
 #### 2.7.2. Multiple matches with all_of
@@ -476,14 +482,14 @@ compared to the usual English inspired syntax of [Specl][]
 expectations:
 
 {% highlight lua %}
-    expect ({true}).to_not_contain.all_of {true, false}
+    expect ({true}).not_to_contain.all_of {true, false}
 {% endhighlight %}
 
 If you want to assert that an expectation does not contain any of the
 supplied elements, it is far better to use:
 
 {% highlight lua %}
-    expect ({non_boolean_result}).to_not_contain.any_of {true, false}
+    expect ({non_boolean_result}).not_to_contain.any_of {true, false}
 {% endhighlight %}
 
 #### 2.7.3. Unordered matching with a_permutation_of

@@ -4,7 +4,7 @@ describe custom formatters:
     yaml = "dummy:\n" ..
            "- 1:\n" ..
            "    expect (1).to_be (0)\n" ..
-           "    expect (0).to_not_be (0)\n" ..
+           "    expect (0).not_to_be (0)\n" ..
            "- 2:\n" ..
            "- 3:\n"
 

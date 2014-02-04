@@ -97,7 +97,7 @@ local Matcher = Object {
     return self
   end,
 
-  -- Respond to `to_`s and `to_not`s.
+  -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
     util.type_check (self.name, {actual}, {self.actual_type})
 
@@ -465,22 +465,22 @@ end
 -- parameter. Matcher names containing '_not_' invert their results
 -- before returning.
 --
--- For example:                  expect ({}).to_not_be {}
+-- For example:                  expect ({}).not_to_be {}
 
 M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
 
 local function expect (ok, actual)
   return setmetatable ({}, {
-    __index = function (_, matcher_name)
+    __index = function (_, verb)
       local inverse = false
-      if matcher_name:match ("^should_not_") then
-        inverse, matcher_root = true, matcher_name:sub (12)
-      elseif matcher_name:match ("^to_not_") then
-        inverse, matcher_root = true, matcher_name:sub (8)
-      elseif matcher_name:match ("^should_") then
-        matcher_root = matcher_name:sub (8)
+      if verb:match ("^should_not_") then
+        inverse, matcher_root = true, verb:sub (12)
+      elseif verb:match ("^to_not_") or verb:match ("^not_to_") then
+        inverse, matcher_root = true, verb:sub (8)
+      elseif verb:match ("^should_") then
+        matcher_root = verb:sub (8)
       else
-        matcher_root = matcher_name:sub (4)
+        matcher_root = verb:sub (4)
       end
 
       local matcher = matchers[matcher_root]
@@ -529,7 +529,7 @@ local function expect (ok, actual)
           -- (iii) otherwise throw an error for unknown adaptors:
           else
             error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-                   matcher_name .. "'")
+                   verb .. "'")
           end
         end,
       })

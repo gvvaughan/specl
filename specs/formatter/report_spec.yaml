@@ -150,7 +150,7 @@ describe report:
 
   - context in non-verbose mode:
     - it exits with non-zero status:
-        expect (run_spec (yaml, args)).to_not_exit (0)
+        expect (run_spec (yaml, args)).not_to_exit (0)
     - it reports 0% expectations met:
         expect (run_spec (yaml, args)).
           to_contain_output "Met 0.00% of 1 expectations."
@@ -171,7 +171,7 @@ describe report:
   - context in verbose mode:
     - before: args = "-v"
     - it exits with non-zero status:
-        expect (run_spec (yaml, args)).to_not_exit (0)
+        expect (run_spec (yaml, args)).not_to_exit (0)
     - it reports 0% expectations met:
         expect (run_spec (yaml, args)).
           to_contain_output "Met 0.00% of 1 expectations."

@@ -41,6 +41,10 @@ Specl NEWS - User visible changes.
     `expect` statement in a given example), but is accepted for ease of
     cutting and pasting.
 
+  - From this release out, matchers using `to_` are preferred to using
+    `should_`.  When negating a new syntax `to_` matcher, both of
+    `to_not_` and `not_to` are accepted.
+
 ** Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs

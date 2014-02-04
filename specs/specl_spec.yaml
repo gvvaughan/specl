@@ -174,7 +174,7 @@ describe specl:
       expect (run_spec (yaml)).to_exit (0)
   - it exits with non-zero status when there are failing examples: |
       yaml = "describe x:\n- it fails: expect (1).to_be (0)"
-      expect (run_spec (yaml)).to_not_exit (0)
+      expect (run_spec (yaml)).not_to_exit (0)
   - it outputs results from a formatter specified on the command line:
       expect (run_spec {"--formatter=tap"; stdin = yaml}).to_contain_output "1..1"
 
