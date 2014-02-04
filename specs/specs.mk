@@ -22,7 +22,6 @@
 ## ------ ##
 
 SPECL= $(srcdir)/bin/specl
-SPECL_OPTS = --unicode
 
 SPECL_ENV = SPECL=$(SPECL) LUA_PATH="$(srcdir)/lib/?.lua;$(LUA_PATH)"
 
