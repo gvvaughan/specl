@@ -97,7 +97,7 @@ local Matcher = Object {
     return self
   end,
 
-  -- Respond to `should_`s and `should_not`s.
+  -- Respond to `to_`s and `to_not`s.
   match = function (self, actual, expect, ...)
     util.type_check (self.name, {actual}, {self.actual_type})
 
@@ -465,7 +465,7 @@ end
 -- parameter. Matcher names containing '_not_' invert their results
 -- before returning.
 --
--- For example:                  expect ({}).should_not_be {}
+-- For example:                  expect ({}).to_not_be {}
 
 M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
 
@@ -475,8 +475,12 @@ local function expect (ok, actual)
       local inverse = false
       if matcher_name:match ("^should_not_") then
         inverse, matcher_root = true, matcher_name:sub (12)
-      else
+      elseif matcher_name:match ("^to_not_") then
+        inverse, matcher_root = true, matcher_name:sub (8)
+      elseif matcher_name:match ("^should_") then
         matcher_root = matcher_name:sub (8)
+      else
+        matcher_root = matcher_name:sub (4)
       end
 
       local matcher = matchers[matcher_root]
@@ -508,14 +512,14 @@ local function expect (ok, actual)
       -- Returns a functable...
       return setmetatable ({}, {
         --     (i) ...with a `__call` metamethod to respond to:
-        --         | expect (foo).should_be (bar)
+        --         | expect (foo).to_be (bar)
         __call = function (_, expected)
           score (matcher:match (actual, expected, ok))
         end,
 
         __index = function (_, adaptor_name)
           --  (ii) ...or else dynamic adapator lookup in the matcher object:
-          --       | expect (foo).should_be.any_of {bar, baz, quux}
+          --       | expect (foo).to_be.any_of {bar, baz, quux}
 	  adaptor = matcher[adaptor_name .. "?"]
           if adaptor then
 	    return function (alternatives)

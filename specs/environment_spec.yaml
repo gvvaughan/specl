@@ -5,19 +5,19 @@ describe environments:
     _G.global_scope = false
 
 - it cannot find undefined symbols:
-    expect (undefined_symbol).should_be (nil)
+    expect (undefined_symbol).to_be (nil)
 - it can find a symbol in the current scope:
     in_the_same_example = true
     overridden_symbol = true
-    expect (in_the_same_example).should_be (true)
+    expect (in_the_same_example).to_be (true)
 - it cannot find a symbol from a sibling example:
-    expect (in_the_same_example).should_be (nil)
+    expect (in_the_same_example).to_be (nil)
 - it gets a clean environment for each example:
-    expect (overridden_symbol).should_be (false)
+    expect (overridden_symbol).to_be (false)
 - it can find a symbol from the current before block:
-    expect (defined_outer_symbol).should_be (true)
+    expect (defined_outer_symbol).to_be (true)
 - it cannot find symbols defined in an inner scope:
-    expect (defined_inner_symbol).should_be (nil)
+    expect (defined_inner_symbol).to_be (nil)
 
 - context when looking up symbols from a nested context:
     - before:
@@ -25,25 +25,25 @@ describe environments:
         defined_inner_symbol = true
 
     - it cannot find undefined symbols:
-        expect (undefined_outer_symbol).should_be (nil)
+        expect (undefined_outer_symbol).to_be (nil)
     - it can find a symbol in global scope:
-        expect (_G.global_scope).should_be (false)
+        expect (_G.global_scope).to_be (false)
     - it can find a symbol in an outer scope:
-        expect (defined_outer_symbol).should_be (true)
+        expect (defined_outer_symbol).to_be (true)
     - it can find a symbol in the current scope:
         in_the_nested_example = true
         define_inner_symbol = false
-        expect (defined_inner_symbol).should_be (true)
+        expect (defined_inner_symbol).to_be (true)
     - it cannot find a symbol from a sibling example:
-        expect (in_the_nested_example).should_be (nil)
+        expect (in_the_nested_example).to_be (nil)
     - it cannot find a symbol from a parent example:
-        expect (in_the_same_example).should_be (nil)
+        expect (in_the_same_example).to_be (nil)
     - it gets a clean environment for each example:
-        expect (overridden_symbol).should_be ("overridden")
+        expect (overridden_symbol).to_be ("overridden")
     - it can find a symbol from the current before block:
-        expect (defined_inner_symbol).should_be (true)
+        expect (defined_inner_symbol).to_be (true)
     - it can find a symbol from the parent before block:
-        expect (defined_outer_symbol).should_be (true)
+        expect (defined_outer_symbol).to_be (true)
 
 - context when looking up symbols from a nested before block:
     - before:
@@ -51,11 +51,11 @@ describe environments:
         undefined_outer_symbol_reference = undefined_outer_symbol
 
     - it can find a symbol in an outer scope:
-        expect (defined_outer_symbol_reference).should_be (true)
+        expect (defined_outer_symbol_reference).to_be (true)
     - it cannot find a symbol in a cousin example:
-        expect (in_the_nested_example).should_be (nil)
+        expect (in_the_nested_example).to_be (nil)
     - it cannot find a symbol in a sibling context:
-        expect (defined_inner_symbol).should_be (nil)
+        expect (defined_inner_symbol).to_be (nil)
 
 - context when mutating a symbol value:
     - before:
@@ -65,16 +65,16 @@ describe environments:
     - it can mutate a symbol in the current scope:
         mutated_inner_symbol = false
         mutated_inner_symbol = true
-        expect (mutated_inner_symbol).should_be (true)
+        expect (mutated_inner_symbol).to_be (true)
     - it can mutate a symbol in an outer scope:
         mutated_outer_symbol = true
-        expect (mutated_outer_symbol).should_be (true)
+        expect (mutated_outer_symbol).to_be (true)
     - it can mutate a symbol in global scope:
         _G.inner_global = true
-        expect (_G.inner_global).should_be (true)
+        expect (_G.inner_global).to_be (true)
     - it can mutate a global symbol instantiated by before block:
         _G.global_scope = true
-        expect (_G.global_scope).should_be (true)
+        expect (_G.global_scope).to_be (true)
 
 - context when requiring a module:
     - before: |
@@ -94,16 +94,16 @@ describe environments:
 
     - it can mutate a symbol in global scope:
         requirestring "_G.global_scope = 'required'"
-        expect (_G.global_scope).should_be "required"
+        expect (_G.global_scope).to_be "required"
     - it can shadow a symbol in an outer scope:
         requirestring "mutated_outer_symbol = true"
-        expect (mutated_outer_symbol).should_be (true)
+        expect (mutated_outer_symbol).to_be (true)
     - it can mutate a symbol in the current scope:
         requirestring "mutated_inner_symbol = true"
-        expect (mutated_inner_symbol).should_be (true)
+        expect (mutated_inner_symbol).to_be (true)
         mutated_inner_symbol = false
         requirestring "mutated_inner_symbol = true"
-        expect (mutated_inner_symbol).should_be (true)
+        expect (mutated_inner_symbol).to_be (true)
 
 - context when executing a load function:
     - before: |
@@ -120,14 +120,14 @@ describe environments:
     - it can mutate a symbol in global scope:
         _G.global_scope = nil
         assert (doload "_G.global_scope = true")()
-        expect (_G.global_scope).should_be (true)
+        expect (_G.global_scope).to_be (true)
     - it can mutate a symbol in an outer scope:
         assert (doload "mutated_outer_symbol = true")()
-        expect (mutated_outer_symbol).should_be (true)
+        expect (mutated_outer_symbol).to_be (true)
     - it can mutate a symbol in the current scope:
         mutated_inner_symbol = false
         assert (doload "mutated_inner_symbol = true")()
-        expect (mutated_inner_symbol).should_be (true)
+        expect (mutated_inner_symbol).to_be (true)
 
 - context when executing a loadfile function:
     - before: |
@@ -147,14 +147,14 @@ describe environments:
     - it can mutate a symbol in global scope:
         _G.global_scope = nil
         assert (doloadfile "_G.global_scope = true")()
-        expect (_G.global_scope).should_be (true)
+        expect (_G.global_scope).to_be (true)
     - it can mutate a symbol in an outer scope:
         assert (doloadfile "mutated_outer_symbol = true")()
-        expect (mutated_outer_symbol).should_be (true)
+        expect (mutated_outer_symbol).to_be (true)
     - it can mutate a symbol in the current scope:
         mutated_inner_symbol = false
         assert (doloadfile "mutated_inner_symbol = true")()
-        expect (mutated_inner_symbol).should_be (true)
+        expect (mutated_inner_symbol).to_be (true)
 
 - context when executing a loadstring function:
     - before:
@@ -163,11 +163,11 @@ describe environments:
     - it can mutate a symbol in global scope:
         _G.global_scope = nil
         assert (loadstring "_G.global_scope = true")()
-        expect (_G.global_scope).should_be (true)
+        expect (_G.global_scope).to_be (true)
     - it can mutate a symbol in an outer scope:
         assert (loadstring "mutated_outer_symbol = true")()
-        expect (mutated_outer_symbol).should_be (true)
+        expect (mutated_outer_symbol).to_be (true)
     - it can mutate a symbol in the current scope:
         mutated_inner_symbol = false
         assert (loadstring "mutated_inner_symbol = true")()
-        expect (mutated_inner_symbol).should_be (true)
+        expect (mutated_inner_symbol).to_be (true)

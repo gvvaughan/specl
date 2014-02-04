@@ -197,14 +197,14 @@ that each example evaluates as it should:
     - describe a stack:
       - it has no elements when empty:
           stack = Stack {}
-          expect (#stack).should_be (0)
+          expect (#stack).to_be (0)
 {% endhighlight %}
 
-The call to expect is almost like English: "Expect size of stack should
-be zero."
+The call to expect is almost like English: "Expect size of stack to be
+zero."
 
 Behind the scenes, when you evaluate a Lua expression with expect, it's
-passed to a _matcher_ method (`.should_be` in this example), which is
+passed to a _matcher_ method (`.to_be` in this example), which is
 used to check whether that expression matched its expected evaluation.
 There are quite a few matchers already implemented in [Specl], and you
 can easily add new ones if they make your expectations more expressive.
@@ -244,7 +244,7 @@ the `expect` calls:
       - it has no elements when empty:
           pending ()
           stack = Stack {}
-          expect (#stack).should_be (0)
+          expect (#stack).to_be (0)
 {% endhighlight %}
 
 This prevents [Specl][] from counting the `expect` result as a failure,
@@ -270,7 +270,7 @@ to the `pending` function call like this:
       - it cannot remove an element when empty:
           pending "issue #26"
           stack = Stack {}
-          expect ("underflow").should_error (stack.pop ())
+          expect ("underflow").to_error (stack.pop ())
 {% endhighlight %}
 
 Running [Specl][] now shows the string in the pending summary report:
@@ -289,7 +289,7 @@ Running [Specl][] now shows the string in the pending summary report:
 [matchers]: #2-matchers
 
 When `expect` looks up a matcher to validate an expectation, the
-`should_` part is just syntactic sugar to make the whole line read more
+`to_` part is just syntactic sugar to make the whole line read more
 clearly when you say it out loud.  The idea is that the code for the
 specification should be self-documenting, and easily understood by
 reading the code itself, rather than having half of the lines in the
@@ -311,14 +311,14 @@ as the matcher argument. For example, [Lua][] interns strings as they
 are compiled, so this expectation passes:
 
 {% highlight lua %}
-    expect ("a string").should_be ("a string")
+    expect ("a string").to_be ("a string")
 {% endhighlight %}
 
 Conversely, [Lua][] constructs a new table object every time it reads
 one from the source, so this expectation fails:
 
 {% highlight lua %}
-    expect ({"a table"}).should_be ({"a table"})
+    expect ({"a table"}).to_be ({"a table"})
 {% endhighlight %}
 
 While the tables look the same, and have the same contents, they are
@@ -335,12 +335,12 @@ following expectations all pass:
 
 {% highlight lua %}
 {% raw %}
-    expect ({}).should_equal ({})
-    expect ({1, two = "three"}).should_equal ({1, two = "three"})
-    expect ({{1, 2}, {{3}, 4}}).should_equal ({{1, 2}, {{3}, 4}})
+    expect ({}).to_equal ({})
+    expect ({1, two = "three"}).to_equal ({1, two = "three"})
+    expect ({{1, 2}, {{3}, 4}}).to_equal ({{1, 2}, {{3}, 4}})
 
     Set = require "std.set"
-    expect (Set {1, 2, 5, 3}).should_equal (Set {5, 1, 2, 3})
+    expect (Set {1, 2, 5, 3}).to_equal (Set {5, 1, 2, 3})
 {% endraw %}
 {% endhighlight %}
 
@@ -353,7 +353,7 @@ contents of a very long expected result, when you can easily tell with
 just some substring whether `expect` has evaluated as specified:
 
 {% highlight lua %}
-    expect (backtrace).should_contain ("table expected")
+    expect (backtrace).to_contain ("table expected")
 {% endhighlight %}
 
 Additionally, when `expect` evaluates to a table, this matcher will
@@ -363,7 +363,7 @@ keys can be of any type.
 
 {% highlight lua %}
 {% raw %}
-    expect ({{1}, {2}, {5}}).should_contain ({5})
+    expect ({{1}, {2}, {5}}).to_contain ({5})
 {% endraw %}
 {% endhighlight %}
 
@@ -383,7 +383,7 @@ When a simple substring search is not appropriate, `match` will compare
 the expectation against a [Lua][] pattern:
 
 {% highlight lua %}
-    expect (backtrace).should_match ("\nparse.lua: [0-9]+:")
+    expect (backtrace).to_match ("\nparse.lua: [0-9]+:")
 {% endhighlight %}
 
 ### 2.5. error
@@ -395,7 +395,7 @@ checks both that an `error` was raised and that the subsequent error
 message contains the supplied substring, if any.
 
 {% highlight lua %}
-    expect (next (nil)).should_error ("table expected")
+    expect (next (nil)).to_error ("table expected")
 {% endhighlight %}
 
 ### 2.6. Inverting a matcher with not
@@ -411,13 +411,13 @@ though, you can just insert `not_` right in the matcher method name.
 a pass or fail:
 
 {% highlight lua %}
-    expect ({}).should_not_be ({})
-    expect (tostring (hex)).should_not_contain ("[g-zG-Z]")
-    expect (next {}).should_not_error ()
+    expect ({}).to_not_be ({})
+    expect (tostring (hex)).to_not_contain ("[g-zG-Z]")
+    expect (next {}).to_not_error ()
 {% endhighlight %}
 
-Note that the last `should_not_error` example doesn't pass the error
-message substring that _should not_ match, because it is never checked,
+Note that the last `to_not_error` example doesn't pass the error
+message substring that _to not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
 ### 2.7. Matcher adaptors
@@ -438,7 +438,7 @@ When you want to check whether an expectation matches among a list of
 alternatives, [Specl][] supports an `any_of` adaptor for any matcher:
 
 {% highlight lua %}
-    expect (ctermid ()).should_match.any_of {"/.*tty%d+", "/.*pts%d+"}
+    expect (ctermid ()).to_match.any_of {"/.*tty%d+", "/.*pts%d+"}
 {% endhighlight %}
 
 The expectation above succeeds if `ctermid ()` output matches any of
@@ -448,7 +448,7 @@ Conversely, as you might expect, when you combine `any_of` with `not`,
 an expectation succeeds only if none of the alternatives match:
 
 {% highlight lua %}
-    expect (type "x").should_not_be.any_of {"table", "nil"}
+    expect (type "x").to_not_be.any_of {"table", "nil"}
 {% endhighlight %}
 
 #### 2.7.2. Multiple matches with all_of
@@ -459,7 +459,7 @@ When you need to ensure that several matches succeed, [Specl][] provides
 the `all_of` adaptor:
 
 {% highlight lua %}
-    expect (("1 2 5"):split " ").should_contain.all_of {"1", "2"}
+    expect (("1 2 5"):split " ").to_contain.all_of {"1", "2"}
 {% endhighlight %}
 
 This expectation succeeds if the `split` method produces a table that
@@ -476,14 +476,14 @@ compared to the usual English inspired syntax of [Specl][]
 expectations:
 
 {% highlight lua %}
-    expect ({true}).should_not_contain.all_of {true, false}
+    expect ({true}).to_not_contain.all_of {true, false}
 {% endhighlight %}
 
 If you want to assert that an expectation does not contain any of the
 supplied elements, it is far better to use:
 
 {% highlight lua %}
-    expect ({non_boolean_result}).should_not_contain.any_of {true, false}
+    expect ({non_boolean_result}).to_not_contain.any_of {true, false}
 {% endhighlight %}
 
 #### 2.7.3. Unordered matching with a_permutation_of
@@ -499,7 +499,7 @@ which can't be guaranteed to have the same sort order on every run.
 {% highlight lua %}
     fn_set, elements = {math.sin=true, math.cos=true, math.tan=true}, {}
     for fn in pairs (fn_set) do elements[#elements + 1] = fn end
-    expect (elements).should_contain.permutation_of (fn_set)
+    expect (elements).to_contain.permutation_of (fn_set)
 {% endhighlight %}
 
 In this example, sorting `elements` before comparing them is dangerous,
@@ -510,7 +510,7 @@ irrespective of order.
 
 Prior to the introduction of `a_permutation_of`, `all_of` was the nearest
 equivalent functionality - but `all_of` will not complain if `elements`
-has even more elements than what it `should_contain` at the time of
+has even more elements than what it `to_contain` at the time of
 comparison.
 
 ### 2.8. Custom Matchers
@@ -522,7 +522,7 @@ Just like the built in matchers described above, you can use the
 custom matchers to make your spec files easier to understand. The
 minimum required is a handler function, which is then called by
 [Specl][] to determine whether the result of the `expect` matches the
-contents of the `should_` argument:
+contents of the `to_` argument:
 
 {% highlight lua %}
     ...
@@ -536,7 +536,7 @@ contents of the `should_` argument:
 
 This is exactly how the `be` matcher is implemented, where [Specl][]
 passes the `actual` result from the expectation and the `expected`
-value from the `should_` argument -- and considers the expectation as
+value from the `to_` argument -- and considers the expectation as
 a whole to have passed if they are both the same according to a [Lua][]
 `==` comparison.
 
@@ -637,7 +637,7 @@ as the `Matcher` factory object used throughout this section of the
 manual).
 
 Adding custom matcher with this API automatically handles lookups
-with `should_` and inverting matchers with the `not_` string.
+with `to_` and inverting matchers with the `not_` string.
 
 #### 2.8.1. Custom Adaptors
 
@@ -698,7 +698,7 @@ To make this adaptor work properly with [Specl][], it must return a
 boolean decribing whether the adaptor matched successfully, followed by
 an error message that specl will use if the overall expectation failed
 (which can happen even when we return `true`, if the expectation uses
-`should_not`).  Again, we use the `Matcher` object's format functions to
+`to_not`).  Again, we use the `Matcher` object's format functions to
 ensure that any specialisations of this particular object will continue
 to behave properly with custom `format_` functions too.
 
@@ -721,7 +721,7 @@ And then [Specl][] will support expectations such as:
     - transform:
       - it remains the same size:
           expect (transform (subject)).
-            should_be.the_same_size_as (subject)
+            to_be.the_same_size_as (subject)
 {% endhighlight %}
 
 Some adaptors (such as the `any_of` built in adaptor) need access to the
@@ -768,7 +768,7 @@ their table keys are just a bare `before` or `after` respectively:
     - before: stack = Stack {}
 
     - it has no elements when empty:
-        expect (#stack).should_equal (0)
+        expect (#stack).to_equal (0)
     ...
 {% endhighlight %}
 

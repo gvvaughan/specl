@@ -47,6 +47,20 @@ Specl NEWS - User visible changes.
     from standard input.  You must explicitly pass a "-" argument to get
     that behaviour.
 
+  - RSpec has been moving from expressing `should_` expectations to
+    using `to_` for technical reasons.  Specl now uses `to_` throughout,
+    not for technical reasons, but because:
+
+      (i) expectations almost always read better with `to_` instead of
+          `should_`;
+     (ii) it's shorter and easier to type, so is less "noisy" in among
+          the important surrounding arguments.
+
+    There are no plans to remove `should_` from Specl, so you can expect
+    to safely continue to use your existing spec files indefinitely: But
+    all mention of `should_` has been removed from documentation, and I
+    recommend you use `to_` for new spec files for the reasons above.
+
 
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 
