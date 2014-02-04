@@ -68,6 +68,7 @@ Where '-' is given as a FILE, then read from standard input.
 Filtering:
 
   +NN                   check only the example at line NN in next FILE
+  FILE:NN[:MM]          check only the example at line NN in this FILE
 
 You can specify +NN (where NN is a line number) multiple times for the
 next specified FILE, or interspersed to specify different line filters
@@ -76,6 +77,12 @@ specifications in that file except those selected by a +NN filter from
 being checked. If +NN is not the first line of an example (as would be
 displayed by a failing example in verbose mode), the option selects no
 examples.
+
+The alternative FILE:NN:MM syntax makes it easy to cut and paste from
+Specl failure output, but allows only a single line NN to be filtered
+(except when combined with +NN filters).  The optional :MM suffix is
+ignored -- and merely represents the ordinal number of an `expect`
+statement in a particular example in verbose Specl formatter outputs.
 
 Due to a shortcoming in libYAML, unicode characters in any passed FILE
 prevent Specl from working. The '--unicode' option works around that
@@ -124,25 +131,41 @@ end
 -- Collect compiles specs here.
 local specs = {}
 
--- Accumulate line filters (+nn args) here.
+-- Accumulate line filters (+NN/:NN args) here.
 local filters
 
 
--- Process files specified on the command-line.
+-- Process files and line filters specified on the command-line.
 local function process_args (fn)
   for i, v in ipairs (arg) do
-    local line = v:match "^%+(%d+)$"
+    -- Process line filters.
+    local filename, line = nil, v:match "^%+(%d+)$"  -- +NN
+    if line == nil then
+      filename, line = v:match "^(.*):(%d+):%d+"     -- file:NN:MM
+    end
+    if line == nil then
+      filename, line = v:match "^(.*):(%d+)$"        -- file:NN
+    end
+
+    -- Fallback to simple `filename`.
+    if line == nil then
+      filename = v
+    end
+
+    -- Store filters.
     if line ~= nil then
       filters = filters or {}
       filters[line] = true
+    end
 
-    elseif v == "-" then
+    -- Process filename.
+    if filename == "-" then
       io.input (io.stdin)
-      fn (v, i)
+      fn (filename, i)
 
-    else
-      io.input (v)
-      fn (v, i)
+    elseif filename ~= nil then
+      io.input (filename)
+      fn (filename, i)
     end
   end
 end

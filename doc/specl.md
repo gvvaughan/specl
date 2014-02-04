@@ -1051,6 +1051,32 @@ The output will display results using the default `progress` formatter.
 To use the `report` formatter instead, add the `-freport`
 option to the command line above.
 
+When invoked with `--verbose`, the `progress` and `report` formatters
+display pending and failing examples with a `filename:NN:EE` prefix;
+where `filename` is the name of the spec file containing the non-passing
+example, `NN` is the line-number of the first line of the non-passing
+example in that file, and `EE` is the ordinal expectation within that
+example.  If you need to recheck just that example, you can cut and
+paste the `filename:NN:EE` directly into your next `specl` invocation:
+
+{% highlight bash %}
+    specl specs/foo_spec.yaml:44:1
+{% endhighlight %}
+
+Actually, the final `:EE` is always ignored, because there's no way
+for [Specl][] to tell what parts of the [Lua][] code in a given example
+are relevant to one `expect` statement or another, so it always checks
+the entire example.  You can omit the `:EE` when you type at the command
+line too.
+
+If you want to check more than a single non-passing example, without
+rechecking all of the specifications in a given file, [Specl][] also
+accepts `+` prefixed line numbers prior to the file name argument:
+
+{% highlight bash %}
+    specl +44 +48 specs/foo_spec.yaml
+{% endhighlight %}
+
 If you prefer to format the results of your specification examples with
 a custom formatter, you should make sure your formatter is visible on
 `LUA_PATH`, and use the `--formatter=BASENAME` option to load it.

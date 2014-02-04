@@ -221,24 +221,69 @@ describe specl:
     - it runs all examples without a line filter:
         expect (run_spec {"-v", stdin = yaml}).
           should_contain_output "\n1 passed, 1 pending, and 1 failed "
-    - it runs only the failing example with a matching line filter:
-        expect (run_spec {"-v", "+5", stdin = yaml}).
-          should_contain_output "\n0 passed, 0 pending, and 1 failed "
-    - it accepts multiple line numbers before the filtered spec file:
-        expect (run_spec {"-v", "+3", "+5", stdin = yaml}).
-          should_contain_output "\n1 passed, 0 pending, and 1 failed "
-    - it only filters the immediately following spec file: |
-        tmp = Tmpfile (yaml .. "    expect (0).should_be (0)\n")
-        expect (run_spec {"-v", "+3", tostring (tmp), stdin = yaml}).
-          should_contain_output "\n2 passed, 1 pending, and 1 failed "
-        expect (run_spec {"-v", "+5", tostring (tmp), stdin = yaml}).
-          should_contain_output "\n1 passed, 1 pending, and 2 failed "
-        expect (run_spec {"-v", "+7", tostring (tmp), stdin = yaml}).
-          should_contain_output "\n2 passed, 1 pending, and 1 failed "
-        expect (run_spec {"-v", tostring (tmp), "+3", stdin = yaml}).
-          should_contain_output "\n3 passed, 0 pending, and 1 failed "
-        expect (run_spec {"-v", tostring (tmp), "+5", stdin = yaml}).
-          should_contain_output "\n2 passed, 0 pending, and 2 failed "
-        expect (run_spec {"-v", tostring (tmp), "+6", stdin = yaml}).
-          should_contain_output "\n2 passed, 1 pending, and 1 failed "
-        tmp:remove ()
+
+    - context by filename:
+      - before: tmp = Tmpfile (yaml)
+      - after: |
+          tmp:remove ()
+
+      - it runs only the failing example with a matching line filter:
+          expect (run_spec {"-v", "+5", stdin = yaml}).
+            should_contain_output "\n0 passed, 0 pending, and 1 failed "
+      - it accepts multiple line numbers before the filtered spec file:
+          expect (run_spec {"-v", "+3", "+5", stdin = yaml}).
+            should_contain_output "\n1 passed, 0 pending, and 1 failed "
+      - it only filters the immediately following spec file: |
+          spec = Tmpfile (yaml .. "    expect (0).should_be (0)\n")
+          expect (run_spec {"-v", "+3", spec.path, stdin = yaml}).
+            should_contain_output "\n2 passed, 1 pending, and 1 failed "
+          expect (run_spec {"-v", "+5", spec.path, stdin = yaml}).
+            should_contain_output "\n1 passed, 1 pending, and 2 failed "
+          expect (run_spec {"-v", "+7", spec.path, stdin = yaml}).
+            should_contain_output "\n2 passed, 1 pending, and 1 failed "
+          spec:remove ()
+      - it accepts a line number suffix to a spec file:
+          expect (run_spec {"-freport", tmp.path .. ":3"}).
+            should_contain_output "\n1 passed, 0 pending and 0 failed "
+          expect (run_spec {"-freport", tmp.path .. ":5"}).
+            should_contain_output "\n0 passed, 0 pending and 1 failed "
+          expect (run_spec {"-freport", tmp.path .. ":6"}).
+            should_contain_output "\n0 passed, 1 pending and 0 failed "
+      - it ignores column or expectation suffix to a spec file:
+          expect (run_spec {"-freport", tmp.path .. ":3:1"}).
+            should_contain_output "\n1 passed, 0 pending and 0 failed "
+          expect (run_spec {"-freport", tmp.path .. ":5:3"}).
+            should_contain_output "\n0 passed, 0 pending and 1 failed "
+          expect (run_spec {"-freport", tmp.path .. ":6:999"}).
+            should_contain_output "\n0 passed, 1 pending and 0 failed "
+
+    - context by stdin:
+      - it runs only the failing example with a matching line filter:
+          expect (run_spec {"-v", "+5", stdin = yaml}).
+            should_contain_output "\n0 passed, 0 pending, and 1 failed "
+      - it accepts multiple line numbers before the filtered spec file:
+          expect (run_spec {"-v", "+3", "+5", stdin = yaml}).
+            should_contain_output "\n1 passed, 0 pending, and 1 failed "
+      - it only filters the immediately following spec file: |
+          spec = Tmpfile (yaml .. "    expect (0).should_be (0)\n")
+          expect (run_spec {"-v", spec.path, "+3", stdin = yaml}).
+            should_contain_output "\n3 passed, 0 pending, and 1 failed "
+          expect (run_spec {"-v", spec.path, "+5", stdin = yaml}).
+            should_contain_output "\n2 passed, 0 pending, and 2 failed "
+          expect (run_spec {"-v", spec.path, "+6", stdin = yaml}).
+            should_contain_output "\n2 passed, 1 pending, and 1 failed "
+          spec:remove ()
+      - it accepts a line number suffix to a spec file:
+          expect (run_spec {"-freport", "-:3", stdin = yaml}).
+            should_contain_output "\n1 passed, 0 pending and 0 failed "
+          expect (run_spec {"-freport", "-:5", stdin = yaml}).
+            should_contain_output "\n0 passed, 0 pending and 1 failed "
+          expect (run_spec {"-freport", "-:6", stdin = yaml}).
+            should_contain_output "\n0 passed, 1 pending and 0 failed "
+      - it ignores column or expectation suffix to a spec file:
+          expect (run_spec {"-freport", "-:3:1", stdin = yaml}).
+            should_contain_output "\n1 passed, 0 pending and 0 failed "
+          expect (run_spec {"-freport", "-:5:3", stdin = yaml}).
+            should_contain_output "\n0 passed, 0 pending and 1 failed "
+          expect (run_spec {"-freport", "-:6:999", stdin = yaml}).
+            should_contain_output "\n0 passed, 1 pending and 0 failed "

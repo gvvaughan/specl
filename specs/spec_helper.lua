@@ -25,8 +25,10 @@ function run_spec (params)
 
     -- But is just options to specl if it begins with a '-'.
     if cmd:sub (1, 1) == "-" then
-      cmd = SPECL .. " --color=no " .. cmd .. " -"
+      cmd = SPECL .. " --color=no " .. cmd
     end
+
+    if params.stdin then cmd = cmd .. " -" end
 
     -- Must pass our package.path through to inferior Specl process.
     local env = params.env or {}
@@ -56,10 +58,6 @@ Tmpfile = Object {
       fh:close ()
     end
     return self
-  end,
-
-  __tostring = function (self)
-    return self.path
   end,
 
   dirname = function (self)
