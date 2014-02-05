@@ -19,8 +19,6 @@
 -- MA 02111-1301, USA.
 
 
--- Use the simple progress formatter by default.  Can be changed by run().
-local formatter  = require "specl.formatter.progress"
 local matchers   = require "specl.matchers"
 local std        = require "specl.std"
 local util       = require "specl.util"
@@ -56,24 +54,24 @@ end
 
 
 
---[[ ============= ]]--
---[[ Spec' Runner. ]]--
---[[ ============= ]]--
+--[[ ================= ]]--
+--[[ Helper Functions. ]]--
+--[[ ================= ]]--
 
 
 -- Append non-nil ARG to HOLDER.accumulated.
 -- If ARG is a table, values for all keys in ARG are accumulated in
 -- equivalent HOLDER keys.
 -- Used to collect output from formatter calls, to be saved for footer.
-local function accumulator (holder, arg)
+local function accumulator (self, arg)
   if arg ~= nil then
     if type (arg) == "table" then
-      holder.accumulated = holder.accumulated or {}
+      self.accumulated = self.accumulated or {}
       for k, v in pairs (arg) do
-        holder.accumulated[k] = (holder.accumulated[k] or "") .. tostring(v)
+        self.accumulated[k] = (self.accumulated[k] or "") .. tostring(v)
       end
     else
-      holder.accumulated = (holder.accumulated or "") .. arg
+      self.accumulated = (self.accumulated or "") .. arg
     end
   end
 end
@@ -89,23 +87,10 @@ local core = {
 }
 
 
--- A map of module name to global symbol side effects.
--- We keep track of these so that they can be injected into an
--- execution environment that requires a module.
-local sidefx = {}
-
-
--- Name of current file.
-local filename
-
--- Filters for current file.
-local filters
-
-
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
-local function initenv (env)
+local function initenv (state, env)
   -- Don't let _G (or _ENV) assignments leak into outer tables.
   rawset (env, "_G", env)
   if env._ENV then rawset (env, "_ENV", env) end
@@ -131,7 +116,7 @@ local function initenv (env)
     -- cache the side effects of a random one!
     if m ~= "spec_helper" then
       loaded, loadfn = package.loaded[m], package.preload[m]
-      import = sidefx[m]
+      import = state.sidefx[m]
     end
 
     if import == nil then
@@ -161,7 +146,10 @@ local function initenv (env)
       env[name] = value
     end
 
-    sidefx[m] = import
+    -- A map of module name to global symbol side effects.
+    -- We keep track of these so that they can be injected into an
+    -- execution environment that requires a module.
+    state.sidefx[m] = import
     package.loaded[m] = package.loaded[m] or loaded or nil
 
     -- Use the system require if loadstring failed (e.g. C module).
@@ -181,17 +169,25 @@ local function initenv (env)
 end
 
 
+
+--[[ ============= ]]--
+--[[ Spec' Runner. ]]--
+--[[ ============= ]]--
+
+
 local run_examples, run_contexts, run
 
 
 -- Run each of EXAMPLES under ENV in order.
-function run_examples (examples, descriptions, env)
+function run_examples (state, examples, descriptions, env)
+  local formatter = state.opts.formatter
+
   local block = function (example, blockenv)
     local fenv   = util.cow (blockenv)
     fenv.expect  = matchers.expect
     fenv.pending = matchers.pending
 
-    initenv (fenv)
+    initenv (state, fenv)
 
     if examples.before ~= nil then
       setfenv (examples.before.example, fenv)
@@ -202,6 +198,7 @@ function run_examples (examples, descriptions, env)
     local description, definition = next (example)
 
     if definition.example then
+      local filters = state.spec.filters
 
       -- An example, execute it in a clean new sub-environment; as long
       -- as there are no filters, or the filters for the source line of
@@ -216,17 +213,17 @@ function run_examples (examples, descriptions, env)
         definition.example ()
 
         local status = std.table.merge ({
-          filename = filename,
+          filename = state.spec.filename,
 	  line     = definition.line,
         }, matchers.status ())
-        accumulator (formatter, formatter.expectations (status, descriptions))
+	formatter:accumulator (formatter.expectations (status, descriptions, state.opts))
 
         table.remove (descriptions)
       end
 
     else
       -- A nested context, revert back to run_contexts.
-      run_contexts (example, descriptions, fenv)
+      run_contexts (state, example, descriptions, fenv)
     end
 
     if examples.after ~= nil then
@@ -246,28 +243,31 @@ end
 
 
 -- Run each of CONTEXTS under ENV in order.
-function run_contexts (contexts, descriptions, env)
+function run_contexts (state, contexts, descriptions, env)
+  local formatter = state.opts.formatter
   for description, examples in pairs (contexts) do
     table.insert (descriptions, description)
-    accumulator (formatter, formatter.spec (descriptions))
-    run_examples (examples, descriptions, env)
+    formatter:accumulator (formatter.spec (descriptions, state.opts))
+    run_examples (state, examples, descriptions, env)
     table.remove (descriptions)
   end
 end
 
 
--- Run SPECS, according to OPTS and ENV.
-function run (specs, env)
-  formatter = opts.formatter or formatter
+-- Run `specs` from `state`.
+function run (state)
+  local formatter = state.opts.formatter
+
+  state.sidefx = {}
+  formatter.accumulator = accumulator -- so we can pass self with ':'
 
   -- Run compiled specs, in order.
-  accumulator (formatter, formatter.header (matchers.stats))
-  for _, spec in ipairs (specs) do
-    filename = spec.filename
-    filters  = spec.filters
-    run_examples (spec.examples, {}, env)
+  formatter:accumulator (formatter.header (matchers.stats, state.opts))
+  for _, spec in ipairs (state.specs) do
+    state.spec = spec
+    run_examples (state, spec.examples, {}, state.sandbox)
   end
-  formatter.footer (matchers.stats, formatter.accumulated)
+  formatter.footer (matchers.stats, formatter.accumulated, state.opts)
   return matchers.stats.fail ~= 0 and 1 or 0
 end
 

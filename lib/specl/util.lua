@@ -19,7 +19,6 @@
 -- MA 02111-1301, USA.
 
 
-local color = require "specl.color"
 local std   = require "specl.std"
 
 from std import Object
@@ -247,23 +246,11 @@ end
 local function nop () end
 
 
--- Color printing.
-local function princ (...)
-  return print (color (...))
-end
-
-
 -- Return S with the first word and following whitespace stripped,
 -- where S contains some whitespace initially (i.e single words are
 -- returned unchanged).
 local function strip1st (s)
   return s:gsub ("^%s*%w+%s+", "")
-end
-
-
--- Color writing.
-local function writc (...)
-  return io.write (color (...))
 end
 
 
@@ -284,12 +271,10 @@ local M = {
   indent         = indent,
   nop            = nop,
   map            = map,
-  princ          = princ,
   strip1st       = strip1st,
   timesince      = timesince,
   type           = xtype,
   type_check     = type_check,
-  writc          = writc,
 }
 
 return M

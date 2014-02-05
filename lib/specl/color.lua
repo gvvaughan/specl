@@ -19,7 +19,7 @@
 -- MA 02111-1301, USA.
 
 
-local _, ansicolors = pcall (require, "ansicolors")
+local have_color, ansicolors = pcall (require, "ansicolors")
 
 local h1      = "%{blue}"
 local h2      = "%{cyan}"
@@ -61,8 +61,8 @@ local colormap = {
 }
 
 
-local function color (s)
-  if opts.color then
+local function color (want_color, s)
+  if want_color and have_color then
     s = ansicolors (s)
   else
     s = s:gsub ("%%{(.-)}", "")
@@ -72,7 +72,7 @@ end
 
 
 return setmetatable (colormap, {
-         __call  = function (_, s) return color (s) end,
+         __call  = function (self, ...) return color (...) end,
          __index = function (_, k)
                      return "%{underline}"
                    end,

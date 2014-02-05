@@ -18,24 +18,19 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-local loader = require "specl.loader"
-local runner = require "specl.runner"
-local std    = require "specl.std"
-local util   = require "specl.util"
-
-local have_color = pcall (require, "ansicolors")
-
+local loader  = require "specl.loader"
+local Options = require "specl.optparse"
+local runner  = require "specl.runner"
+local std     = require "specl.std"
+local util    = require "specl.util"
 
 -- Make a shallow copy of the pristine global environment, so that the
 -- future state of the Specl environment is not exposed to spec files.
-local sandbox = {}
-for k, v in pairs (_G) do sandbox[k] = v end
+local global = {}
+for k, v in pairs (_G) do global[k] = v end
 
 
--- Parse command line options.
-local OptionParser = require "specl.optparse"
-
-local parser = OptionParser [[
+local optspec = [[
 specl (@PACKAGE_NAME@) @VERSION@
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
@@ -92,52 +87,48 @@ accurate line-numbers, and unicode characters are not supported.
 
 Report bugs to @PACKAGE_BUGREPORT@.]]
 
-parser:on ("color", parser.required, parser.boolean)
-parser:on ({"f", "format", "formatter"}, parser.required,
-           function (parser, opt, optarg)
-             local ok, formatter = pcall (require, optarg)
-	     if not ok then
-	       ok, formatter = pcall (require, "specl.formatter." ..optarg)
-	     end
-	     if not ok then
-	       parser:opterr ("could not load '" .. optarg .. "' formatter.")
-	     end
-	     return formatter
-           end)
 
-_G.arg, opts = parser:parse (_G.arg)
-
--- Option defaults.
-if not have_color then
-  opts.color = nil
-elseif opts.color == nil then
-  opts.color = true
-end
-
-if #_G.arg == 0 then
-  _G.arg = util.map (function (f) return f:match "_spec%.yaml$" and f or nil end,
-                     util.files "specs")
-end
-
-if #_G.arg == 0 then
-  if pcall (require, "posix") then
-    return parser:opterr "could not find spec files in './specs/'"
-  else
-    return parser:opterr "install luaposix to autoload spec files from './specs/'"
+-- optparse opt handler for `-f, --formatter=FILE`.
+local function formatter_opthandler (parser, opt, optarg)
+  local ok, formatter = pcall (require, optarg)
+  if not ok then
+    ok, formatter = pcall (require, "specl.formatter." ..optarg)
   end
+  if not ok then
+    parser:opterr ("could not load '" .. optarg .. "' formatter.")
+  end
+  return formatter
 end
 
 
--- Collect compiles specs here.
-local specs = {}
+-- Return `filename` if it has a specfile-like filename, else nil.
+local function specfilter (filename)
+  return filename:match "_spec%.yaml$" and filename or nil
+end
 
--- Accumulate line filters (+NN/:NN args) here.
-local filters
+
+-- Called by process_args() to concatenate YAML formatted
+-- specifications in each <arg>
+local function compile (self, arg)
+  local s, errmsg = std.string.slurp ()
+  if errmsg ~= nil then
+    io.stderr:write (errmsg .. "\n")
+    os.exit (1)
+  end
+  table.insert (self.specs, {
+    filename = arg,
+    examples = loader.load (arg, s, self.opts.unicode),
+    filters  = self.filters,
+  })
+
+  -- Filters have been claimed.
+  self.filters = nil
+end
 
 
 -- Process files and line filters specified on the command-line.
-local function process_args (fn)
-  for i, v in ipairs (arg) do
+local function process_args (self)
+  for i, v in ipairs (self.arg) do
     -- Process line filters.
     local filename, line = nil, v:match "^%+(%d+)$"  -- +NN
     if line == nil then
@@ -152,42 +143,88 @@ local function process_args (fn)
       filename = v
     end
 
-    -- Store filters.
+    -- Accumulate unclaimed filters in the Main object.
     if line ~= nil then
-      filters = filters or {}
-      filters[line] = true
+      self.filters = self.filters or {}
+      self.filters[line] = true
     end
 
     -- Process filename.
     if filename == "-" then
       io.input (io.stdin)
-      fn (filename, i)
+      self:compile (filename)
 
     elseif filename ~= nil then
       io.input (filename)
-      fn (filename, i)
+      self:compile (filename)
     end
   end
 end
 
 
--- Called by process_args() to concatenate YAML formatted
--- specifications in each <arg>
-local function compile (arg)
-  local s, errmsg = std.string.slurp ()
-  if errmsg ~= nil then
-    io.stderr:write (errmsg .. "\n")
-    os.exit (1)
+-- Execute this program.
+local function execute (self)
+  -- Parse command line options.
+  local parser = require "specl.optparse" (optspec)
+
+  parser:on ("color", parser.required, parser.boolean)
+  parser:on ({"f", "format", "formatter"},
+             parser.required, formatter_opthandler)
+
+  self.arg, self.opts = parser:parse (arg, self.opts)
+
+  -- Process all specfiles when none are given explicitly.
+  if #self.arg == 0 then
+    self.arg = util.map (specfilter, util.files "specs")
   end
-  specs[#specs + 1] = {
-    filename = arg,
-    examples = loader.load (arg, s),
-    filters  = filters,
-  }
-  filters = nil
+
+  if #self.arg == 0 then
+    if pcall (require, "posix") then
+      return parser:opterr "could not find spec files in './specs/'"
+    else
+      return parser:opterr "install luaposix to autoload spec files from './specs/'"
+    end
+  end
+
+  self:process_args ()
+
+  os.exit (runner.run (self))
 end
 
 
-process_args (compile)
+return std.Object {
+  _type   = "Main",
 
-os.exit (runner.run (specs, sandbox))
+  arg     = {},
+
+  -- Option defaults.
+  opts    = {
+    color     = true,
+    formatter = require "specl.formatter.progress",
+  },
+
+  -- Collect compiled specs here.
+  specs   = {},
+
+  -- Outermost execution environment.
+  sandbox = {},
+
+  -- Pristine global environment.
+  _global = global,
+
+  -- Methods.
+  __index = {
+    compile      = compile,
+    execute      = execute,
+    process_args = process_args,
+  },
+
+  -- Main {_G.arg, [io = IO], [os = OS]}
+  -- Allow test harness to hijack io and os functions so that it can be
+  -- safely executed in-process.
+  _init   = function (self, arg)
+    self.arg, _G.io, _G.os = arg, arg.io or _G.io, arg.os or _G.os
+    for k, v in pairs (global) do self.sandbox[k] = v end
+    return self
+  end,
+}

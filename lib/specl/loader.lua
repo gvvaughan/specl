@@ -86,7 +86,7 @@ local parser_mt = {
       -- Mark indices are character based, but Lua patterns are byte
       -- based, which means refetching doesn't work in the presence of
       -- unicode characters :(
-      if opts.unicode then return value end
+      if self.unicode then return value end
       value = self.input:sub (event.start_mark.index, event.end_mark.index)
       if event.style == "DOUBLE_QUOTED" then
         value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}
@@ -248,12 +248,13 @@ local parser_mt = {
 
 
 -- Parser object constructor.
-local function Parser (filename, s)
+local function Parser (filename, s, unicode)
   local dir  = std.io.dirname (filename)
   local path = std.package.normalize (
     std.io.catfile (dir, std.package.path_mark .. ".lua"))
 
   local object = {
+    unicode  = unicode,
     anchors  = {},
     input    = s,
     mark     = { line = "0", column = "0" },
@@ -274,9 +275,9 @@ local function Parser (filename, s)
 end
 
 
-local function load (filename, s)
+local function load (filename, s, unicode)
   local documents = {}
-  local parser    = Parser (filename, s)
+  local parser    = Parser (filename, s, unicode)
 
   if parser:parse () ~= "STREAM_START" then
     return parser:error ("expecting STREAM_START event, but got " ..

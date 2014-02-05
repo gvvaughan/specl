@@ -22,7 +22,13 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-from util import indent, map, nop, princ, strip1st, timesince
+from util import indent, map, nop, strip1st, timesince
+
+
+-- Color printing.
+local function princ (want_color, ...)
+  return print (color (want_color, ...))
+end
 
 
 local function tabulate (descriptions)
@@ -42,14 +48,14 @@ local function tabulate (descriptions)
 end
 
 
-local function spec (descriptions)
-  princ (indent (descriptions) .. tabulate (descriptions))
+local function spec (descriptions, opts)
+  princ (opts.color, indent (descriptions) .. tabulate (descriptions))
 end
 
 
 -- Diagnose any failed expectations in situ, and return failure messages
 -- for display at the end.
-local function expectations (status, descriptions)
+local function expectations (status, descriptions, opts)
   local spaces  = indent (descriptions)
   local reports = { fail = "", pend = "" }
   local counts  = { fail = 0, pend = 0, unexpected = 0 }
@@ -128,7 +134,7 @@ local function expectations (status, descriptions)
       end
     end
 
-    princ (spaces .. tabulate (descriptions) ..details)
+    princ (opts.color, spaces .. tabulate (descriptions) ..details)
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
@@ -136,7 +142,7 @@ local function expectations (status, descriptions)
                  ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
 
-    princ (spaces ..  tabulate (descriptions) ..  pend)
+    princ (opts.color, spaces ..  tabulate (descriptions) ..  pend)
   end
 
   -- Add description titles.
@@ -156,34 +162,34 @@ end
 
 
 -- Report statistics.
-local function footer (stats, reports)
+local function footer (stats, reports, opts)
   local total   = stats.pass + stats.fail
   local percent = string.format ("%.2f%%", 100 * stats.pass / total)
 
   print ()
   if reports and reports.pend ~= "" then
-    princ (color.summary .. "Summary of pending expectations" ..
+    princ (opts.color, color.summary .. "Summary of pending expectations" ..
            color.summarypost)
-    princ (reports.pend)
+    princ (opts.color, reports.pend)
   end
   if reports and reports.fail ~= "" then
-    princ (color.summary .. "Summary of failed expectations" ..
+    princ (opts.color, color.summary .. "Summary of failed expectations" ..
            color.summarypost)
-    princ (reports.fail)
+    princ (opts.color, reports.fail)
   end
 
   if total > 0 then
     local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
-    princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
+    princ (opts.color, statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
            " expectations.")
   else
-    princ (color.notallpass .. "No expectations met.")
+    princ (opts.color, color.notallpass .. "No expectations met.")
   end
 
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""
   local pendcolor = (stats.pend > 0) and color.bad or ""
-  princ (passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
+  princ (opts.color, passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
          pendcolor   .. stats.pend .. " pending" .. color.reset .. " and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
          color.clock .. tostring (timesince (stats.starttime)) ..

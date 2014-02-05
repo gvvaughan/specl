@@ -22,7 +22,19 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-from util import map, nop, princ, strip1st, timesince, writc
+from util import map, nop, strip1st, timesince
+
+
+-- Color writing.
+local function writc (want_color, ...)
+  return io.write (color (want_color, ...))
+end
+
+
+-- Color printing.
+local function princ (want_color, ...)
+  return print (color (want_color, ...))
+end
 
 
 -- Use '>' as a marker for currently executing expectation.
@@ -34,7 +46,7 @@ end
 
 -- Print '.' for passed, or 'F' for failed expectation.
 -- Update '>' position.
-local function expectations (status, descriptions)
+local function expectations (status, descriptions, opts)
   reports = { fail = "", pend = "" }
 
   io.write ("\08")
@@ -55,21 +67,21 @@ local function expectations (status, descriptions)
         reports.pend = reports.pend .. color.warn .. expectation.pending
 
         if expectation.status == true then
-          writc (color.strong .. "?")
+          writc (opts.color, color.strong .. "?")
           reports.pend = reports.pend ..
               color.warn .. ", passed unexpectedly!" .. color.reset .. "\n" ..
               "  " .. color.strong ..
               "You can safely remove the 'pending ()' call from this example." ..
               color.reset
         else
-          writc (color.pend .. "*")
+          writc (opts.color, color.pend .. "*")
         end
 
       elseif expectation.status == true then
-        writc (color.good .. ".")
+        writc (opts.color, color.good .. ".")
 
       else
-        writc (color.bad .. "F")
+        writc (opts.color, color.bad .. "F")
 
         local fail
 	if opts.verbose then
@@ -87,7 +99,7 @@ local function expectations (status, descriptions)
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
-    writc (color.pend .. "*")
+    writc (opts.color, color.pend .. "*")
     local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
                  ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
@@ -112,21 +124,21 @@ end
 
 
 -- Report statistics.
-local function footer (stats, reports)
+local function footer (stats, reports, opts)
   local total = stats.pass + stats.fail
 
   print "\08 "
 
   print ()
   if reports and reports.pend ~= "" then
-    princ (color.summary .. "Summary of pending expectations" ..
+    princ (opts.color, color.summary .. "Summary of pending expectations" ..
            color.summarypost)
-    princ (reports.pend)
+    princ (opts.color, reports.pend)
   end
   if reports and reports.fail ~= "" then
-    princ (color.summary .. "Summary of failed expectations" ..
+    princ (opts.color, color.summary .. "Summary of failed expectations" ..
            color.summarypost)
-    princ (reports.fail)
+    princ (opts.color, reports.fail)
   end
 
   local passcolor = (stats.pass > 0) and color.good or color.bad
@@ -135,18 +147,19 @@ local function footer (stats, reports)
   local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
 
   if stats.fail == 0 then
-    writc (prefix .. " expectations met" .. color.reset)
+    writc (opts.color, prefix .. " expectations met" .. color.reset)
 
     if stats.pend ~= 0 then
-      writc (", but " .. color.bad .. stats.pend ..
+      writc (opts.color, ", but " .. color.bad .. stats.pend ..
              " still pending" .. color.reset .. ",")
     end
   else
-    writc (passcolor .. stats.pass .. " passed" .. color.reset .. ", " ..
-           pendcolor .. stats.pend .. " pending" .. color.reset .. ", " ..
-           "and " .. failcolor .. stats.fail .. " failed" .. color.reset)
+    writc (opts.color, passcolor .. stats.pass .. " passed" ..
+           color.reset .. ", " .. pendcolor .. stats.pend .. " pending" ..
+           color.reset .. ", " .. "and " .. failcolor .. stats.fail ..
+	   " failed" .. color.reset)
   end
-  princ (" in " .. color.clock ..
+  princ (opts.color, " in " .. color.clock ..
          tostring (timesince (stats.starttime)) ..
          " seconds" .. color.reset .. ".")
 end
