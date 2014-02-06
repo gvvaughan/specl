@@ -49,6 +49,15 @@ end
 --[[ -------------- ]]--
 
 
+-- Match `with` against keys in `branches` table, and return the result
+-- of running the function in the table value for the matching key, or
+-- the first non-key value function if no key matches.
+local function case (with, branches)
+  local fn = branches[with] or branches[1]
+  if fn then return fn (with) end
+end
+
+
 -- Return given metamethod, if any, or nil.
 local function metamethod (x, n)
   local m = metaentry (x, n)
@@ -58,6 +67,7 @@ end
 
 
 std.func = {
+  case       = case,
   metamethod = metamethod,
 }
 
@@ -562,6 +572,10 @@ M.dirsep, M.pathsep, M.path_mark, M.execdir, M.igmark =
 -- `pathstrings` where this match occurs, and the full text of the
 -- matching element; otherwise it returns nil.
 local function find (pathstrings, patt, init, plain)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to find (string expected, got " .. type (pathstrings) .. ")")
+  assert (type (patt) == "string",
+    "bad argument #2 to find (string expected, got " .. type (patt) .. ")")
   local paths = split (pathstrings, M.pathsep)
   if plain then patt = escape_pattern (patt) end
   init = init or 1
@@ -572,17 +586,39 @@ local function find (pathstrings, patt, init, plain)
 end
 
 
+-- Substitute special characters in a path string.
+local function pathsub (path)
+  return path:gsub ("%%?.", function (capture)
+    return case (capture, {
+           ["?"] = function ()  return M.path_mark end,
+           ["/"] = function ()  return M.dirsep end,
+                   function (s) return s:gsub ("^%%", "", 1) end,
+    })
+  end)
+end
+
+
 -- Normalize a path list by removing redundant `.` and `..` sections,
 -- and keeping only the first instance of duplicate elements.  Each
 -- argument can contain any number of package.pathsep delimited
--- segments.
+-- segments.  Any argument with no package.pathsep automatically
+-- converts "/" to package.dirsep and "?" to package.path_mark,
+-- unless immediately preceded by a "%" symbol.
 local function normalize (...)
+  assert (select ("#", ...) > 0, "wrong number of arguments to 'normalize'")
   local i, paths, pathstrings = 1, {}, table.concat ({...}, M.pathsep)
   for _, path in ipairs (split (pathstrings, M.pathsep)) do
-    path = path:
+    path = pathsub (path):
       gsub (catfile ("^[^", "]"), catfile (".", "%0")):
       gsub (catfile ("", "%.", ""), M.dirsep):
-      gsub (catfile ("", "[^", "]+", "%.%.", ""), M.dirsep)
+      gsub (catfile ("", "%.$"), ""):
+      gsub (catfile ("", "[^", "]+", "%.%.", ""), M.dirsep):
+      gsub (catfile ("", "[^", "]+", "%.%.$"), ""):
+      gsub (catfile ("%.", "%..", ""), catfile ("..", "")):
+      gsub (catfile ("", "$"), "")
+
+    -- Build an inverted table of elements to eliminate duplicates after
+    -- normalization.
     if not paths[path] then
       paths[path], i = i, i + 1
     end
@@ -593,26 +629,34 @@ end
 
 -- Like table.insert, for paths.
 local function insert (pathstrings, ...)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to insert (string expected, got " .. type (pathstrings) .. ")")
   local paths = split (pathstrings, M.pathsep)
   table.insert (paths, ...)
-  return table.concat (paths, M.pathsep)
+  return normalize (unpack (paths))
 end
 
 
 -- Call `fn` with each path in `pathstrings`, or until `fn` returns
 -- non-nil.
-local function mappath (pathstrings, fn, ...)
+local function mappath (pathstrings, callback, ...)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to mappath (string expected, got " .. type (pathstrings) .. ")")
+  assert (type (callback) == "function",
+    "bad argument #2 to mappath (function expected, got " .. type (pathstrings) .. ")")
   for _, path in ipairs (split (pathstrings, M.pathsep)) do
-    local r = fn (path, ...)
+    local r = callback (path, ...)
     if r ~= nil then return r end
   end
 end
 
 
 -- Like table.remove, for paths.
-local function remove (pathstrings, ...)
+local function remove (pathstrings, pos)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to remove (string expected, got " .. type (pathstrings) .. ")")
   local paths = split (pathstrings, M.pathsep)
-  table.remove (paths, ...)
+  table.remove (paths, pos)
   return table.concat (paths, M.pathsep)
 end
 

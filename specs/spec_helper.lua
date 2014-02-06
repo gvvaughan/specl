@@ -1,8 +1,7 @@
 local hell = require "specl.shell"
 local std  = require "specl.std"
-local path = std.io.catfile ("lib", std.package.path_mark .. ".lua")
 
-package.path = std.package.normalize (path, package.path)
+package.path = std.package.normalize ("lib/?.lua", package.path)
 
 local Object = std.Object
 
