@@ -20,7 +20,6 @@
 
 -- Additional commands useful for writing command-line specs.
 
-local matchers = require "specl.matchers"
 local std      = require "specl.std"
 local util     = require "specl.util"
 
@@ -46,7 +45,7 @@ local Command = Object {
     local cmd = table.concat (params, " ")
     local env, stdin = params.env, params.stdin
 
-    -- Flatten the command itstelf to a string.
+    -- Flatten the command itself to a string.
     self.cmd = cmd
     if Object.type (cmd) == "table" then
       -- Subshell is required to make sure redirections are captured,
@@ -116,6 +115,8 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
+  local matchers = require "specl.matchers"
+
   local concat, reformat, Matcher, matchers =
         matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
 
