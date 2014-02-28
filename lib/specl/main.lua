@@ -24,7 +24,8 @@ local runner  = require "specl.runner"
 local std     = require "specl.std"
 local util    = require "specl.util"
 
-from std.table import merge
+from std.table import clone, merge
+
 
 -- Make a shallow copy of the pristine global environment, so that the
 -- future state of the Specl environment is not exposed to spec files.
@@ -231,9 +232,6 @@ return std.Object {
   -- Outermost execution environment.
   sandbox = {},
 
-  -- Pristine global environment.
-  _global = global,
-
   -- Methods.
   __index = {
     compile      = compile,
@@ -241,12 +239,11 @@ return std.Object {
     process_args = process_args,
   },
 
-  -- Main {_G.arg, [io = IO], [os = OS]}
   -- Allow test harness to hijack io and os functions so that it can be
   -- safely executed in-process.
-  _init   = function (self, arg)
-    self.arg, _G.io, _G.os = arg, arg.io or _G.io, arg.os or _G.os
-    for k, v in pairs (global) do self.sandbox[k] = v end
+  _init   = function (self, arg, env)
+    self.arg     = arg
+    self.sandbox = merge (clone (global), env or {})
     return self
   end,
 }

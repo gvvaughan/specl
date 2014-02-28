@@ -89,6 +89,10 @@ Specl NEWS - User visible changes.
            expect (...).to_fail_while_containing "substring"
            expect (...).to_fail_while_matching "pattern"
 
+  - New experimental `specl.inprocess` module provides a way to run
+    carefully written Lua programs inside the Specl process, saving a
+    fork/exec each time.
+
 ** Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs

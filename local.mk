@@ -92,6 +92,7 @@ dist_noinst_DATA +=					\
 	lib/specl/formatter/progress.lua		\
 	lib/specl/formatter/report.lua			\
 	lib/specl/formatter/tap.lua			\
+	lib/specl/inprocess.lua				\
 	lib/specl/loader.lua				\
 	lib/specl/main.lua				\
 	lib/specl/matchers.lua				\

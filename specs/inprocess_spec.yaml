@@ -1,0 +1,436 @@
+before:
+  inprocess = require "specl.inprocess"
+
+specify inprocess:
+- before: |
+    core = {
+      error  = error,
+      exit   = os.exit,
+      output = io.output,
+      print  = print,
+      stderr = io.stderr,
+      stdin  = io.stdin,
+      stdout = io.stdout,
+      type   = io.type,
+      write  = io.write,
+    }
+
+    function call (fn, arg, stdin)
+      local Main = require "specl.std".Object {
+        _type = "Main",
+
+        _init = function (self, arg)
+          self.arg = arg
+          return self
+        end,
+
+        execute = fn,
+      }
+      return inprocess.call (Main, arg, stdin)
+    end
+
+- it propagates arguments to Main object:
+    function execute (self)
+      io.write (table.concat (self.arg or {}, " "))
+    end
+    expect (call (execute, {"arg1", "arg2"})).to_succeed_with "arg1 arg2"
+
+- describe error:
+  - before:
+      execute = function () return error "he deed" end
+  - it captures raised errors: |
+      expect (call (execute)).not_to_succeed ()
+      expect (call (execute)).to_match_error "%d: he deed\nstack traceback:\n"
+  - it restores core error function on completion:
+      expect (call (execute)).not_to_succeed ()
+      expect (error).to_be (core.error)
+
+- describe exit:
+  - context with normal exit:
+    - it captures exit status:
+        expect (call (function () os.exit (true) end)).to_exit (0)
+        expect (call (function () os.exit (0) end)).to_exit (0)
+    - it does not pollute output streams:
+        expect (call (function () os.exit (0) end)).to_output (nil)
+        expect (call (function () os.exit (0) end)).to_output_error (nil)
+    - it reports normal exit for fall-through:
+        expect (call (function () end)).to_exit (0)
+  - context with abnormal exit:
+    - it captures exit status:
+        expect (call (function () os.exit (false) end)).to_exit (1)
+        expect (call (function () os.exit (77) end)).to_exit (77)
+    - it does not pollute output streams:
+        expect (call (function () os.exit (false) end)).to_output (nil)
+        expect (call (function () os.exit (false) end)).to_output_error (nil)
+  - it restores core exit function on completion:
+      expect (call (function () os.exit (0) end)).to_exit (0)
+      expect (os.exit).to_be (core.exit)
+
+- describe write:
+  - it captures output:
+      expect (call (function () io.write "hello" end)).to_output "hello"
+  - it restores core write function on completion:
+      expect (call (function () io.write "" end)).to_output ""
+      expect (io.write).to_be (core.write)
+
+- describe print:
+  - it captures printed string:
+      expect (call (function () print "hello" end)).to_output "hello\n"
+  - it captures printed objects: |
+      expect (call (function () print (1, {"", 2}, true) end)).
+        to_match_output "1\ttable: 0x%x+\ttrue\n"
+  - it restores core print function on completion:
+      expect (call (function () print "" end)).to_output "\n"
+      expect (print).to_be (core.print)
+
+
+- describe StrFile:
+  - it displays as an annotated hex address:
+      expect (call (function () print (io.stdout) end)).
+        to_match_output "strfile %(0x%x+/%a%)"
+  - it has a stable display address:
+      function execute ()
+        print (tostring (io.stdout) == tostring (io.stdout))
+      end
+      expect (call (execute)).to_output "true\n"
+  - it has a unique display address per stream:
+      stdout = call (function () print (io.stdout) end)
+      stderr = call (function () print (io.stderr) end)
+      expect (stdout).not_to_be (stderr)
+
+
+- describe output:
+  - it displays as an annotated hex address:
+      expect (call (function () print (io.output ()) end)).
+        to_match_output "strfile %(0x%x+/%a%)"
+  - it accepts a StrFile argument:
+      function execute ()
+        io.output (io.stderr)
+        io.write "errout"
+      end
+      expect (call (execute)).to_output_error "errout"
+  - it accepts a filename argument:
+      function execute ()
+        local name = os.tmpname ()
+        io.output (name)
+        io.write "fileout"
+        io.output (io.stdout)
+
+        local r = io.open (name)
+        io.write (r:read "*a")
+        r:close ()
+        os.remove (name)
+      end
+      expect (call (execute)).to_output "fileout"
+  - it accepts a file descriptor argument:
+      function execute ()
+        local name = os.tmpname ()
+        local w = io.open (name, "w")
+        io.output (h)
+        io.write "fdout"
+        w:close ()
+        io.output (io.stdout)
+
+        local r = io.open (name)
+        io.write (r:read "*a")
+        r:close ()
+        os.remove (name)
+      end
+      expect (call (execute)).to_output "fdout"
+  - it restores core output function on completion:
+      expect (call (function () print (io.output ()) end)).
+        to_match_output "strfile %(0x%x+/%a%)"
+      expect (io.output).to_be (core.output)
+
+
+- describe stdout:
+  - context with close:
+    - it diagnoses failure:
+        expect (call (function () print (io.stdout:close ()) end)).
+          to_output "nil\tcannot close standard virtual file\n"
+
+  - context with flush:
+    - it intercepts method:
+        expect (call (function () print (io.stdout:flush ()) end)).
+          to_output "\n"
+
+  - context with lines:
+      pending "not yet implemented"
+
+  - context with read:
+    - it diagnoses failure:
+        expect (call (function () print (io.stdout:read "*a") end)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
+        expect (call (function () print (io.stdout:read "not a mode") end)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
+
+  # This specifies our idealised logical behaviour, but actually differs
+  # (necessarily) from seeking on the real standard output.
+  - context with seek:
+    - it reports the output position:
+        function execute () io.write (io.stdout:seek ()) end
+        expect (call (execute)).to_output "0"
+    - it updates the output position:
+        function execute ()
+          for i = 1,8 do io.write (io.stdout:seek ("cur", 0)) end
+        end
+        expect (call (execute)).to_output "01234567"
+    - it defaults offset to zero:
+        function execute ()
+          for i = 1,8 do io.write (io.stdout:seek ("cur")) end
+        end
+        expect (call (execute)).to_output "01234567"
+    - it defaults whence to current position:
+        function execute ()
+          for i = 1,8 do io.write (io.stdout:seek ()) end
+        end
+        expect (call (execute)).to_output "01234567"
+    - it accepts position relative offsets:
+        function execute ()
+          io.stdout:seek ("set", 100)
+          io.write (io.stdout:seek ())
+          io.write (io.stdout:seek ())
+        end
+        expect (call (execute)).to_output "1003"
+    - it accepts end relative offsets:
+        function execute ()
+          for i = 1,8 do io.write (io.stdout:seek ()) end
+          io.stdout:seek ("end", -3)
+          io.write (io.stdout:seek ())
+          io.write (io.stdout:seek ())
+        end
+        expect (call (execute)).to_output "0123456759"
+
+  - context with setvbuf:
+    - it accepts no buffering argument:
+        expect (call (function () io.stdout:setvbuf "no" end)).to_succeed ()
+    - it accepts full buffering arguments:
+        expect (call (function () io.stdout:setvbuf "full" end)).to_succeed ()
+        expect (call (function () io.stdout:setvbuf ("full", 1000) end)).
+          to_succeed ()
+    - it accepts line buffering arguments:
+        expect (call (function () io.stdout:setvbuf "line" end)).to_succeed ()
+        expect (call (function () io.stdout:setvbuf ("line", 1000) end)).
+          to_succeed ()
+
+  - context with write:
+    - it appends to stream:
+        expect (call (function () io.stdout:write "foo" end)).to_output "foo"
+
+  - it restores core stdout stream on completion:
+      expect (call (function () io.stdout:write "" end)).to_output ""
+      expect (io.stdout).should_be (core.stdout)
+
+- describe stderr:
+  - context with close:
+    - it diagnoses failure:
+        expect (call (function () print (io.stderr:close ()) end)).
+          to_output "nil\tcannot close standard virtual file\n"
+
+  - context with flush:
+    - it intercepts method:
+        expect (call (function () print (io.stderr:flush ()) end)).
+          to_output "\n"
+
+  - context with lines:
+      pending "not yet implemented"
+
+  - context with read:
+    - it diagnoses failure:
+        expect (call (function () print (io.stderr:read "*a") end)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
+        expect (call (function () print (io.stderr:read "not a mode") end)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
+
+  # This specifies our idealised logical behaviour, but actually differs
+  # (necessarily) from seeking on the real standard error.
+  - context with seek:
+    - it reports the output position:
+        function execute () io.stderr:write (io.stderr:seek ()) end
+        expect (call (execute)).to_output_error "0"
+    - it updates the output position:
+        function execute ()
+          for i = 1,8 do io.stderr:write (io.stderr:seek ("cur", 0)) end
+        end
+        expect (call (execute)).to_output_error "01234567"
+    - it defaults offset to zero:
+        function execute ()
+          for i = 1,8 do io.stderr:write (io.stderr:seek ("cur")) end
+        end
+        expect (call (execute)).to_output_error "01234567"
+    - it defaults whence to current position:
+        function execute ()
+          for i = 1,8 do io.stderr:write (io.stderr:seek ()) end
+        end
+        expect (call (execute)).to_output_error "01234567"
+    - it accepts position relative offsets:
+        function execute ()
+          io.stderr:seek ("set", 100)
+          io.stderr:write (io.stderr:seek ())
+          io.stderr:write (io.stderr:seek ())
+        end
+        expect (call (execute)).to_output_error "1003"
+    - it accepts end relative offsets:
+        function execute ()
+          for i = 1,8 do io.stderr:write (io.stderr:seek ()) end
+          io.stderr:seek ("end", -3)
+          io.stderr:write (io.stderr:seek ())
+          io.stderr:write (io.stderr:seek ())
+        end
+        expect (call (execute)).to_output_error "0123456759"
+
+  - context with setvbuf:
+    - it accepts no buffering argument:
+        expect (call (function () io.stderr:setvbuf "no" end)).to_succeed ()
+    - it accepts full buffering arguments:
+        expect (call (function () io.stderr:setvbuf "full" end)).to_succeed ()
+        expect (call (function () io.stderr:setvbuf ("full", 1000) end)).
+          to_succeed ()
+    - it accepts line buffering arguments:
+        expect (call (function () io.stderr:setvbuf "line" end)).to_succeed ()
+        expect (call (function () io.stderr:setvbuf ("line", 1000) end)).
+          to_succeed ()
+
+  - context with write:
+    - it appends to stream:
+        expect (call (function () io.stderr:write "foo" end)).
+          to_output_error "foo"
+
+  - it restores core stderr stream on completion:
+      expect (call (function () io.stderr:write "" end)).to_output_error ""
+      expect (io.stderr).should_be (core.stderr)
+
+
+- describe stdin:
+  - context with close:
+    - it diagnoses failure:
+        expect (call (function () print (io.stdin:close ()) end)).
+          to_output "nil\tcannot close standard virtual file\n"
+
+  - context with flush:
+    - it intercepts method:
+        expect (call (function () print (io.stdin:flush ()) end)).
+          to_output "\n"
+
+  - context with lines:
+      pending "not yet implemented"
+
+  - context with read:
+    - context using '*n':
+      - it reads a decimal number:
+          function execute ()
+            local n = io.stdin:read "*n"
+            print (type (n), n)
+          end
+          expect (call (execute, {}, "01234")).should_output "number\t1234\n"
+
+  # This specifies our idealised logical behaviour, but actually differs
+  # (necessarily) from seeking on the real standard input.
+  - context with seek:
+    - it reports the output position:
+        function execute () io.write (io.stdin:seek ()) end
+        expect (call (execute)).to_output "0"
+    - it updates the output position:
+        function execute ()
+          for i = 1,8 do
+            io.write (io.stdin:seek ("cur", 0))
+            io.stdin:read (1)
+          end
+        end
+        expect (call (execute, {}, "abcdefgh")).to_output "01234567"
+    - it defaults offset to zero:
+        function execute ()
+          for i = 1,8 do
+            io.write (io.stdin:seek ("cur"))
+            io.stdin:read (1)
+          end
+        end
+        expect (call (execute, {}, "abcdefgh")).to_output "01234567"
+    - it defaults whence to current position:
+        function execute ()
+          for i = 1,8 do
+            io.write (io.stdin:seek ())
+            io.stdin:read (1)
+          end
+        end
+        expect (call (execute, {}, "abcdefgh")).to_output "01234567"
+    - it accepts position relative offsets:
+        function execute ()
+          io.stdin:seek ("set", 3)
+          io.write (io.stdin:seek ())
+          io.write (io.stdin:read (2))
+          io.write (io.stdin:seek ())
+          io.write (io.stdin:read (1))
+        end
+        expect (call (execute, {}, "abcdefgh")).to_output "3de5f"
+    - it accepts end relative offsets:
+        function execute ()
+          io.stdin:seek ("end", -5)
+          io.write (io.stdin:seek ())
+          io.write (io.stdin:read (2))
+          io.write (io.stdin:seek ())
+          io.write (io.stdin:read (1))
+        end
+        expect (call (execute, {}, "abcdefgh")).to_output "3de5f"
+
+  - context with setvbuf:
+    - it accepts no buffering argument:
+        expect (call (function () io.stdin:setvbuf "no" end)).to_succeed ()
+    - it accepts full buffering arguments:
+        expect (call (function () io.stdin:setvbuf "full" end)).to_succeed ()
+        expect (call (function () io.stdin:setvbuf ("full", 1000) end)).
+          to_succeed ()
+    - it accepts line buffering arguments:
+        expect (call (function () io.stdin:setvbuf "line" end)).to_succeed ()
+        expect (call (function () io.stdin:setvbuf ("line", 1000) end)).
+          to_succeed ()
+
+  - context with write:
+    - it diagnoses failure:
+        expect (call (function () print (io.stdin:write "fail") end)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
+
+  - it restores core stdin stream on completion:
+      function execute ()
+        print (io.stdin:read (1))
+      end
+      expect (call (execute, {}, "c")).to_output "c\n"
+      expect (io.stdin).should_be (core.stdin)
+
+
+- describe type:
+  - it identifies virtual streams:
+      expect (call (function () io.write (io.type (io.stdin)) end)).
+        to_output "file"
+      expect (call (function () io.write (io.type (io.stdout)) end)).
+        to_output "file"
+      expect (call (function () io.write (io.type (io.stderr)) end)).
+        to_output "file"
+  - it identifies file descriptors:
+      function execute ()
+        local name = os.tmpname ()
+        local r = io.open (name)
+        io.write (io.type (r))
+        r:close ()
+        os.remove (name)
+      end
+      expect (call (execute)).to_output "file"
+  - it identifies closed file descriptors:
+      function execute ()
+        local name = os.tmpname ()
+        local r = io.open (name)
+        r:close ()
+        os.remove (name)
+        io.write (io.type (r))
+      end
+      expect (call (execute)).to_output "closed file"
+  - it returns nil for non-descriptors:
+      expect (call (function () print (io.type (nil)) end)).to_output "nil\n"
+      expect (call (function () print (io.type (true)) end)).to_output "nil\n"
+      expect (call (function () print (io.type (42)) end)).to_output "nil\n"
+      expect (call (function () print (io.type "str") end)).to_output "nil\n"
+      expect (call (function () print (io.type {}) end)).to_output "nil\n"
+      expect (call (function () print (io.type (io.type)) end)).to_output "nil\n"
+  - it restores core type function on completion:
+      expect (call (function () print (io.type (nil)) end)).to_output "nil\n"
+      expect (io.type).should_be (core.type)
