@@ -19,6 +19,20 @@ describe environments:
 - it cannot find symbols defined in an inner scope:
     expect (defined_inner_symbol).to_be (nil)
 
+- context do not leak references:
+  - before:
+      path = "./?.lua"
+  - it can change library table elements locally:
+      package.path = path
+      expect (package.path).to_be (path)
+  - it can change _G elements locally:
+      _G.os.exit = false
+      expect (_G.os.exit).to_be (false)
+  - it gets fresh library tables in each example:
+      expect (package.path).not_to_be (path)
+  - it gets a fresh _G table in each example:
+      expect (_G.os.exit).not_to_be (false)
+
 - context when looking up symbols from a nested context:
     - before:
         overridden_symbol = "overridden"

@@ -65,6 +65,13 @@ Specl NEWS - User visible changes.
     all mention of `should_` has been removed from documentation, and I
     recommend you use `to_` for new spec files for the reasons above.
 
+** Bug fixes:
+
+  - Setting table elements from outer environment tables no longer leak
+    into sibling examples.  For example, changing entries in the _G
+    table or adding entries to the string table affects only the current
+    innermost environment now, just like setting other variables.
+
 
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 

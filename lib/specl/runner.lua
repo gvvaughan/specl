@@ -106,6 +106,10 @@ local filters
 -- and run them in the example block environment to capture side-effects
 -- correctly.
 local function initenv (env)
+  -- Don't let _G (or _ENV) assignments leak into outer tables.
+  rawset (env, "_G", env)
+  if env._ENV then rawset (env, "_ENV", env) end
+
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
       local fn = core[intercept] (...)
@@ -133,7 +137,7 @@ local function initenv (env)
     if import == nil then
       -- Not preloaded, so search package.path.
       if loadfn == nil then
-        std.package.mappath (package.path, function (path)
+        std.package.mappath (env.package.path, function (path)
           local filename = path:gsub ("%?", (m:gsub ("%.", "/")))
           local s = slurp (filename)
           if s ~= nil then
@@ -161,7 +165,18 @@ local function initenv (env)
     package.loaded[m] = package.loaded[m] or loaded or nil
 
     -- Use the system require if loadstring failed (e.g. C module).
-    return package.loaded[m] or core.require (m)
+    if loadfn == nil then
+      local save = std.table.clone (package)
+      -- temporarily use environment search paths
+      package.path, package.cpath = env.package.path, env.package.cpath
+
+      setfenv (core.require, env)
+      package.loaded[m] = core.require (m)
+
+      package.path, package.cpath = save.path, save.cpath
+    end
+
+    return package.loaded[m]
   end
 end
 
@@ -172,10 +187,10 @@ local run_examples, run_contexts, run
 -- Run each of EXAMPLES under ENV in order.
 function run_examples (examples, descriptions, env)
   local block = function (example, blockenv)
-    local metatable = { __index = blockenv }
-    local fenv = { expect = matchers.expect, pending = matchers.pending }
+    local fenv   = util.cow (blockenv)
+    fenv.expect  = matchers.expect
+    fenv.pending = matchers.pending
 
-    setmetatable (fenv, metatable)
     initenv (fenv)
 
     if examples.before ~= nil then
@@ -223,7 +238,7 @@ function run_examples (examples, descriptions, env)
   for _, example in ipairs (examples) do
     -- Also, run every block in a sub-environment, so that before() and
     -- after() calls from one block don't affect any other.
-    local fenv = setmetatable ({}, { __index = env })
+    local fenv = util.cow (env)
     setfenv (block, fenv)
     block (example, fenv)
   end

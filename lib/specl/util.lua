@@ -70,6 +70,66 @@ local function timesince (earlier)
 end
 
 
+-- Make a deep copy of table t, including metatables.
+local function deepcopy (t)
+  local r = {}
+  setmetatable (r, getmetatable (t))
+  local d = {[t] = r}
+  local function copy (o, x)
+    for i, v in pairs (x) do
+      if type (v) == "table" then
+        if not d[v] then
+          d[v] = {}
+          setmetatable (d[v], getmetatable (v))
+          o[i] = copy (d[v], v)
+        else
+          o[i] = d[v]
+        end
+      else
+        o[i] = v
+      end
+    end
+    return o
+  end
+  return copy (r, t)
+end
+
+
+-- Uniquely identify copy-on-write metatables.
+local unique = { "Cow" }
+
+
+-- Make a lazy-loading copy-on-write table clone.
+local function cow (t)
+  local r = {}
+
+  -- Don't overwrite object metatables with Cow metatables.
+  for k, v in pairs (t) do
+    local mt = getmetatable (v)
+    if type (v) == "table" and mt and mt._type ~= unique then
+      -- Since we can't be sure how this works, but we want to prevent
+      -- overwriting the original, assume the worst and make a deep
+      -- copy of the whole table.
+      r[k] = deepcopy (v)
+    end
+  end
+
+  -- Table lookups in a Cow table recursively propagates Cow metatables
+  -- on-demand.
+  return setmetatable (r, {
+    _type   = unique,
+    __index = function (self, key)
+                if type (t[key]) == "table" then
+		  rawset (r, key, cow (t[key]))
+		  return r[key]
+		else
+		  return t[key]
+		end
+	      end,
+  })
+end
+
+
 -- Map function F over elements of T and return a table of results.
 local function map (f, t)
   local r = {}
@@ -218,6 +278,7 @@ local M = {
 
   -- Functions
   concat         = concat,
+  cow            = cow,
   files          = files,
   gettimeofday   = gettimeofday,
   indent         = indent,
