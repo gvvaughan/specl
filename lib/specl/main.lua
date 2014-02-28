@@ -184,7 +184,7 @@ local function execute (self)
   parser:on ({"f", "format", "formatter"},
              parser.required, formatter_opthandler)
 
-  self.arg, self.opts = parser:parse (arg, self.opts)
+  self.arg, self.opts = parser:parse (self.arg, self.opts)
 
   -- Process all specfiles when none are given explicitly.
   if #self.arg == 0 then

@@ -54,7 +54,7 @@ LUAM_ENV  = LUA_PATH="$(srcdir)/lib/?.lua;$(LUA_PATH)"
 $(srcdir)/bin/specl: $(dist_noinst_DATA)
 	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
 	test -d "$$d" || $(MKDIR_P) "$$d"
-	$(AM_V_GEN)$(LARCH) -e 'require "specl.main" {arg}:execute ()' $(dist_noinst_DATA) \
+	$(AM_V_GEN)$(LARCH) -e 'require "specl.main" (arg):execute ()' $(dist_noinst_DATA) \
 	| sed							\
 	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
 	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
