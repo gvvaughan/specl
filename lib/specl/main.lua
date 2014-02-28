@@ -127,7 +127,15 @@ end
 
 
 -- Process files and line filters specified on the command-line.
-local function process_args (self)
+local function process_args (self, parser)
+  if #self.arg == 0 then
+    if pcall (require, "posix") then
+      return parser:opterr "could not find spec files in './specs/'"
+    else
+      return parser:opterr "install luaposix to autoload spec files from './specs/'"
+    end
+  end
+
   for i, v in ipairs (self.arg) do
     -- Process line filters.
     local filename, line = nil, v:match "^%+(%d+)$"  -- +NN
@@ -155,7 +163,11 @@ local function process_args (self)
       self:compile (filename)
 
     elseif filename ~= nil then
-      io.input (filename)
+      h = io.open (filename)
+      if h == nil and v:match "^-" then
+        return parser:opterr ("unrecognised option '" .. v .. "'")
+      end
+      io.input (h)
       self:compile (filename)
     end
   end
@@ -178,15 +190,7 @@ local function execute (self)
     self.arg = util.map (specfilter, util.files "specs")
   end
 
-  if #self.arg == 0 then
-    if pcall (require, "posix") then
-      return parser:opterr "could not find spec files in './specs/'"
-    else
-      return parser:opterr "install luaposix to autoload spec files from './specs/'"
-    end
-  end
-
-  self:process_args ()
+  self:process_args (parser)
 
   os.exit (runner.run (self))
 end

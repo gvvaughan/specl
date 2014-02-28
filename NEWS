@@ -72,6 +72,8 @@ Specl NEWS - User visible changes.
     table or adding entries to the string table affects only the current
     innermost environment now, just like setting other variables.
 
+  - Unrecognised command-line options are diagnosed properly.
+
 
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 

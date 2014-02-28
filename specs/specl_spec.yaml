@@ -165,6 +165,11 @@ describe specl:
   - before: |
       yaml = "describe x:\n- it passes: expect (true).to_be (true)"
 
+  - it diagnoses unrecognised options: |
+      expect (run_spec {"--notarealoption", stdin = yaml}).
+        to_contain_error "error: unrecognised option '--notarealoption'"
+      expect (run_spec {"-,", stdin = yaml}).
+        to_contain_error "error: unrecognised option '-,'"
   - it reads a spec from standard input with no arguments:
       expect (run_spec (yaml)).to_contain_output "All expectations met in "
   - it reads a spec from standard input for '-' filename argument:
