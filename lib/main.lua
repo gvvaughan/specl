@@ -27,7 +27,7 @@ local have_color = pcall (require, "ansicolors")
 
 
 -- Make a shallow copy of the pristine global environment, so that the
--- state of the Specl Lua environment is not exposed to spec files.
+-- future state of the Specl environment is not exposed to spec files.
 local sandbox = {}
 for k, v in pairs (_G) do sandbox[k] = v end
 
