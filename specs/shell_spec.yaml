@@ -76,6 +76,30 @@ describe shell:
           expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
+  - describe succeed:
+    - it diagnoses incompatible arguments:
+        expect (expect ("meh").to_succeed ()).to_error "Process expected"
+
+    - it displays actual and expected output on failure:
+        yaml = preamble .. "(spawn 'exit 3').to_succeed ()"
+        expect (run_spec (yaml)).
+          to_contain_output "expecting exit status 0, but got 3"
+
+    - context when called normally:
+      - it succeeds when process exits normally:
+          expect (spawn "exit 0").to_succeed ()
+      - it fails when process exits abnormally:
+          yaml = preamble .. "(spawn 'exit 3').to_succeed ()"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context when called with not_ prefix:
+      - it succeeds when process exits abnormally:
+          expect (spawn "exit 3").not_to_succeed ()
+      - it fails when process exits normally:
+          yaml = preamble .. "(spawn 'exit 0').not_to_succeed ()"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+
   - describe contain_output:
     - it diagnoses incompatible arguments:
         expect (expect ("meh").to_contain_output "meh").to_error "Process expected"
@@ -215,6 +239,30 @@ describe shell:
           expect (spawn "printf hello").not_to_match_output "%s+"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf hello').not_to_match_output '%S+'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+
+  - describe fail:
+    - it diagnoses incompatible arguments:
+        expect (expect ("meh").to_fail ()).to_error "Process expected"
+
+    - it displays actual and expected output on failure:
+        yaml = preamble .. "(spawn 'exit 0').to_fail ()"
+        expect (run_spec (yaml)).
+          to_contain_output "expecting non-zero exit status, but got 0"
+
+    - context when called normally:
+      - it succeeds when process exits abnormally:
+          expect (spawn "exit 3").to_fail ()
+      - it fails when process exits normally:
+          yaml = preamble .. "(spawn 'exit 0').to_fail ()"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context when called with not_ prefix:
+      - it succeeds when process exits normally:
+          expect (spawn "exit 0").not_to_fail ()
+      - it fails when process exits abnormally:
+          yaml = preamble .. "(spawn 'exit 3').not_to_fail ()"
           expect (run_spec (yaml)).to_contain_output (fail_1)
 
 

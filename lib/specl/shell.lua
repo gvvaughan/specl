@@ -164,6 +164,28 @@ do
   }
 
 
+  -- Matches if the exit status of a process is <expect>.
+  matchers.succeed = Matcher {
+    function (actual)
+      return (actual.status == 0)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " " .. tostring (process.status)
+      if process.errout ~= nil and process.errout ~= "" then
+        return m .. "\nand error:" .. reformat (process.errout)
+      end
+      return m
+    end,
+
+    format_expect = function ()
+      return " exit status 0, "
+    end,
+  }
+
+
   -- Matches if the output of a process contains <expect>.
   matchers.contain_output = Matcher {
     function (actual, expect)
@@ -217,6 +239,28 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " output matching:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
+  -- Matches if the exit status of a process is <expect>.
+  matchers.fail = Matcher {
+    function (actual)
+      return (actual.status ~= 0)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " " .. tostring (process.status)
+      if process.errout ~= nil and process.errout ~= "" then
+        return m .. "\nand error:" .. reformat (process.errout)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " non-zero exit status, "
     end,
   }
 

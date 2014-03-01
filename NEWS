@@ -49,6 +49,12 @@ Specl NEWS - User visible changes.
     `should_`.  When negating a new syntax `to_` matcher, both of
     `to_not_` and `not_to` are accepted.
 
+  - `spec/shell.lua` provides two new matchers for expressing the exit
+    status of a process: `fail` and `succeed`.  Sometimes it's clearer
+    to write:
+
+        expect (spawn "exit 0").not_to_fail ()
+
 ** Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs
