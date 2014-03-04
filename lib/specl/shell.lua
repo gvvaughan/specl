@@ -164,6 +164,25 @@ do
   }
 
 
+  -- Matches if the output of a process contains <expect>.
+  matchers.contain_output = Matcher {
+    function (actual, expect)
+      return (string.match (actual.output, escape_pattern (expect)) ~= nil)
+    end,
+
+    actual_type   = "Process",
+    format_actual = process_errout,
+
+    format_expect = function (expect)
+      return " output containing:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " output containing:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
   -- Matches if the output of a process is exactly <expect>.
   matchers.output = Matcher {
     function (actual, expect)
@@ -179,25 +198,6 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " output:" .. reformat (alternatives, adaptor)
-    end,
-  }
-
-
-  -- Matches if the error output of a process is exactly <expect>.
-  matchers.output_error = Matcher {
-    function (actual, expect)
-      return (actual.errout == expect)
-    end,
-
-    actual_type   = "Process",
-    format_actual = reformat_err,
-
-    format_expect = function (expect)
-      return " error output:" .. reformat (expect)
-    end,
-
-    format_alternatives = function (adaptor, alternatives)
-      return " error output:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -221,44 +221,6 @@ do
   }
 
 
-  -- Matches if the error output of a process matches <pattern>.
-  matchers.match_error = Matcher {
-    function (actual, pattern)
-      return (string.match (actual.errout, pattern) ~= nil)
-    end,
-
-    actual_type   = "Process",
-    format_actual = reformat_err,
-
-    format_expect = function (expect)
-      return " error output matching:" .. reformat (expect)
-    end,
-
-    format_alternatives = function (adaptor, alternatives)
-      return " error output matching:" .. reformat (alternatives, adaptor)
-    end,
-  }
-
-
-  -- Matches if the output of a process contains <expect>.
-  matchers.contain_output = Matcher {
-    function (actual, expect)
-      return (string.match (actual.output, escape_pattern (expect)) ~= nil)
-    end,
-
-    actual_type   = "Process",
-    format_actual = process_errout,
-
-    format_expect = function (expect)
-      return " output containing:" .. reformat (expect)
-    end,
-
-    format_alternatives = function (adaptor, alternatives)
-      return " output containing:" .. reformat (alternatives, adaptor)
-    end,
-  }
-
-
   -- Matches if the error output of a process contains <expect>.
   matchers.contain_error = Matcher {
     function (actual, expect)
@@ -274,6 +236,44 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " error output containing:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
+  -- Matches if the error output of a process is exactly <expect>.
+  matchers.output_error = Matcher {
+    function (actual, expect)
+      return (actual.errout == expect)
+    end,
+
+    actual_type   = "Process",
+    format_actual = reformat_err,
+
+    format_expect = function (expect)
+      return " error output:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " error output:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
+  -- Matches if the error output of a process matches <pattern>.
+  matchers.match_error = Matcher {
+    function (actual, pattern)
+      return (string.match (actual.errout, pattern) ~= nil)
+    end,
+
+    actual_type   = "Process",
+    format_actual = reformat_err,
+
+    format_expect = function (expect)
+      return " error output matching:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " error output matching:" .. reformat (alternatives, adaptor)
     end,
   }
 end
