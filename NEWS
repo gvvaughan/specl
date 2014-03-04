@@ -55,6 +55,11 @@ Specl NEWS - User visible changes.
 
         expect (spawn "exit 0").not_to_fail ()
 
+  - `specl/shell.lua` provides another two new matchers for combining
+    specifications of output and exit statuses: `fail_with` behaves
+    like `output_error` but also requires non-zero exit status, and
+    `succeed_with` behaves like `output` but requires exit status 0.
+
 ** Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs

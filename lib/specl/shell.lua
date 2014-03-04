@@ -164,7 +164,7 @@ do
   }
 
 
-  -- Matches if the exit status of a process is <expect>.
+  -- Matches if the exit status of a process is 0.
   matchers.succeed = Matcher {
     function (actual)
       return (actual.status == 0)
@@ -220,6 +220,33 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " output:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
+  -- Matches if the process exits normally with output <expect>
+  matchers.succeed_with = Matcher {
+    function (actual, expect)
+      return (actual.status == 0) and (actual.output == expect)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " exit status " .. tostring (process.status) ..
+        ", with output:" .. reformat (process.output)
+      if process.errout ~= nil and process.errout ~= "" then
+        return m .. "\nand error:" .. reformat (process.errout)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " exit status 0, with output:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " exit status 0, with output:" .. reformat (alternatives, adaptor)
     end,
   }
 
@@ -299,6 +326,33 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " error output:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
+  -- Matches if the process exits abnormally with error output <expect>
+  matchers.fail_with = Matcher {
+    function (actual, expect)
+      return (actual.status ~= 0) and (actual.errout == expect)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " exit status " .. tostring (process.status) ..
+        ", with error:" .. reformat (process.errout)
+      if process.output ~= nil and process.output ~= "" then
+        m = m .. "\nand output:" .. reformat (process.output)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " non-zero exit status, with error:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " non-zero exit status, with error:" .. reformat (alternatives, adaptor)
     end,
   }
 
