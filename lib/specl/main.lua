@@ -56,6 +56,7 @@ Where '-' is given as a FILE, then read from standard input.
       --help            print this help, then exit
       --version         print version number, then exit
       --color=WHEN      request colorized formatter output [default=yes]
+  -1, --fail-fast       exit immediately on first failed example
   -f, --formatter=FILE  use a specific formatter [default=progress]
       --unicode         allow unicode in spec files
   -v, --verbose         request verbose formatter output

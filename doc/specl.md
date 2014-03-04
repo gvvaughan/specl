@@ -1042,6 +1042,23 @@ all the matching spec-files automatically.
     specl
 %{ endhighlight %}
 
+
+### 5.1. Running a Subset of Examples
+
+[running a subset of examples]: #51_running_a_subset_of_examples
+
+Often, after adding the new examples for a feature, you're left with
+a block of failing tests that scroll off the screen when the following
+passing and failing examples are reported, even though you want to
+work on the first failure first -- because you've sensibly ordered your
+examples with the fundamental features earlier than the later examples
+that depend on those earlier ones.  Use the `--fail-fast` option to stop
+checking examples as soon as the first failure has been reported.
+
+{% highlight bash %}
+    specl --fail-fast
+{% endhighlight %}
+
 Once you have accumulated a large collection of spec-files, you might
 only need to check a selection of specs relevent to the files you are
 working on.  As long as you follow the best practice of putting specs
@@ -1082,6 +1099,11 @@ accepts `+` prefixed line numbers prior to the file name argument:
 {% highlight bash %}
     specl +44 +48 specs/foo_spec.yaml
 {% endhighlight %}
+
+
+### 5.2. Formatting Results
+
+[formatting results]: #52_formatting_results
 
 If you prefer to format the results of your specification examples with
 a custom formatter, you should make sure your formatter is visible on

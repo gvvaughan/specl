@@ -197,6 +197,7 @@ function run_examples (state, examples, descriptions, env)
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
 
+    local keepgoing = true
     if definition.example then
       local filters = state.spec.filters
 
@@ -219,17 +220,28 @@ function run_examples (state, examples, descriptions, env)
 	formatter:accumulator (formatter.expectations (status, descriptions, state.opts))
 
         table.remove (descriptions)
+
+        if state.opts.fail_fast then
+          for _, expectation in ipairs (status.expectations) do
+            if expectation.status == false then keepgoing = false end
+          end
+        end
       end
 
     else
       -- A nested context, revert back to run_contexts.
-      run_contexts (state, example, descriptions, fenv)
+      if run_contexts (state, example, descriptions, fenv) == false then
+        keepgoing = false
+      end
     end
 
     if examples.after ~= nil then
       setfenv (examples.after.example, fenv)
       examples.after.example ()
     end
+
+    -- Now after's have executed, return false for --fail-fast.
+    if keepgoing == false then return false end
   end
 
   for _, example in ipairs (examples) do
@@ -237,7 +249,11 @@ function run_examples (state, examples, descriptions, env)
     -- after() calls from one block don't affect any other.
     local fenv = util.cow (env)
     setfenv (block, fenv)
-    block (example, fenv)
+
+    -- Return false immediately for --fail-fast.
+    if block (example, fenv) == false then
+      return false
+    end
   end
 end
 
@@ -248,8 +264,12 @@ function run_contexts (state, contexts, descriptions, env)
   for description, examples in pairs (contexts) do
     table.insert (descriptions, description)
     formatter:accumulator (formatter.spec (descriptions, state.opts))
-    run_examples (state, examples, descriptions, env)
+    local status = run_examples (state, examples, descriptions, env)
     table.remove (descriptions)
+
+    -- Return false immediately for a failed expectation if --fail-fast
+    -- was given.
+    if status == false then return false end
   end
 end
 
@@ -265,8 +285,14 @@ function run (state)
   formatter:accumulator (formatter.header (matchers.stats, state.opts))
   for _, spec in ipairs (state.specs) do
     state.spec = spec
-    run_examples (state, spec.examples, {}, state.sandbox)
+
+    -- Return false immediately for a failed expectation if --fail-fast
+    -- was given.
+    if run_examples (state, spec.examples, {}, state.sandbox) == false then
+      break
+    end
   end
+
   formatter.footer (matchers.stats, formatter.accumulated, state.opts)
   return matchers.stats.fail ~= 0 and 1 or 0
 end

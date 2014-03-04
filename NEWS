@@ -25,6 +25,10 @@ Specl NEWS - User visible changes.
   - The report and progress formatters now display file:line:expectation:
     annotations for failed and pending expectations in verbose mode (-v).
 
+  - New command line option `--fail-fast` (or `-1`) to stop checking
+    expectations immediately on the first failure, rather than
+    continuing and showing all failures.
+
   - You can now filter out all but the examples at a specified line
     number either by pasting from the output of a failed or pending
     expectation in verbose mode, by invoking specl as:
