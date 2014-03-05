@@ -177,8 +177,18 @@ do
 
   -- A Matcher requiring a Process object.
   local ProcessMatcher = Matcher {
-    _init       = {"matchp",   "format_expect", "format_actual", "format_alternatives"},
+    _init       = {"matchp",   "format_actual"},
+    _parmtypes  = {"function", "function"     },
+
     actual_type = "Process",
+
+    format_expect = function (self, expect)
+      return self.expecting .. reformat (expect)
+    end,
+
+    format_alternatives = function (self, adaptor, alternatives)
+      return self.expecting .. reformat (alternatives, adaptor)
+    end,
   }
 
 
@@ -188,13 +198,13 @@ do
       return (actual.status == expect)
     end,
 
-    function (self, expect)
+    format_expect = function (self, expect)
       return " exit status " .. tostring (expect) .. ", "
     end,
 
     but_got_status,
 
-    function (self, adaptor, alternatives)
+    format_alternatives = function (self, adaptor, alternatives)
       return " an exit status of " ..
              concat (alternatives, adaptor, ":quoted") .. ", "
     end,
@@ -207,7 +217,7 @@ do
       return (actual.status == 0)
     end,
 
-    function (self, expect)
+    format_expect = function (self, expect)
       return " exit status 0, "
     end,
 
@@ -221,15 +231,7 @@ do
       return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    function (self, expect)
-      return " output containing:" .. reformat (expect)
-    end,
-
-    but_got_output,
-
-    function (self, adaptor, alternatives)
-      return " output containing:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " output containing:", but_got_output,
   }
 
 
@@ -239,15 +241,8 @@ do
       return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    function (self, expect)
-      return " exit status 0, with output containing:" .. reformat (expect)
-    end,
-
+    expecting =  " exit status 0, with output containing:", 
     but_got_status_with_output,
-
-    function (self, adaptor, alternatives)
-      return " exit status 0, with output containing:" .. reformat (alternatives, adaptor)
-    end,
   }
 
 
@@ -257,15 +252,7 @@ do
       return (actual.output == expect)
     end,
 
-    function (self, expect)
-      return " output:" .. reformat (expect)
-    end,
-
-    but_got_output,
-
-    function (self, adaptor, alternatives)
-      return " output:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " output:", but_got_output,
   }
 
 
@@ -275,15 +262,7 @@ do
       return (actual.status == 0) and (actual.output == expect)
     end,
 
-    function (self, expect)
-      return " exit status 0, with output:" .. reformat (expect)
-    end,
-
-    but_got_status_with_output,
-
-    function (self, adaptor, alternatives)
-      return " exit status 0, with output:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " exit status 0, with output:", but_got_status_with_output,
   }
 
 
@@ -293,15 +272,7 @@ do
       return (string.match (actual.output, pattern) ~= nil)
     end,
 
-    function (self, expect)
-      return " output matching:" .. reformat (expect)
-    end,
-
-    but_got_output,
-
-    function (self, adaptor, alternatives)
-      return " output matching:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " output matching:", but_got_output,
   }
 
 
@@ -311,15 +282,8 @@ do
       return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
     end,
 
-    function (self, expect)
-      return " exit status 0, with output matching:" .. reformat (expect)
-    end,
-
+    expecting = " exit status 0, with output matching:",
     but_got_status_with_output,
-
-    function (self, adaptor, alternatives)
-      return " exit status 0, with output matching:" .. reformat (alternatives, adaptor)
-    end,
   }
 
 
@@ -329,7 +293,7 @@ do
       return (actual.status ~= 0)
     end,
 
-    function (self, expect)
+    format_expect = function (self, expect)
       return " non-zero exit status, "
     end,
 
@@ -343,15 +307,7 @@ do
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    function (self, expect)
-      return " error output containing:" .. reformat (expect)
-    end,
-
-    but_got_errout,
-
-    function (self, adaptor, alternatives)
-      return " error output containing:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " error output containing:", but_got_errout,
   }
 
 
@@ -361,15 +317,8 @@ do
       return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    function (self, expect)
-      return " non-zero exit status, with error output containing:" .. reformat (expect)
-    end,
-
+    expecting = " non-zero exit status, with error output containing:",
     but_got_status_with_errout,
-
-    function (self, adaptor, alternatives)
-      return " non-zero exit status, with error output containing:" .. reformat (alternatives, adaptor)
-    end,
   }
 
 
@@ -379,15 +328,7 @@ do
       return (actual.errout == expect)
     end,
 
-    function (self, expect)
-      return " error output:" .. reformat (expect)
-    end,
-
-    but_got_errout,
-
-    function (self, adaptor, alternatives)
-      return " error output:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " error output:", but_got_errout,
   }
 
 
@@ -397,15 +338,8 @@ do
       return (actual.status ~= 0) and (actual.errout == expect)
     end,
 
-    function (self, expect)
-      return " non-zero exit status, with error:" .. reformat (expect)
-    end,
-
+    expecting = " non-zero exit status, with error:",
     but_got_status_with_errout,
-
-    function (self, adaptor, alternatives)
-      return " non-zero exit status, with error:" .. reformat (alternatives, adaptor)
-    end,
   }
 
 
@@ -415,15 +349,7 @@ do
       return (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    function (self, expect)
-      return " error output matching:" .. reformat (expect)
-    end,
-
-    but_got_errout,
-
-    function (self, adaptor, alternatives)
-      return " error output matching:" .. reformat (alternatives, adaptor)
-    end,
+    expecting = " error output matching:", but_got_errout,
   }
 
 
@@ -433,15 +359,8 @@ do
       return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    function (self, expect)
-      return " non-zero exit status, with error output matching:" .. reformat (expect)
-    end,
-
+    expecting = " non-zero exit status, with error output matching:",
     but_got_status_with_errout,
-
-    function (self, adaptor, alternatives)
-      return " non-zero exit status, with error output matching:" .. reformat (alternatives, adaptor)
-    end,
   }
 end
 
