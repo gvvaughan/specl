@@ -205,6 +205,33 @@ do
   }
 
 
+  -- Matches if the process exits normally with output containing <expect>
+  matchers.succeed_while_containing = Matcher {
+    function (actual, expect)
+      return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " exit status " .. tostring (process.status) ..
+        ", with output:" .. reformat (process.output)
+      if process.errout ~= nil and process.errout ~= "" then
+        return m .. "\nand error:" .. reformat (process.errout)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " exit status 0, with output containing:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " exit status 0, with output containing:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
   -- Matches if the output of a process is exactly <expect>.
   matchers.output = Matcher {
     function (actual, expect)
@@ -338,6 +365,33 @@ do
   }
 
 
+  -- Matches if the process exits normally with output containing <expect>
+  matchers.fail_while_containing = Matcher {
+    function (actual, expect)
+      return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " exit status " .. tostring (process.status) ..
+        ", with error:" .. reformat (process.errout)
+      if process.output ~= nil and process.output ~= "" then
+        return m .. "\nand output:" .. reformat (process.output)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " non-zero exit status, with error output containing:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " non-zero exit status, with error output containing:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
   -- Matches if the error output of a process is exactly <expect>.
   matchers.output_error = Matcher {
     function (actual, expect)
@@ -402,7 +456,7 @@ do
     end,
   }
 
-  
+
   -- Matches if the process exits normally with output matching <expect>
   matchers.fail_while_matching = Matcher {
     function (actual, pattern)

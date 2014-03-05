@@ -68,6 +68,7 @@ Specl NEWS - User visible changes.
          contents:
 
            expect (...).to_succeed_with "exact content"
+           expect (...).to_succeed_while_containing "substring"
            expect (...).to_succeed_while_matching "pattern"
 
       c) To check the standard error stream instead:
@@ -80,6 +81,7 @@ Specl NEWS - User visible changes.
          contents:
 
            expect (...).to_fail_with "exact content"
+           expect (...).to_fail_while_containing "substring"
            expect (...).to_fail_while_matching "pattern"
 
 ** Incompatible changes:
