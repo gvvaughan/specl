@@ -75,8 +75,8 @@ local Matcher = Object {
   _type = "Matcher",
 
   _init      = {"matchp"},
-  _parmtypes = {"function"},
-
+  _parmnames = {"matchp",   "format_expect", "format_actual", "format_alternatives"},
+  _parmtypes = {"function", "function",      "function",      "function"           },
 
   -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
@@ -121,6 +121,8 @@ local Matcher = Object {
 
   -- Defaults:
   actual_type   = "any",
+
+  matchp        = function (actual, expect) return actual == expect end,
 
   format_actual = function (actual) return " " .. q(actual) end,
 

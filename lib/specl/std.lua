@@ -234,7 +234,7 @@ local function object_clone (prototype, ...)
 
   -- Check parameter types when types are specified.
   if object_mt._parmtypes ~= nil then
-    local _parmnames = object_mt._parmnames or _init
+    local _parmnames = object_mt._parmnames or object_mt._init
     if type (_parmnames) == "table" and #_parmnames > 0 then
       local parmvals = {}
       for i, v in ipairs (_parmnames) do parmvals[i] = object[v] or object_mt[v] end
