@@ -120,20 +120,25 @@ do
   local concat, reformat, Matcher, matchers =
         matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
 
-  -- If a shell command fails to meet an expectation, show anything output
-  -- to standard error along with the Specl failure message.
-  local function process_errout (process)
-    local m = ":" .. reformat (process.output)
-    if process.errout ~= nil and process.errout ~= "" then
-      return m .. "\nand error:" .. reformat (process.errout)
-    end
-    return m
+  -- Reformat process error output with the reformat() function.
+  local function reformat_errout (process)
+    return ":" .. reformat (process.errout)
   end
 
 
-  -- Reformat process error output with the reformat() function.
-  local function reformat_err (process)
-    return ":" .. reformat (process.errout)
+  -- Append reformatted error stream content, if it contains anything.
+  local function nonempty_errout (process)
+    if process.errout ~= nil and process.errout ~= "" then
+      return "\nand error:" .. reformat (process.errout)
+    end
+    return ""
+  end
+
+
+  -- If a shell command fails to meet an expectation, show anything output
+  -- to standard error along with the Specl failure message.
+  local function process_errout (process)
+    return ":" .. reformat (process.output) .. nonempty_errout (process)
   end
 
 
@@ -151,11 +156,7 @@ do
     end,
 
     format_actual = function (process)
-      local m = " " .. tostring (process.status)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
+      return " " .. tostring (process.status) .. nonempty_errout (process)
     end,
 
     format_expect = function (expect)
@@ -176,11 +177,7 @@ do
     end,
 
     format_actual = function (process)
-      local m = " " .. tostring (process.status)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
+      return " " .. tostring (process.status) .. nonempty_errout (process)
     end,
 
     format_expect = function ()
@@ -214,12 +211,8 @@ do
     end,
 
     format_actual = function (process)
-      local m = " exit status " .. tostring (process.status) ..
-        ", with output:" .. reformat (process.output)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
+      return " exit status " .. tostring (process.status) ..
+        ", with output:" .. reformat (process.output) .. nonempty_errout (process)
     end,
 
     format_expect = function (expect)
@@ -257,12 +250,8 @@ do
     end,
 
     format_actual = function (process)
-      local m = " exit status " .. tostring (process.status) ..
-        ", with output:" .. reformat (process.output)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
+      return " exit status " .. tostring (process.status) ..
+        ", with output:" .. reformat (process.output) .. nonempty_errout (process)
     end,
 
     format_expect = function (expect)
@@ -300,12 +289,8 @@ do
     end,
 
     format_actual = function (process)
-      local m = " exit status " .. tostring (process.status) ..
-        ", with output:" .. reformat (process.output)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
+      return " exit status " .. tostring (process.status) ..
+        ", with output:" .. reformat (process.output) .. nonempty_errout (process)
     end,
 
     format_expect = function (expect)
@@ -325,11 +310,7 @@ do
     end,
 
     format_actual = function (process)
-      local m = " " .. tostring (process.status)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
+      return " " .. tostring (process.status) .. nonempty_errout (process)
     end,
 
     format_expect = function (expect)
@@ -344,7 +325,7 @@ do
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    format_actual = reformat_err,
+    format_actual = reformat_errout,
 
     format_expect = function (expect)
       return " error output containing:" .. reformat (expect)
@@ -387,7 +368,7 @@ do
       return (actual.errout == expect)
     end,
 
-    format_actual = reformat_err,
+    format_actual = reformat_errout,
 
     format_expect = function (expect)
       return " error output:" .. reformat (expect)
@@ -430,7 +411,7 @@ do
       return (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    format_actual = reformat_err,
+    format_actual = reformat_errout,
 
     format_expect = function (expect)
       return " error output matching:" .. reformat (expect)
