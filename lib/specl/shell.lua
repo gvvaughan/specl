@@ -120,11 +120,13 @@ do
   local concat, reformat, Matcher, matchers =
         matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
 
-  -- Reformat process error output with the reformat() function.
-  local function reformat_errout (process)
-    return ":" .. reformat (process.errout)
+  -- Append reformatted output stream content, if it contains anything.
+  local function nonempty_output (process)
+    if process.output ~= nil and process.output ~= "" then
+      return "\nand output:" .. reformat (process.output)
+    end
+    return ""
   end
-
 
   -- Append reformatted error stream content, if it contains anything.
   local function nonempty_errout (process)
@@ -134,11 +136,42 @@ do
     return ""
   end
 
-
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
-  local function process_errout (process)
+  local function but_got_output (process)
     return ":" .. reformat (process.output) .. nonempty_errout (process)
+  end
+
+  -- If a shell command fails to meet an expectation, show everything output
+  -- to standard error.
+  local function but_got_errout (process)
+    return ":" .. reformat (process.errout)
+  end
+
+  -- If a shell command fails to match expected exit status, show
+  -- anything output to standard error along with the Specl failure
+  -- message.
+  local function but_got_status (process)
+    return " " .. tostring (process.status) .. nonempty_errout (process)
+  end
+
+  -- If a shell command fails to match expected exit status or output,
+  -- show anything output to standard error along with the Specl
+  -- failure message.
+  local function but_got_status_with_output (process)
+    return " exit status " .. tostring (process.status) ..
+           ", with output:" .. reformat (process.output) ..
+	   nonempty_errout (process)
+  end
+
+
+  -- If a shell command fails to match expected exit status or output,
+  -- show anything output to standard output along with the Specl
+  -- failure message.
+  local function but_got_status_with_errout (process)
+    return " exit status " .. tostring (process.status) ..
+           ", with error:" .. reformat (process.errout) ..
+	   nonempty_output (process)
   end
 
 
@@ -155,13 +188,11 @@ do
       return (actual.status == expect)
     end,
 
-    format_actual = function (process)
-      return " " .. tostring (process.status) .. nonempty_errout (process)
-    end,
-
     format_expect = function (expect)
       return " exit status " .. tostring (expect) .. ", "
     end,
+
+    format_actual = but_got_status,
 
     format_alternatives = function (adaptor, alternatives)
       return " an exit status of " ..
@@ -176,13 +207,11 @@ do
       return (actual.status == 0)
     end,
 
-    format_actual = function (process)
-      return " " .. tostring (process.status) .. nonempty_errout (process)
-    end,
-
     format_expect = function ()
       return " exit status 0, "
     end,
+
+    format_actual = but_got_status,
   }
 
 
@@ -192,11 +221,11 @@ do
       return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    format_actual = process_errout,
-
     format_expect = function (expect)
       return " output containing:" .. reformat (expect)
     end,
+
+    format_actual = but_got_output,
 
     format_alternatives = function (adaptor, alternatives)
       return " output containing:" .. reformat (alternatives, adaptor)
@@ -210,14 +239,11 @@ do
       return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    format_actual = function (process)
-      return " exit status " .. tostring (process.status) ..
-        ", with output:" .. reformat (process.output) .. nonempty_errout (process)
-    end,
-
     format_expect = function (expect)
       return " exit status 0, with output containing:" .. reformat (expect)
     end,
+
+    format_actual = but_got_status_with_output,
 
     format_alternatives = function (adaptor, alternatives)
       return " exit status 0, with output containing:" .. reformat (alternatives, adaptor)
@@ -231,11 +257,11 @@ do
       return (actual.output == expect)
     end,
 
-    format_actual = process_errout,
-
     format_expect = function (expect)
       return " output:" .. reformat (expect)
     end,
+
+    format_actual = but_got_output,
 
     format_alternatives = function (adaptor, alternatives)
       return " output:" .. reformat (alternatives, adaptor)
@@ -249,14 +275,11 @@ do
       return (actual.status == 0) and (actual.output == expect)
     end,
 
-    format_actual = function (process)
-      return " exit status " .. tostring (process.status) ..
-        ", with output:" .. reformat (process.output) .. nonempty_errout (process)
-    end,
-
     format_expect = function (expect)
       return " exit status 0, with output:" .. reformat (expect)
     end,
+
+    format_actual = but_got_status_with_output,
 
     format_alternatives = function (adaptor, alternatives)
       return " exit status 0, with output:" .. reformat (alternatives, adaptor)
@@ -270,11 +293,11 @@ do
       return (string.match (actual.output, pattern) ~= nil)
     end,
 
-    format_actual = process_errout,
-
     format_expect = function (expect)
       return " output matching:" .. reformat (expect)
     end,
+
+    format_actual = but_got_output,
 
     format_alternatives = function (adaptor, alternatives)
       return " output matching:" .. reformat (alternatives, adaptor)
@@ -288,14 +311,11 @@ do
       return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
     end,
 
-    format_actual = function (process)
-      return " exit status " .. tostring (process.status) ..
-        ", with output:" .. reformat (process.output) .. nonempty_errout (process)
-    end,
-
     format_expect = function (expect)
       return " exit status 0, with output matching:" .. reformat (expect)
     end,
+
+    format_actual = but_got_status_with_output,
 
     format_alternatives = function (adaptor, alternatives)
       return " exit status 0, with output matching:" .. reformat (alternatives, adaptor)
@@ -309,13 +329,11 @@ do
       return (actual.status ~= 0)
     end,
 
-    format_actual = function (process)
-      return " " .. tostring (process.status) .. nonempty_errout (process)
-    end,
-
     format_expect = function (expect)
       return " non-zero exit status, "
     end,
+
+    format_actual = but_got_status,
   }
 
 
@@ -325,11 +343,11 @@ do
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    format_actual = reformat_errout,
-
     format_expect = function (expect)
       return " error output containing:" .. reformat (expect)
     end,
+
+    format_actual = but_got_errout,
 
     format_alternatives = function (adaptor, alternatives)
       return " error output containing:" .. reformat (alternatives, adaptor)
@@ -343,18 +361,11 @@ do
       return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    format_actual = function (process)
-      local m = " exit status " .. tostring (process.status) ..
-        ", with error:" .. reformat (process.errout)
-      if process.output ~= nil and process.output ~= "" then
-        return m .. "\nand output:" .. reformat (process.output)
-      end
-      return m
-    end,
-
     format_expect = function (expect)
       return " non-zero exit status, with error output containing:" .. reformat (expect)
     end,
+
+    format_actual = but_got_status_with_errout,
 
     format_alternatives = function (adaptor, alternatives)
       return " non-zero exit status, with error output containing:" .. reformat (alternatives, adaptor)
@@ -368,11 +379,11 @@ do
       return (actual.errout == expect)
     end,
 
-    format_actual = reformat_errout,
-
     format_expect = function (expect)
       return " error output:" .. reformat (expect)
     end,
+
+    format_actual = but_got_errout,
 
     format_alternatives = function (adaptor, alternatives)
       return " error output:" .. reformat (alternatives, adaptor)
@@ -386,18 +397,11 @@ do
       return (actual.status ~= 0) and (actual.errout == expect)
     end,
 
-    format_actual = function (process)
-      local m = " exit status " .. tostring (process.status) ..
-        ", with error:" .. reformat (process.errout)
-      if process.output ~= nil and process.output ~= "" then
-        m = m .. "\nand output:" .. reformat (process.output)
-      end
-      return m
-    end,
-
     format_expect = function (expect)
       return " non-zero exit status, with error:" .. reformat (expect)
     end,
+
+    format_actual = but_got_status_with_errout,
 
     format_alternatives = function (adaptor, alternatives)
       return " non-zero exit status, with error:" .. reformat (alternatives, adaptor)
@@ -411,11 +415,11 @@ do
       return (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    format_actual = reformat_errout,
-
     format_expect = function (expect)
       return " error output matching:" .. reformat (expect)
     end,
+
+    format_actual = but_got_errout,
 
     format_alternatives = function (adaptor, alternatives)
       return " error output matching:" .. reformat (alternatives, adaptor)
@@ -429,18 +433,11 @@ do
       return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    format_actual = function (process)
-      local m = " exit status " .. tostring (process.status) ..
-        ", with error:" .. reformat (process.errout)
-      if process.output ~= nil and process.output ~= "" then
-        return m .. "\nand output:" .. reformat (process.output)
-      end
-      return m
-    end,
-
     format_expect = function (expect)
       return " non-zero exit status, with error output matching:" .. reformat (expect)
     end,
+
+    format_actual = but_got_status_with_errout,
 
     format_alternatives = function (adaptor, alternatives)
       return " non-zero exit status, with error output matching:" .. reformat (alternatives, adaptor)
