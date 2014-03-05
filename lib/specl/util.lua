@@ -150,7 +150,7 @@ end
 local function concat (alternatives, infix, quoted)
   infix = infix or ", "
 
-  if quoted then
+  if quoted ~= nil then
     alternatives = map (function (v)
                           if Object.type (v) ~= "string" then
                             return std.string.tostring (v)
@@ -260,9 +260,6 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  -- Constants
-  QUOTED         = true,
-
   -- Functions
   concat         = concat,
   cow            = cow,

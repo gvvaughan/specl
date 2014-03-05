@@ -128,7 +128,7 @@ local Matcher = Object {
 
   format_alternatives = function (adaptor, alternatives)
     return " " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
@@ -320,7 +320,7 @@ matchers.match = Matcher {
 
   format_alternatives = function (adaptor, alternatives)
     return " string matching " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
@@ -411,7 +411,7 @@ matchers.contain = Matcher {
     if type (alternatives) == "string" then
       alternatives = ("%q"):format (alternatives)
     else
-      alternatives = concat (alternatives, adaptor, util.QUOTED)
+      alternatives = concat (alternatives, adaptor, ":quoted")
     end
     return " " .. Object.type (actual) .. " containing " ..
            adaptor .. " " .. alternatives .. ", "

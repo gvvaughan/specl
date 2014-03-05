@@ -196,7 +196,7 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " an exit status of " ..
-             concat (alternatives, adaptor, util.QUOTED) .. ", "
+             concat (alternatives, adaptor, ":quoted") .. ", "
     end,
   }
 
