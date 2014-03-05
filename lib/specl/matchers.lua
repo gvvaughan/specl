@@ -24,22 +24,9 @@ local util  = require "specl.util"
 
 from std        import Object
 from std.string import chomp, escape_pattern, prettytostring, tostring
-from std.table  import clone, empty, size, totable
+from std.table  import clone, clone_rename, empty, merge, size, totable
 
 local M = {}
-
-
--- Merge only the hash part of table <u> into table <t>.
-local function merge_hash (t, u)
-  local ignore = {}
-  for _, v in ipairs (u) do ignore[v] = true end
-
-  for k, v in pairs (u) do
-    if ignore[k] == nil then t[k] = v end
-  end
-
-  return t
-end
 
 
 -- Quote strings nicely, and coerce non-strings into strings.
@@ -88,12 +75,8 @@ local Matcher = Object {
   _type = "Matcher",
 
   _init = function (self, parms)
-    self.matchp = parms[1]
+    merge (self, clone_rename ({"matchp"}, parms))
     util.type_check ("Matcher", {self.matchp}, {"function"})
-
-    -- Overwrite defaults with specified values.
-    self = merge_hash (self, parms)
-
     return self
   end,
 
