@@ -137,13 +137,18 @@ do
   end
 
 
+  -- A Matcher requiring a Process object.
+  local ProcessMatcher = Matcher {
+    function () end, -- dummy
+    actual_type = "Process",
+  }
+
+
   -- Matches if the exit status of a process is <expect>.
-  matchers.exit = Matcher {
+  matchers.exit = ProcessMatcher {
     function (actual, expect)
       return (actual.status == expect)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " " .. tostring (process.status)
@@ -165,12 +170,10 @@ do
 
 
   -- Matches if the exit status of a process is 0.
-  matchers.succeed = Matcher {
+  matchers.succeed = ProcessMatcher {
     function (actual)
       return (actual.status == 0)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " " .. tostring (process.status)
@@ -187,12 +190,11 @@ do
 
 
   -- Matches if the output of a process contains <expect>.
-  matchers.output_containing = Matcher {
+  matchers.output_containing = ProcessMatcher {
     function (actual, expect)
       return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    actual_type   = "Process",
     format_actual = process_errout,
 
     format_expect = function (expect)
@@ -206,12 +208,10 @@ do
 
 
   -- Matches if the process exits normally with output containing <expect>
-  matchers.succeed_while_containing = Matcher {
+  matchers.succeed_while_containing = ProcessMatcher {
     function (actual, expect)
       return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " exit status " .. tostring (process.status) ..
@@ -233,12 +233,11 @@ do
 
 
   -- Matches if the output of a process is exactly <expect>.
-  matchers.output = Matcher {
+  matchers.output = ProcessMatcher {
     function (actual, expect)
       return (actual.output == expect)
     end,
 
-    actual_type   = "Process",
     format_actual = process_errout,
 
     format_expect = function (expect)
@@ -252,12 +251,10 @@ do
 
 
   -- Matches if the process exits normally with output <expect>
-  matchers.succeed_with = Matcher {
+  matchers.succeed_with = ProcessMatcher {
     function (actual, expect)
       return (actual.status == 0) and (actual.output == expect)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " exit status " .. tostring (process.status) ..
@@ -279,12 +276,11 @@ do
 
 
   -- Matches if the output of a process matches <pattern>.
-  matchers.output_matching = Matcher {
+  matchers.output_matching = ProcessMatcher {
     function (actual, pattern)
       return (string.match (actual.output, pattern) ~= nil)
     end,
 
-    actual_type   = "Process",
     format_actual = process_errout,
 
     format_expect = function (expect)
@@ -298,12 +294,10 @@ do
 
 
   -- Matches if the process exits normally with output matching <expect>
-  matchers.succeed_while_matching = Matcher {
+  matchers.succeed_while_matching = ProcessMatcher {
     function (actual, pattern)
       return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " exit status " .. tostring (process.status) ..
@@ -325,12 +319,10 @@ do
 
 
   -- Matches if the exit status of a process is <expect>.
-  matchers.fail = Matcher {
+  matchers.fail = ProcessMatcher {
     function (actual)
       return (actual.status ~= 0)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " " .. tostring (process.status)
@@ -347,12 +339,11 @@ do
 
 
   -- Matches if the error output of a process contains <expect>.
-  matchers.output_error_containing = Matcher {
+  matchers.output_error_containing = ProcessMatcher {
     function (actual, expect)
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    actual_type   = "Process",
     format_actual = reformat_err,
 
     format_expect = function (expect)
@@ -366,12 +357,10 @@ do
 
 
   -- Matches if the process exits normally with output containing <expect>
-  matchers.fail_while_containing = Matcher {
+  matchers.fail_while_containing = ProcessMatcher {
     function (actual, expect)
       return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " exit status " .. tostring (process.status) ..
@@ -393,12 +382,11 @@ do
 
 
   -- Matches if the error output of a process is exactly <expect>.
-  matchers.output_error = Matcher {
+  matchers.output_error = ProcessMatcher {
     function (actual, expect)
       return (actual.errout == expect)
     end,
 
-    actual_type   = "Process",
     format_actual = reformat_err,
 
     format_expect = function (expect)
@@ -412,12 +400,10 @@ do
 
 
   -- Matches if the process exits abnormally with error output <expect>
-  matchers.fail_with = Matcher {
+  matchers.fail_with = ProcessMatcher {
     function (actual, expect)
       return (actual.status ~= 0) and (actual.errout == expect)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " exit status " .. tostring (process.status) ..
@@ -439,12 +425,11 @@ do
 
 
   -- Matches if the error output of a process matches <pattern>.
-  matchers.output_error_matching = Matcher {
+  matchers.output_error_matching = ProcessMatcher {
     function (actual, pattern)
       return (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    actual_type   = "Process",
     format_actual = reformat_err,
 
     format_expect = function (expect)
@@ -458,12 +443,10 @@ do
 
 
   -- Matches if the process exits normally with output matching <expect>
-  matchers.fail_while_matching = Matcher {
+  matchers.fail_while_matching = ProcessMatcher {
     function (actual, pattern)
       return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
     end,
-
-    actual_type   = "Process",
 
     format_actual = function (process)
       local m = " exit status " .. tostring (process.status) ..
