@@ -93,16 +93,16 @@ do
 
   -- Matches if the type of <actual> is <expect>.
   matchers.instantiate_a = Matcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (Object.type (actual) == expect)
     end,
 
-    format_actual = function (actual)
-      return " a " .. Object.type (actual)
+    format_expect = function (self, expect)
+      return " a " .. expect .. ", "
     end,
 
-    format_expect = function (expect)
-      return " a " .. expect .. ", "
+    format_actual = function (self, actual)
+      return " a " .. Object.type (actual)
     end,
   }
 end

@@ -138,27 +138,27 @@ do
 
   -- If a shell command fails to meet an expectation, show anything output
   -- to standard error along with the Specl failure message.
-  local function but_got_output (process)
+  local function but_got_output (self, process)
     return ":" .. reformat (process.output) .. nonempty_errout (process)
   end
 
   -- If a shell command fails to meet an expectation, show everything output
   -- to standard error.
-  local function but_got_errout (process)
+  local function but_got_errout (self, process)
     return ":" .. reformat (process.errout)
   end
 
   -- If a shell command fails to match expected exit status, show
   -- anything output to standard error along with the Specl failure
   -- message.
-  local function but_got_status (process)
+  local function but_got_status (self, process)
     return " " .. tostring (process.status) .. nonempty_errout (process)
   end
 
   -- If a shell command fails to match expected exit status or output,
   -- show anything output to standard error along with the Specl
   -- failure message.
-  local function but_got_status_with_output (process)
+  local function but_got_status_with_output (self, process)
     return " exit status " .. tostring (process.status) ..
            ", with output:" .. reformat (process.output) ..
 	   nonempty_errout (process)
@@ -168,7 +168,7 @@ do
   -- If a shell command fails to match expected exit status or output,
   -- show anything output to standard output along with the Specl
   -- failure message.
-  local function but_got_status_with_errout (process)
+  local function but_got_status_with_errout (self, process)
     return " exit status " .. tostring (process.status) ..
            ", with error:" .. reformat (process.errout) ..
 	   nonempty_output (process)
@@ -184,17 +184,17 @@ do
 
   -- Matches if the exit status of a process is <expect>.
   matchers.exit = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.status == expect)
     end,
 
-    function (expect)
+    function (self, expect)
       return " exit status " .. tostring (expect) .. ", "
     end,
 
     but_got_status,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " an exit status of " ..
              concat (alternatives, adaptor, ":quoted") .. ", "
     end,
@@ -203,11 +203,11 @@ do
 
   -- Matches if the exit status of a process is 0.
   matchers.succeed = ProcessMatcher {
-    function (actual)
+    function (self, actual)
       return (actual.status == 0)
     end,
 
-    function ()
+    function (self, expect)
       return " exit status 0, "
     end,
 
@@ -217,17 +217,17 @@ do
 
   -- Matches if the output of a process contains <expect>.
   matchers.output_containing = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " output containing:" .. reformat (expect)
     end,
 
     but_got_output,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " output containing:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -235,17 +235,17 @@ do
 
   -- Matches if the process exits normally with output containing <expect>
   matchers.succeed_while_containing = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " exit status 0, with output containing:" .. reformat (expect)
     end,
 
     but_got_status_with_output,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " exit status 0, with output containing:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -253,17 +253,17 @@ do
 
   -- Matches if the output of a process is exactly <expect>.
   matchers.output = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.output == expect)
     end,
 
-    function (expect)
+    function (self, expect)
       return " output:" .. reformat (expect)
     end,
 
     but_got_output,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " output:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -271,17 +271,17 @@ do
 
   -- Matches if the process exits normally with output <expect>
   matchers.succeed_with = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.status == 0) and (actual.output == expect)
     end,
 
-    function (expect)
+    function (self, expect)
       return " exit status 0, with output:" .. reformat (expect)
     end,
 
     but_got_status_with_output,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " exit status 0, with output:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -289,17 +289,17 @@ do
 
   -- Matches if the output of a process matches <pattern>.
   matchers.output_matching = ProcessMatcher {
-    function (actual, pattern)
+    function (self, actual, pattern)
       return (string.match (actual.output, pattern) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " output matching:" .. reformat (expect)
     end,
 
     but_got_output,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " output matching:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -307,17 +307,17 @@ do
 
   -- Matches if the process exits normally with output matching <expect>
   matchers.succeed_while_matching = ProcessMatcher {
-    function (actual, pattern)
+    function (self, actual, pattern)
       return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " exit status 0, with output matching:" .. reformat (expect)
     end,
 
     but_got_status_with_output,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " exit status 0, with output matching:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -325,11 +325,11 @@ do
 
   -- Matches if the exit status of a process is <expect>.
   matchers.fail = ProcessMatcher {
-    function (actual)
+    function (self, actual)
       return (actual.status ~= 0)
     end,
 
-    function (expect)
+    function (self, expect)
       return " non-zero exit status, "
     end,
 
@@ -339,17 +339,17 @@ do
 
   -- Matches if the error output of a process contains <expect>.
   matchers.output_error_containing = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " error output containing:" .. reformat (expect)
     end,
 
     but_got_errout,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " error output containing:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -357,17 +357,17 @@ do
 
   -- Matches if the process exits normally with output containing <expect>
   matchers.fail_while_containing = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " non-zero exit status, with error output containing:" .. reformat (expect)
     end,
 
     but_got_status_with_errout,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " non-zero exit status, with error output containing:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -375,17 +375,17 @@ do
 
   -- Matches if the error output of a process is exactly <expect>.
   matchers.output_error = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.errout == expect)
     end,
 
-    function (expect)
+    function (self, expect)
       return " error output:" .. reformat (expect)
     end,
 
     but_got_errout,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " error output:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -393,17 +393,17 @@ do
 
   -- Matches if the process exits abnormally with error output <expect>
   matchers.fail_with = ProcessMatcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (actual.status ~= 0) and (actual.errout == expect)
     end,
 
-    function (expect)
+    function (self, expect)
       return " non-zero exit status, with error:" .. reformat (expect)
     end,
 
     but_got_status_with_errout,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " non-zero exit status, with error:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -411,17 +411,17 @@ do
 
   -- Matches if the error output of a process matches <pattern>.
   matchers.output_error_matching = ProcessMatcher {
-    function (actual, pattern)
+    function (self, actual, pattern)
       return (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " error output matching:" .. reformat (expect)
     end,
 
     but_got_errout,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " error output matching:" .. reformat (alternatives, adaptor)
     end,
   }
@@ -429,17 +429,17 @@ do
 
   -- Matches if the process exits normally with output matching <expect>
   matchers.fail_while_matching = ProcessMatcher {
-    function (actual, pattern)
+    function (self, actual, pattern)
       return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
     end,
 
-    function (expect)
+    function (self, expect)
       return " non-zero exit status, with error output matching:" .. reformat (expect)
     end,
 
     but_got_status_with_errout,
 
-    function (adaptor, alternatives)
+    function (self, adaptor, alternatives)
       return " non-zero exit status, with error output matching:" .. reformat (alternatives, adaptor)
     end,
   }

@@ -526,14 +526,14 @@ comparison.
 Just like the built in matchers described above, you can use the
 `Matcher` factory object from `specl.matchers` to register additional
 custom matchers to make your spec files easier to understand. The
-minimum required is a handler function, which is then called by
-[Specl][] to determine whether the result of the `expect` matches the
-contents of the `to_` argument:
+minimum required is a predicate method, which is then called by
+[Specl][] to determine whether the result of an `expect` parameter
+matches the contents of the `to_` argument:
 
 {% highlight lua %}
     ...
     matchers.Matcher {
-      function (actual, expected)
+      function (self, actual, expected)
         return (actual == expected)
       end,
     }
@@ -556,30 +556,31 @@ You can do this in a `before` block, or your `spec_helper.lua` (see
     matchers = require "specl.matchers"
 
     matchers.matchers.be_again = matchers.Matcher {
-      function (actual, expected)
+      function (self, actual, expected)
     ...
 {% endhighlight %}
 
 Note that the `matchers` table needs to do some work to fully install
 the new `be_again`, and so checks that the assignment is the result
 of a `Matcher` factory call.  Trying to assign anthing else won't
-work.
+work - although nothing stops you from cloning the `Matcher`
+prototype to set default fields and methods prior to assignment.
 
 If you try to use `be_again` as it stands, you'll discover that it
 doesn't display the results from failed expectations as nicely as the
-real `be` matcher - missing the defining *exactly* from the output.
+real `be` matcher - missing the defining "exactly" text in the output.
 To implement additional formatting around the `expected` message, add
-an implementation for the optional `format_expect` key to the `Matcher`
-constructor:
+an implementation for the optional `format_expect` method to the
+`Matcher` constructor:
 
 {% highlight lua %}
     ...
     matchers.matchers.be_again = matchers.Matcher {
-      function (actual, expected)
+      function (self, actual, expected)
         return (actual == expected)
       end,
 
-      format_expect = function (expected)
+      format_expect = function (self, expected)
         return " exactly " .. matchers.stringify (expected)
       end,
     }
@@ -588,28 +589,28 @@ constructor:
 
 Notice the use of `matchers.stringify` to coerce the `expected`
 parameter to a nicely formatted and quoted string.  `stringify` is
-less useful here than it is in the other formatting function slot,
+less useful here than it is in the other formatting method slot,
 `format_actual`.
 
-Both of these functions are passed all of the arguments that are
+Both of these methods are passed all of the arguments that are
 generated in the code wrapped in `expect` that eventually leads to
 the custom matcher, though they are not useful in this particular
 example, the full prototypes are:
 
 {% highlight lua %}
-    function format_expect (expected, actual, ...)
-    function format_actual (actual, expected, ...)
+    function format_expect (self, expected, actual, ...)
+    function format_actual (self, actual, expected, ...)
 {% endhighlight %}
 
 The `specl.shell` custom matchers use this feature if you want to see
 an example of how it can be useful.
 
 Usually, you'll also need to provide nicely formatted messages when
-`any_of` calls fail.  Not surprisingly, you define another function in
-the `Matcher` constructor:
+`any_of` calls fail.  Not surprisingly, to do that, you define another
+method in the `Matcher` constructor:
 
 {% highlight lua %}
-    function format_alternatives (adaptor, alternatives, actual, ...)
+    function format_alternatives (self, adaptor, alternatives, actual, ...)
 {% endhighlight %}
 
 When constructed without a specific `format_alternatives` entry,

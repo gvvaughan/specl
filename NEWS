@@ -116,6 +116,20 @@ Specl NEWS - User visible changes.
       match_output      "     output_matching
       match_error       "     output_error_matching
 
+  - When making custom matchers, all the api constructor functions are
+    now proper methods.  Previous releases forgot the initial self
+    parameter in the unnamed matching predicate function and the
+    following optional functions accepted by the constructor:
+
+      function (self, actual, expect)
+      function format_actual (self, actual, ...)
+      format_expect (self, expect, ...)
+      format_alternatives (self, adaptor, alternatives, ...)
+
+    If you have added any custom matchers to your spec files, be sure
+    to insert the `self` parameter to match the new calling convention
+    as soon as you upgrade, or they will not work with this release.
+
 ** Bug fixes:
 
   - Setting table elements from outer environment tables no longer leak
