@@ -68,6 +68,7 @@ Specl NEWS - User visible changes.
          contents:
 
            expect (...).to_succeed_with "exact content"
+           expect (...).to_succeed_while_matching "pattern"
 
       c) To check the standard error stream instead:
 
@@ -75,10 +76,11 @@ Specl NEWS - User visible changes.
            expect (...).to_output_error_containing  "substring"
            expect (...).to_output_error_matching "pattern"
 
-      e) To require zero exit status with specified error stream
+      e) To require non-zero exit status with specified error stream
          contents:
 
            expect (...).to_fail_with "exact content"
+           expect (...).to_fail_while_matching "pattern"
 
 ** Incompatible changes:
 

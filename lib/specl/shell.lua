@@ -270,6 +270,33 @@ do
   }
 
 
+  -- Matches if the process exits normally with output matching <expect>
+  matchers.succeed_while_matching = Matcher {
+    function (actual, pattern)
+      return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " exit status " .. tostring (process.status) ..
+        ", with output:" .. reformat (process.output)
+      if process.errout ~= nil and process.errout ~= "" then
+        return m .. "\nand error:" .. reformat (process.errout)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " exit status 0, with output matching:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " exit status 0, with output matching:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+
   -- Matches if the exit status of a process is <expect>.
   matchers.fail = Matcher {
     function (actual)
@@ -372,6 +399,33 @@ do
 
     format_alternatives = function (adaptor, alternatives)
       return " error output matching:" .. reformat (alternatives, adaptor)
+    end,
+  }
+
+  
+  -- Matches if the process exits normally with output matching <expect>
+  matchers.fail_while_matching = Matcher {
+    function (actual, pattern)
+      return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
+    end,
+
+    actual_type   = "Process",
+
+    format_actual = function (process)
+      local m = " exit status " .. tostring (process.status) ..
+        ", with error:" .. reformat (process.errout)
+      if process.output ~= nil and process.output ~= "" then
+        return m .. "\nand output:" .. reformat (process.output)
+      end
+      return m
+    end,
+
+    format_expect = function (expect)
+      return " non-zero exit status, with error output matching:" .. reformat (expect)
+    end,
+
+    format_alternatives = function (adaptor, alternatives)
+      return " non-zero exit status, with error output matching:" .. reformat (alternatives, adaptor)
     end,
   }
 end
