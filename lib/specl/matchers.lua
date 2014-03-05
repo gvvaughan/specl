@@ -24,7 +24,7 @@ local util  = require "specl.util"
 
 from std        import Object
 from std.string import chomp, escape_pattern, prettytostring, tostring
-from std.table  import clone, clone_rename, empty, merge, size, totable
+from std.table  import clone, empty, merge, size, totable
 
 local M = {}
 
@@ -74,11 +74,9 @@ end
 local Matcher = Object {
   _type = "Matcher",
 
-  _init = function (self, parms)
-    merge (self, clone_rename ({"matchp"}, parms))
-    util.type_check ("Matcher", {self.matchp}, {"function"})
-    return self
-  end,
+  _init      = {"matchp"},
+  _parmtypes = {"function"},
+
 
   -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
@@ -532,7 +530,7 @@ end
 --[[ ----------------- ]]--
 
 
-return std.table.merge (M, {
+return merge (M, {
   -- Prototypes:
   Matcher   = Matcher,
 

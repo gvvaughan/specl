@@ -232,6 +232,16 @@ local function object_clone (prototype, ...)
     end
   end
 
+  -- Check parameter types when types are specified.
+  if object_mt._parmtypes ~= nil then
+    local _parmnames = object_mt._parmnames or _init
+    if type (_parmnames) == "table" and #_parmnames > 0 then
+      local parmvals = {}
+      for i, v in ipairs (_parmnames) do parmvals[i] = object[v] or object_mt[v] end
+      require "specl.util".type_check (object_mt._type, parmvals, object_mt._parmtypes)
+    end
+  end
+
   return setmetatable (object, object_mt)
 end
 
