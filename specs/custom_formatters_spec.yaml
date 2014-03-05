@@ -44,18 +44,18 @@ describe custom formatters:
       cmd = formatter {
         spec = "function (t) return t[#t] end", yaml = yaml,
       }
-      expect (run_spec (cmd)).to_contain_output "dummy\n"
+      expect (run_spec (cmd)).to_output_containing "dummy\n"
   - it will collect expectations return strings: |
       cmd = formatter {
         expectations = "function (_, t) return t[#t] end", yaml = yaml,
       }
-      expect (run_spec (cmd)).to_contain_output "123\n"
+      expect (run_spec (cmd)).to_output_containing "123\n"
   - it will collect spec return table keys:
       cmd = formatter { spec =
         "function (t) return {[1] = table.concat (t, '>'), [2] = t[#t]} end",
         yaml = yaml,
       }
-      expect (run_spec (cmd)).to_contain_output "{1=dummy,2=dummy}"
+      expect (run_spec (cmd)).to_output_containing "{1=dummy,2=dummy}"
   - it will collect expectations return table keys:
       cmd = formatter { expectations =
         "function (_, t)\n" ..
@@ -64,4 +64,4 @@ describe custom formatters:
         yaml = yaml,
       }
       expect (run_spec (cmd)).
-        to_contain_output "{1=dummy>1;dummy>2;dummy>3;,2=123}"
+        to_output_containing "{1=dummy>1;dummy>2;dummy>3;,2=123}"
