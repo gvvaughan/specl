@@ -27,7 +27,8 @@ from util import map, nop, strip1st, timesince
 
 -- Color writing.
 local function writc (want_color, ...)
-  return io.write (color (want_color, ...))
+  io.stdout:write (color (want_color, ...))
+  io.stdout:flush ()
 end
 
 
@@ -39,8 +40,8 @@ end
 
 -- Use '>' as a marker for currently executing expectation.
 local function header ()
-  io.write (">")
-  io.flush ()
+  io.stdout:write (">")
+  io.stdout:flush ()
 end
 
 
@@ -49,7 +50,8 @@ end
 local function expectations (status, descriptions, opts)
   reports = { fail = "", pend = "" }
 
-  io.write ("\08")
+  io.stdout:write ("\08")
+  io.stdout:flush ()
 
   local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
 
@@ -104,8 +106,8 @@ local function expectations (status, descriptions, opts)
                  ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
   end
-  io.write (">")
-  io.flush ()
+  io.stdout:write (">")
+  io.stdout:flush ()
 
   -- Add description titles.
   if reports.pend ~= "" then
