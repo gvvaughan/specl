@@ -23,8 +23,6 @@
 
 SPECL= $(srcdir)/bin/specl
 
-SPECL_ENV = SPECL=$(SPECL) LUA_PATH="$(srcdir)/lib/?.lua;$(LUA_PATH)"
-
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/custom_formatters_spec.yaml	\
