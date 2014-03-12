@@ -19,23 +19,23 @@ describe matcher:
   - it displays expected and actual output for failures:
       yaml = preamble .. "(1).to_be 'one'"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting exactly "one", but got 1'
+        to_contain_output 'expecting exactly "one", but got 1'
   - it displays all expected and actual output for all_of failures:
       yaml = preamble .. "(3).to_be.all_of {'five', 2, 1}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting all of "five", 2 and 1, but got 3'
+        to_contain_output 'expecting all of "five", 2 and 1, but got 3'
   - it displays all expected and actual output for any_of failures:
       yaml = preamble .. "(3).to_be.any_of {'five', 2, 1}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting any of "five", 2 or 1, but got 3'
+        to_contain_output 'expecting any of "five", 2 or 1, but got 3'
   - it displays the normal format where all_of has only one alternative:
       yaml = preamble .. "(3).to_be.all_of {'five'}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting exactly "five", but got 3'
+        to_contain_output 'expecting exactly "five", but got 3'
   - it displays the normal format where any_of has only one alternative:
       yaml = preamble .. "(3).to_be.any_of {'five'}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting exactly "five", but got 3'
+        to_contain_output 'expecting exactly "five", but got 3'
 
   - context with 'to_be':
     - it succeeds when comparing identical objects:
@@ -46,13 +46,13 @@ describe matcher:
         expect (3).to_be.all_of {1 + 2, 3, 4 - 1}
     - it fails when comparing different objects:
         yaml = preamble .. "(1).to_be 'one'"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object is not any of the alternatives:
         yaml = preamble .. "(3).to_be.any_of {5, 2, 1}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object is not all of the alternatives:
         yaml = preamble .. "(3).to_be.all_of {1 + 2, 3, 4}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
   - context with 'not_to_be':
     - it succeeds when comparing different objects:
@@ -63,13 +63,13 @@ describe matcher:
         expect (3).not_to_be.all_of {5, 2, 1}
     - it fails when comparing identical objects:
         yaml = preamble .. "(1).not_to_be (1)"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object is any of the alternatives:
         yaml = preamble .. "(2).not_to_be.any_of {5, 2, 1}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object is all of the alternatives:
         yaml = preamble .. "(3).not_to_be.all_of {1 + 2, 3, 4 + 5 - 6}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
   - context with 'to_not_be':
     - it succeeds when comparing different objects:
@@ -80,83 +80,83 @@ describe matcher:
         expect (3).to_not_be.all_of {5, 2, 1}
     - it fails when comparing identical objects:
         yaml = preamble .. "(1).to_not_be (1)"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object is any of the alternatives:
         yaml = preamble .. "(2).to_not_be.any_of {5, 2, 1}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object is all of the alternatives:
         yaml = preamble .. "(3).to_not_be.all_of {1 + 2, 3, 4 + 5 - 6}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
 - describe equal:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('str').to_equal {'table'}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting {1=table}, but got "str"'
+        to_contain_output 'expecting {1=table}, but got "str"'
   - it displays all expected and actual output for all_of failures:
       yaml = preamble .. "('str').to_equal.all_of {'table', 'number'}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting all of "table" and "number", but got "str"'
+        to_contain_output 'expecting all of "table" and "number", but got "str"'
   - it displays all expected and actual output for any_of failures:
       yaml = preamble .. "('str').to_equal.any_of {'table', 'number'}"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting any of "table" or "number", but got "str"'
+        to_contain_output 'expecting any of "table" or "number", but got "str"'
 
   - context with 'to_equal':
     - it succeeds when comparing equal objects:
         expect ({}).to_equal {}
     - it makes a deep comparison of table elements:
         yaml = preamble .. deep .. ".to_equal " .. deep
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when object equals all of the alternatives:
         yaml = preamble .. deep ..
                ".to_equal.all_of {" .. deep .. ", " .. deep .. "}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when object equals any of the alternatives:
         yaml = preamble .. deep .. ".to_equal.any_of {0, {0}, " .. deep .. "}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when extended objects have equal contents:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
                "to_equal (hell.Process {1, 'good', 'bad'})"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when extended object equals all of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_equal." ..
                "all_of {hell.Process {1, 'good', 'bad'}, " ..
                "hell.Process {1, 'good', 'bad'}}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when extended object equals any of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_equal." ..
                "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
                "hell.Process {1, 'good', 'bad'}}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it fails when comparing unequal objects:
         yaml = preamble .. "('str').to_equal {'table'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object does not equal all of the alternatives:
         yaml = preamble .. "('str').to_equal.all_of {'str', 'table'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object does not equal any of the alternatives:
         yaml = preamble .. "('str').to_equal.any_of {0, {0}, 'table'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended objects have unequal types:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
                "to_equal (hell.Command {1, 'good', 'bad'})"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended objects have unequal contents:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
                "to_equal (hell.Process {2, 'good', 'bad'})"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended object does not equal all of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_equal." ..
                "all_of {hell.Process {1, 'good', 'bad'}, " ..
                "hell.Process {1, 'good', 'bad'}, 'another thing'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended object does not equal any of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_equal." ..
                "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
                "hell.Process {2, 'good', 'bad'}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
   - context with 'not_to_equal':
     - it succeeds when comparing unequal objects:
@@ -168,44 +168,44 @@ describe matcher:
     - it succeeds when extended objects have unequal types:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
                "not_to_equal (hell.Command {1, 'good', 'bad'})"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when extended objects have unequal contents:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
                "not_to_equal (hell.Process {2, 'good', 'bad'})"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when extended object does not equal all of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_equal." ..
                "all_of {hell.Process {1, 'good', 'bad'}, " ..
                "hell.Process {1, 'good', 'bad'}, 'another thing'}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when extended object does not equal any of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_equal." ..
                "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
                "hell.Process {2, 'good', 'bad'}}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it fails when comparing equal objects:
         yaml = preamble .. "({1, {2}}).not_to_equal {1, {2}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object equals all of the alternatives:
         yaml = preamble .. "({1, {2}}).not_to_equal.all_of {{1, {2}}, {1, {2}}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when object does not equal any of the alternatives:
         yaml = preamble .. "({1, {2}}).not_to_equal.any_of {{1, {2}}, 3, {4}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended objects have equal contents:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
                "not_to_equal (hell.Process {1, 'good', 'bad'})"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended object equals all of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_equal." ..
                "all_of {hell.Process {1, 'good', 'bad'}, " ..
                "hell.Process {1, 'good', 'bad'}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when extended object equals any of the alternatives:
         yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_equal." ..
                "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
                "hell.Process {1, 'good', 'bad'}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
 - describe contain:
@@ -224,21 +224,21 @@ describe matcher:
     - it displays expected and actual output for failures:
         yaml = preamble .. "('tilde').to_contain '~'"
         expect (run_spec (yaml)).
-          to_output_containing 'expecting string containing "~", but got "tilde"'
+          to_contain_output 'expecting string containing "~", but got "tilde"'
     - it displays expected and actual output for a_permutation_of failures:
         yaml = preamble .. "('tilde').to_contain.a_permutation_of ('elite')"
         expect (run_spec (yaml)).
-          to_output_containing ('expecting string containing a permutation of ' ..
+          to_contain_output ('expecting string containing a permutation of ' ..
                              '"elite", but got "tilde"')
     - it displays all expected and actual output for all_of failures:
         yaml = preamble .. "('tilde').to_contain.all_of {'t', 'i', 'de', '~'}"
         expect (run_spec (yaml)).
-          to_output_containing ('expecting string containing all of "t",' ..
+          to_contain_output ('expecting string containing all of "t",' ..
                              ' "i", "de" and "~", but got "tilde"')
     - it displays all expected and actual output for any_of failures:
         yaml = preamble .. "('tilde').to_contain.any_of {'~', 'x', 'foo', 9}"
         expect (run_spec (yaml)).
-          to_output_containing ('expecting string containing any of "~",' ..
+          to_contain_output ('expecting string containing any of "~",' ..
                              ' "x", "foo" or 9, but got "tilde"')
     - context while called normally:
       - it succeeds if the substring is present:
@@ -254,19 +254,19 @@ describe matcher:
            to_contain.any_of {"Cornish", "English", "Gaelic"}
       - it fails if the substring is absent:
           yaml = preamble .. "('English Language').to_contain '~'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if a permutation of the listed string is absent:
           yaml = preamble .. "('english language').to_contain." ..
                  "a_permutation_of 'engaged languish'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails of any of the listed substrings is absent:
           yaml = preamble .. "('English Language').to_contain." ..
                  "all_of {'ngl', 'ngu', 'ngz'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails of none of the listed substrings is present:
           yaml = preamble .. "('English Language').to_contain." ..
                  "any_of {'Celtic', 'Cornish', 'Gaelic'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
     - context while called with not_ prefix:
       - it succeeds if the substring is absent:
           expect ("English Language").not_to_contain "~"
@@ -281,19 +281,19 @@ describe matcher:
             any_of {"Celtic", "Cornish", "Gaelic"}
       - it fails if the substring is present:
           yaml = preamble .. "('English Language').not_to_contain 'e'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if a permutation of the listed string is present:
           yaml = preamble .. "('english language').not_to_contain."..
                  "a_permutation_of 'ungenial haggles'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if all of the listed substrings are present:
           yaml = preamble .. "('English Language').not_to_contain." ..
                  "all_of {'English', 'Language', 'ish'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if any of the listed substrings is present:
           yaml = preamble .. "('English Language').not_to_contain." ..
                  "any_of {'British', 'English', 'Language'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
   - context when receiving a table:
     - before:
@@ -306,220 +306,220 @@ describe matcher:
     - it displays expected and actual output for failures: |
         yaml = preamble .. "({'one', 'two', 'five'}).to_contain 'three'"
         expect (run_spec (yaml)).
-          to_output_matching ("expecting table containing \"three\", but got:\n" ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*%[1%] = \"one\",\n" ..
-                                "%s*|%s*%[2%] = \"two\",\n" ..
-                                "%s*|%s*%[3%] = \"five\",\n" ..
-                                "%s*| %}\n")
+          to_match_output ("expecting table containing \"three\", but got:\n" ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*%[1%] = \"one\",\n" ..
+                           "%s*|%s*%[2%] = \"two\",\n" ..
+                           "%s*|%s*%[3%] = \"five\",\n" ..
+                           "%s*| %}\n")
     - it displays all expected and actual output for a_permutation_of failures:
         yaml = preamble .. "({'one', 'two'}).to_contain.a_permutation_of {'three', 'four'}"
         expect (run_spec (yaml)).
-          to_output_matching ('expecting table containing a permutation of "three" and "four", but got:\n' ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*%[1%] = \"one\",\n" ..
-                                "%s*|%s*%[2%] = \"two\",\n" ..
-                                "%s*| %}\n")
+          to_match_output ('expecting table containing a permutation of "three" and "four", but got:\n' ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*%[1%] = \"one\",\n" ..
+                           "%s*|%s*%[2%] = \"two\",\n" ..
+                           "%s*| %}\n")
     - it displays all expected and actual output for all_of failures:
         yaml = preamble .. "({'one', 'two', 'five'})." ..
                "to_contain.all_of {'one', 'three'}"
         expect (run_spec (yaml)).
-          to_output_matching ('expecting table containing all of "one" and "three", but got:\n' ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*%[1%] = \"one\",\n" ..
-                                "%s*|%s*%[2%] = \"two\",\n" ..
-                                "%s*|%s*%[3%] = \"five\",\n" ..
-                                "%s*| %}\n")
+          to_match_output ('expecting table containing all of "one" and "three", but got:\n' ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*%[1%] = \"one\",\n" ..
+                           "%s*|%s*%[2%] = \"two\",\n" ..
+                           "%s*|%s*%[3%] = \"five\",\n" ..
+                           "%s*| %}\n")
     - it displays all expected and actual output for any_of failures:
         yaml = preamble .. "({'one', 'two', 'five'}).to_contain.any_of {'three', 'seven'}"
         expect (run_spec (yaml)).
-          to_output_matching ('expecting table containing any of "three" or "seven", but got:\n' ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*%[1%] = \"one\",\n" ..
-                                "%s*|%s*%[2%] = \"two\",\n" ..
-                                "%s*|%s*%[3%] = \"five\",\n" ..
-                                "%s*| %}\n")
+          to_match_output ('expecting table containing any of "three" or "seven", but got:\n' ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*%[1%] = \"one\",\n" ..
+                           "%s*|%s*%[2%] = \"two\",\n" ..
+                           "%s*|%s*%[3%] = \"five\",\n" ..
+                           "%s*| %}\n")
 
     - context while called normally:
       - it succeeds if the element is a table value:
           yaml = preamble .. vals .. ".to_contain 'five'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if listed elements are a permutation of table values:
           yaml = preamble .. vals .. ".to_contain." ..
                  "a_permutation_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if all listed elements are a table value:
           yaml = preamble .. vals .. ".to_contain." ..
                  "all_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if any listed element is a table value:
           yaml = preamble .. vals .. ".to_contain." ..
                  "any_of {'three', 'four', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if the element is a table key:
           yaml = preamble .. keys .. ".to_contain 'five'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if listed elements are a permutation of table keys:
           yaml = preamble .. keys .. ".to_contain." ..
                  "a_permutation_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if all listed elements are a table key:
           yaml = preamble .. keys .. ".to_contain." ..
                  "all_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if any listed element is a table key:
           yaml = preamble .. keys .. ".to_contain." ..
                  "any_of {'three', 'four', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds with a one-deep match of a table element:
           yaml = preamble .. deep .. ".to_contain { 'subtable 2' }"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if both tables contain the same elements:
           yaml = preamble .. deep .. ".to_contain." ..
           "a_permutation_of {{'subtable 2'}, {'subtable 1', {'sub-subtable'}}}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if all elements are common to both tables:
           yaml = preamble .. deep .. ".to_contain." ..
           "all_of {{'subtable 2'}, 2}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if there is a common element in both tables:
           yaml = preamble .. deep .. ".to_contain." ..
                  "any_of { 1, 'subtable 2', {3} }"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if the element is not a table value:
           yaml = preamble .. vals .. ".to_contain 'three'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if listed elements are not a permutation of table values:
           yaml = preamble .. vals .. ".to_contain." ..
                  "a_permutation_of {'one', 'two', 'nine'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if the there are any missing elements:
           yaml = preamble .. vals .. ".to_contain." ..
                  "all_of {'one', 'two', 'nine'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if the there are no common elements:
           yaml = preamble .. vals .. ".to_contain." ..
                  "any_of {'three', 'three', 'nine'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if the element is not a table key:
           yaml = preamble .. keys .. ".to_contain 'three'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails any element is not also a table key:
           yaml = preamble .. keys .. ".to_contain." ..
                  "a_permutation_of {'one', 'two', 'three'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails any element is not also a table key:
           yaml = preamble .. keys .. ".to_contain." ..
                  "all_of {'one', 'two', 'three'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if no element is also a table key:
           yaml = preamble .. keys .. ".to_contain." ..
                  "any_of {'three', 'three', 'nine'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if either table contains a unique element:
           yaml = preamble .. deep .. ".to_contain." ..
           "a_permutation_of {{'subtable 1'}, {'subtable 2', {'sub-subtable'}}}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if there are any elements missing from the table:
           yaml = preamble .. deep .. ".to_contain." ..
                 "all_of { 'one', 'subtable 1', {3} }"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if there are no common elements to both tables:
           yaml = preamble .. deep .. ".to_contain." ..
                 "any_of { 'one', 'subtable 1', {3} }"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context while called with not_ prefix:
       - it succeeds if the element is not a table value:
           yaml = preamble .. vals .. ".not_to_contain 'three'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if listed elements are not a permutation of table values:
           yaml = preamble .. vals .. ".not_to_contain." ..
                  "a_permutation_of {'one', 'two', 'nine'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if all listed elements are not table values:
           yaml = preamble .. vals .. ".not_to_contain." ..
                  "all_of {'three', 'three', 'six'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if no listed element is a table value:
           yaml = preamble .. vals .. ".not_to_contain." ..
                  "any_of {'three', 'three', 'six'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if the element is not a table key:
           yaml = preamble .. keys .. ".not_to_contain 'three'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds any element is not also a table key:
           yaml = preamble .. keys .. ".not_to_contain." ..
                  "a_permutation_of {'one', 'two', 'three'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if all listed elements are not table keys:
           yaml = preamble .. keys .. ".not_to_contain." ..
                  "all_of {'three', 'three', 'six'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if no listed element is a table key:
           yaml = preamble .. keys .. ".not_to_contain." ..
                  "any_of {'three', 'three', 'six'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds with no one-deep match of a table element:
           yaml = preamble .. deep .. ".not_to_contain { 'subtable 1' }"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if either table contains a unique element:
           yaml = preamble .. deep .. ".not_to_contain." ..
           "a_permutation_of {{'subtable 1'}, {'subtable 2', {'sub-subtable'}}}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if there are no elements common to both tables:
           yaml = preamble .. deep .. ".not_to_contain." ..
                  "all_of { 'subtable 1' }"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it succeeds if there are no elements common to both tables:
           yaml = preamble .. deep .. ".not_to_contain." ..
                  "any_of { 'subtable 1' }"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if the element is a table value:
           yaml = preamble .. vals .. ".not_to_contain 'five'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if listed elements are a permutation of table values:
           yaml = preamble .. vals .. ".not_to_contain." ..
                  "a_permutation_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if all listed elements are table values:
           yaml = preamble .. vals .. ".not_to_contain." ..
                  "all_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if any listed element is a table value:
           yaml = preamble .. vals .. ".not_to_contain." ..
                  "any_of {'three', 'four', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if the element is a table key:
           yaml = preamble .. keys .. ".not_to_contain 'five'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if listed elements are a permutation of table keys:
           yaml = preamble .. keys .. ".not_to_contain." ..
                  "a_permutation_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if all listed elements are table keys:
           yaml = preamble .. keys .. ".not_to_contain." ..
                  "all_of {'one', 'two', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if any listed element is a table key:
           yaml = preamble .. keys .. ".not_to_contain." ..
                  "any_of {'three', 'four', 'five'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails with a one-deep match of a table element:
           yaml = preamble .. deep .. ".not_to_contain { 'subtable 2' }"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if both tables contain the same elements:
           yaml = preamble .. deep .. ".not_to_contain." ..
           "a_permutation_of {{'subtable 2'}, {'subtable 1', {'sub-subtable'}}}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if all elements are in both tables:
           yaml = preamble .. deep .. ".not_to_contain." ..
                 "all_of {1, { 'subtable 2' }}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it fails if there is a common element in both tables:
           yaml = preamble .. deep .. ".not_to_contain." ..
                 "any_of {1, { 'subtable 2' }, {3}}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
   # Any object derived table will do, but since we already have specl.shell
   # loaded, let's use the shell.Process object for these examples.
@@ -531,139 +531,139 @@ describe matcher:
     - it displays expected and actual output for failures: |
         yaml = preamble .. "_contain 'nothing'"
         expect (run_spec (yaml)).
-          to_output_matching ("expecting Process containing \"nothing\", but got:\n" ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*errout = \"bad\",\n" ..
-                                "%s*|%s*output = \"good\",\n" ..
-                                "%s*|%s*status = 1,\n" ..
-                                "%s*| %}\n")
+          to_match_output ("expecting Process containing \"nothing\", but got:\n" ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*errout = \"bad\",\n" ..
+                           "%s*|%s*output = \"good\",\n" ..
+                           "%s*|%s*status = 1,\n" ..
+                           "%s*| %}\n")
     - it displays all expected and actual output for a_permutation_of failures:
         yaml = preamble ..  "_contain.a_permutation_of {'good', 'bad', 0}"
         expect (run_spec (yaml)).
-          to_output_matching ('expecting Process containing a permutation of "good", "bad" and 0, but got:\n' ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*errout = \"bad\",\n" ..
-                                "%s*|%s*output = \"good\",\n" ..
-                                "%s*|%s*status = 1,\n" ..
-                                "%s*| %}\n")
+          to_match_output ('expecting Process containing a permutation of "good", "bad" and 0, but got:\n' ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*errout = \"bad\",\n" ..
+                           "%s*|%s*output = \"good\",\n" ..
+                           "%s*|%s*status = 1,\n" ..
+                           "%s*| %}\n")
     - it displays all expected and actual output for all_of failures:
         yaml = preamble ..  "_contain.all_of {'1', 'bad'}"
         expect (run_spec (yaml)).
-          to_output_matching ('expecting Process containing all of "1" and "bad", but got:\n' ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*errout = \"bad\",\n" ..
-                                "%s*|%s*output = \"good\",\n" ..
-                                "%s*|%s*status = 1,\n" ..
-                                "%s*| %}\n")
+          to_match_output ('expecting Process containing all of "1" and "bad", but got:\n' ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*errout = \"bad\",\n" ..
+                           "%s*|%s*output = \"good\",\n" ..
+                           "%s*|%s*status = 1,\n" ..
+                           "%s*| %}\n")
     - it displays all expected and actual output for any_of failures:
         yaml = preamble ..  "_contain.any_of {'0', 0, 'zero'}"
         expect (run_spec (yaml)).
-          to_output_matching ('expecting Process containing any of "0", 0 or "zero", but got:\n' ..
-                                "%s*| %{\n" ..
-                                "%s*|%s*errout = \"bad\",\n" ..
-                                "%s*|%s*output = \"good\",\n" ..
-                                "%s*|%s*status = 1,\n" ..
-                                "%s*| %}\n")
+          to_match_output ('expecting Process containing any of "0", 0 or "zero", but got:\n' ..
+                           "%s*| %{\n" ..
+                           "%s*|%s*errout = \"bad\",\n" ..
+                           "%s*|%s*output = \"good\",\n" ..
+                           "%s*|%s*status = 1,\n" ..
+                           "%s*| %}\n")
 
     - context with 'to_':
       - it succeeds if the element is a table value:
           yaml = preamble .. "_contain 'good'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if the element is not a table value:
           yaml = preamble .. "_contain 'marvellous'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if listed elements are a permutation of table values:
           yaml = preamble ..  "_contain.a_permutation_of {'bad', 1, 'good'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if listed elements are not a permutation of table values:
           yaml = preamble ..  "_contain.a_permutation_of {'bad', 1, 'bad'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if all listed elements are a table value:
           yaml = preamble ..  "_contain.all_of {1, 'good', 'bad'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if all listed elements are not a table value:
           yaml = preamble ..  "_contain.all_of {1, 'marvellous', 'bad'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if any listed element is a table value:
           yaml = preamble .. "_contain.any_of {0, 1, 67, 99, 123}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it falis if no listed element is a table value:
           yaml = preamble .. "_contain.any_of {0, -1, -67, -99, -123}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if the element is a table key:
           yaml = preamble .. "_contain 'status'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if the element is not a table key:
           yaml = preamble .. "_contain 'heinous'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if listed elements are a permutation of table keys:
           yaml = preamble ..  "_contain.a_permutation_of {'status', 'output', 'errout'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if listed elements are not a permutation of table keys:
           yaml = preamble ..  "_contain.a_permutation_of {'status', 'output', 'errout', 1}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if all listed elements are a table key:
           yaml = preamble ..  "_contain.all_of {'status', 'output', 'errout'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if all listed elements are not a table key:
           yaml = preamble ..  "_contain.all_of {'heinous', 'output', 'errout'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if any listed element is a table key:
           yaml = preamble .. "_contain.any_of {'static', 'statue', 'status'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it falis if no listed element is a table key:
           yaml = preamble .. "_contain.any_of {'tragus', 'heinous', 'anus'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context with 'not_to_':
       - it succeeds if the element is not a table value:
           yaml = preamble .. "_not_contain 'marvellous'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if the element is a table value:
           yaml = preamble .. "_not_contain 'good'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if listed elements are not a permutation of table values:
           yaml = preamble ..  "_not_contain.a_permutation_of {1, 'bad'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if listed elements are a permutation of table values:
           yaml = preamble ..  "_not_contain.a_permutation_of {'bad', 1, 'good'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if all listed elements are not a table value:
           yaml = preamble ..  "_not_contain.all_of {1, 'marvellous', 'bad'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if all listed elements are a table value:
           yaml = preamble ..  "_not_contain.all_of {1, 'good', 'bad'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if no listed element is a table value:
           yaml = preamble .. "_not_contain.any_of {0, -1, -67, -99, -123}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it falis if any listed element is a table value:
           yaml = preamble .. "_not_contain.any_of {0, 1, 67, 99, 123}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if the element is not a table key:
           yaml = preamble .. "_not_contain 'heinous'"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if the element is a table key:
           yaml = preamble .. "_not_contain 'status'"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if listed elements are not a permutation of table keys:
           yaml = preamble ..  "_not_contain.a_permutation_of {'errout', 'errout', 'errout'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if listed elements are a permutation of table keys:
           yaml = preamble ..  "_not_contain.a_permutation_of {'errout', 'status', 'output'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if all listed elements are not a table key:
           yaml = preamble ..  "_not_contain.all_of {'heinous', 'output', 'errout'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it fails if all listed elements are a table key:
           yaml = preamble ..  "_not_contain.all_of {'status', 'output', 'errout'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
       - it succeeds if no listed element is a table key:
           yaml = preamble .. "_not_contain.any_of {'tragus', 'heinous', 'anus'}"
-          expect (run_spec (yaml)).to_output_containing (pass_all)
+          expect (run_spec (yaml)).to_contain_output (pass_all)
       - it falis if any listed element is a table key:
           yaml = preamble .. "_not_contain.any_of {'static', 'statue', 'status'}"
-          expect (run_spec (yaml)).to_output_containing (fail_1)
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
 - describe match:
   - it diagnoses non-string arguments:
@@ -671,16 +671,16 @@ describe matcher:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('no digits').to_match '%d+'"
       expect (run_spec (yaml)).
-        to_output_containing 'expecting string matching "%d+", but got "no digits"'
+        to_contain_output 'expecting string matching "%d+", but got "no digits"'
   - it displays all expected and actual output for all_of failures:
       yaml = preamble .. "('no digits').to_match.all_of {'%d+', 'digits'}"
       expect (run_spec (yaml)).
-        to_output_containing ('expecting string matching all of "%d+" and "digits", ' ..
+        to_contain_output ('expecting string matching all of "%d+" and "digits", ' ..
                            'but got "no digits"')
   - it displays all expected and actual output for any_of failures:
       yaml = preamble .. "('no digits').to_match.any_of {'%d+', '^digits$'}"
       expect (run_spec (yaml)).
-        to_output_containing ('expecting string matching any of "%d+" or "^digits$", ' ..
+        to_contain_output ('expecting string matching any of "%d+" or "^digits$", ' ..
                            'but got "no digits"')
 
   - context with 'match':
@@ -692,15 +692,15 @@ describe matcher:
         expect ("English Language").to_match.any_of {"^%w+", "~", "e"}
     - it fails if the pattern does not match:
         yaml = preamble .. "('English Language').to_match '%d+'"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if any of the listed patterns match:
         yaml = preamble .. "('English Language').to_match." ..
                "all_of {'^[A-Za-z]*$', 'French Language', '%d+'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if none of the listed patterns match:
         yaml = preamble .. "('English Language').to_match." ..
               "any_of {'^[a-z]*$', 'French Language', '%d+'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
   - context with 'not_match':
     - it succeeds if the pattern does not match:
         expect ("English Language").not_to_match "%d+"
@@ -712,43 +712,43 @@ describe matcher:
           any_of {"^[a-z]*$", "Amarican Language", "%d+"}
     - it fails if the pattern matches:
         yaml = preamble .. "('English Language').not_to_match '^%w+%s'"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if all of the listed patterns match:
         yaml = preamble .. "('English Language').not_to_match." ..
                "all_of {'^[A-Za-z%s]+$', '^%w+%s', '%D+'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if any of the listed patterns match:
         yaml = preamble .. "('English Language').not_to_match." ..
                "any_of {'^[a-z]+$', '^%w+%s', '%d+'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
 - describe error:
   - it displays expected and actual output for failures: |
       yaml = preamble .. "(error 'cheese').to_error 'ham'"
       expect (run_spec (yaml)).
-        to_output_matching ('expecting an error containing:\n' ..
-                             '%s*| ham\n' ..
-                             '%s*but got:\n' ..
-                             '%s*| .*cheese')
+        to_match_output ('expecting an error containing:\n' ..
+                        '%s*| ham\n' ..
+                        '%s*but got:\n' ..
+                        '%s*| .*cheese')
   - it displays all expected and actual output for all_of failures: |
       yaml = preamble .. "(error 'cheese').to_error.all_of {'green eggs', 'ham'}"
       expect (run_spec (yaml)).
-        to_output_matching ('expecting an error containing all of:\n' ..
-                             '%s*| green eggs\n' ..
-                             '%s*and:\n' ..
-                             '%s*| ham\n' ..
-                             '%s*but got:\n' ..
-                             '%s*| .*cheese')
+        to_match_output ('expecting an error containing all of:\n' ..
+                        '%s*| green eggs\n' ..
+                        '%s*and:\n' ..
+                        '%s*| ham\n' ..
+                        '%s*but got:\n' ..
+                        '%s*| .*cheese')
   - it displays all expected and actual output for any_of failures: |
       yaml = preamble .. "(error 'cheese').to_error.any_of {'green eggs', 'ham'}"
       expect (run_spec (yaml)).
-        to_output_matching ('expecting an error containing any of:\n' ..
-                             '%s*| green eggs\n' ..
-                             '%s*or:\n' ..
-                             '%s*| ham\n' ..
-                             '%s*but got:\n' ..
-                             '%s*| .*cheese')
+        to_match_output ('expecting an error containing any of:\n' ..
+                        '%s*| green eggs\n' ..
+                        '%s*or:\n' ..
+                        '%s*| ham\n' ..
+                        '%s*but got:\n' ..
+                        '%s*| .*cheese')
 
   - context with 'error':
     - it succeeds if there is an error that contains the message:
@@ -763,21 +763,21 @@ describe matcher:
         expect (error "error message").to_error ()
     - it fails if there is an error that does not contain the message:
         yaml = preamble .. "(error 'error message').to_error 'failed'"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is an error that does not contain all listed messages:
         yaml = preamble .. "(error 'error message').to_error." ..
                "all_of {'error', 'message', 'exploded'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is an error that does not contain any listed message:
         yaml = preamble .. "(error 'error message').to_error." ..
                "any_of {'failed', 'succeeded', 'exploded'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is no error nor any message argument:
         yaml = preamble .. "('not an error').to_error ()"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is no error:
         yaml = preamble .. "('not an error').to_error 'error'"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
   - context with 'not_error':
     - it succeeds if there is no error:
         expect ("not an error").not_to_error "error"
@@ -790,14 +790,14 @@ describe matcher:
           any_of {"failed", "suceeded", "exploded"}
     - it fails if there is any error with no message argument:
         yaml = preamble .. "(error 'error message').not_to_error ()"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is an error that contains the message:
         yaml = preamble .. "(error 'error message').not_to_error 'error'"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is an error that contains any listed message:
         yaml = preamble .. "(error 'error message').not_to_error." ..
                "any_of {'fail', 'error', 'bogus'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
 - describe using custom adaptor:
   - before: |
@@ -817,37 +817,37 @@ describe matcher:
 
   - it diagnoses incompatible expect arguments:
       yaml = preamble .. "(1).to_equal.the_size_of {}"
-      expect (run_spec (yaml)).to_output_error_containing "table expected"
+      expect (run_spec (yaml)).to_contain_error "table expected"
   - it diagnoses incompatible adaptor arguments:
       yaml = preamble .. "({}).to_equal.the_size_of (1)"
-      expect (run_spec (yaml)).to_output_error_containing "table expected"
+      expect (run_spec (yaml)).to_contain_error "table expected"
   - it diagnoses unsupported matchers:
       yaml = preamble .. "({}).to_contain.the_size_of ({})"
       expect (run_spec (yaml)).
-        to_output_error_containing "unknown 'the_size_of' adaptor with 'to_contain'"
+        to_contain_error "unknown 'the_size_of' adaptor with 'to_contain'"
   - it displays the expected and actual output for failures:
       yaml = preamble .. "({1, 2, 3}).to_equal.the_size_of {'one'}"
       expect (run_spec (yaml)).
-        to_output_containing "expecting a table the same size as "
+        to_contain_output "expecting a table the same size as "
 
   - context with 'equal':
     - it succeeds if both tables are empty:
         yaml = preamble .. "({}).to_equal.the_size_of {}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds if both tables are the same size:
         yaml = preamble .. "({1, 2}).to_equal.the_size_of {{3}, 'four'}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it fails if the tables are not the same size:
         yaml = preamble .. "({1, 2}).to_equal.the_size_of {{3, 'four'}}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
 
   - context with 'not_equal':
     - it succeeds if the tables are not the same size:
         yaml = preamble .. "({1, 2}).not_to_equal.the_size_of {{3, 'four'}}"
-        expect (run_spec (yaml)).to_output_containing (pass_all)
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it fails if both tables are the same size:
         yaml = preamble .. "({1, 2}).not_to_equal.the_size_of {{3}, 'four'}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if both tables are empty:
         yaml = preamble .. "({}).not_to_equal.the_size_of {}"
-        expect (run_spec (yaml)).to_output_containing (fail_1)
+        expect (run_spec (yaml)).to_contain_output (fail_1)

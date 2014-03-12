@@ -66,8 +66,8 @@ Specl NEWS - User visible changes.
       b) For checking the contents of the output stream, use:
 
            expect (...).to_output "exact content"
-           expect (...).to_output_containing  "substring"
-           expect (...).to_output_matching "pattern"
+           expect (...).to_contain_output  "substring"
+           expect (...).to_match_output "pattern"
 
       d) To require zero exit status with specified output stream
          contents:
@@ -79,8 +79,8 @@ Specl NEWS - User visible changes.
       c) To check the standard error stream instead:
 
            expect (...).to_output_error "exact content"
-           expect (...).to_output_error_containing  "substring"
-           expect (...).to_output_error_matching "pattern"
+           expect (...).to_contain_error "substring"
+           expect (...).to_match_error "pattern"
 
       e) To require non-zero exit status with specified error stream
          contents:
@@ -108,18 +108,6 @@ Specl NEWS - User visible changes.
     to safely continue to use your existing spec files indefinitely: But
     all mention of `should_` has been removed from documentation, and I
     recommend you use `to_` for new spec files for the reasons above.
-
-  - The number of matchers in `specl.shell` is now large enough that
-    the arbitrary names are hard to remember without looking them up,
-    so they now follow a consistent naming convention, which required
-    renaming some matchers.  If you have been using the undocumented
-    names please rename the following accordingly in your spec files
-    after upgrading your Specl installation:
-
-      contain_output  is now  output_containing
-      contain_error     "     output_error_containing
-      match_output      "     output_matching
-      match_error       "     output_error_matching
 
   - When making custom matchers, all the api constructor functions are
     now proper methods.  Previous releases forgot the initial self

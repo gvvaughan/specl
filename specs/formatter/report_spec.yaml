@@ -9,9 +9,9 @@ describe report:
   - it exits with zero status: |
       expect (run_spec (argt)).to_exit (0)
   - it reports no expectations:
-      expect (run_spec (argt)).to_output_containing "No expectations met."
+      expect (run_spec (argt)).to_contain_output "No expectations met."
   - it reports a pending example:
-      expect (run_spec (argt)).to_output_containing ", 1 pending "
+      expect (run_spec (argt)).to_contain_output ", 1 pending "
 
 
 - context with pending call from empty example:
@@ -24,16 +24,16 @@ describe report:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met."
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching ", 1 pending "
+        expect (run_spec (argt)).to_match_output ", 1 pending "
     - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is pending %(PENDING example: not yet implemented%)\n"
         )
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending: %(PENDING example: not yet implemented%)\n"
         )
@@ -44,16 +44,16 @@ describe report:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met."
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching ", 1 pending "
+        expect (run_spec (argt)).to_match_output ", 1 pending "
     - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is pending %(PENDING example: not yet implemented%)\n"
         )
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending: %(PENDING example: not yet implemented%)\n"
         )
@@ -69,16 +69,16 @@ describe report:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met."
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching ", 1 pending "
+        expect (run_spec (argt)).to_match_output ", 1 pending "
     - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is pending %(PENDING example: see issue 123%)\n"
         )
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending: %(PENDING example: see issue 123%)\n"
         )
@@ -89,16 +89,16 @@ describe report:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met."
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching ", 1 pending "
+        expect (run_spec (argt)).to_match_output ", 1 pending "
     - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is pending %(PENDING example: see issue 123%)\n"
         )
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending: %(PENDING example: see issue 123%)\n"
         )
@@ -116,16 +116,16 @@ describe report:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met."
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching ", 1 pending "
+        expect (run_spec (argt)).to_match_output ", 1 pending "
     - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is pending %(1 pending%)\n"
         )
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending:\n" ..
           "  PENDING expectation 1: see issue 123\n"
@@ -137,17 +137,17 @@ describe report:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met."
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching ", 1 pending "
+        expect (run_spec (argt)).to_match_output ", 1 pending "
     - it appends pending summary to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is pending\n" ..
           "    %-:3:1: PENDING expectation 1: see issue 123\n"
         )
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- report is pending:\n" ..
           "  %-:3:1: PENDING expectation 1: see issue 123\n"
@@ -166,16 +166,16 @@ describe report:
         expect (run_spec (argt)).not_to_exit (0)
     - it reports 0% expectations met:
         expect (run_spec (argt)).
-          to_output_containing "Met 0.00% of 1 expectations."
+          to_contain_output "Met 0.00% of 1 expectations."
     - it reports the failing example:
-        expect (run_spec (argt)).to_output_matching " 1 failed "
+        expect (run_spec (argt)).to_match_output " 1 failed "
     - it appends failing suffix to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is failing %(1 failing%)\n"
         )
     - it lists failing example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of failed expectations:\n" ..
           "%- report is failing:\n" ..
           "  FAILED expectation 1: expecting exactly 0, but got 1\n"
@@ -188,18 +188,18 @@ describe report:
         expect (run_spec (argt)).not_to_exit (0)
     - it reports 0% expectations met:
         expect (run_spec (argt)).
-          to_output_containing "Met 0.00% of 1 expectations."
+          to_contain_output "Met 0.00% of 1 expectations."
     - it reports the failing example:
-        expect (run_spec (argt)).to_output_matching " 1 failed "
+        expect (run_spec (argt)).to_match_output " 1 failed "
     - it appends failing summary to the example output: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "report\n" ..
           "  is failing\n" ..
           "    %-:3:1: FAILED expectation 1:\n" ..
           "    expecting exactly 0, but got 1\n"
         )
     - it lists failing example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of failed expectations:\n" ..
           "%- report is failing:\n" ..
           "  %-:3:1: FAILED expectation 1:\n" ..

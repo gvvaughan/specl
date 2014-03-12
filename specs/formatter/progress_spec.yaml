@@ -9,9 +9,9 @@ describe progress:
   - it exits with zero status:
       expect (run_spec (argt)).to_exit (0)
   - it reports no expectations:
-      expect (run_spec (argt)).to_output_containing "No expectations met,"
+      expect (run_spec (argt)).to_contain_output "No expectations met,"
   - it reports a pending example:
-      expect (run_spec (argt)).to_output_containing " 1 still pending,"
+      expect (run_spec (argt)).to_contain_output " 1 still pending,"
 
 
 - context with pending call from empty example:
@@ -24,13 +24,13 @@ describe progress:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met,"
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching " 1 still pending,"
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
     - it displays an asterisk for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*%*%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*%*%S"
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- progress is pending: %(PENDING example: not yet implemented%)\n"
         )
@@ -41,13 +41,13 @@ describe progress:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met,"
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching " 1 still pending,"
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
     - it displays an asterisk for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*%*%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*%*%S"
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- progress is pending: %(PENDING example: not yet implemented%)\n"
         )
@@ -63,13 +63,13 @@ describe progress:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met,"
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching " 1 still pending,"
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
     - it displays an asterisk for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*%*%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*%*%S"
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- progress is pending: %(PENDING example: see issue 123%)\n"
         )
@@ -80,13 +80,13 @@ describe progress:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met,"
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching " 1 still pending,"
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
     - it displays an asterisk for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*%*%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*%*%S"
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- progress is pending: %(PENDING example: see issue 123%)\n"
         )
@@ -104,13 +104,13 @@ describe progress:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met,"
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching " 1 still pending,"
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
     - it displays an asterisk for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*%*%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*%*%S"
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- progress is pending:\n" ..
           "  PENDING expectation 1: see issue 123\n"
@@ -122,13 +122,13 @@ describe progress:
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_output_containing "No expectations met,"
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_output_matching " 1 still pending,"
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
     - it displays an asterisk for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*%*%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*%*%S"
     - it lists pending example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
           "%- progress is pending:\n" ..
           "  %-:3:1: PENDING expectation 1: see issue 123\n"
@@ -146,11 +146,11 @@ describe progress:
     - it exits with non-zero status:
         expect (run_spec (argt)).not_to_exit (0)
     - it reports the failing example:
-        expect (run_spec (argt)).to_output_matching " 1 failed "
+        expect (run_spec (argt)).to_match_output " 1 failed "
     - it displays an F for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*F%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*F%S"
     - it lists failing example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of failed expectations:\n" ..
           "%- progress is failing:\n" ..
           "  FAILED expectation 1: expecting exactly 0, but got 1\n"
@@ -162,11 +162,11 @@ describe progress:
     - it exits with non-zero status:
         expect (run_spec (argt)).not_to_exit (0)
     - it reports the failing example:
-        expect (run_spec (argt)).to_output_matching " 1 failed "
+        expect (run_spec (argt)).to_match_output " 1 failed "
     - it displays an F for a pending example:
-        expect (run_spec (argt)).to_output_matching "^[^\\n]*F%S"
+        expect (run_spec (argt)).to_match_output "^[^\\n]*F%S"
     - it lists failing example in report summary: |
-        expect (run_spec (argt)).to_output_matching (
+        expect (run_spec (argt)).to_match_output (
           "Summary of failed expectations:\n" ..
           "%- progress is failing:\n" ..
           "  %-:3:1: FAILED expectation 1:\n" ..

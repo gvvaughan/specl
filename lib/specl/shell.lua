@@ -226,7 +226,7 @@ do
 
 
   -- Matches if the output of a process contains <expect>.
-  matchers.output_containing = ProcessMatcher {
+  matchers.contain_output = ProcessMatcher {
     function (self, actual, expect)
       return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
@@ -267,7 +267,7 @@ do
 
 
   -- Matches if the output of a process matches <pattern>.
-  matchers.output_matching = ProcessMatcher {
+  matchers.match_output = ProcessMatcher {
     function (self, actual, pattern)
       return (string.match (actual.output, pattern) ~= nil)
     end,
@@ -302,7 +302,7 @@ do
 
 
   -- Matches if the error output of a process contains <expect>.
-  matchers.output_error_containing = ProcessMatcher {
+  matchers.contain_error = ProcessMatcher {
     function (self, actual, expect)
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
@@ -344,7 +344,7 @@ do
 
 
   -- Matches if the error output of a process matches <pattern>.
-  matchers.output_error_matching = ProcessMatcher {
+  matchers.match_error = ProcessMatcher {
     function (self, actual, pattern)
       return (string.match (actual.errout, pattern) ~= nil)
     end,

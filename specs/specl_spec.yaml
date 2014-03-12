@@ -7,9 +7,9 @@ describe specl:
     - it exits with zero status:
         expect (run_spec (yaml)).to_exit (0)
     - it complains with no expectations:
-        expect (run_spec (yaml)).to_output_containing "No expectations met, "
+        expect (run_spec (yaml)).to_contain_output "No expectations met, "
     - it treats it as a pending example:
-        expect (run_spec (yaml)).to_output_matching "%*.*1 still pending"
+        expect (run_spec (yaml)).to_match_output "%*.*1 still pending"
 
   - context with pending call from example:
     - it exits with zero status:
@@ -17,15 +17,15 @@ describe specl:
         expect (run_spec (yaml)).to_exit (0)
     - it reports pending expectations:
         yaml = yaml .. " pending ()"
-        expect (run_spec (yaml)).to_output_matching "%*.*1 still pending"
+        expect (run_spec (yaml)).to_match_output "%*.*1 still pending"
     - it reports unexpected pending passes: |
         yaml = yaml .. "\n    pending ()\n    expect (1).to_be (1)"
         expect (run_spec (yaml)).
-          to_output_matching "%?.*PENDING expectation 1: .*passed unexpectedly"
+          to_match_output "%?.*PENDING expectation 1: .*passed unexpectedly"
     - it uses pending argument for pending passes: |
         yaml = yaml .. " |\n    pending 'issue #23'\n    expect (1).to_be (1)"
         expect (run_spec (yaml)).
-          to_output_matching "%?.*PENDING expectation 1.*issue #23.*passed unexpectedly"
+          to_match_output "%?.*PENDING expectation 1.*issue #23.*passed unexpectedly"
 
   - context with libYAML parse error in spec file:
     - before:
@@ -35,21 +35,21 @@ describe specl:
     - it diagnoses spurious question mark: |
         tmp:append (" ?\n    garbage")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path .. ":2:3: mapping keys are not allowed")
+          to_contain_error (tmp.path .. ":2:3: mapping keys are not allowed")
     - it diagnoses spurious braces in plain scalar: |
         tmp:append ("\n    { garbage")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path ..
+          to_contain_error (tmp.path ..
                             ":4:1: did not find expected ',' or '}'")
     - it diagnoses spurious bracket in plain scalar: |
         tmp:append ("\n    [ garbage")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path ..
+          to_contain_error (tmp.path ..
                             ":3:7: did not find expected ',' or ']'")
     - it diagnoses missing colon in badly indented line: |
         tmp:append ("\nprint ':'")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path .. ":3:1: could not find expected ':'")
+          to_contain_error (tmp.path .. ":3:1: could not find expected ':'")
 
   - context with LuaMacro parse error in macro expansion:
     - before:
@@ -59,21 +59,21 @@ describe specl:
     - it diagnoses missing parenthesis in 'expect' call: |
         tmp:append ("\n    expect (fn (x ()).to_be {}")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path .. ":3: parse error near 'expect'")
+          to_contain_error (tmp.path .. ":3: parse error near 'expect'")
     - it diagnoses spurious paretheses in 'expect' call: |
         tmp:append (" |" ..
                  "\n    expect (fn (x ()))" ..
                  "\n      ).to_be {}")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path .. ":4: unexpected symbol near ')'")
+          to_contain_error (tmp.path .. ":4: unexpected symbol near ')'")
     - it diagnoses missing parentheses before 'expect' call: |
         tmp:append ("\n    garbage ( expect (1).to_be (0) foo")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path .. ":3: ')' expected near 'foo'")
+          to_contain_error (tmp.path .. ":3: ')' expected near 'foo'")
     - it diagnoses spurious parentheses before 'expect' call: |
         tmp:append ("\n    ) expect (1).to_be (0)")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_containing (tmp.path .. ":3: unexpected symbol near ')'")
+          to_contain_error (tmp.path .. ":3: unexpected symbol near ')'")
 
   - context with Lua error in first line of example:
     - before:
@@ -84,23 +84,23 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         tmp:append (example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":3: .* near 'garbage'")
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         tmp:append (" |" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":3: .* near 'garbage'")
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML folded style: |
         tmp:append (" >" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":3: .* near 'garbage'")
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         tmp:append (" '" .. example .. "'")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":3: .* near 'garbage'")
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         tmp:append (' "' .. example .. '"')
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":3: .* near 'garbage'")
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
 
   - context with Lua error in multi-line example:
     - before:
@@ -111,23 +111,23 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         tmp:append (example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":5: .* near 'garbage'")
+          to_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         tmp:append (" |" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":5: .* near 'garbage'")
+          to_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML folded style: |
         tmp:append (" >" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":5: .* near 'garbage'")
+          to_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         tmp:append (" '" .. example .. "'")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":5: .* near 'garbage'")
+          to_match_error (tmp.path .. ":5: .* near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         tmp:append (' "' .. example .. '"')
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":5: .* near 'garbage'")
+          to_match_error (tmp.path .. ":5: .* near 'garbage'")
 
   - context with Lua error in multi-example spec-file:
     - before: |
@@ -143,23 +143,23 @@ describe specl:
     - it reports filename and line number for YAML plain style: |
         tmp:append (example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":8: .* near 'garbage'")
+          to_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML literal style: |
         tmp:append (" |" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":8: .* near 'garbage'")
+          to_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML folded style: |
         tmp:append (" >" .. example)
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":8: .* near 'garbage'")
+          to_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML single-quoted style: |
         tmp:append (" '" .. example .. "'")
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":8: .* near 'garbage'")
+          to_match_error (tmp.path .. ":8: .* near 'garbage'")
     - it reports filename and line number for YAML double-quoted style: |
         tmp:append (' "' .. example .. '"')
         expect (run_spec {"--color=no", tmp.path}).
-          to_output_error_matching (tmp.path .. ":8: .* near 'garbage'")
+          to_match_error (tmp.path .. ":8: .* near 'garbage'")
 
 - describe command line interface:
   - before: |
@@ -167,21 +167,21 @@ describe specl:
 
   - it diagnoses unrecognised options: |
       expect (run_spec {"--notarealoption", stdin = yaml}).
-        to_output_error_containing "error: unrecognised option '--notarealoption'"
+        to_contain_error "error: unrecognised option '--notarealoption'"
       expect (run_spec {"-,", stdin = yaml}).
-        to_output_error_containing "error: unrecognised option '-,'"
+        to_contain_error "error: unrecognised option '-,'"
   - it reads a spec from standard input with no arguments:
-      expect (run_spec (yaml)).to_output_containing "All expectations met in "
+      expect (run_spec (yaml)).to_contain_output "All expectations met in "
   - it reads a spec from standard input for '-' filename argument:
       expect (run_spec {"-"; stdin = yaml}).
-        to_output_containing "All expectations met in "
+        to_contain_output "All expectations met in "
   - it exits with zero status when there are no failing examples:
       expect (run_spec (yaml)).to_exit (0)
   - it exits with non-zero status when there are failing examples: |
       yaml = "describe x:\n- it fails: expect (1).to_be (0)"
       expect (run_spec (yaml)).not_to_exit (0)
   - it outputs results from a formatter specified on the command line:
-      expect (run_spec {"--formatter=tap"; stdin = yaml}).to_output_containing "1..1"
+      expect (run_spec {"--formatter=tap"; stdin = yaml}).to_contain_output "1..1"
 
   - context when using a custom formatter:
     - before: |
@@ -226,10 +226,10 @@ describe specl:
 
     - it supports selection by string:
         expect (run_spec {"-e", "fails", stdin = yaml}).
-          to_output_containing "\n0 passed, 0 pending, and 2 failed "
+          to_contain_output "\n0 passed, 0 pending, and 2 failed "
     - it supports selection by pattern:
         expect (run_spec {"-e", "%w+%s*again", stdin = yaml}).
-          to_output_containing "\n0 passed, 0 pending, and 1 failed "
+          to_contain_output "\n0 passed, 0 pending, and 1 failed "
 
   - context when filtering by line number:
     - before: |
@@ -242,10 +242,10 @@ describe specl:
 
     - it reports failing line number in verbose mode: |
         expect (run_spec {"-v", stdin = yaml}).
-          to_output_containing "  -:5:1: FAILED expectation 1"
+          to_contain_output "  -:5:1: FAILED expectation 1"
     - it runs all examples without a line filter:
         expect (run_spec {"-v", stdin = yaml}).
-          to_output_containing "\n1 passed, 1 pending, and 1 failed "
+          to_contain_output "\n1 passed, 1 pending, and 1 failed "
 
     - context by filename:
       - before: tmp = Tmpfile (yaml)
@@ -254,61 +254,61 @@ describe specl:
 
       - it runs only the failing example with a matching line filter:
           expect (run_spec {"-v", "+5", stdin = yaml}).
-            to_output_containing "\n0 passed, 0 pending, and 1 failed "
+            to_contain_output "\n0 passed, 0 pending, and 1 failed "
       - it accepts multiple line numbers before the filtered spec file:
           expect (run_spec {"-v", "+3", "+5", stdin = yaml}).
-            to_output_containing "\n1 passed, 0 pending, and 1 failed "
+            to_contain_output "\n1 passed, 0 pending, and 1 failed "
       - it only filters the immediately following spec file: |
           spec = Tmpfile (yaml .. "    expect (0).to_be (0)\n")
           expect (run_spec {"-v", "+3", spec.path, stdin = yaml}).
-            to_output_containing "\n2 passed, 1 pending, and 1 failed "
+            to_contain_output "\n2 passed, 1 pending, and 1 failed "
           expect (run_spec {"-v", "+5", spec.path, stdin = yaml}).
-            to_output_containing "\n1 passed, 1 pending, and 2 failed "
+            to_contain_output "\n1 passed, 1 pending, and 2 failed "
           expect (run_spec {"-v", "+7", spec.path, stdin = yaml}).
-            to_output_containing "\n2 passed, 1 pending, and 1 failed "
+            to_contain_output "\n2 passed, 1 pending, and 1 failed "
           spec:remove ()
       - it accepts a line number suffix to a spec file:
           expect (run_spec {"-freport", tmp.path .. ":3"}).
-            to_output_containing "\n1 passed, 0 pending and 0 failed "
+            to_contain_output "\n1 passed, 0 pending and 0 failed "
           expect (run_spec {"-freport", tmp.path .. ":5"}).
-            to_output_containing "\n0 passed, 0 pending and 1 failed "
+            to_contain_output "\n0 passed, 0 pending and 1 failed "
           expect (run_spec {"-freport", tmp.path .. ":6"}).
-            to_output_containing "\n0 passed, 1 pending and 0 failed "
+            to_contain_output "\n0 passed, 1 pending and 0 failed "
       - it ignores column or expectation suffix to a spec file:
           expect (run_spec {"-freport", tmp.path .. ":3:1"}).
-            to_output_containing "\n1 passed, 0 pending and 0 failed "
+            to_contain_output "\n1 passed, 0 pending and 0 failed "
           expect (run_spec {"-freport", tmp.path .. ":5:3"}).
-            to_output_containing "\n0 passed, 0 pending and 1 failed "
+            to_contain_output "\n0 passed, 0 pending and 1 failed "
           expect (run_spec {"-freport", tmp.path .. ":6:999"}).
-            to_output_containing "\n0 passed, 1 pending and 0 failed "
+            to_contain_output "\n0 passed, 1 pending and 0 failed "
 
     - context by stdin:
       - it runs only the failing example with a matching line filter:
           expect (run_spec {"-v", "+5", stdin = yaml}).
-            to_output_containing "\n0 passed, 0 pending, and 1 failed "
+            to_contain_output "\n0 passed, 0 pending, and 1 failed "
       - it accepts multiple line numbers before the filtered spec file:
           expect (run_spec {"-v", "+3", "+5", stdin = yaml}).
-            to_output_containing "\n1 passed, 0 pending, and 1 failed "
+            to_contain_output "\n1 passed, 0 pending, and 1 failed "
       - it only filters the immediately following spec file: |
           spec = Tmpfile (yaml .. "    expect (0).to_be (0)\n")
           expect (run_spec {"-v", spec.path, "+3", stdin = yaml}).
-            to_output_containing "\n3 passed, 0 pending, and 1 failed "
+            to_contain_output "\n3 passed, 0 pending, and 1 failed "
           expect (run_spec {"-v", spec.path, "+5", stdin = yaml}).
-            to_output_containing "\n2 passed, 0 pending, and 2 failed "
+            to_contain_output "\n2 passed, 0 pending, and 2 failed "
           expect (run_spec {"-v", spec.path, "+6", stdin = yaml}).
-            to_output_containing "\n2 passed, 1 pending, and 1 failed "
+            to_contain_output "\n2 passed, 1 pending, and 1 failed "
           spec:remove ()
       - it accepts a line number suffix to a spec file:
           expect (run_spec {"-freport", "-:3", stdin = yaml}).
-            to_output_containing "\n1 passed, 0 pending and 0 failed "
+            to_contain_output "\n1 passed, 0 pending and 0 failed "
           expect (run_spec {"-freport", "-:5", stdin = yaml}).
-            to_output_containing "\n0 passed, 0 pending and 1 failed "
+            to_contain_output "\n0 passed, 0 pending and 1 failed "
           expect (run_spec {"-freport", "-:6", stdin = yaml}).
-            to_output_containing "\n0 passed, 1 pending and 0 failed "
+            to_contain_output "\n0 passed, 1 pending and 0 failed "
       - it ignores column or expectation suffix to a spec file:
           expect (run_spec {"-freport", "-:3:1", stdin = yaml}).
-            to_output_containing "\n1 passed, 0 pending and 0 failed "
+            to_contain_output "\n1 passed, 0 pending and 0 failed "
           expect (run_spec {"-freport", "-:5:3", stdin = yaml}).
-            to_output_containing "\n0 passed, 0 pending and 1 failed "
+            to_contain_output "\n0 passed, 0 pending and 1 failed "
           expect (run_spec {"-freport", "-:6:999", stdin = yaml}).
-            to_output_containing "\n0 passed, 1 pending and 0 failed "
+            to_contain_output "\n0 passed, 1 pending and 0 failed "
