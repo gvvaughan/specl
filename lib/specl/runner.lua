@@ -25,6 +25,7 @@ local util       = require "specl.util"
 
 
 from std.string import slurp, split
+from util       import map, strip1st
 
 
 --[[ ================================= ]]--
@@ -199,15 +200,27 @@ function run_examples (state, examples, descriptions, env)
 
     local keepgoing = true
     if definition.example then
-      local filters = state.spec.filters
 
       -- An example, execute it in a clean new sub-environment; as long
       -- as there are no filters, or the filters for the source line of
-      -- this definition is true.
+      -- this definition or inclusive example pattern is true.
 
-      if filters == nil or filters[definition.line] == true then
-        table.insert (descriptions, description)
+      local filters = state.spec.filters
+      local inclusive = (filters == nil) or (filters[definition.line])
 
+      table.insert (descriptions, description)
+
+      if not inclusive then
+	local source = table.concat (map (strip1st, descriptions))
+        for _, pattern in ipairs (filters.inclusive or {}) do
+          if source:match (pattern) then
+            inclusive = true
+	    break
+	  end
+	end
+      end
+
+      if inclusive then
         matchers.init ()
 
         setfenv (definition.example, fenv)
@@ -219,14 +232,14 @@ function run_examples (state, examples, descriptions, env)
         }, matchers.status ())
 	formatter:accumulator (formatter.expectations (status, descriptions, state.opts))
 
-        table.remove (descriptions)
-
         if state.opts.fail_fast then
           for _, expectation in ipairs (status.expectations) do
             if expectation.status == false then keepgoing = false end
           end
         end
       end
+
+      table.remove (descriptions)
 
     else
       -- A nested context, revert back to run_contexts.

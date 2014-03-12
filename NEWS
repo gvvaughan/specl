@@ -29,7 +29,12 @@ Specl NEWS - User visible changes.
     expectations immediately on the first failure, rather than
     continuing and showing all failures.
 
-  - You can now filter out all but the examples at a specified line
+  - New command line option `--example=PATTERN` (or `-e PATTERN`) to specify
+    inclusive filters matched against the fully concatenated YAML
+    descriptions of an example. Use this to select a subset of examples to
+    (re)check.
+
+  - You can also filter out all but the examples at a specified line
     number either by pasting from the output of a failed or pending
     expectation in verbose mode, by invoking specl as:
 

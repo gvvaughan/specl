@@ -24,6 +24,8 @@ local runner  = require "specl.runner"
 local std     = require "specl.std"
 local util    = require "specl.util"
 
+from std.table import merge
+
 -- Make a shallow copy of the pristine global environment, so that the
 -- future state of the Specl environment is not exposed to spec files.
 local global = {}
@@ -53,18 +55,23 @@ If no FILE is listed, then run specifications for all files from the
 
 Where '-' is given as a FILE, then read from standard input.
 
-      --help            print this help, then exit
-      --version         print version number, then exit
-      --color=WHEN      request colorized formatter output [default=yes]
-  -1, --fail-fast       exit immediately on first failed example
-  -f, --formatter=FILE  use a specific formatter [default=progress]
-      --unicode         allow unicode in spec files
-  -v, --verbose         request verbose formatter output
+      --help             print this help, then exit
+      --version          print version number, then exit
+      --color=WHEN       request colorized formatter output [default=yes]
+  -1, --fail-fast        exit immediately on first failed example
+  -f, --formatter=FILE   use a specific formatter [default=progress]
+      --unicode          allow unicode in spec files
+  -v, --verbose          request verbose formatter output
 
 Filtering:
 
-  +NN                   check only the example at line NN in next FILE
-  FILE:NN[:MM]          check only the example at line NN in this FILE
+  -e, --example=PATTERN  check only the examples matching PATTERN
+  +NN                    check only the example at line NN in next FILE
+  FILE:NN[:MM]           check only the example at line NN in this FILE
+
+When filtering by PATTERN, an example is considered a match if PATTERN
+matches the concatenation of nested YAML descriptions leading directly
+to that example in its spec file.
 
 You can specify +NN (where NN is a line number) multiple times for the
 next specified FILE, or interspersed to specify different line filters
@@ -116,13 +123,19 @@ local function compile (self, arg)
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
   end
+
+  -- Add example opts to each spec file to simplify filtering later.
+  if self.opts.example ~= nil then
+    self.filters = merge (self.filters or {}, {inclusive = self.opts.example})
+  end
+
   table.insert (self.specs, {
     filename = arg,
     examples = loader.load (arg, s, self.opts.unicode),
     filters  = self.filters,
   })
 
-  -- Filters have been claimed.
+  -- Line filters have been claimed.
   self.filters = nil
 end
 
@@ -185,6 +198,11 @@ local function execute (self)
              parser.required, formatter_opthandler)
 
   self.arg, self.opts = parser:parse (self.arg, self.opts)
+
+  -- When opt.example is non-nil, it must be a table.
+  if self.opts.example and type (self.opts.example) ~= "table" then
+    self.opts.example = { self.opts.example }
+  end
 
   -- Process all specfiles when none are given explicitly.
   if #self.arg == 0 then

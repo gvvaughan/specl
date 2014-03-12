@@ -1075,6 +1075,48 @@ The output will display results using the default `progress` formatter.
 To use the `report` formatter instead, add the `-freport`
 option to the command line above.
 
+For finer grained selection of a subset of examples than by file,
+[Specl][] accepts any number of filters to match against the full nested
+[YAML][] path to each example, using the `--example=PATTERN` option.
+Given the following spec-file:
+
+{% highlight lua %}
+specify module:
+- context group one:
+  - it passes:
+      expect (1).to_be (1)
+  - it hasn't decided yet:
+- context group two:
+  - it fails:
+      expect (1).to_be (0)
+  - it fails again:
+      expect (0).to_be (1)
+{% endhighlight %}
+
+The full name of an example is made by starting at the nearest top level
+[YAML][] description field, and concatenating all of the nested
+descriptions that lead to the example itself, but leaving off the very
+first word of each.  For example, you can tell `specl` to check the
+first two examples, named `module group one passes` and `module group
+one hasn't decided yet` like this:
+
+{% highlight bash %}
+    specl --example 'group one'
+{% endhighlight %}
+
+[Specl][] will run all examples that match any one (or more) of the
+`--example` (or `-e`) arguments you give it.  Those arguments are
+interpreted as [Lua patterns][], so you must be careful to escape any
+pattern meta-characters with an additional `%` (percent) character.
+Other than that, each argument is matched against the concatenated
+description path leading to each example with respect to pattern anchors
+and the like, so you could include the final example in addition to the
+first group selected above as follows:
+
+{% highlight bash %}
+    specl --e 'group one' -e '%w+%s*again$'
+{% endhighlight %}
+
 When invoked with `--verbose`, the `progress` and `report` formatters
 display pending and failing examples with a `filename:NN:EE` prefix;
 where `filename` is the name of the spec file containing the non-passing
@@ -1142,3 +1184,4 @@ No support for mocks in the current version.
 [rspec]: http://github.com/rspec/rspec
 [specl]: http://github.com/gvvaughan/specl
 [yaml]:  http//yaml.org
+[lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1

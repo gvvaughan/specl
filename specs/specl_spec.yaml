@@ -211,6 +211,26 @@ describe specl:
         }
         expect (run_spec (command)).to_output "hs.f"
 
+  - context when filtering by pattern:
+    - before: |
+        yaml = "specify module:\n" ..
+               "- context group one:\n" ..
+               "  - it passes:\n" ..
+               "      expect (1).to_be (1)\n" ..
+               "  - it hasn't decided yet:\n" ..
+               "- context group two:\n" ..
+               "  - it fails:\n" ..
+               "      expect (1).to_be (0)\n" ..
+               "  - it fails again:\n" ..
+               "      expect (0).to_be (1)\n"
+
+    - it supports selection by string:
+        expect (run_spec {"-e", "fails", stdin = yaml}).
+          to_output_containing "\n0 passed, 0 pending, and 2 failed "
+    - it supports selection by pattern:
+        expect (run_spec {"-e", "%w+%s*again", stdin = yaml}).
+          to_output_containing "\n0 passed, 0 pending, and 1 failed "
+
   - context when filtering by line number:
     - before: |
         yaml = "specify specl:\n" ..
