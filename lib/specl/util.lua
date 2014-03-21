@@ -183,8 +183,9 @@ local function type_error (name, i, arglist, typelist)
   if Object.type (expected) ~= "table" then expected = {expected} end
   expected = concat (expected, " or "):gsub ("#table", "non-empty table")
 
-  error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
-         expected .. " expected, got " .. actual .. ")", 3)
+  error ("bad argument #" .. tostring (i) .. " to '" .. name ..
+         "' (" .. expected .. " expected, got " .. actual .. ")\n" ..
+	 "received: '" .. tostring (arglist[i]) .. "'", 3)
 end
 
 
