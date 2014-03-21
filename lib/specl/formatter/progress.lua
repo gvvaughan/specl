@@ -38,20 +38,10 @@ local function princ (want_color, ...)
 end
 
 
--- Use '>' as a marker for currently executing expectation.
-local function header ()
-  io.stdout:write (">")
-  io.stdout:flush ()
-end
-
-
 -- Print '.' for passed, or 'F' for failed expectation.
 -- Update '>' position.
 local function expectations (status, descriptions, opts)
   reports = { fail = "", pend = "" }
-
-  io.stdout:write ("\08")
-  io.stdout:flush ()
 
   local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
 
@@ -106,7 +96,6 @@ local function expectations (status, descriptions, opts)
                  ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
   end
-  io.stdout:write (">")
   io.stdout:flush ()
 
   -- Add description titles.
@@ -128,8 +117,6 @@ end
 -- Report statistics.
 local function footer (stats, reports, opts)
   local total = stats.pass + stats.fail
-
-  print "\08 "
 
   print ()
   if reports and reports.pend ~= "" then
@@ -174,7 +161,7 @@ end
 
 
 local M = {
-  header       = header,
+  header       = nop,
   spec         = nop,
   expectations = expectations,
   footer       = footer,
