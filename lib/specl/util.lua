@@ -32,7 +32,7 @@ if have_posix then
 
   files = function (root)
     local t = {}
-    for _, file in ipairs (posix.dir (root)) do
+    for _, file in ipairs (posix.dir (root) or {}) do
       if file ~= "." and file ~= ".." then
         local path = std.io.catfile (root, file)
         if posix.stat (path).type == "directory" then
