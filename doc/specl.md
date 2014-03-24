@@ -344,9 +344,31 @@ following expectations all pass:
 {% endraw %}
 {% endhighlight %}
 
-### 2.3. contain
+### 2.3. copy
 
-[contain]: #23_contain
+[copy]: #23_copy
+
+Like `equal`, this matcher is also useful for comparing tables, or
+std.object derived objects, and usually gives the same results.
+However, `copy` will fail if the result of `expect` is the exact same
+object as the matcher argument.  The following example:
+
+{% highlight lua %}
+    t = {"foo"}
+    expect (table.clone (t)).to_copy (t)
+{% endhighlight %}
+
+is equivalent to:
+
+{% highlight lua %}
+    t = {"foo"}
+    expect (table.clone (t)).to_equal (t)
+    expect (table.clone (t)).not_to_be (t)
+{% endhighlight %}
+
+### 2.4. contain
+
+[contain]: #24_contain
 
 When comparing strings, you might not want to write out the entire
 contents of a very long expected result, when you can easily tell with
@@ -375,9 +397,9 @@ If `expect` passes anything other than a string, table or `std.object`
 derivative to this matcher, [Specl][] aborts with an error; use
 `tostring` or similar if you need to.
 
-### 2.4. match
+### 2.5. match
 
-[match]: #24_match
+[match]: #25_match
 
 When a simple substring search is not appropriate, `match` will compare
 the expectation against a [Lua][] pattern:
@@ -386,9 +408,9 @@ the expectation against a [Lua][] pattern:
     expect (backtrace).to_match ("\nparse.lua: [0-9]+:")
 {% endhighlight %}
 
-### 2.5. error
+### 2.6. error
 
-[error]: #25_error
+[error]: #26_error
 
 Specifications for error conditions are a great idea! And this matcher
 checks both that an `error` was raised and that the subsequent error
@@ -398,9 +420,9 @@ message contains the supplied substring, if any.
     expect (next (nil)).to_error ("table expected")
 {% endhighlight %}
 
-### 2.6. Inverting a matcher with not
+### 2.7. Inverting a matcher with not
 
-[inverting a matcher with not]: #26_inverting_a_matcher_with_not
+[inverting a matcher with not]: #27_inverting_a_matcher_with_not
 
 Oftentimes, in your specification you need to check that an expectation
 does **not** match a particular outcome, and [Specl][] has you covered
@@ -426,9 +448,9 @@ Note that the last `not_to_error` example doesn't pass the error
 message substring that _to not_ match, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
-### 2.7. Matcher adaptors
+### 2.8. Matcher adaptors
 
-[matcher adaptors]: #27_matcher_adaptors
+[matcher adaptors]: #28_matcher_adaptors
 
 In addition to using matchers for straight one-to-one comparisons
 between the result of an `expect` and the argument provided to the
@@ -436,9 +458,9 @@ matcher, [Specl][] has some shortcuts that can intercept the arguments
 and adapt the comparison sequence.  These shortcuts are called
 _adaptors_.
 
-#### 2.7.1. Matching alternatives with any_of
+#### 2.8.1. Matching alternatives with any_of
 
-[matching alternatives with any_of]: #271_matching_alternative_with_any_of
+[matching alternatives with any_of]: #281_matching_alternative_with_any_of
 
 When you want to check whether an expectation matches among a list of
 alternatives, [Specl][] supports an `any_of` adaptor for any matcher:
@@ -457,9 +479,9 @@ an expectation succeeds only if none of the alternatives match:
     expect (type "x").not_to_be.any_of {"table", "nil"}
 {% endhighlight %}
 
-#### 2.7.2. Multiple matches with all_of
+#### 2.8.2. Multiple matches with all_of
 
-[multiple matches with all_of]: #272_multiple_matches_with_all_of
+[multiple matches with all_of]: #282_multiple_matches_with_all_of
 
 When you need to ensure that several matches succeed, [Specl][] provides
 the `all_of` adaptor:
@@ -492,9 +514,9 @@ supplied elements, it is far better to use:
     expect ({non_boolean_result}).not_to_contain.any_of {true, false}
 {% endhighlight %}
 
-#### 2.7.3. Unordered matching with a_permutation_of
+#### 2.8.3. Unordered matching with a_permutation_of
 
-[unordered matching with a_permutation_of]: #273_unordered_matching_with_a_permutation_of
+[unordered matching with a_permutation_of]: #283_unordered_matching_with_a_permutation_of
 
 While [Specl][] makes every effort to maintain ordering of elements in
 the tables (and objects) it uses, there are times when you really want
@@ -519,9 +541,9 @@ equivalent functionality - but `all_of` will not complain if `elements`
 has even more elements than what it `to_contain` at the time of
 comparison.
 
-### 2.8. Custom Matchers
+### 2.9. Custom Matchers
 
-[custom matchers]: #28_custom_matchers
+[custom matchers]: #29_custom_matchers
 
 Just like the built in matchers described above, you can use the
 `Matcher` factory object from `specl.matchers` to register additional
@@ -646,9 +668,9 @@ manual).
 Adding custom matcher with this API automatically handles lookups
 with `to_` and inverting matchers with the `not_` string.
 
-#### 2.8.1. Custom Adaptors
+#### 2.9.1. Custom Adaptors
 
-[custom adaptors]: #281-custom-adaptors
+[custom adaptors]: #291-custom-adaptors
 
 When you create a custom matcher, it can often improve the
 expressiveness of your spec files to allow additional custom adaptors

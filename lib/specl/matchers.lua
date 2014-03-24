@@ -273,6 +273,23 @@ matchers.be = Matcher {
 }
 
 
+-- Equal but not the same object.
+matchers.copy = Matcher {
+  function (self, actual, expect)
+    return (actual ~= expect) and (objcmp (actual, expect) == true)
+  end,
+
+  format_expect = function (self, expect)
+    return " a copy of " .. q(expect) .. ", "
+  end,
+
+  format_alternatives = function (self, adaptor, alternatives)
+    return " a copy of " .. adaptor .. " " ..
+           concat (alternatives, adaptor, ":quoted") .. ", "
+  end,
+}
+
+
 -- Matches if any error is raised inside `expect`.
 matchers.error = Matcher {
   function (self, actual, expect, ok)

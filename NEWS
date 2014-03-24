@@ -54,6 +54,12 @@ Specl NEWS - User visible changes.
     `should_`.  When negating a new syntax `to_` matcher, both of
     `to_not_` and `not_to` are accepted.
 
+  - New `copy` matcher, to specify that an object should be an identical
+    copy of the expected value, but not the same object:
+
+      t = {"foo"}
+      expect (table.clone (t)).to_copy (t)
+
   - You can `require "specl.shell"` for a swathe of additional matchers
     to specify results from a `Process` object:
 

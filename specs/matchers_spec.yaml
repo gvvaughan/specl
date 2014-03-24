@@ -208,6 +208,130 @@ describe matcher:
         expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
+- describe copy:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "('str').to_copy {'table'}"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a copy of {1=table}, but got "str"'
+  - it displays all expected and actual output for all_of failures:
+      yaml = preamble .. "('str').to_copy.all_of {'table', 'number'}"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a copy of all of "table" and "number", but got "str"'
+  - it displays all expected and actual output for any_of failures:
+      yaml = preamble .. "('str').to_copy.any_of {'table', 'number'}"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a copy of any of "table" or "number", but got "str"'
+
+  - context with 'to_copy':
+    - it succeeds when comparing equal objects:
+        expect ({}).to_copy {}
+    - it makes a deep comparison of table elements:
+        yaml = preamble .. deep .. ".to_copy " .. deep
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when object equals all of the alternatives:
+        yaml = preamble .. deep ..
+               ".to_copy.all_of {" .. deep .. ", " .. deep .. "}"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when object equals any of the alternatives:
+        yaml = preamble .. deep .. ".to_copy.any_of {0, {0}, " .. deep .. "}"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when extended objects have equal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "to_copy (hell.Process {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when extended object equals all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_copy." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when extended object equals any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_copy." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it fails when comparing unequal objects:
+        yaml = preamble .. "('str').to_copy {'table'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when comparing an object with itself:
+        yaml = preamble .. "('str').to_copy 'str'"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when object does not equal all of the alternatives:
+        yaml = preamble .. "('str').to_copy.all_of {'str', 'table'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when object does not equal any of the alternatives:
+        yaml = preamble .. "('str').to_copy.any_of {0, {0}, 'table'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended objects have unequal types:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "to_copy (hell.Command {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended objects have unequal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "to_copy (hell.Process {2, 'good', 'bad'})"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended object does not equal all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_copy." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}, 'another thing'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended object does not equal any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).to_copy." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {2, 'good', 'bad'}}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'not_to_copy':
+    - it succeeds when comparing unequal objects:
+        expect ('str').not_to_copy {'table'}
+    - it succeeds when comparing an object with itself:
+        expect ('str').not_to_copy 'str'
+    - it succeeds when object does not equal all of the alternatives:
+        expect ('str').not_to_copy.all_of {'str', 'table'}
+    - it succeeds when object is not any of the alternatives:
+        expect ('str').not_to_copy.any_of {0, {0}, 'table'}
+    - it succeeds when extended objects have unequal types:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "not_to_copy (hell.Command {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when extended objects have unequal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "not_to_copy (hell.Process {2, 'good', 'bad'})"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when extended object does not equal all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_copy." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}, 'another thing'}"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when extended object does not equal any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_copy." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {2, 'good', 'bad'}}"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it fails when comparing equal objects:
+        yaml = preamble .. "({1, {2}}).not_to_copy {1, {2}}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when object equals all of the alternatives:
+        yaml = preamble .. "({1, {2}}).not_to_copy.all_of {{1, {2}}, {1, {2}}}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when object does not equal any of the alternatives:
+        yaml = preamble .. "({1, {2}}).not_to_copy.any_of {{1, {2}}, 3, {4}}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended objects have equal contents:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'})." ..
+               "not_to_copy (hell.Process {1, 'good', 'bad'})"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended object equals all of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_copy." ..
+               "all_of {hell.Process {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when extended object equals any of the alternatives:
+        yaml = preamble .. "(hell.Process {1, 'good', 'bad'}).not_to_copy." ..
+               "any_of {1, 'good', 'bad', {1, 'good', 'bad'}, " ..
+               "hell.Process {1, 'good', 'bad'}}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+
 - describe contain:
   - it diagnoses incompatible arguments:
       expect (expect (function () end).to_contain "nothing").
