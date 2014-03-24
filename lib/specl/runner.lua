@@ -19,40 +19,15 @@
 -- MA 02111-1301, USA.
 
 
+local compat     = require "specl.compat"
 local matchers   = require "specl.matchers"
 local std        = require "specl.std"
 local util       = require "specl.util"
 
 
+from compat     import loadstring, setfenv
 from std.string import slurp, split
 from util       import map, strip1st
-
-
---[[ ================================= ]]--
---[[ Compatibility between 5.1 and 5.2 ]]--
---[[ ================================= ]]--
-
-
--- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-setfenv = setfenv or function(f, t)
-  local name
-  local up = 0
-  repeat
-    up = up + 1
-    name = debug.getupvalue (f, up)
-  until name == '_ENV' or name == nil
-  if name then
-    debug.upvaluejoin (f, up, function () return name end, 1)
-    debug.setupvalue (f, up, t)
-  end
-  return f
-end
-
-
-loadstring = loadstring or function (chunk, chunkname)
-  return load (chunk, chunkname)
-end
-
 
 
 --[[ ================= ]]--

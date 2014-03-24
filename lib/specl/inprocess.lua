@@ -19,10 +19,12 @@
 -- MA 02111-1301, USA.
 
 
-local hell = require "specl.shell"
-local std  = require "specl.std"
-local util = require "specl.util"
+local compat = require "specl.compat"
+local hell   = require "specl.shell"
+local std    = require "specl.std"
+local util   = require "specl.util"
 
+from compat    import setfenv
 from hell      import Process
 from std.func  import case
 from std.table import clone, merge

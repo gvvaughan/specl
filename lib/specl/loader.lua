@@ -22,8 +22,11 @@
 local macro = require "macro"
 local yaml  = require "yaml"
 
-local std   = require "specl.std"
-local util  = require "specl.util"
+local compat = require "specl.compat"
+local std    = require "specl.std"
+local util   = require "specl.util"
+
+from compat import loadstring
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"

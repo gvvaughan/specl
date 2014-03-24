@@ -89,6 +89,7 @@ dist_bin_SCRIPTS += bin/specl
 
 dist_noinst_DATA +=					\
 	lib/specl/color.lua				\
+	lib/specl/compat.lua				\
 	lib/specl/formatter/progress.lua		\
 	lib/specl/formatter/report.lua			\
 	lib/specl/formatter/tap.lua			\
