@@ -78,12 +78,20 @@ local function initenv (state, env)
     end
   end
 
-  -- For a not-yet-{pre,}loaded module, try to find it on `package.path`
-  -- and load it with `loadstring`, so that any symbols that leak out
-  -- (the side effects) are cached, and then copied into the example
-  -- block environment, for this and subsequent examples that load it.
+  -- For a not-yet-{pre,}loaded module, try to find it on the
+  -- environment `package.path` using the system loaders, and cache any
+  -- symbols that leak out (the side effects). Copy any leaked symbols
+  -- into the example block environment, for this and subsequent
+  -- examples that load it.
   env.require = function (m)
     local errmsg, import, loaded, loadfn
+
+    -- temporarily switch to the environment package context.
+    local save = {
+      cpath = package.cpath, path = package.path, loaders = package.loaders,
+    }
+    package.cpath, package.path, package.loaders =
+      env.package.cpath, env.package.path, env.package.loaders
 
     -- We can have a spec_helper.lua in each spec directory, so don't
     -- cache the side effects of a random one!
@@ -93,18 +101,21 @@ local function initenv (state, env)
     end
 
     if import == nil then
-      -- Not preloaded, so search package.path.
+      -- No side effects cached; find a loader function.
       if loadfn == nil then
-        std.package.mappath (env.package.path, function (path)
-          local filename = path:gsub ("%?", (m:gsub ("%.", "/")))
-          local s = slurp (filename)
-          if s ~= nil then
-            loadfn, errmsg = loadstring (s, filename)
-	    return "break"
-          end
-        end)
+        errmsg = ""
+        for _, loader in ipairs (package.loaders) do
+	  loadfn = loader (m)
+	  if type (loadfn) == "function" then
+            break
+	  end
+	  errmsg = errmsg .. (loadfn and tostring (loadfn) or "")
+        end
       end
-      if errmsg ~= nil then return error (errmsg) end
+      if type (loadfn) ~= "function" then
+        package.path, package.cpath = save.path, save.cpath
+        return error (errmsg)
+      end
 
       -- Capture side effects.
       if loadfn ~= nil then
@@ -125,18 +136,8 @@ local function initenv (state, env)
     state.sidefx[m] = import
     package.loaded[m] = package.loaded[m] or loaded or nil
 
-    -- Use the system require if loadstring failed (e.g. C module).
-    if loadfn == nil then
-      local save = std.table.clone (package)
-      -- temporarily use environment search paths
-      package.path, package.cpath = env.package.path, env.package.cpath
-
-      setfenv (core.require, env)
-      package.loaded[m] = core.require (m)
-
-      package.path, package.cpath = save.path, save.cpath
-    end
-
+    package.cpath, package.path, package.loaders =
+      save.cpath, save.path, save.loaders
     return package.loaded[m]
   end
 end
