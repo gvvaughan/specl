@@ -232,6 +232,8 @@ return std.Object {
   -- Outermost execution environment.
   sandbox = {},
 
+  inprocess = _G,
+
   -- Methods.
   __index = {
     compile      = compile,

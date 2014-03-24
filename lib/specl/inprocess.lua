@@ -128,6 +128,20 @@ local StrFile = std.Object {
 }
 
 
+local function inject (into, from)
+  for k, v in pairs (from) do
+    local tfrom, tinto = type (v), type (into[k])
+    if tfrom == "table" and (tinto == "table" or tinto == "nil") then
+      into[k] = into[k] or {}
+      inject (into[k], from[k])
+    else
+      into[k] = from[k]
+    end
+  end
+  return into
+end
+
+
 -- Run a Lua program in-process
 local function call (main, arg, stdin)
   util.type_check ("call", {main}, {"Main"})
@@ -138,9 +152,9 @@ local function call (main, arg, stdin)
   local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
 
   -- Execution environment.
-  local env = util.deepcopy (_G)
+  local env = {}
 
-  env.io = merge (clone (io), {
+  env.io = {
     stdin   = pin,
     stdout  = pout,
     stderr  = perr,
@@ -175,17 +189,9 @@ local function call (main, arg, stdin)
     write   = function (...)
                 env.io.output ():write (...)
               end,
-  })
+  }
 
-
-  -- Capture print statements to process output.
-  env.print = function (...)
-                local t = {...}
-                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
-                env.io.output ():write (table.concat (t, "\t") .. "\n")
-              end
-
-  env.os = merge (clone (os), {
+  env.os = {
     -- Capture exit status without quitting specl process itself.
     exit = function (code)
              case (tostring (code), {
@@ -196,7 +202,14 @@ local function call (main, arg, stdin)
              -- Abort execution now that status is set.
              error ("env.os.exit", 0)
            end,
-  })
+  }
+
+  -- Capture print statements to process output.
+  env.print = function (...)
+                local t = {...}
+                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
+                env.io.output ():write (table.concat (t, "\t") .. "\n")
+              end
 
   -- Instantiate with the execution environment so that sandboxed
   -- applications can see and manipulate it before continuing.
@@ -211,8 +224,25 @@ local function call (main, arg, stdin)
 
   -- Set the environment for `execute`, for non-sandboxing apps, so they
   -- have no special steps to take.
-  setfenv (Main.execute, env)
+  local restore = {
+    io = {
+      input  = Main.inprocess.io.input,
+      output = Main.inprocess.io.output,
+      stderr = Main.inprocess.io.stderr,
+      stdin  = Main.inprocess.io.stdin,
+      stdout = Main.inprocess.io.stdout,
+      type   = Main.inprocess.io.type,
+      write  = Main.inprocess.io.write,
+    },
+    os = {
+      exit   = Main.inprocess.os.exit,
+    },
+    print    = Main.inprocess.print,
+  }
+
+  inject (Main.inprocess, env)
   local ok, err = xpcall (Main.execute, traceback, Main)
+  inject (Main.inprocess, restore)
 
   if ok then
     pstat = 0
