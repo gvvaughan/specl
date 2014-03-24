@@ -135,8 +135,8 @@ local function call (main, arg, stdin)
   local pstat = -1
   local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
 
-  -- Copy-on-write execution environment.
-  local env = util.cow (_G)
+  -- Execution environment.
+  local env = util.deepcopy (_G)
 
   env.io = merge (clone (io), {
     stdin   = pin,

@@ -184,7 +184,7 @@ function run_examples (state, examples, descriptions, env)
   local formatter = state.opts.formatter
 
   local block = function (example, blockenv)
-    local fenv   = util.cow (blockenv)
+    local fenv   = util.deepcopy (blockenv)
     fenv.expect  = matchers.expect
     fenv.pending = matchers.pending
 
@@ -260,7 +260,7 @@ function run_examples (state, examples, descriptions, env)
   for _, example in ipairs (examples) do
     -- Also, run every block in a sub-environment, so that before() and
     -- after() calls from one block don't affect any other.
-    local fenv = util.cow (env)
+    local fenv = util.deepcopy (env)
     setfenv (block, fenv)
 
     -- Return false immediately for --fail-fast.
