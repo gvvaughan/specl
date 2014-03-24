@@ -222,6 +222,12 @@ local function call (main, arg, stdin)
     end
   end
 
+  -- Diagnose malformed Main object.
+  if type (Main.inprocess) ~= "table" then
+    error ("malformed 'inprocess' in Main object (table expected, found " ..
+           type (Main.inprocess) .. ")")
+  end
+
   -- Set the environment for `execute`, for non-sandboxing apps, so they
   -- have no special steps to take.
   local restore = {

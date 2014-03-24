@@ -15,21 +15,33 @@ specify inprocess:
       write  = io.write,
     }
 
+    Base = require "specl.std".Object {
+      _type = "Main",
+
+      _init = function (self, arg)
+        if arg.execute then
+          self.execute, arg.execute = arg.execute, nil
+        end
+        if arg.inprocess then
+          self.inprocess, arg.inprocess = arg.inprocess, nil
+        end
+        self.arg = arg
+        return self
+      end,
+    }
+
     function call (where, fn, arg, stdin)
-      local Main = require "specl.std".Object {
-        _type = "Main",
-
-        _init = function (self, arg)
-          self.arg = arg
-          return self
-        end,
-
+      local Main = Base {
         inprocess = where,
-
-        execute = fn,
+        execute   = fn,
       }
       return inprocess.call (Main, arg, stdin)
     end
+
+- it diagnoses malformed inprocess field in Main object:
+    expect (inprocess.call (Base)).to_error "table expected, found nil"
+    expect (inprocess.call (Base {inprocess = "{}"})).
+      to_error "table expected, found string"
 
 - it propagates arguments to Main object:
     function execute (self)
