@@ -19,12 +19,11 @@
 -- MA 02111-1301, USA.
 
 local color = require "specl.color"
-local std   = require "specl.std"
-local util  = require "specl.util"
 
-from std        import Object
-from std.string import chomp, escape_pattern, prettytostring, tostring
-from std.table  import clone, empty, merge, size, totable
+from "specl.util" import gettimeofday, type_check
+from "specl.std"  import Object, string.chomp, string.escape_pattern,
+                    string.prettytostring, string.tostring, table.clone,
+                    table.empty, table.merge, table.size, table.totable
 
 local M = {}
 
@@ -80,7 +79,7 @@ local Matcher = Object {
 
   -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name, {actual}, {self.actual_type})
 
     -- Pass all parameters to both formatters!
     local m = "expecting" .. self:format_expect (expect, actual, ...) ..
@@ -92,8 +91,8 @@ local Matcher = Object {
   -- Adaptors:
 
   ["all_of?"] = function (self, actual, alternatives, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".all_of", {alternatives}, {"#table"})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".all_of", {alternatives}, {"#table"})
 
     local success
     for _, expect in ipairs (alternatives) do
@@ -106,8 +105,8 @@ local Matcher = Object {
   end,
 
   ["any_of?"] = function (self, actual, alternatives, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".any_of", {alternatives}, {"#table"})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".any_of", {alternatives}, {"#table"})
 
     local success
     for _, expect in ipairs (alternatives) do
@@ -149,7 +148,7 @@ local matchers = setmetatable ({content = {}}, {
   __index = function (self, name) return rawget (self.content, name) end,
 
   __newindex = function (self, name, matcher)
-    util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
+    type_check ("matchers." .. name, {matcher}, {"Matcher"})
     rawset (self.content, name, matcher)
     rawset (matcher, "name", name)
   end,
@@ -373,8 +372,8 @@ matchers.contain = Matcher {
 
   -- Additional adaptor to match unordered tables (and strings!).
   ["a_permutation_of?"] = function (self, actual, expected, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
 
     -- calculate failure output before coercing strings into tables
     local msg = "expecting" ..
@@ -467,7 +466,7 @@ end
 --
 -- For example:                  expect ({}).not_to_be {}
 
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
+M.stats = { pass = 0, pend = 0, fail = 0, starttime = gettimeofday () }
 
 local function expect (ok, actual)
   return setmetatable ({}, {

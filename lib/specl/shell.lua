@@ -20,11 +20,10 @@
 
 -- Additional commands useful for writing command-line specs.
 
-local std      = require "specl.std"
-local util     = require "specl.util"
 
-from std        import Object
-from std.string import escape_pattern
+from "specl.std"  import Object, string.escape_pattern
+from "specl.util" import type_check
+
 
 local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"
@@ -36,7 +35,7 @@ local Command = Object {
   _type = "Command",
 
   _init = function (self, params)
-    util.type_check ("Command",
+    type_check ("Command",
       {self, params}, {{"Command", "table"}, {"string", "table"}})
 
     local kind = Object.type (params)
@@ -85,7 +84,7 @@ local Process = Object {
 
 -- Run a command in a subprocess
 local function spawn (o)
-  util.type_check ("spawn", {o}, {{"string", "table", "Command"}})
+  type_check ("spawn", {o}, {{"string", "table", "Command"}})
   if Object.type (o) ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.

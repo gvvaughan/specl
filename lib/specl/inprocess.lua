@@ -19,19 +19,13 @@
 -- MA 02111-1301, USA.
 
 
-local compat = require "specl.compat"
-local hell   = require "specl.shell"
-local std    = require "specl.std"
-local util   = require "specl.util"
-
-from compat    import setfenv, xpcall
-from hell      import Process
-from std.func  import case
-from std.table import clone, merge
-from util      import nop
+from "specl.compat" import setfenv, xpcall
+from "specl.shell"  import Process
+from "specl.std"    import Object, func.case, table.clone, table.merge
+from "specl.util"   import nop, type_check
 
 
-local StrFile = std.Object {
+local StrFile = Object {
   _type = "StrFile",
   _init = {"mode", "buffer"},
 
@@ -144,7 +138,7 @@ end
 
 -- Run a Lua program in-process
 local function call (main, arg, stdin)
-  util.type_check ("call", {main}, {"Main"})
+  type_check ("call", {main}, {"Main"})
   arg = arg or {}
 
   -- Captured exit status, standard input, standard output and standard error.
@@ -160,7 +154,7 @@ local function call (main, arg, stdin)
     stderr  = perr,
 
     input   = function (h)
-                if std.Object.type (h) == "StrFile" then
+                if Object.type (h) == "StrFile" then
                   pin = h
                 elseif h then
                   io.input (h)
@@ -170,7 +164,7 @@ local function call (main, arg, stdin)
               end,
 
     output  = function (h)
-                if std.Object.type (h) == "StrFile" then
+                if Object.type (h) == "StrFile" then
                   pout = h
                 elseif h then
                   io.output (h)
@@ -180,7 +174,7 @@ local function call (main, arg, stdin)
               end,
 
     type    = function (h)
-                if std.Object.type (h) == "StrFile" then
+                if Object.type (h) == "StrFile" then
                   return "file" -- virtual stdio streams cannot be closed
                 end
                 return io.type (h)

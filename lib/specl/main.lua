@@ -19,12 +19,10 @@
 -- MA 02111-1301, USA.
 
 local loader  = require "specl.loader"
-local Options = require "specl.optparse"
 local runner  = require "specl.runner"
-local std     = require "specl.std"
-local util    = require "specl.util"
 
-from std.table import clone, merge
+from "specl.std"  import Object, table.clone, table.merge
+from "specl.util" import files, map
 
 
 -- Make a shallow copy of the pristine global environment, so that the
@@ -206,7 +204,7 @@ local function execute (self)
 
   -- Process all specfiles when none are given explicitly.
   if #self.arg == 0 then
-    self.arg = util.map (specfilter, util.files "specs")
+    self.arg = map (specfilter, files "specs")
   end
 
   self:process_args (parser)
@@ -215,7 +213,7 @@ local function execute (self)
 end
 
 
-return std.Object {
+return Object {
   _type   = "Main",
 
   arg     = {},

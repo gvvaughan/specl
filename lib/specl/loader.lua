@@ -22,11 +22,9 @@
 local macro = require "macro"
 local yaml  = require "yaml"
 
-local compat = require "specl.compat"
-local std    = require "specl.std"
-local util   = require "specl.util"
-
-from compat import loadstring
+from "specl.compat" import loadstring
+from "specl.std"    import io.catfile, package.path_mark
+from "specl.util"   import nop
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
@@ -235,9 +233,9 @@ local parser_mt = {
         ALIAS          = self.load_alias,
         MAPPING_START  = self.load_map,
         SEQUENCE_START = self.load_sequence,
-        MAPPING_END    = util.nop,
-        SEQUENCE_END   = util.nop,
-        DOCUMENT_END   = util.nop,
+        MAPPING_END    = nop,
+        SEQUENCE_END   = nop,
+        DOCUMENT_END   = nop,
       }
 
       local event = self:parse ()
@@ -253,8 +251,7 @@ local parser_mt = {
 -- Parser object constructor.
 local function Parser (filename, s, unicode)
   local dir  = std.io.dirname (filename)
-  local path = std.package.normalize (
-    std.io.catfile (dir, std.package.path_mark .. ".lua"))
+  local path = std.package.normalize (catfile (dir, path_mark .. ".lua"))
 
   local object = {
     unicode  = unicode,
@@ -264,7 +261,7 @@ local function Parser (filename, s, unicode)
     next     = yaml.parser (s),
 
     -- strip leading './'
-    filename = filename:gsub (std.io.catfile ("^%.", ""), ""),
+    filename = filename:gsub (catfile ("^%.", ""), ""),
 
     -- Used to simplify requiring from the spec file directory.
     preamble = string.format ([[

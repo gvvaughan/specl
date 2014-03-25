@@ -21,32 +21,54 @@
 
 local macro = require "macro"
 
--- Prepend PREFIX to each element of list L.  Return concatenated
--- string of all element, separated by SEP.
-local function mapconcat (prefix, l, sep)
-  local sep = sep or ""
+-- Call FN with each element of list L.  Return concatenated string
+-- of all elements, separated by ", ".
+local function mapconcat (fn, l)
   local t = {}
   for i, e in ipairs (l) do
-    t[i] = prefix .. e
+    t[i] = fn (e)
   end
-  return table.concat (t, sep)
+  return table.concat (t, ", ")
+end
+
+local function lastelement (dot_delimited)
+  return dot_delimited:match "([^%.]+)$"
 end
 
 -- Define from syntax as a LuaMacro macro.
 macro.define ('from', function (get)
-  local prefix = get:name () .. "."
-  while get:peek (1) == "." do
-    get ()
-    prefix = prefix .. get:name () .. "."
+  local type, preamble, prefix = get:peek (1), ""
+
+  if type == "iden" then
+    prefix = get:name () .. "."
+    while get:peek (1) == "." do
+      get ()
+      prefix = prefix .. get:name () .. "."
+    end
+  elseif type == "string" then
+    local name = get:string ()
+    local suffix = lastelement (name)
+    preamble = "local " .. suffix .. ' = require "' .. name .. '"\n'
+    prefix = suffix .. "."
+  else
+    -- Not followed by an identifier, pass through.
+    return nil, true
   end
 
   local args = {}
   repeat
-    get () -- "import" or ","
-    get () -- space
+    if #args == 0 then
+      get:expecting ("iden", "import")
+    else
+      get:expecting ","
+    end
     args[#args + 1] = get:name ()
+    while get:peek (1) == "." do
+      get ()
+      args[#args] = args[#args] .. "." .. get:name ()
+    end
   until get:peek (1) ~= ","
 
-  return "local "..table.concat (args, ", ").." = " ..
-         mapconcat (prefix, args, ", ")
+  return preamble .. "local " .. mapconcat (lastelement, args) .. " = " ..
+         mapconcat (function (name) return prefix .. name end, args)
 end)

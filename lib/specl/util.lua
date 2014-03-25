@@ -19,9 +19,7 @@
 -- MA 02111-1301, USA.
 
 
-local std   = require "specl.std"
-
-from std import Object
+from "specl.std" import Object
 
 local have_posix, posix = pcall (require, "posix")
 

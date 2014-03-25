@@ -21,13 +21,10 @@
 
 local compat     = require "specl.compat"
 local matchers   = require "specl.matchers"
-local std        = require "specl.std"
-local util       = require "specl.util"
 
-
-from compat     import loadstring, setfenv
-from std.string import slurp, split
-from util       import map, strip1st
+from "specl.compat" import loadstring, setfenv
+from "specl.std"    import string.slurp, string.split
+from "specl.util"   import map, strip1st
 
 
 --[[ ================= ]]--
