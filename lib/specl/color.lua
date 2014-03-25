@@ -21,25 +21,26 @@
 
 local have_color, ansicolors = pcall (require, "ansicolors")
 
-local h1      = "%{blue}"
-local h2      = "%{cyan}"
+local h1      = "%{bright blue}"
+local h2      = "%{blue}"
+local h3      = "%{cyan}"
 local default = ""
 local good    = "%{green}"
 local bad     = "%{bright white redbg}"
 
 local colormap = {
-  describe = h1,
-  context  = h2,
-  when     = h2,
-  with     = h2,
+  specify  = h1,
+  describe = h2,
+  context  = h3,
+  when     = h3,
+  with     = h3,
   it       = default,
-  specify  = default,
   example  = default,
 
-  head     = h1,
-  subhead  = h2,
+  head     = h2,
+  subhead  = h3,
   entry    = default,
-  summary  = h1,
+  summary  = h2,
 
   fail     = bad,
   pend     = "%{yellow}",
