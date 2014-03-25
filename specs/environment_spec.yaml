@@ -21,6 +21,7 @@ describe environments:
 
 - context do not leak references:
   - before:
+      in_sibling_before = true
       path = "./?.lua"
   - it can change library table elements locally:
       package.path = path
@@ -37,7 +38,7 @@ describe environments:
     - before:
         overridden_symbol = "overridden"
         defined_inner_symbol = true
-
+        from_sibling_before = in_sibling_before or false
     - it cannot find undefined symbols:
         expect (undefined_outer_symbol).to_be (nil)
     - it can find a symbol in global scope:
@@ -46,12 +47,17 @@ describe environments:
         expect (defined_outer_symbol).to_be (true)
     - it can find a symbol in the current scope:
         in_the_nested_example = true
-        define_inner_symbol = false
-        expect (defined_inner_symbol).to_be (true)
+        defined_inner_symbol = false
+        expect (defined_inner_symbol).to_be (false)
     - it cannot find a symbol from a sibling example:
         expect (in_the_nested_example).to_be (nil)
+    - it cannot see symbol changes from a sibling example:
+        expect (defined_inner_symbol).to_be (true)
     - it cannot find a symbol from a parent example:
         expect (in_the_same_example).to_be (nil)
+    - it cannot find a symbol from a sibling before:
+        expect (in_sibling_before).to_be (nil)
+        expect (from_sibling_before).to_be (false)
     - it gets a clean environment for each example:
         expect (overridden_symbol).to_be ("overridden")
     - it can find a symbol from the current before block:

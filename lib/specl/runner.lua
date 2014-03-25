@@ -231,13 +231,9 @@ function run_examples (state, examples, descriptions, env)
   end
 
   for _, example in ipairs (examples) do
-    -- Also, run every block in a sub-environment, so that before() and
-    -- after() calls from one block don't affect any other.
-    local fenv = util.deepcopy (env)
-    setfenv (block, fenv)
-
-    -- Return false immediately for --fail-fast.
-    if block (example, fenv) == false then
+    setfenv (block, env)
+    if block (example, env) == false then
+      -- Return false immediately for --fail-fast.
       return false
     end
   end
