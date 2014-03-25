@@ -78,12 +78,11 @@ local function deepcopy (t)
     elseif copied[orig] then
       copy = copied[orig]
     else
-      copied[orig] = {}
-      for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
-        rawset (copied[orig], makecopy (k), makecopy (v))
-      end
-      setmetatable (copied[orig], makecopy (getmetatable (orig)))
+      copied[orig] = setmetatable ({}, makecopy (getmetatable (orig)))
       copy = copied[orig]
+      for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
+        rawset (copy, makecopy (k), makecopy (v))
+      end
     end
     return copy
   end
