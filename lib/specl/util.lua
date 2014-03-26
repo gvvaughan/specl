@@ -71,23 +71,19 @@ end
 local function deepcopy (t)
   local copied = {} -- references to tables already copied
 
-  local function makecopy (orig)
-    local copy
-    if type (orig) ~= "table" then
-      copy = orig
-    elseif copied[orig] then
-      copy = copied[orig]
-    else
-      copied[orig] = setmetatable ({}, makecopy (getmetatable (orig)))
-      copy = copied[orig]
-      for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
-        rawset (copy, makecopy (k), makecopy (v))
-      end
+  local function tablecopy (orig)
+    local mt = getmetatable (orig)
+    local copy = mt and setmetatable ({}, copied[mt] or tablecopy (mt)) or {}
+    copied[orig] = copy
+    for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
+      if type (k) == "table" then k = copied[k] or tablecopy (k) end
+      if type (v) == "table" then v = copied[v] or tablecopy (v) end
+      rawset (copy, k, v)
     end
     return copy
   end
 
-  return makecopy (t)
+  return tablecopy (t)
 end
 
 
