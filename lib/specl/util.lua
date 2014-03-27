@@ -24,6 +24,10 @@ from "specl.std" import Object
 local have_posix, posix = pcall (require, "posix")
 
 
+-- A null operation function.
+local function nop () end
+
+
 local files -- forward declaration
 
 if have_posix then
@@ -45,7 +49,7 @@ if have_posix then
 
 else
 
-  files = function () return {} end
+  files = nop
 
 end
 
@@ -199,10 +203,6 @@ end
 local function indent (descriptions)
   return string.rep ("  ", #descriptions - 1)
 end
-
-
--- A null operation function.
-local function nop () end
 
 
 -- Return S with the first word and following whitespace stripped,
