@@ -216,20 +216,6 @@ end
 return Object {
   _type   = "Main",
 
-  arg     = {},
-
-  -- Option defaults.
-  opts    = {
-    color     = true,
-    formatter = require "specl.formatter.progress",
-  },
-
-  -- Collect compiled specs here.
-  specs   = {},
-
-  -- Outermost execution environment.
-  sandbox = {},
-
   inprocess = _G,
 
   -- Methods.
@@ -241,9 +227,21 @@ return Object {
 
   -- Allow test harness to hijack io and os functions so that it can be
   -- safely executed in-process.
-  _init   = function (self, arg, env)
+  _init = function (self, arg, env)
     self.arg     = arg
+
+    -- Option defaults.
+    self.opts    = {
+      color      = true,
+      formatter  = require "specl.formatter.progress",
+    }
+
+    -- Collect compiled specs here.
+    self.specs   = {}
+
+    -- Outermost execution environment.
     self.sandbox = merge (clone (global), env or {})
+
     return self
   end,
 }
