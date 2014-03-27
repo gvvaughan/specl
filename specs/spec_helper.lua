@@ -5,7 +5,7 @@ package.path = std.package.normalize ("lib/?.lua", package.path)
 
 local Object = std.Object
 
-function run_spec (params)
+function spawn_specl (params)
   local SPECL = os.getenv ("SPECL") or "bin/specl"
 
   -- If params is a string, it is the input text for the subprocess.
@@ -37,6 +37,31 @@ function run_spec (params)
   end
 
   error ("run_spec was expecting a string or table, but got a "..type (params))
+end
+
+
+local inprocess = require "specl.inprocess"
+local Main      = require "specl.main"
+
+function run_spec (params)
+  -- If params is a string, it is the input text for the subprocess.
+  if type (params) == "string" then
+    return inprocess.call (Main, {"--color=no", "-"}, params)
+  end
+
+  -- If params is a table, fill in the gaps in parameters it names.
+  if type (params) == "table" then
+    -- The command is made from the array part of params table.
+    local argt = {"--color=no"}
+    for _, e in ipairs (params) do argt[#argt + 1] = e end
+
+    if params.stdin then argt[#argt + 1] = "-" end
+
+    local proc = inprocess.call (Main, argt, params.stdin)
+    return proc
+  end
+
+  error ("inprocess_spec was expecting a string or table, but got a "..type (params))
 end
 
 

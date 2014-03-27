@@ -23,7 +23,7 @@ local compat     = require "specl.compat"
 local matchers   = require "specl.matchers"
 
 from "specl.compat" import loadstring, setfenv
-from "specl.std"    import string.slurp, string.split
+from "specl.std"    import string.slurp, string.split, table.merge
 from "specl.util"   import map, strip1st
 
 
@@ -158,8 +158,8 @@ function run_examples (state, examples, descriptions, env)
 
   local block = function (example, blockenv)
     local fenv   = util.deepcopy (blockenv)
-    fenv.expect  = matchers.expect
-    fenv.pending = matchers.pending
+    fenv.expect  = function (...) return matchers.expect  (state, ...) end
+    fenv.pending = function (...) return matchers.pending (state, ...) end
 
     initenv (state, fenv)
 
@@ -194,16 +194,16 @@ function run_examples (state, examples, descriptions, env)
       end
 
       if inclusive then
-        matchers.init ()
+        matchers.init (state)
 
         setfenv (definition.example, fenv)
         definition.example ()
 
-        local status = std.table.merge ({
+        local status = merge ({
           filename = state.spec.filename,
 	  line     = definition.line,
-        }, matchers.status ())
-	formatter:accumulator (formatter.expectations (status, descriptions, state.opts))
+        }, matchers.status (state))
+	state:accumulator (formatter.expectations (status, descriptions, state.opts))
 
         if state.opts.fail_fast then
           for _, expectation in ipairs (status.expectations) do
@@ -245,7 +245,7 @@ function run_contexts (state, contexts, descriptions, env)
   local formatter = state.opts.formatter
   for description, examples in pairs (contexts) do
     table.insert (descriptions, description)
-    formatter:accumulator (formatter.spec (descriptions, state.opts))
+    state:accumulator (formatter.spec (descriptions, state.opts))
     local status = run_examples (state, examples, descriptions, env)
     table.remove (descriptions)
 
@@ -261,10 +261,11 @@ function run (state)
   local formatter = state.opts.formatter
 
   state.sidefx = {}
-  formatter.accumulator = accumulator -- so we can pass self with ':'
+  state.accumulator = accumulator -- so we can pass self with ':'
+  state.accumulated = nil
 
   -- Run compiled specs, in order.
-  formatter:accumulator (formatter.header (matchers.stats, state.opts))
+  state:accumulator (formatter.header (state.stats, state.opts))
   for _, spec in ipairs (state.specs) do
     state.spec = spec
 
@@ -275,8 +276,8 @@ function run (state)
     end
   end
 
-  formatter.footer (matchers.stats, formatter.accumulated, state.opts)
-  return matchers.stats.fail ~= 0 and 1 or 0
+  formatter.footer (state.stats, state.accumulated, state.opts)
+  return state.stats.fail ~= 0 and 1 or 0
 end
 
 

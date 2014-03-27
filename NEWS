@@ -97,7 +97,10 @@ Specl NEWS - User visible changes.
 
   - New experimental `specl.inprocess` module provides a way to run
     carefully written Lua programs inside the Specl process, saving a
-    fork/exec each time.
+    fork/exec each time.  Converting Specl itself to be reentrant, and
+    using `specl.inprocess` for most of its examples shaves more than
+    75% off the time spent in `make check`: from over 20secs to under
+    5secs on my machine.
 
 ** Incompatible changes:
 

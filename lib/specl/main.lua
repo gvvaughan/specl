@@ -22,7 +22,7 @@ local loader  = require "specl.loader"
 local runner  = require "specl.runner"
 
 from "specl.std"  import Object, table.clone, table.merge
-from "specl.util" import files, map
+from "specl.util" import files, gettimeofday, map
 
 
 -- Make a shallow copy of the pristine global environment, so that the
@@ -241,6 +241,11 @@ return Object {
 
     -- Outermost execution environment.
     self.sandbox = merge (clone (global), env or {})
+
+    -- Expectation statistics.
+    self.stats = {
+      pass = 0, pend = 0, fail = 0, starttime = gettimeofday ()
+    }
 
     return self
   end,

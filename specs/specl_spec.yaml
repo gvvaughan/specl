@@ -202,14 +202,14 @@ describe specl:
           env = { LUA_PATH = tmp:dirname () .. "/?;" .. package.path },
           stdin = yaml,
         }
-        expect (run_spec (command)).to_output "hs.f"
+        expect (spawn_specl (command)).to_output "hs.f"
     - it accepts -f as an equivalent to --formatter:
         command = {
           "-f" .. tmp:basename (), "-";
           env = { LUA_PATH = tmp:dirname () .. "/?;" .. package.path },
           stdin = yaml,
         }
-        expect (run_spec (command)).to_output "hs.f"
+        expect (spawn_specl (command)).to_output "hs.f"
 
   - context when filtering by pattern:
     - before: |

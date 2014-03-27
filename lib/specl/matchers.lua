@@ -20,7 +20,7 @@
 
 local color = require "specl.color"
 
-from "specl.util" import gettimeofday, type_check
+from "specl.util" import type_check
 from "specl.std"  import Object, string.chomp, string.escape_pattern,
                     string.prettytostring, string.tostring, table.clone,
                     table.empty, table.merge, table.size, table.totable
@@ -443,19 +443,16 @@ matchers.contain = Matcher {
 --[[ ============= ]]--
 
 
-local expectations, ispending
-
-
 -- Called at the start of each example block.
-local function init ()
-  expectations = {}
-  ispending    = nil
+local function init (state)
+  state.expectations = {}
+  state.ispending = nil
 end
 
 
 -- Return status since last init.
-local function status ()
-  return { expectations = expectations, ispending = ispending }
+local function status (state)
+  return { expectations = state.expectations, ispending = state.ispending }
 end
 
 
@@ -465,10 +462,7 @@ end
 -- before returning.
 --
 -- For example:                  expect ({}).not_to_be {}
-
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = gettimeofday () }
-
-local function expect (ok, actual)
+local function expect (state, ok, actual)
   return setmetatable ({}, {
     __index = function (_, verb)
       local inverse = false
@@ -492,14 +486,16 @@ local function expect (ok, actual)
           message = message and ("not " .. message)
         end
 
+	from state import expectations, ispending, stats
+
         if ispending ~= nil then
           -- stats.pend is updated by pending ()
           -- +1 per pending example, not per expectation in pending examples
           pending = ispending
         elseif success ~= true then
-          M.stats.fail = M.stats.fail + 1
+          stats.fail = stats.fail + 1
         else
-          M.stats.pass = M.stats.pass + 1
+          stats.pass = stats.pass + 1
         end
         table.insert (expectations, {
           message = message,
@@ -537,9 +533,9 @@ local function expect (ok, actual)
 end
 
 
-local function pending (s)
-  M.stats.pend = M.stats.pend + 1
-  ispending  = s or "not yet implemented"
+local function pending (state, s)
+  state.stats.pend = state.stats.pend + 1
+  state.ispending  = s or "not yet implemented"
 end
 
 
