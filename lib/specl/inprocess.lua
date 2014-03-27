@@ -157,20 +157,21 @@ local function call (main, arg, stdin)
                 if Object.type (h) == "StrFile" then
                   pin = h
                 elseif h then
-                  io.input (h)
-                else
-                  return pin or io.input ()
+                  pin = io.input (h)
                 end
+                return pin or io.input ()
               end,
 
     output  = function (h)
-                if Object.type (h) == "StrFile" then
-                  pout = h
-                elseif h then
-                  io.output (h)
-                else
-                  return pout or io.output ()
+	        if h ~= nil then
+		  if io.type (pout) ~= "closed file" then pout:flush () end
+                  if Object.type (h) == "StrFile" then
+                    pout = h
+                  else
+                    pout = io.output (h)
+		  end
                 end
+		return pout or io.output ()
               end,
 
     type    = function (h)
