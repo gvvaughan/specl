@@ -40,6 +40,21 @@ local loadstring = loadstring or function (chunk, chunkname)
 end
 
 
+do
+  local have_xpcall_args
+  local function catch (arg) have_xpcall_args = arg end
+  xpcall (catch, function () end, true)
+
+  if have_xpcall_args ~= true then
+    local _xpcall = xpcall
+    xpcall = function (fn, errh, ...)
+      local args, n = {...}, select ("#", ...)
+      return _xpcall(function() return fn (unpack (args, 1, n)) end, errh)
+    end
+  end
+end
+
+
 
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
@@ -48,4 +63,5 @@ end
 return {
   loadstring = loadstring,
   setfenv    = setfenv,
+  xpcall     = xpcall,
 }

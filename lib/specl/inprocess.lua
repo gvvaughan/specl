@@ -24,7 +24,7 @@ local hell   = require "specl.shell"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
-from compat    import setfenv
+from compat    import setfenv, xpcall
 from hell      import Process
 from std.func  import case
 from std.table import clone, merge
