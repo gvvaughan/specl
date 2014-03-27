@@ -32,13 +32,13 @@ local files -- forward declaration
 
 if have_posix then
 
-  files = function (root)
-    local t = {}
+  files = function (root, t)
+    t = t or {}
     for _, file in ipairs (posix.dir (root) or {}) do
       if file ~= "." and file ~= ".." then
         local path = std.io.catfile (root, file)
         if posix.stat (path).type == "directory" then
-          t = std.table.merge (t, files (path))
+          t = files (path, t)
         else
           t[#t + 1] = path
         end
