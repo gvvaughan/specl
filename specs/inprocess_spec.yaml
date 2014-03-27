@@ -54,7 +54,7 @@ specify inprocess:
       execute = function () return error "he deed" end
   - it captures raised errors: |
       expect (call (_G, execute)).not_to_succeed ()
-      expect (call (_G, execute)).to_match_error "%d: he deed\nstack traceback:\n"
+      expect (call (_G, execute)).to_match_error "he deed\nstack traceback:\n"
   - it restores core error function on completion:
       expect (call (_G, execute)).not_to_succeed ()
       expect (error).to_be (core.error)
