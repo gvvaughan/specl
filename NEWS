@@ -2,6 +2,11 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Bug fixes:
+
+  - Specl no longer crashes when requiring system libraries (such as
+    math, bit32 etc) from examples or spec_helpers.
+
 
 * Noteworthy changes in release 11 (2014-04-05) [stable]
 

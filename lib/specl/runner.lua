@@ -100,7 +100,7 @@ local function initenv (state, env)
       import = state.sidefx[m]
     end
 
-    if import == nil then
+    if import == nil and loaded == nil then
       -- No side effects cached; find a loader function.
       if loadfn == nil then
         errmsg = ""
