@@ -6,15 +6,14 @@ layout: default
 [Specl][] is testing tool for [Lua][], providing a
 [Behaviour Driven Development][BDD] framework in the vein of [RSpec][].
 
- * a rich command line program (the `specl` command)
- * textual descriptions of examples and groups (spec files use [YAML][])
- * flexible and customizable reporting (formatters)
- * extensible expectation language (matchers)
+ * textual descriptions of examples and groups ([spec files](#1-specifications) using [YAML][])
+ * extensible expectation language ([matchers](#2-matchers))
+ * self-contained execution environments ([environments](#3-environments))
+ * flexible and customizable reporting ([formatters](#4-formatters))
+ * a rich command line program (the [`specl` command](#5-command-line))
 
 
 ## 1. Specifications
-
-[specifications]: #1-specifications
 
 The `specl` command verifies that the behaviour of your software meets
 the specifications encoded in one or more _spec-files_. A spec-file is
@@ -24,7 +23,7 @@ code that verify whether the software behaves as described.
 
 A tiny spec-file outline follows:
 
-{% highlight lua %}
+{% highlight yaml %}
     describe specification file format:
     - it is just a list of examples with descriptions:
         with_Lua_code ("to verify described behaviours")
@@ -64,8 +63,6 @@ descriptions and example code, all indented as prescribed by the
 
 ### 1.1 YAML
 
-[yaml section]: #11_yaml_spec_files
-
 [YAML][] makes for a very readable specification file-format, and allows
 embedded [Lua][] code right within the standard, as you saw in the last
 section.  However, there are some rules to follow as you write your
@@ -81,7 +78,7 @@ will need to force the parser to read the description as a string by
 surrounding it with `"` (double-quote mark) if you want to put any
 punctuation in the description text:
 
-{% highlight lua %}
+{% highlight yaml %}
     - "it requires double-quote marks: but only when using punctuation":
 {% endhighlight %}
 
@@ -92,7 +89,7 @@ part of the indentation whitespace.
 
 [Specl][] treats everything following the `:` (colon) as a Lua code:
 
-{% highlight lua %}
+{% highlight yaml %}
     - it concatenates all following indented lines to a single line:
         Stack = require "stack"
         stack = Stack {}
@@ -108,7 +105,7 @@ terminate an embedded comment, for example) you'll need to prevent
 literal block marker ` |` (space, pipe) after the `:` separator for
 this:
 
-{% highlight lua %}
+{% highlight yaml %}
     - it does not strip significant whitespace in a literal block: |
         -- A comment on this line, followed by code
         stack = Stack {}
@@ -125,13 +122,11 @@ character, depending where in the hierarchy it will go.
 
 ### 1.2. Contexts
 
-[contexts]: #12_contexts
-
 You can further sub-divide your example groups by _context_. In addition
 to listing examples in each group, list items can also be contexts,
 which in turn list more examples of their own:
 
-{% highlight lua %}
+{% highlight yaml %}
     describe a stack:
     - it is empty to start with:
     - context when pushing items:
@@ -146,7 +141,7 @@ which in turn list more examples of their own:
 By convention, the context descriptions start with the word "context",
 but [Specl][] doesn't enforce that tradition, so you should just try to
 write a description that makes the output easy to understand (see
-[Command Line][]).
+[Command Line](#5-command-line)).
 
 Actually, description naming conventions aside, there is no difference
 between an example group and a context: Each serves to describe a group
@@ -159,8 +154,6 @@ in a single file.
 
 ### 1.3. Examples
 
-[examples]: #13_examples
-
 At the innermost nesting of all those _context_ and _example group_
 entries, you will ultimately want to include one or more actual
 _examples_. These too are best written with readable names in
@@ -168,7 +161,7 @@ plain-English, as shown in the sample from the previous section, but
 (unlike contexts) they are followed by the associated example code in
 [Lua][], rather than containing more nested contexts.
 
-{% highlight lua %}
+{% highlight yaml %}
     describe a stack:
     - it is empty to start with:
         ...EXAMPLE-LUA-CODE...
@@ -184,8 +177,6 @@ call them.
 
 ### 1.4. Expectations
 
-[expectations]: #14_expectations
-
 Each of your examples lists a series of expectations that [Specl][] runs
 to determine whether the specification for that part of your project is
 being met. Inside the [Lua][] part of each example, you should write a
@@ -193,7 +184,7 @@ small block of code that checks that the example being described meets
 your expectations. [Specl][] gives you a new `expect` command to check
 that each example evaluates as it should:
 
-{% highlight lua %}
+{% highlight yaml %}
     - describe a stack:
       - it has no elements when empty:
           stack = Stack {}
@@ -214,8 +205,6 @@ more detail.
 
 ### 1.5. Pending Examples
 
-[pending examples]: #15_pending_examples
-
 Often, you'll think of a useful expectation or behaviour that you don't
 have time to implement right now.  Noting it off-line somewhere, or even
 adding a commented out example is likely to lead to it being forgotten.
@@ -227,7 +216,9 @@ or specification.
 The simplest kind of pending example is an example description with no
 associated Lua example code:
 
+{% highlight yaml %}
     - it raises an error if the stack is full:
+{% endhighlight %}
 
 The built in formatters will show this as a non-failing unimplemented
 (**pending!**) example when the spec-files is run, so you can keep
@@ -239,7 +230,7 @@ the call to `pending ()` somewhere near the beginning of the example
 to disable following _expectations_, without removing or commenting out
 the `expect` calls:
 
-{% highlight lua %}
+{% highlight yaml %}
     - describe a stack:
       - it has no elements when empty:
           pending ()
@@ -252,6 +243,7 @@ but crucially also allows [Specl][] to inform you when the expectation
 begins passing to remind you to remove stale `pending ()` calls from
 your specifications.
 
+{% highlight yaml %}
     ?.....
 
     Summary of pending expectations:
@@ -260,12 +252,13 @@ your specifications.
       You can safely remove the 'pending ()' call from this example
 
     All expectations met, but 1 still pending, in 0.00366 seconds.
+{% endhighlight %}
 
 Sometimes, it's useful to add some metadata to a pending example that
 you want to see in the summary report.  Pass a single string parameter
 to the `pending` function call like this:
 
-{% highlight lua %}
+{% highlight yaml %}
     - describe a stack:
       - it cannot remove an element when empty:
           pending "issue #26"
@@ -275,6 +268,7 @@ to the `pending` function call like this:
 
 Running [Specl][] now shows the string in the pending summary report:
 
+{% highlight yaml %}
     ?.....
 
     Summary of pending expectations:
@@ -282,11 +276,10 @@ Running [Specl][] now shows the string in the pending summary report:
       PENDING expectation 1: issue #26, not yet implemented
 
     All expectations met, but 1 still pending, in 0.00332 seconds.
+{% endhighlight %}
 
 
 ## 2. Matchers
-
-[matchers]: #2-matchers
 
 When `expect` looks up a matcher to validate an expectation, the
 `to_` part is just syntactic sugar to make the whole line read more
@@ -297,14 +290,13 @@ spec-file be comments explaining what is going on, and needing to be
 kept in sync with the code being described.
 
 The matchers themselves are stored by just the root of their name (`be`
-in this case).  See [Inverting a Matcher with not][], for more about why
-that is.
+in this case).  See
+[Inverting a Matcher with not](#inverting-a-matcher-with-not), for more
+about why that is.
 
 The matchers built in to [Specl][] are listed below.
 
 ### 2.1. be
-
-[be]: #21_be
 
 This matches only when the result of `expect` is the exact same object
 as the matcher argument. For example, [Lua][] interns strings as they
@@ -326,8 +318,6 @@ still separate and distinct objects.
 
 ### 2.2. equal
 
-[equal]: #22_equal
-
 To get around that problem when comparing tables, or std.object derived
 objects, use the `equal` matcher, which does a recursive element by
 element comparison of the contents of the expectation arguments. The
@@ -345,8 +335,6 @@ following expectations all pass:
 {% endhighlight %}
 
 ### 2.3. copy
-
-[copy]: #23_copy
 
 Like `equal`, this matcher is also useful for comparing tables, or
 std.object derived objects, and usually gives the same results.
@@ -367,8 +355,6 @@ is equivalent to:
 {% endhighlight %}
 
 ### 2.4. contain
-
-[contain]: #24_contain
 
 When comparing strings, you might not want to write out the entire
 contents of a very long expected result, when you can easily tell with
@@ -399,8 +385,6 @@ derivative to this matcher, [Specl][] aborts with an error; use
 
 ### 2.5. match
 
-[match]: #25_match
-
 When a simple substring search is not appropriate, `match` will compare
 the expectation against a [Lua][] pattern:
 
@@ -409,8 +393,6 @@ the expectation against a [Lua][] pattern:
 {% endhighlight %}
 
 ### 2.6. error
-
-[error]: #26_error
 
 Specifications for error conditions are a great idea! And this matcher
 checks both that an `error` was raised and that the subsequent error
@@ -421,8 +403,6 @@ message contains the supplied substring, if any.
 {% endhighlight %}
 
 ### 2.7. Inverting a matcher with not
-
-[inverting a matcher with not]: #27_inverting_a_matcher_with_not
 
 Oftentimes, in your specification you need to check that an expectation
 does **not** match a particular outcome, and [Specl][] has you covered
@@ -435,8 +415,8 @@ most readable. Some people are annoyed by split infinitives, but
 or `not_to_` as entirely equivalent.
 
 [Specl][] will still call the matcher according to the root name (see
-[Matchers][]), but inverts the result of the comparison before reporting
-a pass or fail:
+[Matchers](#2-matchers)), but inverts the result of the comparison
+before reporting a pass or fail:
 
 {% highlight lua %}
     expect ({}).not_to_be ({})
@@ -450,8 +430,6 @@ but you can pass the string if it makes an expectation clearer.
 
 ### 2.8. Matcher adaptors
 
-[matcher adaptors]: #28_matcher_adaptors
-
 In addition to using matchers for straight one-to-one comparisons
 between the result of an `expect` and the argument provided to the
 matcher, [Specl][] has some shortcuts that can intercept the arguments
@@ -459,8 +437,6 @@ and adapt the comparison sequence.  These shortcuts are called
 _adaptors_.
 
 #### 2.8.1. Matching alternatives with any_of
-
-[matching alternatives with any_of]: #281_matching_alternative_with_any_of
 
 When you want to check whether an expectation matches among a list of
 alternatives, [Specl][] supports an `any_of` adaptor for any matcher:
@@ -480,8 +456,6 @@ an expectation succeeds only if none of the alternatives match:
 {% endhighlight %}
 
 #### 2.8.2. Multiple matches with all_of
-
-[multiple matches with all_of]: #282_multiple_matches_with_all_of
 
 When you need to ensure that several matches succeed, [Specl][] provides
 the `all_of` adaptor:
@@ -516,8 +490,6 @@ supplied elements, it is far better to use:
 
 #### 2.8.3. Unordered matching with a_permutation_of
 
-[unordered matching with a_permutation_of]: #283_unordered_matching_with_a_permutation_of
-
 While [Specl][] makes every effort to maintain ordering of elements in
 the tables (and objects) it uses, there are times when you really want
 to check the contents of an inherently unordered expectation - say,
@@ -542,8 +514,6 @@ has even more elements than what it `to_contain` at the time of
 comparison.
 
 ### 2.9. Custom Matchers
-
-[custom matchers]: #29_custom_matchers
 
 Just like the built in matchers described above, you can use the
 `Matcher` factory object from `specl.matchers` to register additional
@@ -571,7 +541,7 @@ a whole to have passed if they are both the same according to a [Lua][]
 Of course, our custom `be` matcher reimplementation is not available
 to spec files until it has been registered in [Specl][]s matcher table.
 You can do this in a `before` block, or your `spec_helper.lua` (see
-[Separating Helper Functions][]).
+[Separating Helper Functions](#separating-helper-functions)).
 
 {% highlight lua %}
     ...
@@ -670,8 +640,6 @@ with `to_` and inverting matchers with the `not_` string.
 
 #### 2.9.1. Custom Adaptors
 
-[custom adaptors]: #291-custom-adaptors
-
 When you create a custom matcher, it can often improve the
 expressiveness of your spec files to allow additional custom adaptors
 that are specific to a particular Matcher object (and other Matchers
@@ -746,7 +714,7 @@ additional adaptors to the existing `Matcher` objects too:
 
 And then [Specl][] will support expectations such as:
 
-{% highlight lua %}
+{% highlight yaml %}
     - transform:
       - it remains the same size:
           expect (transform (subject)).
@@ -764,8 +732,6 @@ the adaptor method with `self.matchp`.
 
 ## 3. Environments
 
-[environments]: #3-environments
-
 It's important that every example be evaluated from a clean slate, both
 to prevent the side effects of one example affecting the start
 conditions of another, and in order to focus on a given example without
@@ -777,8 +743,6 @@ which to execute each example, then tearing it down afterwards to build
 another clean environment for executing the next example, and so on.
 
 ### 3.1. Before and After functions
-
-[before and after functions]: #31_before_and_after_functions
 
 To keep examples as readable and concise as possible, it's best not to
 have too much code in each. For example, it's inefficient to repeat a
@@ -792,7 +756,7 @@ finished, just prior to tearing the environment down. Since we don't
 need any fancy long descriptions for `before` and `after` functions,
 their table keys are just a bare `before` or `after` respectively:
 
-{% highlight lua %}
+{% highlight yaml %}
     ...
     - before: stack = Stack {}
 
@@ -808,8 +772,6 @@ for more concise example code in the specification.
 
 ### 3.2. Grouping Examples
 
-[grouping examples]: #32_grouping_examples
-
 If you have used [RSpec][], you'll already know that it supports
 `before(:each)` and `before(:all)`, and equivalents for `after`. But
 then goes to some lengths to warn that if you initialise any mutable
@@ -824,7 +786,7 @@ for grouping, but also allow you to write a `before` function outside of
 a group, where it will behave as if it were a `before(:all)` inside the
 group:
 
-{% highlight lua %}
+{% highlight yaml %}
     ...
     - describe a Stack:
         - before: |
@@ -847,8 +809,6 @@ a nested context (and write the description starting with the word
 "context" rather than "describe" if you are a traditionalist!).
 
 ### 3.3. Separating Helper Functions
-
-[separating helper functions]: #33_separating_helper_functions
 
 Oftentimes, spec files can become crowded with so much setup code that
 the actual specifications can get lost in the noise.  In this case, it
@@ -877,8 +837,6 @@ package.path = std.package.normalize (path, package.path)
 
 ## 4. Formatters
 
-[formatters]: #4-formatters
-
 As [Specl][] executes examples and tests the expectations of a
 specification, it can displays its progress using a formatter.
 
@@ -888,28 +846,27 @@ doesn't suit you.
 
 ### 4.1. Progress Formatter
 
-[progress formatter]: #41_progress_formatter
-
 The default formatter simply displays [Specl][]'s progress by writing a
 single period for every expectation that is met, or an `F` instead if an
 expectation is not met.  Once all the expectations have been evaluated,
 a one line summary follows:
 
+{% highlight yaml %}
     ......
     All expectations met in 0.00233 seconds.
+{% endhighlight %}
 
-In verbose mode (see [Command Line][]), a longer description of any
+In verbose mode (see [Command Line](#5-command-line)), a longer description of any
 pending or failing examples is displayed, along with the file and line
 location of each.
 
 ### 4.2. Report Formatter
 
-[report formatter]: #42_report_formatter
-
 The other built in formatter writes out the specification descriptions
 in an indented list in an easy to read format, followed by a slightly
 more detailed summary.
 
+{% highlight yaml %}
     a stack
       is empty to start with
       when pushing items
@@ -922,18 +879,17 @@ more detailed summary.
 
     Met 100.00% of 6 expectations.
     6 passed, 0 failed in 0.00250 seconds
+{% endhighlight %}
 
 Failing and pending expectations are annotated inline, and again with
 more detail in the summary footer.
 
-In verbose mode (see [Command Line][]), the inline annotations are
-expanded to the more detailed summary format, and both inline and
-summary reports give the file and line number of each, making a
-particular example easy to find within a large spec-file.
+In verbose mode (see [Command Line](#5-command-line)), the inline
+annotations are expanded to the more detailed summary format, and both
+inline and summary reports give the file and line number of each, making
+a particular example easy to find within a large spec-file.
 
 ### 4.3. Custom Formatters
-
-[custom formatters]: #43_custom_formatters
 
 A formatter is just a table of functions that [Specl][] can call as it
 runs your specifications, so provided you supply the table keys that
@@ -1050,8 +1006,6 @@ your custom formatter.
 
 ## 5. Command Line
 
-[command line]: #5-command-line
-
 Given a spec-file or two, along with the implementation of the code
 being checked against those specifications, you run [Specl][] inside the
 project directory using the provided `specl` command.
@@ -1061,14 +1015,12 @@ directory named `specs/`, and to have names ending in `_spec.yaml`. As
 long as you follow that format, invoking `specl` will find and check
 all the matching spec-files automatically.
 
-%{ highlight bash %}
+{% highlight bash %}
     specl
-%{ endhighlight %}
+{% endhighlight %}
 
 
 ### 5.1. Running a Subset of Examples
-
-[running a subset of examples]: #51_running_a_subset_of_examples
 
 Often, after adding the new examples for a feature, you're left with
 a block of failing tests that scroll off the screen when the following
@@ -1102,7 +1054,7 @@ For finer grained selection of a subset of examples than by file,
 [YAML][] path to each example, using the `--example=PATTERN` option.
 Given the following spec-file:
 
-{% highlight lua %}
+{% highlight yaml %}
 specify module:
 - context group one:
   - it passes:
@@ -1168,8 +1120,6 @@ accepts `+` prefixed line numbers prior to the file name argument:
 
 ### 5.2. Formatting Results
 
-[formatting results]: #52_formatting_results
-
 If you prefer to format the results of your specification examples with
 a custom formatter, you should make sure your formatter is visible on
 `LUA_PATH`, and use the `--formatter=BASENAME` option to load it.
@@ -1195,8 +1145,6 @@ remaining available options.
 
 
 ## 6. Not Yet Implemented
-
-[not yet implemented]: #6-not-yet-implemented
 
 No support for mocks in the current version.
 
