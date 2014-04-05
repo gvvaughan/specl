@@ -19,8 +19,10 @@
 -- MA 02111-1301, USA.
 
 
+-- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs;
+-- Lua 5.2 implementation below works on C or Lua funcs unchanged.
 -- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-local setfenv = setfenv or function(f, t)
+local setfenv = debug.setfenv or function(f, t)
   local name
   local up = 0
   repeat
