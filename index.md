@@ -1057,7 +1057,7 @@ being checked against those specifications, you run [Specl][] inside the
 project directory using the provided `specl` command.
 
 The `specl` command expects spec-files to be kept in a top-level
-directory named `specs/`, and to have names ending in `_spec.yaml. As
+directory named `specs/`, and to have names ending in `_spec.yaml`. As
 long as you follow that format, invoking `specl` will find and check
 all the matching spec-files automatically.
 
