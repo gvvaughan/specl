@@ -19,12 +19,40 @@
 -- MA 02111-1301, USA.
 
 
-local color = require "specl.color"
-local std   = require "specl.std"
-
-from std import Object
+from "specl.std" import Object
 
 local have_posix, posix = pcall (require, "posix")
+
+
+-- A null operation function.
+local function nop () end
+
+
+local files -- forward declaration
+
+if have_posix then
+
+  files = function (root, t)
+    t = t or {}
+    for _, file in ipairs (posix.dir (root) or {}) do
+      if file ~= "." and file ~= ".." then
+        local path = std.io.catfile (root, file)
+        if posix.stat (path).type == "directory" then
+          t = files (path, t)
+        else
+          t[#t + 1] = path
+        end
+      end
+    end
+    return t
+  end
+
+else
+
+  files = nop
+
+end
+
 
 -- Use higher resolution timers from luaposix if available.
 local function gettimeofday ()
@@ -40,6 +68,26 @@ local function timesince (earlier)
   end
   local elapsed = posix.timersub (posix.gettimeofday (), earlier)
   return (elapsed.usec / 1000000) + elapsed.sec
+end
+
+
+-- Return a complete copy of T, along with copied metatables.
+local function deepcopy (t)
+  local copied = {} -- references to tables already copied
+
+  local function tablecopy (orig)
+    local mt = getmetatable (orig)
+    local copy = mt and setmetatable ({}, copied[mt] or tablecopy (mt)) or {}
+    copied[orig] = copy
+    for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
+      if type (k) == "table" then k = copied[k] or tablecopy (k) end
+      if type (v) == "table" then v = copied[v] or tablecopy (v) end
+      rawset (copy, k, v)
+    end
+    return copy
+  end
+
+  return tablecopy (t)
 end
 
 
@@ -64,7 +112,7 @@ end
 local function concat (alternatives, infix, quoted)
   infix = infix or ", "
 
-  if quoted then
+  if quoted ~= nil then
     alternatives = map (function (v)
                           if Object.type (v) ~= "string" then
                             return std.string.tostring (v)
@@ -97,8 +145,9 @@ local function type_error (name, i, arglist, typelist)
   if Object.type (expected) ~= "table" then expected = {expected} end
   expected = concat (expected, " or "):gsub ("#table", "non-empty table")
 
-  error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
-         expected .. " expected, got " .. actual .. ")", 3)
+  error ("bad argument #" .. tostring (i) .. " to '" .. name ..
+         "' (" .. expected .. " expected, got " .. actual .. ")\n" ..
+	 "received: '" .. tostring (arglist[i]) .. "'", 3)
 end
 
 
@@ -156,27 +205,11 @@ local function indent (descriptions)
 end
 
 
--- A null operation function.
-local function nop () end
-
-
--- Color printing.
-local function princ (...)
-  return print (color (...))
-end
-
-
 -- Return S with the first word and following whitespace stripped,
 -- where S contains some whitespace initially (i.e single words are
 -- returned unchanged).
 local function strip1st (s)
   return s:gsub ("^%s*%w+%s+", "")
-end
-
-
--- Color writing.
-local function writc (...)
-  return io.write (color (...))
 end
 
 
@@ -186,21 +219,18 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  -- Constants
-  QUOTED         = true,
-
   -- Functions
   concat         = concat,
+  deepcopy       = deepcopy,
+  files          = files,
   gettimeofday   = gettimeofday,
   indent         = indent,
   nop            = nop,
   map            = map,
-  princ          = princ,
   strip1st       = strip1st,
   timesince      = timesince,
   type           = xtype,
   type_check     = type_check,
-  writc          = writc,
 }
 
 return M

@@ -1,15 +1,17 @@
 local hell = require "specl.shell"
 local std  = require "specl.std"
 
+package.path = std.package.normalize ("lib/?.lua", package.path)
+
 local Object = std.Object
 
-function run_spec (params)
-  local SPECL = "specs/specl --color=no"
+function spawn_specl (params)
+  local SPECL = os.getenv ("SPECL") or "bin/specl"
 
   -- If params is a string, it is the input text for the subprocess.
   if type (params) == "string" then
     return hell.spawn {
-      SPECL;
+      SPECL, "--color=no", "-";
       stdin = params,
       env = { LUA_PATH=package.path },
     }
@@ -22,8 +24,10 @@ function run_spec (params)
 
     -- But is just options to specl if it begins with a '-'.
     if cmd:sub (1, 1) == "-" then
-      cmd = SPECL .. " " .. cmd
+      cmd = SPECL .. " --color=no " .. cmd
     end
+
+    if params.stdin then cmd = cmd .. " -" end
 
     -- Must pass our package.path through to inferior Specl process.
     local env = params.env or {}
@@ -33,6 +37,31 @@ function run_spec (params)
   end
 
   error ("run_spec was expecting a string or table, but got a "..type (params))
+end
+
+
+local inprocess = require "specl.inprocess"
+local Main      = require "specl.main"
+
+function run_spec (params)
+  -- If params is a string, it is the input text for the subprocess.
+  if type (params) == "string" then
+    return inprocess.call (Main, {"--color=no", "-"}, params)
+  end
+
+  -- If params is a table, fill in the gaps in parameters it names.
+  if type (params) == "table" then
+    -- The command is made from the array part of params table.
+    local argt = {"--color=no"}
+    for _, e in ipairs (params) do argt[#argt + 1] = e end
+
+    if params.stdin then argt[#argt + 1] = "-" end
+
+    local proc = inprocess.call (Main, argt, params.stdin)
+    return proc
+  end
+
+  error ("inprocess_spec was expecting a string or table, but got a "..type (params))
 end
 
 
@@ -89,16 +118,16 @@ do
 
   -- Matches if the type of <actual> is <expect>.
   matchers.instantiate_a = Matcher {
-    function (actual, expect)
+    function (self, actual, expect)
       return (Object.type (actual) == expect)
     end,
 
-    format_actual = function (actual)
-      return " a " .. Object.type (actual)
+    format_expect = function (self, expect)
+      return " a " .. expect .. ", "
     end,
 
-    format_expect = function (expect)
-      return " a " .. expect .. ", "
+    format_actual = function (self, actual)
+      return " a " .. Object.type (actual)
     end,
   }
 end

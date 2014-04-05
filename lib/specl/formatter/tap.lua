@@ -1,9 +1,7 @@
 -- Test Anything Protocol style formatter.
 --
 
-local util = require "specl.util"
-
-from util import map, nop, strip1st
+from "specl.util" import map, nop, strip1st
 
 local curr_test = 0
 

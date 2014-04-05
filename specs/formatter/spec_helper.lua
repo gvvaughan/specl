@@ -1,10 +1,8 @@
-local hell = require "specl.shell"
+local inprocess = require "specl.inprocess"
+local Main      = require "specl.main"
 
-local SPECL = "specs/specl"
-
-function run_spec (yaml, ...)
-  return hell.spawn {
-    SPECL, "--color=no", "--formatter=report", ...;
-    stdin = yaml,
-  }
+function run_spec (argt)
+  local t = {"--color=no", "-"}
+  for _, e in ipairs (argt) do table.insert (t, #t,  e) end
+  return inprocess.call (Main, t, argt.stdin)
 end

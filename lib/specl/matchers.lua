@@ -19,27 +19,13 @@
 -- MA 02111-1301, USA.
 
 local color = require "specl.color"
-local std   = require "specl.std"
-local util  = require "specl.util"
 
-from std        import Object
-from std.string import chomp, escape_pattern, prettytostring, tostring
-from std.table  import clone, empty, size, totable
+from "specl.util" import type_check
+from "specl.std"  import Object, string.chomp, string.escape_pattern,
+                    string.prettytostring, string.tostring, table.clone,
+                    table.empty, table.merge, table.size, table.totable
 
 local M = {}
-
-
--- Merge only the hash part of table <u> into table <t>.
-local function merge_hash (t, u)
-  local ignore = {}
-  for _, v in ipairs (u) do ignore[v] = true end
-
-  for k, v in pairs (u) do
-    if ignore[k] == nil then t[k] = v end
-  end
-
-  return t
-end
 
 
 -- Quote strings nicely, and coerce non-strings into strings.
@@ -70,12 +56,12 @@ local function alternatives_msg (object, adaptor, alternatives, actual, expect, 
   local m
 
   if #alternatives == 1 then
-    m = "expecting" .. object.format_expect (alternatives[1], actual, ...) ..
-        "but got" .. object.format_actual (actual, expect, ...)
+    m = "expecting" .. object:format_expect (alternatives[1], actual, ...) ..
+        "but got" .. object:format_actual (actual, expect, ...)
   else
     m = "expecting" ..
-        object.format_alternatives (adaptor, alternatives, actual, ...) ..
-        "but got" .. object.format_actual (actual, expect, ...)
+        object:format_alternatives (adaptor, alternatives, actual, ...) ..
+        "but got" .. object:format_actual (actual, expect, ...)
   end
 
   return m
@@ -87,36 +73,30 @@ end
 local Matcher = Object {
   _type = "Matcher",
 
-  _init = function (self, parms)
-    self.matchp = parms[1]
-    util.type_check ("Matcher", {self.matchp}, {"function"})
+  _init      = {"matchp"},
+  _parmnames = {"matchp",   "format_expect", "format_actual", "format_alternatives"},
+  _parmtypes = {"function", "function",      "function",      "function"           },
 
-    -- Overwrite defaults with specified values.
-    self = merge_hash (self, parms)
-
-    return self
-  end,
-
-  -- Respond to `should_`s and `should_not`s.
+  -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name, {actual}, {self.actual_type})
 
     -- Pass all parameters to both formatters!
-    local m = "expecting" .. self.format_expect (expect, actual, ...) ..
-              "but got" .. self.format_actual (actual, expect, ...)
-    return self.matchp (actual, expect, ...), m
+    local m = "expecting" .. self:format_expect (expect, actual, ...) ..
+              "but got" .. self:format_actual (actual, expect, ...)
+    return self:matchp (actual, expect, ...), m
   end,
 
 
   -- Adaptors:
 
   ["all_of?"] = function (self, actual, alternatives, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".all_of", {alternatives}, {"#table"})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".all_of", {alternatives}, {"#table"})
 
     local success
     for _, expect in ipairs (alternatives) do
-      success = self.matchp (actual, expect, ...)
+      success = self:matchp (actual, expect, ...)
       if not success then break end
     end
 
@@ -125,12 +105,12 @@ local Matcher = Object {
   end,
 
   ["any_of?"] = function (self, actual, alternatives, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".any_of", {alternatives}, {"#table"})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".any_of", {alternatives}, {"#table"})
 
     local success
     for _, expect in ipairs (alternatives) do
-      success = self.matchp (actual, expect, ...)
+      success = self:matchp (actual, expect, ...)
       if success then break end
     end
 
@@ -141,13 +121,15 @@ local Matcher = Object {
   -- Defaults:
   actual_type   = "any",
 
-  format_actual = function (actual) return " " .. q(actual) end,
+  matchp        = function (self, actual, expect) return actual == expect end,
 
-  format_expect = function (expect) return " " .. q(expect) .. ", " end,
+  format_actual = function (self, actual) return " " .. q(actual) end,
 
-  format_alternatives = function (adaptor, alternatives)
+  format_expect = function (self, expect) return " " .. q(expect) .. ", " end,
+
+  format_alternatives = function (self, adaptor, alternatives)
     return " " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
@@ -166,7 +148,7 @@ local matchers = setmetatable ({content = {}}, {
   __index = function (self, name) return rawget (self.content, name) end,
 
   __newindex = function (self, name, matcher)
-    util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
+    type_check ("matchers." .. name, {matcher}, {"Matcher"})
     rawset (self.content, name, matcher)
     rawset (matcher, "name", name)
   end,
@@ -223,34 +205,56 @@ end
 
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
+  -- If they are the same object (number, interned string, table etc),
+  -- or they shara a metatable with an __eq metamethod that says they
+  -- equal, then they *are* the same... no need for more checking.
+  if o1 == o2 then return true end
+
+  -- Non-table types at this point must differ.
+  if type (o1) ~= "table" or type (o2) ~= "table" then return false end
+
   -- cache extended types
   local type1, type2 = Object.type (o1), Object.type (o2)
 
   -- different types are unequal
   if type1 ~= type2 then return false end
 
-  -- core types can be compared directly
-  if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
-
   -- compare std.Objects according to table contents
   if type1 ~= "table" then o1 = totable (o1) end
   if type2 ~= "table" then o2 = totable (o2) end
 
+  local subcomps = {}  -- keys requiring a recursive comparison
   for k, v in pairs (o1) do
-    if o2[k] == nil or not objcmp (v, o2[k]) then return false end
+    if o2[k] == nil then return false end
+    if v ~= o2[k] then
+      if type (v) ~= "table" then return false end
+      -- only require recursive comparisons for mismatched values
+      table.insert (subcomps, k)
+    end
   end
   -- any keys in o2, not already compared above denote a mismatch!
-  for k, _ in pairs (o2) do
+  for k in pairs (o2) do
     if o1[k] == nil then return false end
   end
-  return true
+  if #subcomps == 0 then return true end
+  if #subcomps > 1 then
+    -- multiple table-valued keys remain, so we have to recurse
+    for _, k in ipairs (subcomps) do
+      assert (o1[k] ~= nil and o2[k] ~= nil)
+      if not objcmp (o1[k], o2[k]) then return false end
+    end
+    return true
+  end
+  -- use a tail call for arbitrary depth single-key subcomparison
+  local _, k = next (subcomps)
+  return objcmp (o1[k], o2[k])
 end
 
 
 -- Deep comparison, matches if <actual> and <expect> share the same
 -- structure.
 matchers.equal = Matcher {
-  function (actual, expect)
+  function (self, actual, expect)
     return (objcmp (actual, expect) == true)
   end,
 }
@@ -258,19 +262,36 @@ matchers.equal = Matcher {
 
 -- Identity, only match if <actual> and <expect> are the same object.
 matchers.be = Matcher {
-  function (actual, expect)
+  function (self, actual, expect)
     return (actual == expect)
   end,
 
-  format_expect = function (expect)
+  format_expect = function (self, expect)
     return " exactly " .. q(expect) .. ", "
+  end,
+}
+
+
+-- Equal but not the same object.
+matchers.copy = Matcher {
+  function (self, actual, expect)
+    return (actual ~= expect) and (objcmp (actual, expect) == true)
+  end,
+
+  format_expect = function (self, expect)
+    return " a copy of " .. q(expect) .. ", "
+  end,
+
+  format_alternatives = function (self, adaptor, alternatives)
+    return " a copy of " .. adaptor .. " " ..
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
 
 -- Matches if any error is raised inside `expect`.
 matchers.error = Matcher {
-  function (actual, expect, ok)
+  function (self, actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
         ok = not actual:match (".*" .. escape_pattern (expect) .. ".*")
@@ -280,7 +301,7 @@ matchers.error = Matcher {
   end,
 
   -- force a new-line, let the display engine take care of indenting.
-  format_actual = function (actual, _, ok)
+  format_actual = function (self, actual, _, ok)
     if ok then
       return " no error"
     else
@@ -288,7 +309,7 @@ matchers.error = Matcher {
     end
   end,
 
-  format_expect = function (expect)
+  format_expect = function (self, expect)
     if expect ~= nil then
       return " an error containing:" .. reformat (expect)
     else
@@ -296,7 +317,7 @@ matchers.error = Matcher {
     end
   end,
 
-  format_alternatives = function (adaptor, alternatives)
+  format_alternatives = function (self, adaptor, alternatives)
     return " an error containing " .. adaptor .. ":" ..
            reformat (alternatives, adaptor)
   end,
@@ -305,26 +326,26 @@ matchers.error = Matcher {
 
 -- Matches if <actual> matches <pattern>.
 matchers.match = Matcher {
-  function (actual, pattern)
+  function (self, actual, pattern)
     return (actual:match (pattern) ~= nil)
   end,
 
   actual_type   = "string",
 
-  format_expect = function (pattern)
+  format_expect = function (self, pattern)
     return " string matching " .. q(pattern) .. ", "
   end,
 
-  format_alternatives = function (adaptor, alternatives)
+  format_alternatives = function (self, adaptor, alternatives)
     return " string matching " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
 
 -- Matches if <actual> contains <expect>.
 matchers.contain = Matcher {
-  function (actual, expect)
+  function (self, actual, expect)
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
       return (actual:match (escape_pattern (expect)) ~= nil)
@@ -351,13 +372,13 @@ matchers.contain = Matcher {
 
   -- Additional adaptor to match unordered tables (and strings!).
   ["a_permutation_of?"] = function (self, actual, expected, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
 
     -- calculate failure output before coercing strings into tables
     local msg = "expecting" ..
-                self.format_alternatives ("a permutation of", expected, actual, ...) ..
-                "but got" .. self.format_actual (actual, expect, ...)
+                self:format_alternatives ("a permutation of", expected, actual, ...) ..
+                "but got" .. self:format_actual (actual, expect, ...)
 
     if Object.type (actual) ~= "table" then actual = totable (actual) end
     if Object.type (expected) ~= "table" then expected = totable (expected) end
@@ -386,7 +407,7 @@ matchers.contain = Matcher {
 
   actual_type   = {"string", "table", "object"},
 
-  format_actual = function (actual)
+  format_actual = function (self, actual)
     if type (actual) == "string" then
       return " " .. q (actual)
     elseif util.type (actual) == "object" then
@@ -396,7 +417,7 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_expect = function (expect, actual)
+  format_expect = function (self, expect, actual)
     if type (expect) == "string" and type (actual) == "string" then
       return " string containing " .. q(expect) .. ", "
     else
@@ -404,11 +425,11 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_alternatives = function (adaptor, alternatives, actual)
+  format_alternatives = function (self, adaptor, alternatives, actual)
     if type (alternatives) == "string" then
       alternatives = ("%q"):format (alternatives)
     else
-      alternatives = concat (alternatives, adaptor, util.QUOTED)
+      alternatives = concat (alternatives, adaptor, ":quoted")
     end
     return " " .. Object.type (actual) .. " containing " ..
            adaptor .. " " .. alternatives .. ", "
@@ -422,19 +443,16 @@ matchers.contain = Matcher {
 --[[ ============= ]]--
 
 
-local expectations, ispending
-
-
 -- Called at the start of each example block.
-local function init ()
-  expectations = {}
-  ispending    = nil
+local function init (state)
+  state.expectations = {}
+  state.ispending = nil
 end
 
 
 -- Return status since last init.
-local function status ()
-  return { expectations = expectations, ispending = ispending }
+local function status (state)
+  return { expectations = state.expectations, ispending = state.ispending }
 end
 
 
@@ -443,18 +461,19 @@ end
 -- parameter. Matcher names containing '_not_' invert their results
 -- before returning.
 --
--- For example:                  expect ({}).should_not_be {}
-
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
-
-local function expect (ok, actual)
+-- For example:                  expect ({}).not_to_be {}
+local function expect (state, ok, actual)
   return setmetatable ({}, {
-    __index = function (_, matcher_name)
+    __index = function (_, verb)
       local inverse = false
-      if matcher_name:match ("^should_not_") then
-        inverse, matcher_root = true, matcher_name:sub (12)
+      if verb:match ("^should_not_") then
+        inverse, matcher_root = true, verb:sub (12)
+      elseif verb:match ("^to_not_") or verb:match ("^not_to_") then
+        inverse, matcher_root = true, verb:sub (8)
+      elseif verb:match ("^should_") then
+        matcher_root = verb:sub (8)
       else
-        matcher_root = matcher_name:sub (8)
+        matcher_root = verb:sub (4)
       end
 
       local matcher = matchers[matcher_root]
@@ -467,14 +486,16 @@ local function expect (ok, actual)
           message = message and ("not " .. message)
         end
 
+	from state import expectations, ispending, stats
+
         if ispending ~= nil then
           -- stats.pend is updated by pending ()
           -- +1 per pending example, not per expectation in pending examples
           pending = ispending
         elseif success ~= true then
-          M.stats.fail = M.stats.fail + 1
+          stats.fail = stats.fail + 1
         else
-          M.stats.pass = M.stats.pass + 1
+          stats.pass = stats.pass + 1
         end
         table.insert (expectations, {
           message = message,
@@ -486,14 +507,14 @@ local function expect (ok, actual)
       -- Returns a functable...
       return setmetatable ({}, {
         --     (i) ...with a `__call` metamethod to respond to:
-        --         | expect (foo).should_be (bar)
+        --         | expect (foo).to_be (bar)
         __call = function (_, expected)
           score (matcher:match (actual, expected, ok))
         end,
 
         __index = function (_, adaptor_name)
           --  (ii) ...or else dynamic adapator lookup in the matcher object:
-          --       | expect (foo).should_be.any_of {bar, baz, quux}
+          --       | expect (foo).to_be.any_of {bar, baz, quux}
 	  adaptor = matcher[adaptor_name .. "?"]
           if adaptor then
 	    return function (alternatives)
@@ -503,7 +524,7 @@ local function expect (ok, actual)
           -- (iii) otherwise throw an error for unknown adaptors:
           else
             error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-                   matcher_name .. "'")
+                   verb .. "'")
           end
         end,
       })
@@ -512,9 +533,9 @@ local function expect (ok, actual)
 end
 
 
-local function pending (s)
-  M.stats.pend = M.stats.pend + 1
-  ispending  = s or "not yet implemented"
+local function pending (state, s)
+  state.stats.pend = state.stats.pend + 1
+  state.ispending  = s or "not yet implemented"
 end
 
 
@@ -523,7 +544,7 @@ end
 --[[ ----------------- ]]--
 
 
-return std.table.merge (M, {
+return merge (M, {
   -- Prototypes:
   Matcher   = Matcher,
 

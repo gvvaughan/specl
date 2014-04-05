@@ -21,12 +21,20 @@
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = 30422a3d540a64f4a593d45cd41960e4
+old_NEWS_hash = 7a587ba98ed0457bc660bbf8bd0daf1e
 
 update_copyright_env = \
 	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
 	UPDATE_COPYRIGHT_USE_INTERVALS=1 \
 	UPDATE_COPYRIGHT_FORCE=1
+
+
+## ------------- ##
+## Declarations. ##
+## ------------- ##
+
+dist_noinst_SCRIPTS	=
+dist_noinst_DATA	=
 
 include specs/specs.mk
 
@@ -46,7 +54,7 @@ LUAM_ENV  = LUA_PATH="$(srcdir)/lib/?.lua;$(LUA_PATH)"
 $(srcdir)/bin/specl: $(dist_noinst_DATA)
 	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
 	test -d "$$d" || $(MKDIR_P) "$$d"
-	$(AM_V_GEN)$(LARCH) -e 'require "main"' $(dist_noinst_DATA) \
+	$(AM_V_GEN)$(LARCH) -e 'require "specl.main" (arg):execute ()' $(bin_specl_SOURCES) \
 	| sed							\
 	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
 	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
@@ -79,25 +87,34 @@ man_MANS += doc/specl.1
 
 dist_bin_SCRIPTS += bin/specl
 
-dist_noinst_DATA =					\
-	lib/main.lua					\
-	lib/specl.lua					\
+bin_specl_SOURCES =					\
 	lib/specl/color.lua				\
+	lib/specl/compat.lua				\
 	lib/specl/formatter/progress.lua		\
 	lib/specl/formatter/report.lua			\
 	lib/specl/formatter/tap.lua			\
+	lib/specl/inprocess.lua				\
 	lib/specl/loader.lua				\
+	lib/specl/main.lua				\
 	lib/specl/matchers.lua				\
         lib/specl/optparse.lua				\
+	lib/specl/runner.lua				\
 	lib/specl/shell.lua				\
 	lib/specl/std.lua				\
 	lib/specl/util.lua				\
 	$(NOTHING_ELSE)
 
+dist_noinst_DATA += $(bin_specl_SOURCES)
 
 ## ------------- ##
 ## Distribution. ##
 ## ------------- ##
+
+dist_noinst_SCRIPTS += build-aux/larch
+
+dist_noinst_DATA +=					\
+	lib/larch/from.lua				\
+	$(NOTHING_ELSE)
 
 EXTRA_DIST +=						\
 	doc/specl.1					\

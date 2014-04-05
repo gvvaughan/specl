@@ -1,5 +1,151 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 11 (2014-04-05) [stable]
+
+** New features:
+
+  - Built-in matchers compare nested tables and objects in about 25% of
+    the time required previously, and is optimised for tail-call
+    elimination for non-tree like structures.
+
+  - Specl now loads a 'spec_helper.lua' from the same directory as the
+    spec file being executed into the example environment automatically,
+    so there's no need to manually require it from a `before:` block in
+    each spec file any more.
+
+  - You can easily run Specl from the top of your source tree without
+    any special LUA_PATH munging in Makefiles or wrapper scripts. Just
+    set `package.path` and `package.cpath` to find the code being specced
+    out in a 'spec_helper.lua' in each directory containing spec files.
+
+  - When invoked with no filename arguments, `specl` will check all your
+    specifications, as long as they have names ending in `_spec.yaml` and
+    are kept in or somewhere below the `specs/` directory of your project.
+
+  - The report and progress formatters now display file:line:expectation:
+    annotations for failed and pending expectations in verbose mode (-v).
+
+  - New command line option `--fail-fast` (or `-1`) to stop checking
+    expectations immediately on the first failure, rather than
+    continuing and showing all failures.
+
+  - New command line option `--example=PATTERN` (or `-e PATTERN`) to specify
+    inclusive filters matched against the fully concatenated YAML
+    descriptions of an example. Use this to select a subset of examples to
+    (re)check.
+
+  - You can also filter out all but the examples at a specified line
+    number either by pasting from the output of a failed or pending
+    expectation in verbose mode, by invoking specl as:
+
+        specl specs/some_spec.yaml:44:1
+
+    or with as many `+NN` as necessary to select several examples from
+    the following file:
+
+        specl +44 +48 specs/some_spec.yaml
+
+    or a combination of the above. Note that the final `:1` in the
+    former is ignored and can be omitted (it is the ordinal number of an
+    `expect` statement in a given example), but is accepted for ease of
+    cutting and pasting.
+
+  - From this release out, matchers using `to_` are preferred to using
+    `should_`.  When negating a new syntax `to_` matcher, both of
+    `to_not_` and `not_to` are accepted.
+
+  - New `copy` matcher, to specify that an object should be an identical
+    copy of the expected value, but not the same object:
+
+      t = {"foo"}
+      expect (table.clone (t)).to_copy (t)
+
+  - You can `require "specl.shell"` for a swathe of additional matchers
+    to specify results from a `Process` object:
+
+      a) For exit statuses, use:
+
+           expect (shell.spawn "exit 42").to_exit (42)
+           expect (shell.spawn "exit 0").to_succeed ()
+           expect (shell.spawn "/bin/false").to_fail ()
+
+      b) For checking the contents of the output stream, use:
+
+           expect (...).to_output "exact content"
+           expect (...).to_contain_output  "substring"
+           expect (...).to_match_output "pattern"
+
+      d) To require zero exit status with specified output stream
+         contents:
+
+           expect (...).to_succeed_with "exact content"
+           expect (...).to_succeed_while_containing "substring"
+           expect (...).to_succeed_while_matching "pattern"
+
+      c) To check the standard error stream instead:
+
+           expect (...).to_output_error "exact content"
+           expect (...).to_contain_error "substring"
+           expect (...).to_match_error "pattern"
+
+      e) To require non-zero exit status with specified error stream
+         contents:
+
+           expect (...).to_fail_with "exact content"
+           expect (...).to_fail_while_containing "substring"
+           expect (...).to_fail_while_matching "pattern"
+
+  - New experimental `specl.inprocess` module provides a way to run
+    carefully written Lua programs inside the Specl process, saving a
+    fork/exec each time.  Converting Specl itself to be reentrant, and
+    using `specl.inprocess` for most of its examples shaves more than
+    75% off the time spent in `make check`: from over 20secs to under
+    5secs on my machine.
+
+** Incompatible changes:
+
+  - Invoking `specl` with no filename arguments no longer reads specs
+    from standard input.  You must explicitly pass a "-" argument to get
+    that behaviour.
+
+  - RSpec has been moving from expressing `should_` expectations to
+    using `to_` for technical reasons.  Specl now uses `to_` throughout,
+    not for technical reasons, but because:
+
+      (i) expectations almost always read better with `to_` instead of
+          `should_`;
+     (ii) it's shorter and easier to type, so is less "noisy" in among
+          the important surrounding arguments.
+
+    There are no plans to remove `should_` from Specl, so you can expect
+    to safely continue to use your existing spec files indefinitely: But
+    all mention of `should_` has been removed from documentation, and I
+    recommend you use `to_` for new spec files for the reasons above.
+
+  - When making custom matchers, all the api constructor functions are
+    now proper methods.  Previous releases forgot the initial self
+    parameter in the unnamed matching predicate function and the
+    following optional functions accepted by the constructor:
+
+      function (self, actual, expect)
+      function format_actual (self, actual, ...)
+      format_expect (self, expect, ...)
+      format_alternatives (self, adaptor, alternatives, ...)
+
+    If you have added any custom matchers to your spec files, be sure
+    to insert the `self` parameter to match the new calling convention
+    as soon as you upgrade, or they will not work with this release.
+
+** Bug fixes:
+
+  - Setting table elements from outer environment tables no longer leak
+    into sibling examples.  For example, changing entries in the _G
+    table or adding entries to the string table affects only the current
+    innermost environment now, just like setting other variables.
+
+  - Unrecognised command-line options are diagnosed properly.
+
+
 * Noteworthy changes in release 10 (2014-01-15) [stable]
 
 ** Bug fixes:

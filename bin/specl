@@ -31,358 +31,6 @@ test -n "$LUA" || {
 exec "$LUA" "$0" "$@"
 ]]SH
 
-package.preload["main"] = (function ()
--- Specification testing framework.
--- Written by Gary V. Vaughan, 2013
---
--- Copyright (c) 2013-2014 Gary V. Vaughan
---
--- This program is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3, or (at your option)
--- any later version.
---
--- This program is distributed in the hope that it will be useful, but
--- WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
--- General Public License for more details.
---
--- You should have received a copy of the GNU General Public License
--- along with this program; see the file COPYING.  If not, write to the
--- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
--- MA 02111-1301, USA.
-
-local specl  = require "specl"
-local loader = require "specl.loader"
-local std    = require "specl.std"
-
-local have_color = pcall (require, "ansicolors")
-
-
--- Make a shallow copy of the pristine global environment, so that the
--- state of the Specl Lua environment is not exposed to spec files.
-local sandbox = {}
-for k, v in pairs (_G) do sandbox[k] = v end
-
-
--- Parse command line options.
-local OptionParser = require "specl.optparse"
-
-local parser = OptionParser [[
-specl (Specl) 10
-Written by Gary V. Vaughan <gary@gnu.org>, 2013
-
-Copyright (C) 2013, Gary V. Vaughan
-Specl comes with ABSOLUTELY NO WARRANTY.
-You may redistribute copies of Specl under the terms of the GNU
-General Public License; either version 3, or any later version.
-For more information, see <http://www.gnu.org/licenses>.
-
-Usage: specl [OPTION]... [FILE]...
-
-Behaviour Driven Development for Lua.
-
-Develop and run BDD specs written in Lua for RSpec style workflow, by
-verifying specification expectations read from given FILEs or standard
-input, and reporting the results on standard output.
-
-If no FILE is listed, or where '-' is given as a FILE, then read from
-standard input.
-
-      --help            print this help, then exit
-      --version         print version number, then exit
-      --color=WHEN      request colorized formatter output [default=yes]
-  -f, --formatter=FILE  use a specific formatter [default=progress]
-      --unicode         allow unicode in spec files
-  -v, --verbose         request verbose formatter output
-
-Due to a shortcoming in libYAML, unicode characters in any passed FILE
-prevent Specl from working. The '--unicode' option works around that
-shortcoming, but any error messages caused by Lua code in FILE will
-usually report line-numbers incorrectly.  By default, errors report
-accurate line-numbers, and unicode characters are not supported.
-
-Report bugs to http://github.com/gvvaughan/specl/issues.]]
-
-parser:on ("color", parser.required, parser.boolean)
-parser:on ({"f", "format", "formatter"}, parser.required,
-           function (parser, opt, optarg)
-             local ok, formatter = pcall (require, optarg)
-	     if not ok then
-	       ok, formatter = pcall (require, "specl.formatter." ..optarg)
-	     end
-	     if not ok then
-	       parser:opterr ("could not load '" .. optarg .. "' formatter.")
-	     end
-	     return formatter
-           end)
-
-_G.arg, opts = parser:parse (_G.arg)
-
--- Option defaults.
-if not have_color then
-  opts.color = nil
-elseif opts.color == nil then
-  opts.color = true
-end
-
-
--- Called by std.io.process_files() to concatenate YAML formatted
--- specifications in each <filename>
-local specs = {}
-function slurp (filename)
-  local s, errmsg = std.string.slurp ()
-  if errmsg ~= nil then
-    io.stderr:write (errmsg .. "\n")
-    os.exit (1)
-  end
-  specs[#specs + 1] = loader.load (filename, s)
-end
-
-
-std.io.process_files (slurp)
-
-os.exit (specl.run (specs, sandbox))
-
-end)
-package.preload["specl"] = (function ()
--- Specification testing framework.
--- Written by Gary V. Vaughan, 2013
---
--- Copyright (c) 2013-2014 Gary V. Vaughan
---
--- This program is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3, or (at your option)
--- any later version.
---
--- This program is distributed in the hope that it will be useful, but
--- WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
--- General Public License for more details.
---
--- You should have received a copy of the GNU General Public License
--- along with this program; see the file COPYING.  If not, write to the
--- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
--- MA 02111-1301, USA.
-
-
--- Use the simple progress formatter by default.  Can be changed by run().
-local formatter  = require "specl.formatter.progress"
-local matchers   = require "specl.matchers"
-local util       = require "specl.util"
-
-
-
---[[ ================================= ]]--
---[[ Compatibility between 5.1 and 5.2 ]]--
---[[ ================================= ]]--
-
-
--- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-setfenv = setfenv or function(f, t)
-  local name
-  local up = 0
-  repeat
-    up = up + 1
-    name = debug.getupvalue (f, up)
-  until name == '_ENV' or name == nil
-  if name then
-    debug.upvaluejoin (f, up, function () return name end, 1)
-    debug.setupvalue (f, up, t)
-  end
-  return f
-end
-
-
-loadstring = loadstring or function (chunk, chunkname)
-  return load (chunk, chunkname)
-end
-
-
-
---[[ ============= ]]--
---[[ Spec' Runner. ]]--
---[[ ============= ]]--
-
-
--- Append non-nil ARG to HOLDER.accumulated.
--- If ARG is a table, values for all keys in ARG are accumulated in
--- equivalent HOLDER keys.
--- Used to collect output from formatter calls, to be saved for footer.
-local function accumulator (holder, arg)
-  if arg ~= nil then
-    if type (arg) == "table" then
-      holder.accumulated = holder.accumulated or {}
-      for k, v in pairs (arg) do
-        holder.accumulated[k] = (holder.accumulated[k] or "") .. tostring(v)
-      end
-    else
-      holder.accumulated = (holder.accumulated or "") .. arg
-    end
-  end
-end
-
-
--- Intercept functions that normally execute in the global environment,
--- and run them in the example block environment to capture side-effects
--- correctly.
-local function initenv (env)
-  for _, intercept in pairs { "load", "loadfile", "loadstring" } do
-    env[intercept] = function (...)
-      local fn = env.specl["_" .. intercept] (...)
-      return function ()
-        setfenv (fn, env)
-        return fn ()
-      end
-    end
-  end
-
-  -- Manually walk the package path, and `loadstring(f)` what we find...
-  --   * setfenv prior to running loadstring returned function, which
-  --     imports any global symbols from <f> into the local env;
-  --   * (re)load the module with the system loader so that specl itself
-  --     can find all the symbols it needs without digging through nested
-  --     sandbox environments.
-  env.require = function (f)
-    local fn, errmsg = package.preload[f], "could not load " .. f
-
-    if fn == nil then
-      local h, filename
-
-      for path in string.gmatch (package.path .. ";", "([^;]*);") do
-        filename = path:gsub ("%?", (f:gsub ("%.", "/")))
-        h = io.open (filename, "rb")
-        if h then break end
-      end
-
-      -- Manually load into a local function, if we found it.
-      if h ~= nil then
-	local s = h:read "*a"
-        h:close ()
-
-        if s ~= nil then fn, errmsg = loadstring (s, filename) end
-
-        if errmsg ~= nil then error (errmsg) end
-
-	if f:match "spec_helper" == nil and f:match "^lua_......$" == nil then
-	  package.preload[f] = fn
-	end
-      end
-    end
-
-    if fn ~= nil then
-      -- Ensure any global symbols arrive in <env>.
-      setfenv (fn, env)
-      fn ()
-    end
-
-    -- Return the package.loaded result.
-    return env.specl._require (f)
-  end
-end
-
-
-local run_examples, run_contexts, run
-
-
--- Run each of EXAMPLES under ENV in order.
-function run_examples (examples, descriptions, env)
-  local block = function (example, blockenv)
-    local metatable = { __index = blockenv }
-    local fenv = { expect = matchers.expect, pending = matchers.pending }
-
-    setmetatable (fenv, metatable)
-    initenv (fenv)
-
-    if examples.before ~= nil then
-      setfenv (examples.before, fenv)
-      examples.before ()
-    end
-
-    -- There is only one, otherwise we can't maintain example order.
-    local description, definition = next (example)
-
-    if type (definition) == "table" then
-      -- A nested context, revert back to run_contexts.
-      run_contexts (example, descriptions, fenv)
-
-    elseif type (definition) == "function" then
-      -- An example, execute it in a clean new sub-environment.
-      table.insert (descriptions, description)
-
-      matchers.init ()
-
-      setfenv (definition, fenv)
-      definition ()
-      accumulator (formatter,
-                   formatter.expectations (matchers.status (), descriptions))
-      table.remove (descriptions)
-    end
-
-    if examples.after ~= nil then
-      setfenv (examples.after, fenv)
-      examples.after ()
-    end
-  end
-
-  for _, example in ipairs (examples) do
-    -- Also, run every block in a sub-environment, so that before() and
-    -- after() calls from one block don't affect any other.
-    local fenv = setmetatable ({}, { __index = env })
-    setfenv (block, fenv)
-    block (example, fenv)
-  end
-end
-
-
--- Run each of CONTEXTS under ENV in order.
-function run_contexts (contexts, descriptions, env)
-  for description, examples in pairs (contexts) do
-    table.insert (descriptions, description)
-    accumulator (formatter, formatter.spec (descriptions))
-    run_examples (examples, descriptions, env)
-    table.remove (descriptions)
-  end
-end
-
-
--- Run SPECS, according to OPTS and ENV.
-function run (specs, env)
-  formatter = opts.formatter or formatter
-
-  env.specl = {
-    -- Environment access to core functions that we override to
-    -- run within nested function environment later.
-    _load       = load,
-    _loadfile   = loadfile,
-    _loadstring = loadstring,
-    _require    = require,
-  }
-
-  -- Run compiled specs, in order.
-  accumulator (formatter, formatter.header (matchers.stats))
-  for _, spec in ipairs (specs) do
-    run_examples (spec, {}, env)
-  end
-  formatter.footer (matchers.stats, formatter.accumulated)
-  return matchers.stats.fail ~= 0 and 1 or 0
-end
-
-
-
---[[ ----------------- ]]--
---[[ Public Interface. ]]--
---[[ ----------------- ]]--
-
-local M = {
-  run       = run,
-}
-
-
-return M
-
-end)
 package.preload["specl.color"] = (function ()
 -- Conditional ANSI coloration.
 -- Written by Gary V. Vaughan, 2013
@@ -405,27 +53,28 @@ package.preload["specl.color"] = (function ()
 -- MA 02111-1301, USA.
 
 
-local _, ansicolors = pcall (require, "ansicolors")
+local have_color, ansicolors = pcall (require, "ansicolors")
 
-local h1      = "%{blue}"
-local h2      = "%{cyan}"
+local h1      = "%{bright blue}"
+local h2      = "%{blue}"
+local h3      = "%{cyan}"
 local default = ""
 local good    = "%{green}"
 local bad     = "%{bright white redbg}"
 
 local colormap = {
-  describe = h1,
-  context  = h2,
-  when     = h2,
-  with     = h2,
+  specify  = h1,
+  describe = h2,
+  context  = h3,
+  when     = h3,
+  with     = h3,
   it       = default,
-  specify  = default,
   example  = default,
 
-  head     = h1,
-  subhead  = h2,
+  head     = h2,
+  subhead  = h3,
   entry    = default,
-  summary  = h1,
+  summary  = h2,
 
   fail     = bad,
   pend     = "%{yellow}",
@@ -447,8 +96,8 @@ local colormap = {
 }
 
 
-local function color (s)
-  if opts.color then
+local function color (want_color, s)
+  if want_color and have_color then
     s = ansicolors (s)
   else
     s = s:gsub ("%%{(.-)}", "")
@@ -458,11 +107,83 @@ end
 
 
 return setmetatable (colormap, {
-         __call  = function (_, s) return color (s) end,
+         __call  = function (self, ...) return color (...) end,
          __index = function (_, k)
                      return "%{underline}"
                    end,
        })
+
+end)
+package.preload["specl.compat"] = (function ()
+-- Compatibility between 5.1 and 5.2
+-- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
+--
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
+
+
+-- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs;
+-- Lua 5.2 implementation below works on C or Lua funcs unchanged.
+-- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
+local setfenv = debug.setfenv or function(f, t)
+  local name
+  local up = 0
+  repeat
+    up = up + 1
+    name = debug.getupvalue (f, up)
+  until name == '_ENV' or name == nil
+  if name then
+    debug.upvaluejoin (f, up, function () return name end, 1)
+    debug.setupvalue (f, up, t)
+  end
+  return f
+end
+
+
+local loadstring = loadstring or function (chunk, chunkname)
+  return load (chunk, chunkname)
+end
+
+
+do
+  local have_xpcall_args
+  local function catch (arg) have_xpcall_args = arg end
+  xpcall (catch, function () end, true)
+
+  if have_xpcall_args ~= true then
+    local _xpcall = xpcall
+    xpcall = function (fn, errh, ...)
+      local args, n = {...}, select ("#", ...)
+      return _xpcall(function() return fn (unpack (args, 1, n)) end, errh)
+    end
+  end
+end
+
+
+
+--[[ ----------------- ]]--
+--[[ Public Interface. ]]--
+--[[ ----------------- ]]--
+
+return {
+  loadstring = loadstring,
+  setfenv    = setfenv,
+  xpcall     = xpcall,
+}
 
 end)
 package.preload["specl.formatter.progress"] = (function ()
@@ -488,66 +209,83 @@ package.preload["specl.formatter.progress"] = (function ()
 
 
 local color = require "specl.color"
-local util  = require "specl.util"
 
-local map, nop, princ, strip1st, timesince, writc = util.map, util.nop, util.princ, util.strip1st, util.timesince, util.writc
+local util = require "specl.util"
+local map, nop, strip1st, timesince = util.map, util.nop, util.strip1st, util.timesince
 
 
--- Use '>' as a marker for currently executing expectation.
-local function header ()
-  io.write (">")
-  io.flush ()
+-- Color writing.
+local function writc (want_color, ...)
+  io.stdout:write (color (want_color, ...))
+  io.stdout:flush ()
+end
+
+
+-- Color printing.
+local function princ (want_color, ...)
+  return print (color (want_color, ...))
 end
 
 
 -- Print '.' for passed, or 'F' for failed expectation.
 -- Update '>' position.
-local function expectations (status, descriptions)
+local function expectations (status, descriptions, opts)
   reports = { fail = "", pend = "" }
 
-  io.write ("\08")
+  local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
 
   if next (status.expectations) then
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
-        reports.pend = reports.pend .. "\n  " ..
-          color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
+        reports.pend = reports.pend .. "\n  "
+	if opts.verbose then
+	  reports.pend = reports.pend .. fileline .. i .. ": " .. color.reset
+	end
+        reports.pend = reports.pend ..
+	  color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
 
         reports.pend = reports.pend .. color.warn .. expectation.pending
 
         if expectation.status == true then
-          writc (color.strong .. "?")
+          writc (opts.color, color.strong .. "?")
           reports.pend = reports.pend ..
               color.warn .. ", passed unexpectedly!" .. color.reset .. "\n" ..
               "  " .. color.strong ..
               "You can safely remove the 'pending ()' call from this example." ..
               color.reset
         else
-          writc (color.pend .. "*")
+          writc (opts.color, color.pend .. "*")
         end
 
       elseif expectation.status == true then
-        writc (color.good .. ".")
+        writc (opts.color, color.good .. ".")
 
       else
-        writc (color.bad .. "F")
+        writc (opts.color, color.bad .. "F")
 
-        local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. color.reset .. ": " ..  expectation.message
+        local fail
+	if opts.verbose then
+	  fail = "  " .. fileline .. i.. ": " .. color.reset .. color.fail ..
+		 "FAILED expectation " .. i .. color.reset .. ":\n" ..
+	         expectation.message
+	else
+          fail = "  " .. color.fail .. "FAILED expectation " .. i ..
+	         color.reset .. ": " .. expectation.message
+	end
+
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
       end
     end
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
-    writc (color.pend .. "*")
+    writc (opts.color, color.pend .. "*")
     local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
                  ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
   end
-  io.write (">")
-  io.flush ()
+  io.stdout:flush ()
 
   -- Add description titles.
   if reports.pend ~= "" then
@@ -566,21 +304,19 @@ end
 
 
 -- Report statistics.
-local function footer (stats, reports)
+local function footer (stats, reports, opts)
   local total = stats.pass + stats.fail
-
-  print "\08 "
 
   print ()
   if reports and reports.pend ~= "" then
-    princ (color.summary .. "Summary of pending expectations" ..
+    princ (opts.color, color.summary .. "Summary of pending expectations" ..
            color.summarypost)
-    princ (reports.pend)
+    princ (opts.color, reports.pend)
   end
   if reports and reports.fail ~= "" then
-    princ (color.summary .. "Summary of failed expectations" ..
+    princ (opts.color, color.summary .. "Summary of failed expectations" ..
            color.summarypost)
-    princ (reports.fail)
+    princ (opts.color, reports.fail)
   end
 
   local passcolor = (stats.pass > 0) and color.good or color.bad
@@ -589,18 +325,19 @@ local function footer (stats, reports)
   local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
 
   if stats.fail == 0 then
-    writc (prefix .. " expectations met" .. color.reset)
+    writc (opts.color, prefix .. " expectations met" .. color.reset)
 
     if stats.pend ~= 0 then
-      writc (", but " .. color.bad .. stats.pend ..
+      writc (opts.color, ", but " .. color.bad .. stats.pend ..
              " still pending" .. color.reset .. ",")
     end
   else
-    writc (passcolor .. stats.pass .. " passed" .. color.reset .. ", " ..
-           pendcolor .. stats.pend .. " pending" .. color.reset .. ", " ..
-           "and " .. failcolor .. stats.fail .. " failed" .. color.reset)
+    writc (opts.color, passcolor .. stats.pass .. " passed" ..
+           color.reset .. ", " .. pendcolor .. stats.pend .. " pending" ..
+           color.reset .. ", " .. "and " .. failcolor .. stats.fail ..
+	   " failed" .. color.reset)
   end
-  princ (" in " .. color.clock ..
+  princ (opts.color, " in " .. color.clock ..
          tostring (timesince (stats.starttime)) ..
          " seconds" .. color.reset .. ".")
 end
@@ -613,7 +350,7 @@ end
 
 
 local M = {
-  header       = header,
+  header       = nop,
   spec         = nop,
   expectations = expectations,
   footer       = footer,
@@ -645,9 +382,15 @@ package.preload["specl.formatter.report"] = (function ()
 
 
 local color = require "specl.color"
-local util  = require "specl.util"
 
-local indent, map, nop, princ, strip1st, timesince = util.indent, util.map, util.nop, util.princ, util.strip1st, util.timesince
+local util = require "specl.util"
+local indent, map, nop, strip1st, timesince = util.indent, util.map, util.nop, util.strip1st, util.timesince
+
+
+-- Color printing.
+local function princ (want_color, ...)
+  return print (color (want_color, ...))
+end
 
 
 local function tabulate (descriptions)
@@ -667,17 +410,19 @@ local function tabulate (descriptions)
 end
 
 
-local function spec (descriptions)
-  princ (indent (descriptions) .. tabulate (descriptions))
+local function spec (descriptions, opts)
+  princ (opts.color, indent (descriptions) .. tabulate (descriptions))
 end
 
 
 -- Diagnose any failed expectations in situ, and return failure messages
 -- for display at the end.
-local function expectations (status, descriptions)
+local function expectations (status, descriptions, opts)
   local spaces  = indent (descriptions)
   local reports = { fail = "", pend = "" }
   local counts  = { fail = 0, pend = 0, unexpected = 0 }
+
+  local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
 
   if next (status.expectations) then
     local details = ""
@@ -685,9 +430,14 @@ local function expectations (status, descriptions)
     -- If we have expectations, display the result of each.
     for i, expectation in ipairs (status.expectations) do
       if expectation.pending ~= nil then
-        local pend = "  " .. color.pend ..
+        local pend = "  "
+	if opts.verbose then
+	  pend = pend .. fileline .. i .. ": " .. color.reset
+        end
+        pend = pend .. color.pend ..
               "PENDING expectation " ..  i .. color.reset .. ": " ..
               color.warn .. expectation.pending
+
         if expectation.status == true then
           counts.unexpected = counts.unexpected + 1
 
@@ -710,10 +460,17 @@ local function expectations (status, descriptions)
       elseif expectation.status == false then
         counts.fail = counts.fail + 1
 
-        local fail = "  " .. color.fail .. "FAILED expectation " ..
-                     i .. color.reset .. ": " ..  expectation.message
-        reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
+        local fail
+	if opts.verbose then
+	  fail = "  " .. fileline .. i.. ": " .. color.reset .. color.fail ..
+		 "FAILED expectation " .. i .. color.reset .. ":\n" ..
+	         expectation.message
+	else
+          fail = "  " .. color.fail .. "FAILED expectation " .. i ..
+	         color.reset .. ": " .. expectation.message
+	end
 
+        reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
         if opts.verbose then
           details = details .. "\n" .. spaces .. fail:gsub ("\n", "%0  " .. spaces)
         end
@@ -739,7 +496,7 @@ local function expectations (status, descriptions)
       end
     end
 
-    princ (spaces .. tabulate (descriptions) ..details)
+    princ (opts.color, spaces .. tabulate (descriptions) ..details)
 
   elseif status.ispending then
     -- Otherwise, display only pending examples.
@@ -747,7 +504,7 @@ local function expectations (status, descriptions)
                  ": " .. status.ispending .. ")"
     reports.pend = reports.pend .. pend
 
-    princ (spaces ..  tabulate (descriptions) ..  pend)
+    princ (opts.color, spaces ..  tabulate (descriptions) ..  pend)
   end
 
   -- Add description titles.
@@ -767,34 +524,34 @@ end
 
 
 -- Report statistics.
-local function footer (stats, reports)
+local function footer (stats, reports, opts)
   local total   = stats.pass + stats.fail
   local percent = string.format ("%.2f%%", 100 * stats.pass / total)
 
   print ()
   if reports and reports.pend ~= "" then
-    princ (color.summary .. "Summary of pending expectations" ..
+    princ (opts.color, color.summary .. "Summary of pending expectations" ..
            color.summarypost)
-    princ (reports.pend)
+    princ (opts.color, reports.pend)
   end
   if reports and reports.fail ~= "" then
-    princ (color.summary .. "Summary of failed expectations" ..
+    princ (opts.color, color.summary .. "Summary of failed expectations" ..
            color.summarypost)
-    princ (reports.fail)
+    princ (opts.color, reports.fail)
   end
 
   if total > 0 then
     local statcolor = (percent == "100.00%") and color.allpass or color.notallpass
-    princ (statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
+    princ (opts.color, statcolor .. "Met " .. percent .. " of " .. tostring (total) ..
            " expectations.")
   else
-    princ (color.notallpass .. "No expectations met.")
+    princ (opts.color, color.notallpass .. "No expectations met.")
   end
 
   local passcolor = (stats.pass > 0) and color.good or color.bad
   local failcolor = (stats.fail > 0) and color.bad or ""
   local pendcolor = (stats.pend > 0) and color.bad or ""
-  princ (passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
+  princ (opts.color, passcolor   .. stats.pass .. " passed" .. color.reset .. ", " ..
          pendcolor   .. stats.pend .. " pending" .. color.reset .. " and " ..
          failcolor   .. stats.fail .. " failed%{reset} in " ..
          color.clock .. tostring (timesince (stats.starttime)) ..
@@ -823,7 +580,6 @@ package.preload["specl.formatter.tap"] = (function ()
 --
 
 local util = require "specl.util"
-
 local map, nop, strip1st = util.map, util.nop, util.strip1st
 
 local curr_test = 0
@@ -877,6 +633,273 @@ local M = {
 return M
 
 end)
+package.preload["specl.inprocess"] = (function ()
+-- In process Lua programs.
+-- Written by Gary V. Vaughan, 2014
+--
+-- Copyright (c) 2014 Gary V. Vaughan
+--
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
+
+
+local compat = require "specl.compat"
+local setfenv, xpcall = compat.setfenv, compat.xpcall
+local shell = require "specl.shell"
+local Process = shell.Process
+local std = require "specl.std"
+local Object, case, clone, merge = std.Object, std.func.case, std.table.clone, std.table.merge
+local util = require "specl.util"
+local nop, type_check = util.nop, util.type_check
+
+
+local StrFile = Object {
+  _type = "StrFile",
+  _init = {"mode", "buffer"},
+
+  mode   = "r",
+  pos    = 1,
+
+  __tostring = function (self)
+    -- If not set manually, default `name` to a unique hex address.
+    self.name = self.name or tostring ({}):gsub (".*x", "0x")
+    return "strfile (" .. self.name .. "/" .. self.mode .. ")"
+  end,
+
+  -- Equivalents to core file object methods.
+  __index = {
+    close   = function (self)
+                return nil, "cannot close standard virtual file"
+              end,
+
+    flush   = nop,
+
+    lines   = nop,
+
+    read    = function (self, mode)
+                -- Obeys the spec, though may not match core file:read
+                -- error precisely.
+                if self.mode ~= "r" then
+                  return nil, "Bad virtual file descriptor", 9
+                end
+                local b = self.pos
+                return case (mode or "*l", {
+                  ["*n"] = function ()
+                             local ok, e = self.buffer:find ("^%d*%.?%d+")
+                             if ok then
+                               self.pos = e + 1
+                               return tonumber (self.buffer:sub (b, e))
+                             end
+                             local ok, e = self.buffer:find ("^0[xX]%x*%.?%x+")
+                             if ok then
+                               self.pos = e + 1
+                               return tonumber (self.buffer:sub (b, e), 16)
+                             end
+                             return nil
+                           end,
+
+                  ["*a"] = function ()
+                             self.pos = #self.buffer + 1
+                             return self.buffer:sub (b)
+                           end,
+
+                  ["*l"] = function ()
+                             local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                             self.pos = e + 1
+                             return self.buffer:sub (b, e):gsub ("\n$", "")
+                           end,
+
+                  ["*L"] = function ()
+                             local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                             self.pos = e + 1
+                             return self.buffer:sub (b, e)
+                           end,
+
+                           function ()
+                             if type (mode) ~= "number" then
+                               return error ("bad argument #1 to 'read' (invalid option)", 3)
+                             end
+                             self.pos = self.pos + mode
+                             return self.buffer:sub (b, self.pos - 1)
+                           end,
+                })
+              end,
+
+    seek    = function (self, whence, offset)
+                offset = offset or 0
+                self.pos = case (whence or "cur", {
+                  set     = function () return offset + 1                end,
+                  cur     = function () return self.pos + offset         end,
+                  ["end"] = function () return #self.buffer + offset + 1 end,
+                })
+                return self.pos - 1
+              end,
+
+    setvbuf = nop,
+
+    write   = function (self, ...)
+                -- Obeys the spec, though may not match core file:read
+                -- error precisely.
+                if self.mode ~= "w" then
+                  return nil, "Bad virtual file descriptor", 9
+                end
+                self.buffer = (self.buffer or "") .. table.concat {...}
+                self.pos = #self.buffer + 1
+              end,
+  },
+}
+
+
+local function inject (into, from)
+  for k, v in pairs (from) do
+    local tfrom, tinto = type (v), type (into[k])
+    if tfrom == "table" and (tinto == "table" or tinto == "nil") then
+      into[k] = into[k] or {}
+      inject (into[k], from[k])
+    else
+      into[k] = from[k]
+    end
+  end
+  return into
+end
+
+
+-- Run a Lua program in-process
+local function call (main, arg, stdin)
+  type_check ("call", {main}, {"Main"})
+  arg = arg or {}
+
+  -- Captured exit status, standard input, standard output and standard error.
+  local pstat = -1
+  local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
+
+  -- Execution environment.
+  local env = {}
+
+  env.io = {
+    stdin   = pin,
+    stdout  = pout,
+    stderr  = perr,
+
+    input   = function (h)
+                if Object.type (h) == "StrFile" then
+                  pin = h
+                elseif h then
+                  pin = io.input (h)
+                end
+                return pin or io.input ()
+              end,
+
+    output  = function (h)
+	        if h ~= nil then
+		  if io.type (pout) ~= "closed file" then pout:flush () end
+                  if Object.type (h) == "StrFile" then
+                    pout = h
+                  else
+                    pout = io.output (h)
+		  end
+                end
+		return pout or io.output ()
+              end,
+
+    type    = function (h)
+                if Object.type (h) == "StrFile" then
+                  return "file" -- virtual stdio streams cannot be closed
+                end
+                return io.type (h)
+              end,
+
+    write   = function (...)
+                env.io.output ():write (...)
+              end,
+  }
+
+  env.os = {
+    -- Capture exit status without quitting specl process itself.
+    exit = function (code)
+             case (tostring (code), {
+               ["false"] = function () pstat = 1 end,
+               ["true"]  = function () pstat = 0 end,
+                           function () pstat = code end,
+             })
+             -- Abort execution now that status is set.
+             error ("env.os.exit", 0)
+           end,
+  }
+
+  -- Capture print statements to process output.
+  env.print = function (...)
+                local t = {...}
+                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
+                env.io.output ():write (table.concat (t, "\t") .. "\n")
+              end
+
+  -- Instantiate with the execution environment so that sandboxed
+  -- applications can see and manipulate it before continuing.
+  local Main = main (arg, env)
+
+  -- Append traceback to an error inside xpcall.
+  local function traceback (errobj)
+    if errobj ~= "env.os.exit" then
+      env.io.stderr:write (debug.traceback (errobj, 2))
+    end
+  end
+
+  -- Diagnose malformed Main object.
+  if type (Main.inprocess) ~= "table" then
+    error ("malformed 'inprocess' in Main object (table expected, found " ..
+           type (Main.inprocess) .. ")")
+  end
+
+  -- Set the environment for `execute`, for non-sandboxing apps, so they
+  -- have no special steps to take.
+  local restore = {
+    io = {
+      input  = Main.inprocess.io.input,
+      output = Main.inprocess.io.output,
+      stderr = Main.inprocess.io.stderr,
+      stdin  = Main.inprocess.io.stdin,
+      stdout = Main.inprocess.io.stdout,
+      type   = Main.inprocess.io.type,
+      write  = Main.inprocess.io.write,
+    },
+    os = {
+      exit   = Main.inprocess.os.exit,
+    },
+    print    = Main.inprocess.print,
+  }
+
+  inject (Main.inprocess, env)
+  local ok, err = xpcall (Main.execute, traceback, Main)
+  inject (Main.inprocess, restore)
+
+  if ok then
+    pstat = 0
+  elseif type (pstat) ~= "number" then
+    pstat = 1
+  end
+
+  return Process {pstat, pout.buffer, perr.buffer}
+end
+
+
+return {
+  call = call,
+}
+
+end)
 package.preload["specl.loader"] = (function ()
 -- Load Specl spec-files into native Lua tables.
 -- Written by Gary V. Vaughan, 2013
@@ -900,8 +923,14 @@ package.preload["specl.loader"] = (function ()
 
 
 local macro = require "macro"
-local util  = require "specl.util"
 local yaml  = require "yaml"
+
+local compat = require "specl.compat"
+local loadstring = compat.loadstring
+local std = require "specl.std"
+local catfile, path_mark = std.io.catfile, std.package.path_mark
+local util = require "specl.util"
+local nop = util.nop
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
@@ -964,7 +993,7 @@ local parser_mt = {
       -- Mark indices are character based, but Lua patterns are byte
       -- based, which means refetching doesn't work in the presence of
       -- unicode characters :(
-      if opts.unicode then return value end
+      if self.unicode then return value end
       value = self.input:sub (event.start_mark.index, event.end_mark.index)
       if event.style == "DOUBLE_QUOTED" then
         value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}
@@ -1006,8 +1035,13 @@ local parser_mt = {
       self:add_anchor (map)
       -- Inject the preamble into before node of the outermost map.
       if self.preamble then
-        map.before, self.preamble = self.preamble, nil
+        map.before = {
+	  example = self.preamble,
+	  line    = 0,
+	}
+	self.preamble = nil
       end
+
       while true do
         local key = self:load_node ()
         if key == nil then break end
@@ -1018,18 +1052,27 @@ local parser_mt = {
         if key == "before" then
           -- Be careful not to overwrite injected preamble.
           value = self:refetch (value, event)
-          map.before = table.concat {map.before or "", value}
+          map.before = {
+	    example = table.concat {map.before and map.before.example or "", value},
+	    line    = self.mark.line,
+	  }
         elseif value == "" then
-          map[key] = self:compile ("pending ()")
+          map[key] = {
+	    example = self:compile ("pending ()"),
+	    line    = self.mark.line,
+	  }
         elseif type (value) == "string" then
-          map[key] = self:compile (self:refetch (value, event))
+          map[key] = {
+            example = self:compile (self:refetch (value, event)),
+	    line    = self.mark.line,
+	  }
         else
           map[key] = value
         end
       end
       -- Delayed compilation of before, having injecting preamble now.
-      if type (map.before) == "string" then
-        map.before = self:compile (map.before)
+      if map.before and type (map.before.example) == "string" then
+        map.before.example = self:compile (map.before.example)
       end
       return map
     end,
@@ -1096,9 +1139,9 @@ local parser_mt = {
         ALIAS          = self.load_alias,
         MAPPING_START  = self.load_map,
         SEQUENCE_START = self.load_sequence,
-        MAPPING_END    = util.nop,
-        SEQUENCE_END   = util.nop,
-        DOCUMENT_END   = util.nop,
+        MAPPING_END    = nop,
+        SEQUENCE_END   = nop,
+        DOCUMENT_END   = nop,
       }
 
       local event = self:parse ()
@@ -1112,26 +1155,35 @@ local parser_mt = {
 
 
 -- Parser object constructor.
-local function Parser (filename, s)
+local function Parser (filename, s, unicode)
+  local dir  = std.io.dirname (filename)
+  local path = std.package.normalize (catfile (dir, path_mark .. ".lua"))
+
   local object = {
+    unicode  = unicode,
     anchors  = {},
-    filename = filename:gsub ("^%./", ""),
     input    = s,
     mark     = { line = "0", column = "0" },
     next     = yaml.parser (s),
 
+    -- strip leading './'
+    filename = filename:gsub (catfile ("^%.", ""), ""),
+
     -- Used to simplify requiring from the spec file directory.
-    preamble = "package.path = \"" ..
-               filename:gsub ("[^/]+$", "?.lua;") ..
-               "\" .. package.path\n",
+    preamble = string.format ([[
+      package.path = require "specl.std".package.normalize ("%s", package.path)
+
+      -- Autoload spec_helper from spec-file directory, if any.
+      pcall (require, "spec_helper")
+    ]], path)
   }
   return setmetatable (object, parser_mt)
 end
 
 
-local function load (filename, s)
+local function load (filename, s, unicode)
   local documents = {}
-  local parser    = Parser (filename, s)
+  local parser    = Parser (filename, s, unicode)
 
   if parser:parse () ~= "STREAM_START" then
     return parser:error ("expecting STREAM_START event, but got " ..
@@ -1176,6 +1228,263 @@ local M = {
 return M
 
 end)
+package.preload["specl.main"] = (function ()
+-- Specification testing framework.
+-- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
+--
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
+
+local loader  = require "specl.loader"
+local runner  = require "specl.runner"
+
+local std = require "specl.std"
+local Object, clone, merge = std.Object, std.table.clone, std.table.merge
+local util = require "specl.util"
+local files, gettimeofday, map = util.files, util.gettimeofday, util.map
+
+
+-- Make a shallow copy of the pristine global environment, so that the
+-- future state of the Specl environment is not exposed to spec files.
+local global = {}
+for k, v in pairs (_G) do global[k] = v end
+
+
+local optspec = [[
+specl (Specl) 11
+Written by Gary V. Vaughan <gary@gnu.org>, 2013
+
+Copyright (C) 2013, Gary V. Vaughan
+Specl comes with ABSOLUTELY NO WARRANTY.
+You may redistribute copies of Specl under the terms of the GNU
+General Public License; either version 3, or any later version.
+For more information, see <http://www.gnu.org/licenses>.
+
+Usage: specl [OPTION]... [FILE]...
+
+Behaviour Driven Development for Lua.
+
+Develop and run BDD specs written in Lua for RSpec style workflow, by verifying
+specification expectations read from given FILEs or standard input, and
+reporting the results on standard output.
+
+If no FILE is listed, then run specifications for all files from the 'specs/'
+directory with names ending in '.yaml'.
+
+Where '-' is given as a FILE, then read from standard input.
+
+      --help             print this help, then exit
+      --version          print version number, then exit
+      --color=WHEN       request colorized formatter output [default=yes]
+  -1, --fail-fast        exit immediately on first failed example
+  -f, --formatter=FILE   use a specific formatter [default=progress]
+      --unicode          allow unicode in spec files
+  -v, --verbose          request verbose formatter output
+
+Filtering:
+
+  -e, --example=PATTERN  check only the examples matching PATTERN
+  +NN                    check only the example at line NN in next FILE
+  FILE:NN[:MM]           check only the example at line NN in this FILE
+
+When filtering by PATTERN, an example is considered a match if PATTERN matches
+the concatenation of nested YAML descriptions leading directly to that example
+in its spec file.
+
+You can specify +NN (where NN is a line number) multiple times for the next
+specified FILE, or interspersed to specify different line filters for different
+FILEs. Specifying any number of +NN will prevent all specifications in that
+file except those selected by a +NN filter from being checked. If +NN is not
+the first line of an example (as would be displayed by a failing example in
+verbose mode), the option selects no examples.
+
+The alternative FILE:NN:MM syntax makes it easy to cut and paste from Specl
+failure output, but allows only a single line NN to be filtered (except when
+combined with +NN filters).  The optional :MM suffix is ignored -- and merely
+represents the ordinal number of an `expect` statement in a particular example
+in verbose Specl formatter outputs.
+
+Due to a shortcoming in libYAML, unicode characters in any passed FILE prevent
+Specl from working. The '--unicode' option works around that shortcoming, but
+any error messages caused by Lua code in FILE will usually report line-numbers
+incorrectly.  By default, errors report accurate line-numbers, and unicode
+characters are not supported.
+
+Report bugs to http://github.com/gvvaughan/specl/issues.]]
+
+
+-- optparse opt handler for `-f, --formatter=FILE`.
+local function formatter_opthandler (parser, opt, optarg)
+  local ok, formatter = pcall (require, optarg)
+  if not ok then
+    ok, formatter = pcall (require, "specl.formatter." ..optarg)
+  end
+  if not ok then
+    parser:opterr ("could not load '" .. optarg .. "' formatter.")
+  end
+  return formatter
+end
+
+
+-- Return `filename` if it has a specfile-like filename, else nil.
+local function specfilter (filename)
+  return filename:match "_spec%.yaml$" and filename or nil
+end
+
+
+-- Called by process_args() to concatenate YAML formatted
+-- specifications in each <arg>
+local function compile (self, arg)
+  local s, errmsg = std.string.slurp ()
+  if errmsg ~= nil then
+    io.stderr:write (errmsg .. "\n")
+    os.exit (1)
+  end
+
+  -- Add example opts to each spec file to simplify filtering later.
+  if self.opts.example ~= nil then
+    self.filters = merge (self.filters or {}, {inclusive = self.opts.example})
+  end
+
+  table.insert (self.specs, {
+    filename = arg,
+    examples = loader.load (arg, s, self.opts.unicode),
+    filters  = self.filters,
+  })
+
+  -- Line filters have been claimed.
+  self.filters = nil
+end
+
+
+-- Process files and line filters specified on the command-line.
+local function process_args (self, parser)
+  if #self.arg == 0 then
+    if pcall (require, "posix") then
+      return parser:opterr "could not find spec files in './specs/'"
+    else
+      return parser:opterr "install luaposix to autoload spec files from './specs/'"
+    end
+  end
+
+  for i, v in ipairs (self.arg) do
+    -- Process line filters.
+    local filename, line = nil, v:match "^%+(%d+)$"  -- +NN
+    if line == nil then
+      filename, line = v:match "^(.*):(%d+):%d+"     -- file:NN:MM
+    end
+    if line == nil then
+      filename, line = v:match "^(.*):(%d+)$"        -- file:NN
+    end
+
+    -- Fallback to simple `filename`.
+    if line == nil then
+      filename = v
+    end
+
+    -- Accumulate unclaimed filters in the Main object.
+    if line ~= nil then
+      self.filters = self.filters or {}
+      self.filters[line] = true
+    end
+
+    -- Process filename.
+    if filename == "-" then
+      io.input (io.stdin)
+      self:compile (filename)
+
+    elseif filename ~= nil then
+      h = io.open (filename)
+      if h == nil and v:match "^-" then
+        return parser:opterr ("unrecognised option '" .. v .. "'")
+      end
+      io.input (h)
+      self:compile (filename)
+    end
+  end
+end
+
+
+-- Execute this program.
+local function execute (self)
+  -- Parse command line options.
+  local parser = require "specl.optparse" (optspec)
+
+  parser:on ("color", parser.required, parser.boolean)
+  parser:on ({"f", "format", "formatter"},
+             parser.required, formatter_opthandler)
+
+  self.arg, self.opts = parser:parse (self.arg, self.opts)
+
+  -- When opt.example is non-nil, it must be a table.
+  if self.opts.example and type (self.opts.example) ~= "table" then
+    self.opts.example = { self.opts.example }
+  end
+
+  -- Process all specfiles when none are given explicitly.
+  if #self.arg == 0 then
+    self.arg = map (specfilter, files "specs")
+  end
+
+  self:process_args (parser)
+
+  os.exit (runner.run (self))
+end
+
+
+return Object {
+  _type   = "Main",
+
+  inprocess = _G,
+
+  -- Methods.
+  __index = {
+    compile      = compile,
+    execute      = execute,
+    process_args = process_args,
+  },
+
+  -- Allow test harness to hijack io and os functions so that it can be
+  -- safely executed in-process.
+  _init = function (self, arg, env)
+    self.arg     = arg
+
+    -- Option defaults.
+    self.opts    = {
+      color      = true,
+      formatter  = require "specl.formatter.progress",
+    }
+
+    -- Collect compiled specs here.
+    self.specs   = {}
+
+    -- Outermost execution environment.
+    self.sandbox = merge (clone (global), env or {})
+
+    -- Expectation statistics.
+    self.stats = {
+      pass = 0, pend = 0, fail = 0, starttime = gettimeofday ()
+    }
+
+    return self
+  end,
+}
+
+end)
 package.preload["specl.matchers"] = (function ()
 -- Specification matchers.
 -- Written by Gary V. Vaughan, 2013
@@ -1198,27 +1507,13 @@ package.preload["specl.matchers"] = (function ()
 -- MA 02111-1301, USA.
 
 local color = require "specl.color"
-local std   = require "specl.std"
-local util  = require "specl.util"
 
-local Object = std.Object
-local chomp, escape_pattern, prettytostring, tostring = std.string.chomp, std.string.escape_pattern, std.string.prettytostring, std.string.tostring
-local clone, empty, size, totable = std.table.clone, std.table.empty, std.table.size, std.table.totable
+local util = require "specl.util"
+local type_check = util.type_check
+local std = require "specl.std"
+local Object, chomp, escape_pattern, prettytostring, tostring, clone, empty, merge, size, totable = std.Object, std.string.chomp, std.string.escape_pattern, std.string.prettytostring, std.string.tostring, std.table.clone, std.table.empty, std.table.merge, std.table.size, std.table.totable
 
 local M = {}
-
-
--- Merge only the hash part of table <u> into table <t>.
-local function merge_hash (t, u)
-  local ignore = {}
-  for _, v in ipairs (u) do ignore[v] = true end
-
-  for k, v in pairs (u) do
-    if ignore[k] == nil then t[k] = v end
-  end
-
-  return t
-end
 
 
 -- Quote strings nicely, and coerce non-strings into strings.
@@ -1249,12 +1544,12 @@ local function alternatives_msg (object, adaptor, alternatives, actual, expect, 
   local m
 
   if #alternatives == 1 then
-    m = "expecting" .. object.format_expect (alternatives[1], actual, ...) ..
-        "but got" .. object.format_actual (actual, expect, ...)
+    m = "expecting" .. object:format_expect (alternatives[1], actual, ...) ..
+        "but got" .. object:format_actual (actual, expect, ...)
   else
     m = "expecting" ..
-        object.format_alternatives (adaptor, alternatives, actual, ...) ..
-        "but got" .. object.format_actual (actual, expect, ...)
+        object:format_alternatives (adaptor, alternatives, actual, ...) ..
+        "but got" .. object:format_actual (actual, expect, ...)
   end
 
   return m
@@ -1266,36 +1561,30 @@ end
 local Matcher = Object {
   _type = "Matcher",
 
-  _init = function (self, parms)
-    self.matchp = parms[1]
-    util.type_check ("Matcher", {self.matchp}, {"function"})
+  _init      = {"matchp"},
+  _parmnames = {"matchp",   "format_expect", "format_actual", "format_alternatives"},
+  _parmtypes = {"function", "function",      "function",      "function"           },
 
-    -- Overwrite defaults with specified values.
-    self = merge_hash (self, parms)
-
-    return self
-  end,
-
-  -- Respond to `should_`s and `should_not`s.
+  -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name, {actual}, {self.actual_type})
 
     -- Pass all parameters to both formatters!
-    local m = "expecting" .. self.format_expect (expect, actual, ...) ..
-              "but got" .. self.format_actual (actual, expect, ...)
-    return self.matchp (actual, expect, ...), m
+    local m = "expecting" .. self:format_expect (expect, actual, ...) ..
+              "but got" .. self:format_actual (actual, expect, ...)
+    return self:matchp (actual, expect, ...), m
   end,
 
 
   -- Adaptors:
 
   ["all_of?"] = function (self, actual, alternatives, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".all_of", {alternatives}, {"#table"})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".all_of", {alternatives}, {"#table"})
 
     local success
     for _, expect in ipairs (alternatives) do
-      success = self.matchp (actual, expect, ...)
+      success = self:matchp (actual, expect, ...)
       if not success then break end
     end
 
@@ -1304,12 +1593,12 @@ local Matcher = Object {
   end,
 
   ["any_of?"] = function (self, actual, alternatives, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".any_of", {alternatives}, {"#table"})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".any_of", {alternatives}, {"#table"})
 
     local success
     for _, expect in ipairs (alternatives) do
-      success = self.matchp (actual, expect, ...)
+      success = self:matchp (actual, expect, ...)
       if success then break end
     end
 
@@ -1320,13 +1609,15 @@ local Matcher = Object {
   -- Defaults:
   actual_type   = "any",
 
-  format_actual = function (actual) return " " .. q(actual) end,
+  matchp        = function (self, actual, expect) return actual == expect end,
 
-  format_expect = function (expect) return " " .. q(expect) .. ", " end,
+  format_actual = function (self, actual) return " " .. q(actual) end,
 
-  format_alternatives = function (adaptor, alternatives)
+  format_expect = function (self, expect) return " " .. q(expect) .. ", " end,
+
+  format_alternatives = function (self, adaptor, alternatives)
     return " " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
@@ -1345,7 +1636,7 @@ local matchers = setmetatable ({content = {}}, {
   __index = function (self, name) return rawget (self.content, name) end,
 
   __newindex = function (self, name, matcher)
-    util.type_check ("matchers." .. name, {matcher}, {"Matcher"})
+    type_check ("matchers." .. name, {matcher}, {"Matcher"})
     rawset (self.content, name, matcher)
     rawset (matcher, "name", name)
   end,
@@ -1402,34 +1693,56 @@ end
 
 -- Recursively compare <o1> and <o2> for equivalence.
 local function objcmp (o1, o2)
+  -- If they are the same object (number, interned string, table etc),
+  -- or they shara a metatable with an __eq metamethod that says they
+  -- equal, then they *are* the same... no need for more checking.
+  if o1 == o2 then return true end
+
+  -- Non-table types at this point must differ.
+  if type (o1) ~= "table" or type (o2) ~= "table" then return false end
+
   -- cache extended types
   local type1, type2 = Object.type (o1), Object.type (o2)
 
   -- different types are unequal
   if type1 ~= type2 then return false end
 
-  -- core types can be compared directly
-  if type (o1) ~= "table" or type (o2) ~= "table" then return o1 == o2 end
-
   -- compare std.Objects according to table contents
   if type1 ~= "table" then o1 = totable (o1) end
   if type2 ~= "table" then o2 = totable (o2) end
 
+  local subcomps = {}  -- keys requiring a recursive comparison
   for k, v in pairs (o1) do
-    if o2[k] == nil or not objcmp (v, o2[k]) then return false end
+    if o2[k] == nil then return false end
+    if v ~= o2[k] then
+      if type (v) ~= "table" then return false end
+      -- only require recursive comparisons for mismatched values
+      table.insert (subcomps, k)
+    end
   end
   -- any keys in o2, not already compared above denote a mismatch!
-  for k, _ in pairs (o2) do
+  for k in pairs (o2) do
     if o1[k] == nil then return false end
   end
-  return true
+  if #subcomps == 0 then return true end
+  if #subcomps > 1 then
+    -- multiple table-valued keys remain, so we have to recurse
+    for _, k in ipairs (subcomps) do
+      assert (o1[k] ~= nil and o2[k] ~= nil)
+      if not objcmp (o1[k], o2[k]) then return false end
+    end
+    return true
+  end
+  -- use a tail call for arbitrary depth single-key subcomparison
+  local _, k = next (subcomps)
+  return objcmp (o1[k], o2[k])
 end
 
 
 -- Deep comparison, matches if <actual> and <expect> share the same
 -- structure.
 matchers.equal = Matcher {
-  function (actual, expect)
+  function (self, actual, expect)
     return (objcmp (actual, expect) == true)
   end,
 }
@@ -1437,19 +1750,36 @@ matchers.equal = Matcher {
 
 -- Identity, only match if <actual> and <expect> are the same object.
 matchers.be = Matcher {
-  function (actual, expect)
+  function (self, actual, expect)
     return (actual == expect)
   end,
 
-  format_expect = function (expect)
+  format_expect = function (self, expect)
     return " exactly " .. q(expect) .. ", "
+  end,
+}
+
+
+-- Equal but not the same object.
+matchers.copy = Matcher {
+  function (self, actual, expect)
+    return (actual ~= expect) and (objcmp (actual, expect) == true)
+  end,
+
+  format_expect = function (self, expect)
+    return " a copy of " .. q(expect) .. ", "
+  end,
+
+  format_alternatives = function (self, adaptor, alternatives)
+    return " a copy of " .. adaptor .. " " ..
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
 
 -- Matches if any error is raised inside `expect`.
 matchers.error = Matcher {
-  function (actual, expect, ok)
+  function (self, actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
         ok = not actual:match (".*" .. escape_pattern (expect) .. ".*")
@@ -1459,7 +1789,7 @@ matchers.error = Matcher {
   end,
 
   -- force a new-line, let the display engine take care of indenting.
-  format_actual = function (actual, _, ok)
+  format_actual = function (self, actual, _, ok)
     if ok then
       return " no error"
     else
@@ -1467,7 +1797,7 @@ matchers.error = Matcher {
     end
   end,
 
-  format_expect = function (expect)
+  format_expect = function (self, expect)
     if expect ~= nil then
       return " an error containing:" .. reformat (expect)
     else
@@ -1475,7 +1805,7 @@ matchers.error = Matcher {
     end
   end,
 
-  format_alternatives = function (adaptor, alternatives)
+  format_alternatives = function (self, adaptor, alternatives)
     return " an error containing " .. adaptor .. ":" ..
            reformat (alternatives, adaptor)
   end,
@@ -1484,26 +1814,26 @@ matchers.error = Matcher {
 
 -- Matches if <actual> matches <pattern>.
 matchers.match = Matcher {
-  function (actual, pattern)
+  function (self, actual, pattern)
     return (actual:match (pattern) ~= nil)
   end,
 
   actual_type   = "string",
 
-  format_expect = function (pattern)
+  format_expect = function (self, pattern)
     return " string matching " .. q(pattern) .. ", "
   end,
 
-  format_alternatives = function (adaptor, alternatives)
+  format_alternatives = function (self, adaptor, alternatives)
     return " string matching " .. adaptor .. " " ..
-           concat (alternatives, adaptor, util.QUOTED) .. ", "
+           concat (alternatives, adaptor, ":quoted") .. ", "
   end,
 }
 
 
 -- Matches if <actual> contains <expect>.
 matchers.contain = Matcher {
-  function (actual, expect)
+  function (self, actual, expect)
     if type (actual) == "string" and type (expect) == "string" then
       -- Look for a substring if VALUE is a string.
       return (actual:match (escape_pattern (expect)) ~= nil)
@@ -1530,13 +1860,13 @@ matchers.contain = Matcher {
 
   -- Additional adaptor to match unordered tables (and strings!).
   ["a_permutation_of?"] = function (self, actual, expected, ...)
-    util.type_check (self.name, {actual}, {self.actual_type})
-    util.type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
+    type_check (self.name, {actual}, {self.actual_type})
+    type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
 
     -- calculate failure output before coercing strings into tables
     local msg = "expecting" ..
-                self.format_alternatives ("a permutation of", expected, actual, ...) ..
-                "but got" .. self.format_actual (actual, expect, ...)
+                self:format_alternatives ("a permutation of", expected, actual, ...) ..
+                "but got" .. self:format_actual (actual, expect, ...)
 
     if Object.type (actual) ~= "table" then actual = totable (actual) end
     if Object.type (expected) ~= "table" then expected = totable (expected) end
@@ -1565,7 +1895,7 @@ matchers.contain = Matcher {
 
   actual_type   = {"string", "table", "object"},
 
-  format_actual = function (actual)
+  format_actual = function (self, actual)
     if type (actual) == "string" then
       return " " .. q (actual)
     elseif util.type (actual) == "object" then
@@ -1575,7 +1905,7 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_expect = function (expect, actual)
+  format_expect = function (self, expect, actual)
     if type (expect) == "string" and type (actual) == "string" then
       return " string containing " .. q(expect) .. ", "
     else
@@ -1583,11 +1913,11 @@ matchers.contain = Matcher {
     end
   end,
 
-  format_alternatives = function (adaptor, alternatives, actual)
+  format_alternatives = function (self, adaptor, alternatives, actual)
     if type (alternatives) == "string" then
       alternatives = ("%q"):format (alternatives)
     else
-      alternatives = concat (alternatives, adaptor, util.QUOTED)
+      alternatives = concat (alternatives, adaptor, ":quoted")
     end
     return " " .. Object.type (actual) .. " containing " ..
            adaptor .. " " .. alternatives .. ", "
@@ -1601,19 +1931,16 @@ matchers.contain = Matcher {
 --[[ ============= ]]--
 
 
-local expectations, ispending
-
-
 -- Called at the start of each example block.
-local function init ()
-  expectations = {}
-  ispending    = nil
+local function init (state)
+  state.expectations = {}
+  state.ispending = nil
 end
 
 
 -- Return status since last init.
-local function status ()
-  return { expectations = expectations, ispending = ispending }
+local function status (state)
+  return { expectations = state.expectations, ispending = state.ispending }
 end
 
 
@@ -1622,18 +1949,19 @@ end
 -- parameter. Matcher names containing '_not_' invert their results
 -- before returning.
 --
--- For example:                  expect ({}).should_not_be {}
-
-M.stats = { pass = 0, pend = 0, fail = 0, starttime = util.gettimeofday () }
-
-local function expect (ok, actual)
+-- For example:                  expect ({}).not_to_be {}
+local function expect (state, ok, actual)
   return setmetatable ({}, {
-    __index = function (_, matcher_name)
+    __index = function (_, verb)
       local inverse = false
-      if matcher_name:match ("^should_not_") then
-        inverse, matcher_root = true, matcher_name:sub (12)
+      if verb:match ("^should_not_") then
+        inverse, matcher_root = true, verb:sub (12)
+      elseif verb:match ("^to_not_") or verb:match ("^not_to_") then
+        inverse, matcher_root = true, verb:sub (8)
+      elseif verb:match ("^should_") then
+        matcher_root = verb:sub (8)
       else
-        matcher_root = matcher_name:sub (8)
+        matcher_root = verb:sub (4)
       end
 
       local matcher = matchers[matcher_root]
@@ -1646,14 +1974,16 @@ local function expect (ok, actual)
           message = message and ("not " .. message)
         end
 
+	local expectations, ispending, stats = state.expectations, state.ispending, state.stats
+
         if ispending ~= nil then
           -- stats.pend is updated by pending ()
           -- +1 per pending example, not per expectation in pending examples
           pending = ispending
         elseif success ~= true then
-          M.stats.fail = M.stats.fail + 1
+          stats.fail = stats.fail + 1
         else
-          M.stats.pass = M.stats.pass + 1
+          stats.pass = stats.pass + 1
         end
         table.insert (expectations, {
           message = message,
@@ -1665,14 +1995,14 @@ local function expect (ok, actual)
       -- Returns a functable...
       return setmetatable ({}, {
         --     (i) ...with a `__call` metamethod to respond to:
-        --         | expect (foo).should_be (bar)
+        --         | expect (foo).to_be (bar)
         __call = function (_, expected)
           score (matcher:match (actual, expected, ok))
         end,
 
         __index = function (_, adaptor_name)
           --  (ii) ...or else dynamic adapator lookup in the matcher object:
-          --       | expect (foo).should_be.any_of {bar, baz, quux}
+          --       | expect (foo).to_be.any_of {bar, baz, quux}
 	  adaptor = matcher[adaptor_name .. "?"]
           if adaptor then
 	    return function (alternatives)
@@ -1682,7 +2012,7 @@ local function expect (ok, actual)
           -- (iii) otherwise throw an error for unknown adaptors:
           else
             error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-                   matcher_name .. "'")
+                   verb .. "'")
           end
         end,
       })
@@ -1691,9 +2021,9 @@ local function expect (ok, actual)
 end
 
 
-local function pending (s)
-  M.stats.pend = M.stats.pend + 1
-  ispending  = s or "not yet implemented"
+local function pending (state, s)
+  state.stats.pend = state.stats.pend + 1
+  state.ispending  = s or "not yet implemented"
 end
 
 
@@ -1702,7 +2032,7 @@ end
 --[[ ----------------- ]]--
 
 
-return std.table.merge (M, {
+return merge (M, {
   -- Prototypes:
   Matcher   = Matcher,
 
@@ -1719,28 +2049,103 @@ return std.table.merge (M, {
 
 end)
 package.preload["specl.optparse"] = (function ()
--- Parse and process command line options.
--- Written by Gary V. Vaughan, 2013
---
--- Copyright (C) 2013-2014 Gary V. Vaughan
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3 of the License, or
--- (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
---
--- You should have received a copy of the GNU General Public License
--- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+--[=[--
+ Parse and process command line options.
+
+     local OptionParser = require "std.optparse"
+
+     local parser = OptionParser [[
+     any text VERSION
+     Additional lines of text to show when the --version
+     option is passed.
+
+     Several lines or paragraphs are permitted.
+
+     Usage: PROGNAME
+
+     Banner text.
+
+     Optional long description text to show when the --help
+     option is passed.
+
+     Several lines or paragraphs of long description are permitted.
+
+     Options:
+
+       -b                       a short option with no long option
+           --long               a long option with no short option
+           --another-long       a long option with internal hypen
+       -v, --verbose            a combined short and long option
+       -n, --dryrun, --dry-run  several spellings of the same option
+       -u, --name=USER          require an argument
+       -o, --output=[FILE]      accept an optional argument
+           --version            display version information, then exit
+           --help               display this help, then exit
+
+    Footer text.  Several lines or paragraphs are permitted.
+
+    Please report bugs at bug-list@yourhost.com
+    ]]
+
+    _G.arg, _G.opts = parser:parse (_G.arg)
+
+ Most often, everything else is handled automatically.  After calling
+ `parser:parse` as shown above, `_G.arg` will contain unparsed arguments,
+ usually filenames or similar, and `_G.opts` will be a table of parsed
+ option values. The keys to the table are the long-options with leading
+ hyphens stripped, and non-word characters turned to `_`.  For example
+ if `--another-long` had been found in `_G.arg` then `_G.opts` would
+ have a key named `another_long`.  If there is no long option name, then
+ the short option is used, e.g. `_G.opts.b` will be set.  The values
+ saved in those keys are controlled by the option handler, usually just
+ `true` or the option argument string as appropriate.
+
+ On those occasions where more complex processing is required, handlers
+ can be replaced or added using parser:@{on}.  A good option to always
+ add, is to make `--` signal the end of processed options, so that any
+ options following `--` on the command line, even if they begin with a
+ hyphen and look like options otherwise, are not processed but instead
+ left in the modified `_G.arg` returned by `parser:parse`:
+
+     parser:on ('--', parser.finished)
+
+ See the documentation for @{std.optparse:on} for more details of how to
+ use this powerful method.
+
+ When writing your own handlers for @{std.optparse:on}, you only need
+ to deal with normalised arguments, because combined short arguments
+ (`-xyz`), equals separators to long options (`--long=ARG`) are fully
+ expanded before any handler is called.
+
+ Note that @{std.io.die} and @{std.io.warn} will only prefix messages
+ with `parser.program` if the parser options are assigned back to
+ `_G.opts` as shown in the example above.
+
+ @classmod std.optparse
+]=]
 
 
--- forward declarations
-local optional, required, finished, flag, help, version
-local boolean, file
+local OptionParser -- forward declaration
+
+
+------
+-- Customized parser for your options.
+--
+-- This table is returned by @{OptionParser}, and most importantly has
+-- the @{parse} method you call to fill the `opts` table according to
+-- what command-line options were passed to your program.
+-- @table parser
+-- @string program the first word following `Usage:` in @{OptionParser}
+--   spec string
+-- @string version the last white-space delimited word on the first line
+--   of text in the spec string
+-- @string versiontext everything preceding `Usage:` in the spec string,
+--   and which will be displayed by the @{version} @{on_handler}
+-- @string helptext everything including and following `Usage:` in the
+--   spec string and which will be displayed by the @{help}
+--   @{on_handler}
+-- @func parse see @{parse}
+-- @func on see @{on}
 
 
 --[[ ----------------- ]]--
@@ -1748,9 +2153,17 @@ local boolean, file
 --[[ ----------------- ]]--
 
 
+local optional, required
+
+
 --- Normalise an argument list.
-local function normalise (parser, arglist)
-  -- First pass: Normalise to long option names, without '=' separators.
+-- Separate short options, remove `=` separators from
+-- `--long-option=optarg` etc.
+-- @local
+-- @function normalise
+-- @tparam table arglist list of arguments to normalise
+-- @treturn table normalised argument list
+local function normalise (self, arglist)
   local normal = {}
   local i = 0
   while i < #arglist do
@@ -1761,22 +2174,37 @@ local function normalise (parser, arglist)
     if opt:sub (1, 2) == "--" then
       local x = opt:find ("=", 3, true)
       if x then
-        table.insert (normal, opt:sub (1, x - 1))
-        table.insert (normal, opt:sub (x + 1))
-      else
+        local optname = opt:sub (1, x -1)
+
+	-- Only split recognised long options.
+	if self[optname] then
+          table.insert (normal, optname)
+          table.insert (normal, opt:sub (x + 1))
+	else
+	  x = nil
+	end
+      end
+
+      if x == nil then
+	-- No '=', or substring before '=' is not a known option name.
         table.insert (normal, opt)
       end
 
     elseif opt:sub (1, 1) == "-" and string.len (opt) > 2 then
-      local rest
+      local orig, split, rest = opt, {}
       repeat
         opt, rest = opt:sub (1, 2), opt:sub (3)
 
-        table.insert (normal, opt)
+        table.insert (split, opt)
+
+	-- If there's no handler, the option was a typo, or not supposed
+	-- to be an option at all.
+	if self[opt] == nil then
+	  opt, split = nil, { orig }
 
         -- Split '-xyz' into '-x -yz', and reiterate for '-yz'
-        if parser[opt].handler ~= optional and
-           parser[opt].handler ~= required then
+        elseif self[opt].handler ~= optional and
+          self[opt].handler ~= required then
 	  if string.len (rest) > 0 then
             opt = "-" .. rest
 	  else
@@ -1785,10 +2213,13 @@ local function normalise (parser, arglist)
 
         -- Split '-xshortargument' into '-x shortargument'.
         else
-          table.insert (normal, rest)
+          table.insert (split, rest)
           opt = nil
         end
       until opt == nil
+
+      -- Append split options to normalised list
+      for _, v in ipairs (split) do table.insert (normal, v) end
     else
       table.insert (normal, opt)
     end
@@ -1799,15 +2230,20 @@ local function normalise (parser, arglist)
 end
 
 
-local function set (parser, opt, value)
-  local key = parser[opt].key
+--- Store `value` with `opt`.
+-- @local
+-- @function set
+-- @string opt option name
+-- @param value option argument value
+local function set (self, opt, value)
+  local key = self[opt].key
 
-  if type (parser.opts[key]) == "table" then
-    table.insert (parser.opts[key], value)
-  elseif parser.opts[key] ~= nil then
-    parser.opts[key] = { parser.opts[key], value }
+  if type (self.opts[key]) == "table" then
+    table.insert (self.opts[key], value)
+  elseif self.opts[key] ~= nil then
+    self.opts[key] = { self.opts[key], value }
   else
-    parser.opts[key] = value
+    self.opts[key] = value
   end
 end
 
@@ -1818,73 +2254,160 @@ end
 --[[ ============= ]]--
 
 
--- Finish option processing.
-function finished (parser, arglist, i)
+--- Option at `arglist[i]` can take an argument.
+-- Argument is accepted only if there is a following entry that does not
+-- begin with a '-'.
+--
+-- This is the handler automatically assigned to options that have
+-- `--opt=[ARG]` style specifications in the @{OptionParser} spec
+-- argument.  You can also pass it as the `handler` argument to @{on} for
+-- options you want to add manually without putting them in the
+-- @{OptionParser} spec.
+--
+-- Like @{required}, this handler will store multiple occurrences of a
+-- command-line option.
+-- @static
+-- @tparam table arglist list of arguments
+-- @int i index of last processed element of `arglist`
+-- @param[opt=true] value either a function to process the option
+--   argument, or a default value if encountered without an optarg
+-- @treturn int index of next element of `arglist` to process
+function optional (self, arglist, i, value)
+  if i + 1 <= #arglist and arglist[i + 1]:sub (1, 1) ~= "-" then
+    return self:required (arglist, i, value)
+  end
+
+  if type (value) == "function" then
+    value = value (self, opt, nil)
+  elseif value == nil then
+    value = true
+  end
+
+  set (self, arglist[i], value)
+  return i + 1
+end
+
+
+--- Option at `arglist[i}` requires an argument.
+--
+-- This is the handler automatically assigned to options that have
+-- `--opt=ARG` style specifications in the @{OptionParser} spec argument.
+-- You can also pass it as the `handler` argument to @{on} for options
+-- you want to add manually without putting them in the @{OptionParser}
+-- spec.
+--
+-- Normally the value stored in the `opt` table by this handler will be
+-- the string given as the argument to that option on the command line.
+-- However, if the option is given on the command-line multiple times,
+-- `opt["name"]` will end up with all those arguments stored in the
+-- array part of a table:
+--
+--     $ cat ./prog
+--     ...
+--     parser:on ({"-e", "-exec"}, required)
+--     _G.arg, _G.opt = parser:parse (_G.arg)
+--     print std.string.tostring (_G.opt.exec)
+--     ...
+--     $ ./prog -e '(foo bar)' -e '(foo baz)' -- qux
+--     {1=(foo bar),2=(foo baz)}
+-- @static
+-- @tparam table arglist list of arguments
+-- @int i index of last processed element of `arglist`
+-- @param[opt] value either a function to process the option argument,
+--   or a forced value to replace the user's option argument.
+-- @treturn int index of next element of `arglist` to process
+function required (self, arglist, i, value)
+  local opt = arglist[i]
+  if i + 1 > #arglist then
+    self:opterr ("option '" .. opt .. "' requires an argument")
+    return i + 1
+  end
+
+  if type (value) == "function" then
+    value = value (self, opt, arglist[i + 1])
+  elseif value == nil then
+    value = arglist[i + 1]
+  end
+
+  set (self, opt, value)
+  return i + 2
+end
+
+
+--- Finish option processing
+--
+-- This is the handler automatically assigned to the option written as
+-- `--` in the @{OptionParser} spec argument.  You can also pass it as
+-- the `handler` argument to @{on} if you want to manually add an end
+-- of options marker without writing it in the @{OptionParser} spec.
+--
+-- This handler tells the parser to stop processing arguments, so that
+-- anything after it will be an argument even if it otherwise looks
+-- like an option.
+-- @static
+-- @tparam table arglist list of arguments
+-- @int i index of last processed element of `arglist`
+-- @treturn int index of next element of `arglist` to process
+local function finished (self, arglist, i)
   for opt = i + 1, #arglist do
-    table.insert (parser.unrecognised, arglist[opt])
+    table.insert (self.unrecognised, arglist[opt])
   end
   return 1 + #arglist
 end
 
 
--- Option at ARGLIST[I} requires an argument.
-function required (parser, arglist, i, value)
+--- Option at `arglist[i]` is a boolean switch.
+--
+-- This is the handler automatically assigned to options that have
+-- `--long-opt` or `-x` style specifications in the @{OptionParser} spec
+-- argument. You can also pass it as the `handler` argument to @{on} for
+-- options you want to add manually without putting them in the
+-- @{OptionParser} spec.
+--
+-- Beware that, _unlike_ @{required}, this handler will store multiple
+-- occurrences of a command-line option as a table **only** when given a
+-- `value` function.  Automatically assigned handlers do not do this, so
+-- the option will simply be `true` if the option was given one or more
+-- times on the command-line.
+-- @static
+-- @tparam table arglist list of arguments
+-- @int i index of last processed element of `arglist`
+-- @param[opt] value either a function to process the option argument,
+--   or a value to store when this flag is encountered
+-- @treturn int index of next element of `arglist` to process
+local function flag (self, arglist, i, value)
   local opt = arglist[i]
-  if i + 1 > #arglist then
-    parser:opterr ("option '" .. opt .. "' requires an argument")
-    return i + 1
-  end
-
   if type (value) == "function" then
-    value = value (parser, opt, arglist[i + 1])
+    set (self, opt, value (self, opt, true))
   elseif value == nil then
-    value = arglist[i + 1]
+    local key = self[opt].key
+    self.opts[key] = true
   end
 
-  set (parser, opt, value)
-  return i + 2
-end
-
-
--- Option at ARGLIST[I] will take an argument only if there is a
--- following entry that does not begin with a '-'.
-function optional (parser, arglist, i, value)
-  if i + 1 <= #arglist and arglist[i + 1]:sub (1, 1) ~= "-" then
-    return parser:required (arglist, i, value)
-  end
-
-  if type (value) == "function" then
-    value = value (parser, opt, nil)
-  elseif value == nil then
-    value = true
-  end
-
-  set (parser, arglist[i], value)
   return i + 1
 end
 
 
--- Option at ARGLIST[I] is a boolean switch.
-function flag (parser, arglist, i, value)
-  if type (value) == "function" then
-    value = value (parser, opt, true)
-  elseif value == nil then
-    value = true
-  end
-
-  set (parser, arglist[i], value)
-  return i + 1
-end
-
-
-function help (parser)
-  print (parser.helptext)
+--- Option should display help text, then exit.
+--
+-- This is the handler automatically assigned tooptions that have
+-- `--help` in the specification, e.g. `-h, -?, --help`.
+-- @static
+-- @function help
+local function help (self)
+  print (self.helptext)
   os.exit (0)
 end
 
 
-function version (parser)
-  print (parser.versiontext)
+--- Option should display version text, then exit.
+--
+-- This is the handler automatically assigned tooptions that have
+-- `--version` in the specification, e.g. `-V, --version`.
+-- @static
+-- @function version
+local function version (self)
+  print (self.versiontext)
   os.exit (0)
 end
 
@@ -1895,6 +2418,16 @@ end
 --[[ =============== ]]--
 
 
+--- Map various option strings to equivalent Lua boolean values.
+-- @table boolvals
+-- @field false false
+-- @field 0 false
+-- @field no false
+-- @field n false
+-- @field true true
+-- @field 1 true
+-- @field yes true
+-- @field y true
 local boolvals = {
   ["false"] = false, ["true"]  = true,
   ["0"]     = false, ["1"]     = true,
@@ -1903,24 +2436,40 @@ local boolvals = {
 }
 
 
--- Value is one of the keys in BOOLVALS above.
-function boolean (parser, opt, optarg)
+--- Return a Lua boolean equivalent of various `optarg` strings.
+-- Report an option parse error if `optarg` is not recognised.
+--
+-- Pass this as the `value` function to @{on} when you want various
+-- *truthy* or *falsey* option arguments to be coerced to a Lua `true`
+-- or `false` respectively in the options table.
+-- @static
+-- @string opt option name
+-- @string[opt="1"] optarg option argument, must be a key in @{boolvals}
+-- @treturn bool `true` or `false`
+local function boolean (self, opt, optarg)
   if optarg == nil then optarg = "1" end -- default to truthy
   local b = boolvals[tostring (optarg):lower ()]
   if b == nil then
-    parser:opterr (optarg .. ": Not a valid argument to " ..opt[1] .. ".")
+    return self:opterr (optarg .. ": Not a valid argument to " ..opt[1] .. ".")
   end
   return b
 end
 
 
--- Bail out with an error unless OPTARG is an existing file.
--- FIXME: this only checks whether the file has read permissions
-function file (parser, opt, optarg)
+--- Report an option parse error unless `optarg` names an
+-- existing file.
+--
+-- Pass this as the `value` function to @{on} when you want to accept
+-- only option arguments that name an existing file.
+-- @fixme this only checks whether the file has read permissions
+-- @static
+-- @string opt option name
+-- @string optarg option argument, must be an existing file
+-- @treturn `optarg`
+local function file (self, opt, optarg)
   local h, errmsg = io.open (optarg, "r")
   if h == nil then
-    parser:opterr (optarg .. ": " .. errmsg)
-    return nil
+    return self:opterr (optarg .. ": " .. errmsg)
   end
   h:close ()
   return optarg
@@ -1933,8 +2482,14 @@ end
 --[[ =============== ]]--
 
 
-local function opterr (parser, msg)
-  local prog = parser.program
+--- Report an option parse error, then exit with status 2.
+--
+-- Use this in your custom option handlers for consistency with the
+-- error output from built-in `optparse` error messages.
+-- @static
+-- @string msg error message
+local function opterr (self, msg)
+  local prog = self.program
   -- Ensure final period.
   if msg:match ("%.$") == nil then msg = msg .. "." end
   io.stderr:write (prog .. ": error: " .. msg .. "\n")
@@ -1943,12 +2498,34 @@ local function opterr (parser, msg)
 end
 
 
--- Add option handlers to PARSER.
--- @param parser  the parser object
--- @param opts    name of the option as a string, or list of names in a table
--- @param handler callback function when given option is encountered
--- @param value   additional value passed to <handler>
-local function on (parser, opts, handler, value)
+------
+-- Function signature of an option handler for @{on}.
+-- @function on_handler
+-- @tparam table arglist list of arguments
+-- @int i index of last processed element of `arglist`
+-- @param[opt=nil] value additional `value` registered with @{on}
+-- @treturn int index of next element of `arglist` to process
+
+
+--- Add an option handler.
+--
+-- When the automatically assigned option handlers don't do everything
+-- you require, or when you don't want to put an option into the
+-- @{OptionParser} `spec` argument, use this function to specify custom
+-- behaviour.  If you write the option into the `spec` argument anyway,
+-- calling this function will replace the automatically assigned handler
+-- with your own.
+--
+--     parser:on ("--", parser.finished)
+--     parser:on ("-V", parser.version)
+--     parser:on ("--config-file", parser.required, parser.file)
+--     parser:on ("--enable-nls", parser.optional, parser.boolean)
+-- @function on
+-- @tparam[string|table] opts name of the option, or list of option names
+-- @tparam on_handler handler function to call when any of `opts` is
+--   encountered
+-- @param value additional value passed to @{on_handler}
+local function on (self, opts, handler, value)
   if type (opts) == "string" then opts = { opts } end
   handler = handler or flag -- unspecified options behave as flags
 
@@ -1980,44 +2557,89 @@ local function on (parser, opts, handler, value)
   key = normal[#normal]:match ("^%-*(.*)$"):gsub ("%W", "_")
 
   for _, opt in ipairs (normal) do
-    parser[opt] = { key = key, handler = handler, value = value }
+    self[opt] = { key = key, handler = handler, value = value }
   end
 end
 
 
--- Parse ARGLIST with PARSER.
-local function parse (parser, arglist)
-  parser.unrecognised = {}
+------
+-- Parsed options table, with a key for each encountered option, each
+-- with value set by that option's @{on_handler}.  Where an option
+-- has one or more long-options specified, the key will be the first
+-- one of those with leading hyphens stripped and non-alphanumeric
+-- characters replaced with underscores.  For options that can only be
+-- specified by a short option, the key will be the letter of the first
+-- of the specified short options:
+--
+--     {"-e", "--eval-file"} => opts.eval_file
+--     {"-n", "--dryrun", "--dry-run"} => opts.dryrun
+--     {"-t", "-T"} => opts.t
+--
+-- Generally there will be one key for each previously specified
+-- option (either automatically assigned by @{OptionParser} or
+-- added manually with @{on}) containing the value(s) assigned by the
+-- associated @{on_handler}.  For automatically assigned handlers,
+-- that means `true` for straight-forward flags and
+-- optional-argument options for which no argument was given; or else
+-- the string value of the argument passed with an option given only
+-- once; or a table of string values of the same for arguments given
+-- multiple times.
+--
+--     ./prog -x -n -x => opts = { x = true, dryrun = true }
+--     ./prog -e '(foo bar)' -e '(foo baz)'
+--         => opts = {eval_file = {"(foo bar)", "(foo baz)"} }
+--
+-- If you write your own handlers, or otherwise specify custom
+-- handling of options with @{on}, then whatever value those handlers
+-- return will be assigned to the respective keys in `opts`.
+-- @table opts
 
-  arglist = normalise (parser, arglist)
+
+--- Parse `arglist`.
+-- @tparam table arglist list of arguments
+-- @tparam[opt] table defaults table of default option values
+-- @treturn table a list of unrecognised `arglist` elements
+-- @treturn opts parsing results
+local function parse (self, arglist, defaults)
+  self.unrecognised, self.opts = {}, {}
+
+  arglist = normalise (self, arglist)
 
   local i = 1
   while i > 0 and i <= #arglist do
     local opt = arglist[i]
 
-    if parser[opt] == nil then
-      table.insert (parser.unrecognised, opt)
+    if self[opt] == nil then
+      table.insert (self.unrecognised, opt)
       i = i + 1
 
       -- Following non-'-' prefixed argument is an optarg.
       if i <= #arglist and arglist[i]:match "^[^%-]" then
-        table.insert (parser.unrecognised, arglist[i])
+        table.insert (self.unrecognised, arglist[i])
         i = i + 1
       end
 
     -- Run option handler functions.
     else
-      assert (type (parser[opt].handler) == "function")
+      assert (type (self[opt].handler) == "function")
 
-      i = parser[opt].handler (parser, arglist, i, parser[opt].value)
+      i = self[opt].handler (self, arglist, i, self[opt].value)
     end
   end
 
-  return parser.unrecognised, parser.opts
+  -- Merge defaults into user options.
+  for k, v in pairs (defaults or {}) do
+    if self.opts[k] == nil then self.opts[k] = v end
+  end
+
+  -- metatable allows `io.warn` to find `parser.program` when assigned
+  -- back to _G.opts.
+  return self.unrecognised, setmetatable (self.opts, {__index = self})
 end
 
 
-local M = {
+--- @export
+local methods = {
   boolean  = boolean,
   file     = file,
   finished = finished,
@@ -2033,15 +2655,27 @@ local M = {
 }
 
 
+
+--- Take care not to register duplicate handlers.
+-- @param current current handler value
+-- @param new new handler value
+-- @return `new` if `current` is nil
 local function set_handler (current, new)
   assert (current == nil, "only one handler per option")
   return new
 end
 
 
--- Instantiate a new parser, ready to parse the documented options in SPEC.
-M.new = function (spec)
-  local parser = setmetatable ({ opts = {} }, { __index = M })
+--- Instantiate a new parser.
+-- Read the documented options from `spec` and return a new parser that
+-- can be passed to @{parse} for parsing those options from an argument
+-- list.  Options are recognised as lines that begin with at least two
+-- spaces, followed by a hyphen.
+-- @static
+-- @string spec option parsing specification
+-- @treturn parser a parser for options described by `spec`
+function OptionParser (spec)
+  local parser = setmetatable ({ opts = {} }, { __index = methods })
 
   parser.versiontext, parser.version, parser.helptext, parser.program =
     spec:match ("^([^\n]-(%S+)\n.-)%s*([Uu]sage: (%S+).-)%s*$")
@@ -2116,13 +2750,311 @@ end
 
 
 -- Support calling the returned table:
---   local OptionParser = require "specl.optparse"
---   local parser = OptionParser (helptext)
-return setmetatable (M, {
-  __call = function (self, ...)
-             return self.new (...)
-           end
+return setmetatable (methods, {
+  __call = function (_, ...)
+             return OptionParser (...)
+           end,
 })
+
+end)
+package.preload["specl.runner"] = (function ()
+-- Specification testing framework.
+-- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2014 Gary V. Vaughan
+--
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
+
+
+local compat     = require "specl.compat"
+local matchers   = require "specl.matchers"
+
+local compat = require "specl.compat"
+local loadstring, setfenv = compat.loadstring, compat.setfenv
+local std = require "specl.std"
+local slurp, split, merge = std.string.slurp, std.string.split, std.table.merge
+local util = require "specl.util"
+local map, strip1st = util.map, util.strip1st
+
+
+--[[ ================= ]]--
+--[[ Helper Functions. ]]--
+--[[ ================= ]]--
+
+
+-- Append non-nil ARG to HOLDER.accumulated.
+-- If ARG is a table, values for all keys in ARG are accumulated in
+-- equivalent HOLDER keys.
+-- Used to collect output from formatter calls, to be saved for footer.
+local function accumulator (self, arg)
+  if arg ~= nil then
+    if type (arg) == "table" then
+      self.accumulated = self.accumulated or {}
+      for k, v in pairs (arg) do
+        self.accumulated[k] = (self.accumulated[k] or "") .. tostring(v)
+      end
+    else
+      self.accumulated = (self.accumulated or "") .. arg
+    end
+  end
+end
+
+
+-- Access to core functions that we override to run within nested
+-- function environments.
+local core = {
+  load       = load,
+  loadfile   = loadfile,
+  loadstring = loadstring,
+  require    = require,
+}
+
+
+-- Intercept functions that normally execute in the global environment,
+-- and run them in the example block environment to capture side-effects
+-- correctly.
+local function initenv (state, env)
+  -- Don't let _G (or _ENV) assignments leak into outer tables.
+  rawset (env, "_G", env)
+  if env._ENV then rawset (env, "_ENV", env) end
+
+  for _, intercept in pairs { "load", "loadfile", "loadstring" } do
+    env[intercept] = function (...)
+      local fn = core[intercept] (...)
+      return function ()
+        setfenv (fn, env)
+        return fn ()
+      end
+    end
+  end
+
+  -- For a not-yet-{pre,}loaded module, try to find it on the
+  -- environment `package.path` using the system loaders, and cache any
+  -- symbols that leak out (the side effects). Copy any leaked symbols
+  -- into the example block environment, for this and subsequent
+  -- examples that load it.
+  env.require = function (m)
+    local errmsg, import, loaded, loadfn
+
+    -- temporarily switch to the environment package context.
+    local save = {
+      cpath = package.cpath, path = package.path, loaders = package.loaders,
+    }
+    package.cpath, package.path, package.loaders =
+      env.package.cpath, env.package.path, env.package.loaders
+
+    -- We can have a spec_helper.lua in each spec directory, so don't
+    -- cache the side effects of a random one!
+    if m ~= "spec_helper" then
+      loaded, loadfn = package.loaded[m], package.preload[m]
+      import = state.sidefx[m]
+    end
+
+    if import == nil then
+      -- No side effects cached; find a loader function.
+      if loadfn == nil then
+        errmsg = ""
+        for _, loader in ipairs (package.loaders) do
+	  loadfn = loader (m)
+	  if type (loadfn) == "function" then
+            break
+	  end
+	  errmsg = errmsg .. (loadfn and tostring (loadfn) or "")
+        end
+      end
+      if type (loadfn) ~= "function" then
+        package.path, package.cpath = save.path, save.cpath
+        return error (errmsg)
+      end
+
+      -- Capture side effects.
+      if loadfn ~= nil then
+        import = setmetatable ({}, {__index = env})
+        setfenv (loadfn, import)
+        loaded = loadfn ()
+      end
+    end
+
+    -- Import side effects into example block environment.
+    for name, value in pairs (import or {}) do
+      env[name] = value
+    end
+
+    -- A map of module name to global symbol side effects.
+    -- We keep track of these so that they can be injected into an
+    -- execution environment that requires a module.
+    state.sidefx[m] = import
+    package.loaded[m] = package.loaded[m] or loaded or nil
+
+    package.cpath, package.path, package.loaders =
+      save.cpath, save.path, save.loaders
+    return package.loaded[m]
+  end
+end
+
+
+
+--[[ ============= ]]--
+--[[ Spec' Runner. ]]--
+--[[ ============= ]]--
+
+
+local run_examples, run_contexts, run
+
+
+-- Run each of EXAMPLES under ENV in order.
+function run_examples (state, examples, descriptions, env)
+  local formatter = state.opts.formatter
+
+  local block = function (example, blockenv)
+    local fenv   = util.deepcopy (blockenv)
+    fenv.expect  = function (...) return matchers.expect  (state, ...) end
+    fenv.pending = function (...) return matchers.pending (state, ...) end
+
+    initenv (state, fenv)
+
+    if examples.before ~= nil then
+      setfenv (examples.before.example, fenv)
+      examples.before.example ()
+    end
+
+    -- There is only one, otherwise we can't maintain example order.
+    local description, definition = next (example)
+
+    local keepgoing = true
+    if definition.example then
+
+      -- An example, execute it in a clean new sub-environment; as long
+      -- as there are no filters, or the filters for the source line of
+      -- this definition or inclusive example pattern is true.
+
+      local filters = state.spec.filters
+      local inclusive = (filters == nil) or (filters[definition.line])
+
+      table.insert (descriptions, description)
+
+      if not inclusive then
+	local source = table.concat (map (strip1st, descriptions))
+        for _, pattern in ipairs (filters.inclusive or {}) do
+          if source:match (pattern) then
+            inclusive = true
+	    break
+	  end
+	end
+      end
+
+      if inclusive then
+        matchers.init (state)
+
+        setfenv (definition.example, fenv)
+        definition.example ()
+
+        local status = merge ({
+          filename = state.spec.filename,
+	  line     = definition.line,
+        }, matchers.status (state))
+	state:accumulator (formatter.expectations (status, descriptions, state.opts))
+
+        if state.opts.fail_fast then
+          for _, expectation in ipairs (status.expectations) do
+            if expectation.status == false then keepgoing = false end
+          end
+        end
+      end
+
+      table.remove (descriptions)
+
+    else
+      -- A nested context, revert back to run_contexts.
+      if run_contexts (state, example, descriptions, fenv) == false then
+        keepgoing = false
+      end
+    end
+
+    if examples.after ~= nil then
+      setfenv (examples.after.example, fenv)
+      examples.after.example ()
+    end
+
+    -- Now after's have executed, return false for --fail-fast.
+    if keepgoing == false then return false end
+  end
+
+  for _, example in ipairs (examples) do
+    setfenv (block, env)
+    if block (example, env) == false then
+      -- Return false immediately for --fail-fast.
+      return false
+    end
+  end
+end
+
+
+-- Run each of CONTEXTS under ENV in order.
+function run_contexts (state, contexts, descriptions, env)
+  local formatter = state.opts.formatter
+  for description, examples in pairs (contexts) do
+    table.insert (descriptions, description)
+    state:accumulator (formatter.spec (descriptions, state.opts))
+    local status = run_examples (state, examples, descriptions, env)
+    table.remove (descriptions)
+
+    -- Return false immediately for a failed expectation if --fail-fast
+    -- was given.
+    if status == false then return false end
+  end
+end
+
+
+-- Run `specs` from `state`.
+function run (state)
+  local formatter = state.opts.formatter
+
+  state.sidefx = {}
+  state.accumulator = accumulator -- so we can pass self with ':'
+  state.accumulated = nil
+
+  -- Run compiled specs, in order.
+  state:accumulator (formatter.header (state.stats, state.opts))
+  for _, spec in ipairs (state.specs) do
+    state.spec = spec
+
+    -- Return false immediately for a failed expectation if --fail-fast
+    -- was given.
+    if run_examples (state, spec.examples, {}, state.sandbox) == false then
+      break
+    end
+  end
+
+  formatter.footer (state.stats, state.accumulated, state.opts)
+  return state.stats.fail ~= 0 and 1 or 0
+end
+
+
+
+--[[ ----------------- ]]--
+--[[ Public Interface. ]]--
+--[[ ----------------- ]]--
+
+local M = {
+  run       = run,
+}
+
+
+return M
 
 end)
 package.preload["specl.shell"] = (function ()
@@ -2148,12 +3080,12 @@ package.preload["specl.shell"] = (function ()
 
 -- Additional commands useful for writing command-line specs.
 
-local matchers = require "specl.matchers"
-local std      = require "specl.std"
-local util     = require "specl.util"
 
-local Object = std.Object
-local escape_pattern = std.string.escape_pattern
+local std = require "specl.std"
+local Object, escape_pattern = std.Object, std.string.escape_pattern
+local util = require "specl.util"
+local type_check = util.type_check
+
 
 local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"
@@ -2165,7 +3097,7 @@ local Command = Object {
   _type = "Command",
 
   _init = function (self, params)
-    util.type_check ("Command",
+    type_check ("Command",
       {self, params}, {{"Command", "table"}, {"string", "table"}})
 
     local kind = Object.type (params)
@@ -2174,7 +3106,7 @@ local Command = Object {
     local cmd = table.concat (params, " ")
     local env, stdin = params.env, params.stdin
 
-    -- Flatten the command itstelf to a string.
+    -- Flatten the command itself to a string.
     self.cmd = cmd
     if Object.type (cmd) == "table" then
       -- Subshell is required to make sure redirections are captured,
@@ -2214,7 +3146,7 @@ local Process = Object {
 
 -- Run a command in a subprocess
 local function spawn (o)
-  util.type_check ("spawn", {o}, {{"string", "table", "Command"}})
+  type_check ("spawn", {o}, {{"string", "table", "Command"}})
   if Object.type (o) ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.
@@ -2244,164 +3176,252 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
+  local matchers = require "specl.matchers"
+
   local concat, reformat, Matcher, matchers =
         matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
 
-  -- If a shell command fails to meet an expectation, show anything output
-  -- to standard error along with the Specl failure message.
-  local function process_errout (process)
-    local m = ":" .. reformat (process.output)
-    if process.errout ~= nil and process.errout ~= "" then
-      return m .. "\nand error:" .. reformat (process.errout)
+  -- Append reformatted output stream content, if it contains anything.
+  local function nonempty_output (process)
+    if process.output ~= nil and process.output ~= "" then
+      return "\nand output:" .. reformat (process.output)
     end
-    return m
+    return ""
   end
 
+  -- Append reformatted error stream content, if it contains anything.
+  local function nonempty_errout (process)
+    if process.errout ~= nil and process.errout ~= "" then
+      return "\nand error:" .. reformat (process.errout)
+    end
+    return ""
+  end
 
-  -- Reformat process error output with the reformat() function.
-  local function reformat_err (process)
+  -- If a shell command fails to meet an expectation, show anything output
+  -- to standard error along with the Specl failure message.
+  local function but_got_output (self, process)
+    return ":" .. reformat (process.output) .. nonempty_errout (process)
+  end
+
+  -- If a shell command fails to meet an expectation, show everything output
+  -- to standard error.
+  local function but_got_errout (self, process)
     return ":" .. reformat (process.errout)
   end
 
+  -- If a shell command fails to match expected exit status, show
+  -- anything output to standard error along with the Specl failure
+  -- message.
+  local function but_got_status (self, process)
+    return " " .. tostring (process.status) .. nonempty_errout (process)
+  end
+
+  -- If a shell command fails to match expected exit status or output,
+  -- show anything output to standard error along with the Specl
+  -- failure message.
+  local function but_got_status_with_output (self, process)
+    return " exit status " .. tostring (process.status) ..
+           ", with output:" .. reformat (process.output) ..
+	   nonempty_errout (process)
+  end
+
+
+  -- If a shell command fails to match expected exit status or output,
+  -- show anything output to standard output along with the Specl
+  -- failure message.
+  local function but_got_status_with_errout (self, process)
+    return " exit status " .. tostring (process.status) ..
+           ", with error:" .. reformat (process.errout) ..
+	   nonempty_output (process)
+  end
+
+
+  -- A Matcher requiring a Process object.
+  local ProcessMatcher = Matcher {
+    _init       = {"matchp",   "format_actual"},
+    _parmtypes  = {"function", "function"     },
+
+    actual_type = "Process",
+
+    format_expect = function (self, expect)
+      return self.expecting .. reformat (expect)
+    end,
+
+    format_alternatives = function (self, adaptor, alternatives)
+      return self.expecting .. reformat (alternatives, adaptor)
+    end,
+  }
+
 
   -- Matches if the exit status of a process is <expect>.
-  matchers.exit = Matcher {
-    function (actual, expect)
+  matchers.exit = ProcessMatcher {
+    function (self, actual, expect)
       return (actual.status == expect)
     end,
 
-    actual_type   = "Process",
-
-    format_actual = function (process)
-      local m = " " .. tostring (process.status)
-      if process.errout ~= nil and process.errout ~= "" then
-        return m .. "\nand error:" .. reformat (process.errout)
-      end
-      return m
-    end,
-
-    format_expect = function (expect)
+    format_expect = function (self, expect)
       return " exit status " .. tostring (expect) .. ", "
     end,
 
-    format_alternatives = function (adaptor, alternatives)
+    but_got_status,
+
+    format_alternatives = function (self, adaptor, alternatives)
       return " an exit status of " ..
-             concat (alternatives, adaptor, util.QUOTED) .. ", "
+             concat (alternatives, adaptor, ":quoted") .. ", "
     end,
   }
 
 
-  -- Matches if the output of a process is exactly <expect>.
-  matchers.output = Matcher {
-    function (actual, expect)
-      return (actual.output == expect)
+  -- Matches if the exit status of a process is 0.
+  matchers.succeed = ProcessMatcher {
+    function (self, actual)
+      return (actual.status == 0)
     end,
 
-    actual_type   = "Process",
-    format_actual = process_errout,
-
-    format_expect = function (expect)
-      return " output:" .. reformat (expect)
+    format_expect = function (self, expect)
+      return " exit status 0, "
     end,
 
-    format_alternatives = function (adaptor, alternatives)
-      return " output:" .. reformat (alternatives, adaptor)
-    end,
-  }
-
-
-  -- Matches if the error output of a process is exactly <expect>.
-  matchers.output_error = Matcher {
-    function (actual, expect)
-      return (actual.errout == expect)
-    end,
-
-    actual_type   = "Process",
-    format_actual = reformat_err,
-
-    format_expect = function (expect)
-      return " error output:" .. reformat (expect)
-    end,
-
-    format_alternatives = function (adaptor, alternatives)
-      return " error output:" .. reformat (alternatives, adaptor)
-    end,
-  }
-
-
-  -- Matches if the output of a process matches <pattern>.
-  matchers.match_output = Matcher {
-    function (actual, pattern)
-      return (string.match (actual.output, pattern) ~= nil)
-    end,
-
-    actual_type   = "Process",
-    format_actual = process_errout,
-
-    format_expect = function (expect)
-      return " output matching:" .. reformat (expect)
-    end,
-
-    format_alternatives = function (adaptor, alternatives)
-      return " output matching:" .. reformat (alternatives, adaptor)
-    end,
-  }
-
-
-  -- Matches if the error output of a process matches <pattern>.
-  matchers.match_error = Matcher {
-    function (actual, pattern)
-      return (string.match (actual.errout, pattern) ~= nil)
-    end,
-
-    actual_type   = "Process",
-    format_actual = reformat_err,
-
-    format_expect = function (expect)
-      return " error output matching:" .. reformat (expect)
-    end,
-
-    format_alternatives = function (adaptor, alternatives)
-      return " error output matching:" .. reformat (alternatives, adaptor)
-    end,
+    but_got_status,
   }
 
 
   -- Matches if the output of a process contains <expect>.
-  matchers.contain_output = Matcher {
-    function (actual, expect)
+  matchers.contain_output = ProcessMatcher {
+    function (self, actual, expect)
       return (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    actual_type   = "Process",
-    format_actual = process_errout,
+    expecting = " output containing:", but_got_output,
+  }
 
-    format_expect = function (expect)
-      return " output containing:" .. reformat (expect)
+
+  -- Matches if the process exits normally with output containing <expect>
+  matchers.succeed_while_containing = ProcessMatcher {
+    function (self, actual, expect)
+      return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    format_alternatives = function (adaptor, alternatives)
-      return " output containing:" .. reformat (alternatives, adaptor)
+    expecting =  " exit status 0, with output containing:",
+    but_got_status_with_output,
+  }
+
+
+  -- Matches if the output of a process is exactly <expect>.
+  matchers.output = ProcessMatcher {
+    function (self, actual, expect)
+      return (actual.output == expect)
     end,
+
+    expecting = " output:", but_got_output,
+  }
+
+
+  -- Matches if the process exits normally with output <expect>
+  matchers.succeed_with = ProcessMatcher {
+    function (self, actual, expect)
+      return (actual.status == 0) and (actual.output == expect)
+    end,
+
+    expecting = " exit status 0, with output:", but_got_status_with_output,
+  }
+
+
+  -- Matches if the output of a process matches <pattern>.
+  matchers.match_output = ProcessMatcher {
+    function (self, actual, pattern)
+      return (string.match (actual.output, pattern) ~= nil)
+    end,
+
+    expecting = " output matching:", but_got_output,
+  }
+
+
+  -- Matches if the process exits normally with output matching <expect>
+  matchers.succeed_while_matching = ProcessMatcher {
+    function (self, actual, pattern)
+      return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
+    end,
+
+    expecting = " exit status 0, with output matching:",
+    but_got_status_with_output,
+  }
+
+
+  -- Matches if the exit status of a process is <expect>.
+  matchers.fail = ProcessMatcher {
+    function (self, actual)
+      return (actual.status ~= 0)
+    end,
+
+    format_expect = function (self, expect)
+      return " non-zero exit status, "
+    end,
+
+    but_got_status,
   }
 
 
   -- Matches if the error output of a process contains <expect>.
-  matchers.contain_error = Matcher {
-    function (actual, expect)
+  matchers.contain_error = ProcessMatcher {
+    function (self, actual, expect)
       return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    actual_type   = "Process",
-    format_actual = reformat_err,
+    expecting = " error output containing:", but_got_errout,
+  }
 
-    format_expect = function (expect)
-      return " error output containing:" .. reformat (expect)
+
+  -- Matches if the process exits normally with output containing <expect>
+  matchers.fail_while_containing = ProcessMatcher {
+    function (self, actual, expect)
+      return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
     end,
 
-    format_alternatives = function (adaptor, alternatives)
-      return " error output containing:" .. reformat (alternatives, adaptor)
+    expecting = " non-zero exit status, with error output containing:",
+    but_got_status_with_errout,
+  }
+
+
+  -- Matches if the error output of a process is exactly <expect>.
+  matchers.output_error = ProcessMatcher {
+    function (self, actual, expect)
+      return (actual.errout == expect)
     end,
+
+    expecting = " error output:", but_got_errout,
+  }
+
+
+  -- Matches if the process exits abnormally with error output <expect>
+  matchers.fail_with = ProcessMatcher {
+    function (self, actual, expect)
+      return (actual.status ~= 0) and (actual.errout == expect)
+    end,
+
+    expecting = " non-zero exit status, with error:",
+    but_got_status_with_errout,
+  }
+
+
+  -- Matches if the error output of a process matches <pattern>.
+  matchers.match_error = ProcessMatcher {
+    function (self, actual, pattern)
+      return (string.match (actual.errout, pattern) ~= nil)
+    end,
+
+    expecting = " error output matching:", but_got_errout,
+  }
+
+
+  -- Matches if the process exits normally with output matching <expect>
+  matchers.fail_while_matching = ProcessMatcher {
+    function (self, actual, pattern)
+      return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
+    end,
+
+    expecting = " non-zero exit status, with error output matching:",
+    but_got_status_with_errout,
   }
 end
 
@@ -2472,6 +3492,15 @@ end
 --[[ -------------- ]]--
 
 
+-- Match `with` against keys in `branches` table, and return the result
+-- of running the function in the table value for the matching key, or
+-- the first non-key value function if no key matches.
+local function case (with, branches)
+  local fn = branches[with] or branches[1]
+  if fn then return fn (with) end
+end
+
+
 -- Return given metamethod, if any, or nil.
 local function metamethod (x, n)
   local m = metaentry (x, n)
@@ -2481,6 +3510,7 @@ end
 
 
 std.func = {
+  case       = case,
   metamethod = metamethod,
 }
 
@@ -2518,6 +3548,16 @@ end
 -- Return whether table is empty.
 local function empty (t)
   return not next (t)
+end
+
+
+--- Invert a table.
+local function invert (t)
+  local i = {}
+  for k, v in pairs (t) do
+    i[v] = k
+  end
+  return i
 end
 
 
@@ -2561,6 +3601,7 @@ std.table = {
   clone        = clone,
   clone_rename = clone_rename,
   empty        = empty,
+  invert       = invert,
   merge        = merge,
   size         = size,
   totable      = totable,
@@ -2634,6 +3675,16 @@ local function object_clone (prototype, ...)
     end
   end
 
+  -- Check parameter types when types are specified.
+  if object_mt._parmtypes ~= nil then
+    local _parmnames = object_mt._parmnames or object_mt._init
+    if type (_parmnames) == "table" and #_parmnames > 0 then
+      local parmvals = {}
+      for i, v in ipairs (_parmnames) do parmvals[i] = object[v] or object_mt[v] end
+      require "specl.util".type_check (object_mt._type, parmvals, object_mt._parmtypes)
+    end
+  end
+
   return setmetatable (object, object_mt)
 end
 
@@ -2679,6 +3730,7 @@ local function tablify (object)
   end
   return t
 end
+
 
 -- Metatable for objects
 local metatable = {
@@ -2749,6 +3801,24 @@ std.strbuf = std.Object {
 --[[ ------ ]]--
 
 
+-- Concatenate one or more directories and a filename into a path.
+local function catfile (...)
+  return table.concat ({...}, std.package.dirsep)
+end
+
+
+-- Remove leading directories from `path`.
+local function basename (path)
+  return path:gsub (catfile ("^.*", ""), "")
+end
+
+
+-- Remove trailing filename from `path`.
+local function dirname (path)
+  return path:gsub (catfile ("", "[^", "]*$"), "")
+end
+
+
 -- Process files specified on the command-line.
 local function process_files (fn)
   if #arg == 0 then
@@ -2766,6 +3836,9 @@ end
 
 
 std.io = {
+  basename      = basename,
+  catfile       = catfile,
+  dirname       = dirname,
   process_files = process_files,
 }
 
@@ -2800,6 +3873,14 @@ local function slurp (h)
     h:close ()
     return s
   end
+end
+
+
+--- Split a string at a given separator.
+local function split (s, sep)
+  local l, s, p = {}, s .. sep, "(.-)" .. escape_pattern (sep)
+  string.gsub (s, p, function (cap) l[#l + 1] = cap end)
+  return l
 end
 
 
@@ -2914,8 +3995,133 @@ std.string = {
   prettytostring = prettytostring,
   render         = render,
   slurp          = slurp,
+  split          = split,
   tostring       = tostring,
 }
+
+
+
+--[[ ----------- ]]--
+--[[ std.package ]]--
+--[[ ----------- ]]--
+
+local M = {}
+
+
+--- Make named constants for `package.config`
+M.dirsep, M.pathsep, M.path_mark, M.execdir, M.igmark =
+  string.match (package.config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
+
+-- Looks for a path segment match of `patt` in `pathstrings`.
+-- A third, optional numerical argument `init` specifies what element to
+-- start the search at; its default value is 1 and can be negative.  A
+-- value of true as a fourth optional argument `plain` turns off the
+-- pattern matching facilities, so the function does a plain "find
+-- substring" operation, with no characters in `patt` being considered
+-- magic.  Note that if `plain` is given, then `init` must be given as
+-- well.
+-- If it finds a match, then `find` returns the element index of
+-- `pathstrings` where this match occurs, and the full text of the
+-- matching element; otherwise it returns nil.
+local function find (pathstrings, patt, init, plain)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to find (string expected, got " .. type (pathstrings) .. ")")
+  assert (type (patt) == "string",
+    "bad argument #2 to find (string expected, got " .. type (patt) .. ")")
+  local paths = split (pathstrings, M.pathsep)
+  if plain then patt = escape_pattern (patt) end
+  init = init or 1
+  if init < 0 then init = #paths - init end
+  for i = init, #paths do
+    if paths[i]:find (patt) then return i, paths[i] end
+  end
+end
+
+
+-- Substitute special characters in a path string.
+local function pathsub (path)
+  return path:gsub ("%%?.", function (capture)
+    return case (capture, {
+           ["?"] = function ()  return M.path_mark end,
+           ["/"] = function ()  return M.dirsep end,
+                   function (s) return s:gsub ("^%%", "", 1) end,
+    })
+  end)
+end
+
+
+-- Normalize a path list by removing redundant `.` and `..` sections,
+-- and keeping only the first instance of duplicate elements.  Each
+-- argument can contain any number of package.pathsep delimited
+-- segments.  Any argument with no package.pathsep automatically
+-- converts "/" to package.dirsep and "?" to package.path_mark,
+-- unless immediately preceded by a "%" symbol.
+local function normalize (...)
+  assert (select ("#", ...) > 0, "wrong number of arguments to 'normalize'")
+  local i, paths, pathstrings = 1, {}, table.concat ({...}, M.pathsep)
+  for _, path in ipairs (split (pathstrings, M.pathsep)) do
+    path = pathsub (path):
+      gsub (catfile ("^[^", "]"), catfile (".", "%0")):
+      gsub (catfile ("", "%.", ""), M.dirsep):
+      gsub (catfile ("", "%.$"), ""):
+      gsub (catfile ("", "[^", "]+", "%.%.", ""), M.dirsep):
+      gsub (catfile ("", "[^", "]+", "%.%.$"), ""):
+      gsub (catfile ("%.", "%..", ""), catfile ("..", "")):
+      gsub (catfile ("", "$"), "")
+
+    -- Build an inverted table of elements to eliminate duplicates after
+    -- normalization.
+    if not paths[path] then
+      paths[path], i = i, i + 1
+    end
+  end
+  return table.concat (invert (paths), M.pathsep)
+end
+
+
+-- Like table.insert, for paths.
+local function insert (pathstrings, ...)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to insert (string expected, got " .. type (pathstrings) .. ")")
+  local paths = split (pathstrings, M.pathsep)
+  table.insert (paths, ...)
+  return normalize (unpack (paths))
+end
+
+
+-- Call `fn` with each path in `pathstrings`, or until `fn` returns
+-- non-nil.
+local function mappath (pathstrings, callback, ...)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to mappath (string expected, got " .. type (pathstrings) .. ")")
+  assert (type (callback) == "function",
+    "bad argument #2 to mappath (function expected, got " .. type (pathstrings) .. ")")
+  for _, path in ipairs (split (pathstrings, M.pathsep)) do
+    local r = callback (path, ...)
+    if r ~= nil then return r end
+  end
+end
+
+
+-- Like table.remove, for paths.
+local function remove (pathstrings, pos)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to remove (string expected, got " .. type (pathstrings) .. ")")
+  local paths = split (pathstrings, M.pathsep)
+  table.remove (paths, pos)
+  return table.concat (paths, M.pathsep)
+end
+
+
+std.package = merge (M, {
+  find      = find,
+  insert    = insert,
+  mappath   = mappath,
+  normalize = normalize,
+  remove    = remove,
+})
+
 
 
 --[[ ----------------- ]]--
@@ -2948,12 +4154,41 @@ package.preload["specl.util"] = (function ()
 -- MA 02111-1301, USA.
 
 
-local color = require "specl.color"
-local std   = require "specl.std"
-
+local std = require "specl.std"
 local Object = std.Object
 
 local have_posix, posix = pcall (require, "posix")
+
+
+-- A null operation function.
+local function nop () end
+
+
+local files -- forward declaration
+
+if have_posix then
+
+  files = function (root, t)
+    t = t or {}
+    for _, file in ipairs (posix.dir (root) or {}) do
+      if file ~= "." and file ~= ".." then
+        local path = std.io.catfile (root, file)
+        if posix.stat (path).type == "directory" then
+          t = files (path, t)
+        else
+          t[#t + 1] = path
+        end
+      end
+    end
+    return t
+  end
+
+else
+
+  files = nop
+
+end
+
 
 -- Use higher resolution timers from luaposix if available.
 local function gettimeofday ()
@@ -2969,6 +4204,26 @@ local function timesince (earlier)
   end
   local elapsed = posix.timersub (posix.gettimeofday (), earlier)
   return (elapsed.usec / 1000000) + elapsed.sec
+end
+
+
+-- Return a complete copy of T, along with copied metatables.
+local function deepcopy (t)
+  local copied = {} -- references to tables already copied
+
+  local function tablecopy (orig)
+    local mt = getmetatable (orig)
+    local copy = mt and setmetatable ({}, copied[mt] or tablecopy (mt)) or {}
+    copied[orig] = copy
+    for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
+      if type (k) == "table" then k = copied[k] or tablecopy (k) end
+      if type (v) == "table" then v = copied[v] or tablecopy (v) end
+      rawset (copy, k, v)
+    end
+    return copy
+  end
+
+  return tablecopy (t)
 end
 
 
@@ -2993,7 +4248,7 @@ end
 local function concat (alternatives, infix, quoted)
   infix = infix or ", "
 
-  if quoted then
+  if quoted ~= nil then
     alternatives = map (function (v)
                           if Object.type (v) ~= "string" then
                             return std.string.tostring (v)
@@ -3026,8 +4281,9 @@ local function type_error (name, i, arglist, typelist)
   if Object.type (expected) ~= "table" then expected = {expected} end
   expected = concat (expected, " or "):gsub ("#table", "non-empty table")
 
-  error ("bad argument #" .. tostring (i) .. " to '" .. name .. "' (" ..
-         expected .. " expected, got " .. actual .. ")", 3)
+  error ("bad argument #" .. tostring (i) .. " to '" .. name ..
+         "' (" .. expected .. " expected, got " .. actual .. ")\n" ..
+	 "received: '" .. tostring (arglist[i]) .. "'", 3)
 end
 
 
@@ -3085,27 +4341,11 @@ local function indent (descriptions)
 end
 
 
--- A null operation function.
-local function nop () end
-
-
--- Color printing.
-local function princ (...)
-  return print (color (...))
-end
-
-
 -- Return S with the first word and following whitespace stripped,
 -- where S contains some whitespace initially (i.e single words are
 -- returned unchanged).
 local function strip1st (s)
   return s:gsub ("^%s*%w+%s+", "")
-end
-
-
--- Color writing.
-local function writc (...)
-  return io.write (color (...))
 end
 
 
@@ -3115,25 +4355,22 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  -- Constants
-  QUOTED         = true,
-
   -- Functions
   concat         = concat,
+  deepcopy       = deepcopy,
+  files          = files,
   gettimeofday   = gettimeofday,
   indent         = indent,
   nop            = nop,
   map            = map,
-  princ          = princ,
   strip1st       = strip1st,
   timesince      = timesince,
   type           = xtype,
   type_check     = type_check,
-  writc          = writc,
 }
 
 return M
 
 end)
-require "main"
+require "specl.main" (arg):execute ()
 

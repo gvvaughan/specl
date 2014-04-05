@@ -20,8 +20,11 @@
 
 
 local macro = require "macro"
-local util  = require "specl.util"
 local yaml  = require "yaml"
+
+from "specl.compat" import loadstring
+from "specl.std"    import io.catfile, package.path_mark
+from "specl.util"   import nop
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
@@ -84,7 +87,7 @@ local parser_mt = {
       -- Mark indices are character based, but Lua patterns are byte
       -- based, which means refetching doesn't work in the presence of
       -- unicode characters :(
-      if opts.unicode then return value end
+      if self.unicode then return value end
       value = self.input:sub (event.start_mark.index, event.end_mark.index)
       if event.style == "DOUBLE_QUOTED" then
         value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}
@@ -126,8 +129,13 @@ local parser_mt = {
       self:add_anchor (map)
       -- Inject the preamble into before node of the outermost map.
       if self.preamble then
-        map.before, self.preamble = self.preamble, nil
+        map.before = {
+	  example = self.preamble,
+	  line    = 0,
+	}
+	self.preamble = nil
       end
+
       while true do
         local key = self:load_node ()
         if key == nil then break end
@@ -138,18 +146,27 @@ local parser_mt = {
         if key == "before" then
           -- Be careful not to overwrite injected preamble.
           value = self:refetch (value, event)
-          map.before = table.concat {map.before or "", value}
+          map.before = {
+	    example = table.concat {map.before and map.before.example or "", value},
+	    line    = self.mark.line,
+	  }
         elseif value == "" then
-          map[key] = self:compile ("pending ()")
+          map[key] = {
+	    example = self:compile ("pending ()"),
+	    line    = self.mark.line,
+	  }
         elseif type (value) == "string" then
-          map[key] = self:compile (self:refetch (value, event))
+          map[key] = {
+            example = self:compile (self:refetch (value, event)),
+	    line    = self.mark.line,
+	  }
         else
           map[key] = value
         end
       end
       -- Delayed compilation of before, having injecting preamble now.
-      if type (map.before) == "string" then
-        map.before = self:compile (map.before)
+      if map.before and type (map.before.example) == "string" then
+        map.before.example = self:compile (map.before.example)
       end
       return map
     end,
@@ -216,9 +233,9 @@ local parser_mt = {
         ALIAS          = self.load_alias,
         MAPPING_START  = self.load_map,
         SEQUENCE_START = self.load_sequence,
-        MAPPING_END    = util.nop,
-        SEQUENCE_END   = util.nop,
-        DOCUMENT_END   = util.nop,
+        MAPPING_END    = nop,
+        SEQUENCE_END   = nop,
+        DOCUMENT_END   = nop,
       }
 
       local event = self:parse ()
@@ -232,26 +249,35 @@ local parser_mt = {
 
 
 -- Parser object constructor.
-local function Parser (filename, s)
+local function Parser (filename, s, unicode)
+  local dir  = std.io.dirname (filename)
+  local path = std.package.normalize (catfile (dir, path_mark .. ".lua"))
+
   local object = {
+    unicode  = unicode,
     anchors  = {},
-    filename = filename:gsub ("^%./", ""),
     input    = s,
     mark     = { line = "0", column = "0" },
     next     = yaml.parser (s),
 
+    -- strip leading './'
+    filename = filename:gsub (catfile ("^%.", ""), ""),
+
     -- Used to simplify requiring from the spec file directory.
-    preamble = "package.path = \"" ..
-               filename:gsub ("[^/]+$", "?.lua;") ..
-               "\" .. package.path\n",
+    preamble = string.format ([[
+      package.path = require "specl.std".package.normalize ("%s", package.path)
+
+      -- Autoload spec_helper from spec-file directory, if any.
+      pcall (require, "spec_helper")
+    ]], path)
   }
   return setmetatable (object, parser_mt)
 end
 
 
-local function load (filename, s)
+local function load (filename, s, unicode)
   local documents = {}
-  local parser    = Parser (filename, s)
+  local parser    = Parser (filename, s, unicode)
 
   if parser:parse () ~= "STREAM_START" then
     return parser:error ("expecting STREAM_START event, but got " ..

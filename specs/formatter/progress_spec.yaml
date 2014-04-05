@@ -1,17 +1,17 @@
-describe report:
+describe progress:
 - before:
-    preamble = "describe report:\n- it is pending:"
+    preamble = "describe progress:\n- it is pending:"
 
 
 - context with empty example:
   - before:
-      argt = {"-freport", stdin = preamble}
-  - it exits with zero status: |
+      argt = {"-fprogress", stdin = preamble}
+  - it exits with zero status:
       expect (run_spec (argt)).to_exit (0)
   - it reports no expectations:
-      expect (run_spec (argt)).to_contain_output "No expectations met."
+      expect (run_spec (argt)).to_contain_output "No expectations met,"
   - it reports a pending example:
-      expect (run_spec (argt)).to_contain_output ", 1 pending "
+      expect (run_spec (argt)).to_contain_output " 1 still pending,"
 
 
 - context with pending call from empty example:
@@ -20,42 +20,36 @@ describe report:
 
   - context in non-verbose mode:
     - before:
-        argt = {"-freport", stdin = yaml}
+        argt = {"-fprogress", stdin = yaml}
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_contain_output "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_match_output ", 1 pending "
-    - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is pending %(PENDING example: not yet implemented%)\n"
-        )
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
+    - it displays an asterisk for a pending example:
+        expect (run_spec (argt)).to_match_output "^%*"
     - it lists pending example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
-          "%- report is pending: %(PENDING example: not yet implemented%)\n"
+          "%- progress is pending: %(PENDING example: not yet implemented%)\n"
         )
 
   - context in verbose mode:
     - before:
-        argt = {"-freport", "-v", stdin = yaml}
+        argt = {"-fprogress", "-v", stdin = yaml}
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_contain_output "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_match_output ", 1 pending "
-    - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is pending %(PENDING example: not yet implemented%)\n"
-        )
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
+    - it displays an asterisk for a pending example:
+        expect (run_spec (argt)).to_match_output "^%*"
     - it lists pending example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
-          "%- report is pending: %(PENDING example: not yet implemented%)\n"
+          "%- progress is pending: %(PENDING example: not yet implemented%)\n"
         )
 
 
@@ -65,42 +59,36 @@ describe report:
 
   - context in non-verbose mode:
     - before:
-        argt = {"-freport", stdin = yaml}
+        argt = {"-fprogress", stdin = yaml}
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_contain_output "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_match_output ", 1 pending "
-    - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is pending %(PENDING example: see issue 123%)\n"
-        )
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
+    - it displays an asterisk for a pending example:
+        expect (run_spec (argt)).to_match_output "^%*"
     - it lists pending example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
-          "%- report is pending: %(PENDING example: see issue 123%)\n"
+          "%- progress is pending: %(PENDING example: see issue 123%)\n"
         )
 
   - context in verbose mode:
     - before:
-        argt = {"-freport", "-v", stdin = yaml}
+        argt = {"-fprogress", "-v", stdin = yaml}
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_contain_output "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_match_output ", 1 pending "
-    - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is pending %(PENDING example: see issue 123%)\n"
-        )
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
+    - it displays an asterisk for a pending example:
+        expect (run_spec (argt)).to_match_output "^%*"
     - it lists pending example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
-          "%- report is pending: %(PENDING example: see issue 123%)\n"
+          "%- progress is pending: %(PENDING example: see issue 123%)\n"
         )
 
 
@@ -112,96 +100,75 @@ describe report:
 
   - context in non-verbose mode:
     - before:
-        argt = {"-freport", stdin = yaml}
+        argt = {"-fprogress", stdin = yaml}
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_contain_output "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_match_output ", 1 pending "
-    - it appends pending suffix to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is pending %(1 pending%)\n"
-        )
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
+    - it displays an asterisk for a pending example:
+        expect (run_spec (argt)).to_match_output "^%*"
     - it lists pending example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
-          "%- report is pending:\n" ..
+          "%- progress is pending:\n" ..
           "  PENDING expectation 1: see issue 123\n"
         )
 
   - context in verbose mode:
     - before:
-        argt = {"-freport", "-v", stdin = yaml}
+        argt = {"-fprogress", "-v", stdin = yaml}
     - it exits with zero status:
         expect (run_spec (argt)).to_exit (0)
     - it reports no expectations:
-        expect (run_spec (argt)).to_contain_output "No expectations met."
+        expect (run_spec (argt)).to_contain_output "No expectations met,"
     - it reports the pending example:
-        expect (run_spec (argt)).to_match_output ", 1 pending "
-    - it appends pending summary to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is pending\n" ..
-          "    %-:3:1: PENDING expectation 1: see issue 123\n"
-        )
+        expect (run_spec (argt)).to_match_output " 1 still pending,"
+    - it displays an asterisk for a pending example:
+        expect (run_spec (argt)).to_match_output "^%*"
     - it lists pending example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of pending expectations:\n" ..
-          "%- report is pending:\n" ..
+          "%- progress is pending:\n" ..
           "  %-:3:1: PENDING expectation 1: see issue 123\n"
         )
 
 - context with failing expectation:
   - before:
-      yaml = "describe report:\n" ..
+      yaml = "describe progress:\n" ..
              "- it is failing:\n" ..
              "    expect (1).to_be (0)\n"
 
   - context in non-verbose mode:
     - before:
-        argt = {"-freport", stdin = yaml}
+        argt = {"-fprogress", stdin = yaml}
     - it exits with non-zero status:
         expect (run_spec (argt)).not_to_exit (0)
-    - it reports 0% expectations met:
-        expect (run_spec (argt)).
-          to_contain_output "Met 0.00% of 1 expectations."
     - it reports the failing example:
         expect (run_spec (argt)).to_match_output " 1 failed "
-    - it appends failing suffix to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is failing %(1 failing%)\n"
-        )
+    - it displays an F for a pending example:
+        expect (run_spec (argt)).to_match_output "^F"
     - it lists failing example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of failed expectations:\n" ..
-          "%- report is failing:\n" ..
+          "%- progress is failing:\n" ..
           "  FAILED expectation 1: expecting exactly 0, but got 1\n"
         )
 
   - context in verbose mode:
     - before:
-        argt = {"-freport", "-v", stdin = yaml}
+        argt = {"-fprogress", "-v", stdin = yaml}
     - it exits with non-zero status:
         expect (run_spec (argt)).not_to_exit (0)
-    - it reports 0% expectations met:
-        expect (run_spec (argt)).
-          to_contain_output "Met 0.00% of 1 expectations."
     - it reports the failing example:
         expect (run_spec (argt)).to_match_output " 1 failed "
-    - it appends failing summary to the example output: |
-        expect (run_spec (argt)).to_match_output (
-          "report\n" ..
-          "  is failing\n" ..
-          "    %-:3:1: FAILED expectation 1:\n" ..
-          "    expecting exactly 0, but got 1\n"
-        )
+    - it displays an F for a pending example:
+        expect (run_spec (argt)).to_match_output "^F"
     - it lists failing example in report summary: |
         expect (run_spec (argt)).to_match_output (
           "Summary of failed expectations:\n" ..
-          "%- report is failing:\n" ..
+          "%- progress is failing:\n" ..
           "  %-:3:1: FAILED expectation 1:\n" ..
           "  expecting exactly 0, but got 1\n"
         )

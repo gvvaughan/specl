@@ -49,6 +49,15 @@ end
 --[[ -------------- ]]--
 
 
+-- Match `with` against keys in `branches` table, and return the result
+-- of running the function in the table value for the matching key, or
+-- the first non-key value function if no key matches.
+local function case (with, branches)
+  local fn = branches[with] or branches[1]
+  if fn then return fn (with) end
+end
+
+
 -- Return given metamethod, if any, or nil.
 local function metamethod (x, n)
   local m = metaentry (x, n)
@@ -58,6 +67,7 @@ end
 
 
 std.func = {
+  case       = case,
   metamethod = metamethod,
 }
 
@@ -95,6 +105,16 @@ end
 -- Return whether table is empty.
 local function empty (t)
   return not next (t)
+end
+
+
+--- Invert a table.
+local function invert (t)
+  local i = {}
+  for k, v in pairs (t) do
+    i[v] = k
+  end
+  return i
 end
 
 
@@ -138,6 +158,7 @@ std.table = {
   clone        = clone,
   clone_rename = clone_rename,
   empty        = empty,
+  invert       = invert,
   merge        = merge,
   size         = size,
   totable      = totable,
@@ -211,6 +232,16 @@ local function object_clone (prototype, ...)
     end
   end
 
+  -- Check parameter types when types are specified.
+  if object_mt._parmtypes ~= nil then
+    local _parmnames = object_mt._parmnames or object_mt._init
+    if type (_parmnames) == "table" and #_parmnames > 0 then
+      local parmvals = {}
+      for i, v in ipairs (_parmnames) do parmvals[i] = object[v] or object_mt[v] end
+      require "specl.util".type_check (object_mt._type, parmvals, object_mt._parmtypes)
+    end
+  end
+
   return setmetatable (object, object_mt)
 end
 
@@ -256,6 +287,7 @@ local function tablify (object)
   end
   return t
 end
+
 
 -- Metatable for objects
 local metatable = {
@@ -326,6 +358,24 @@ std.strbuf = std.Object {
 --[[ ------ ]]--
 
 
+-- Concatenate one or more directories and a filename into a path.
+local function catfile (...)
+  return table.concat ({...}, std.package.dirsep)
+end
+
+
+-- Remove leading directories from `path`.
+local function basename (path)
+  return path:gsub (catfile ("^.*", ""), "")
+end
+
+
+-- Remove trailing filename from `path`.
+local function dirname (path)
+  return path:gsub (catfile ("", "[^", "]*$"), "")
+end
+
+
 -- Process files specified on the command-line.
 local function process_files (fn)
   if #arg == 0 then
@@ -343,6 +393,9 @@ end
 
 
 std.io = {
+  basename      = basename,
+  catfile       = catfile,
+  dirname       = dirname,
   process_files = process_files,
 }
 
@@ -377,6 +430,14 @@ local function slurp (h)
     h:close ()
     return s
   end
+end
+
+
+--- Split a string at a given separator.
+local function split (s, sep)
+  local l, s, p = {}, s .. sep, "(.-)" .. escape_pattern (sep)
+  string.gsub (s, p, function (cap) l[#l + 1] = cap end)
+  return l
 end
 
 
@@ -491,8 +552,133 @@ std.string = {
   prettytostring = prettytostring,
   render         = render,
   slurp          = slurp,
+  split          = split,
   tostring       = tostring,
 }
+
+
+
+--[[ ----------- ]]--
+--[[ std.package ]]--
+--[[ ----------- ]]--
+
+local M = {}
+
+
+--- Make named constants for `package.config`
+M.dirsep, M.pathsep, M.path_mark, M.execdir, M.igmark =
+  string.match (package.config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
+
+-- Looks for a path segment match of `patt` in `pathstrings`.
+-- A third, optional numerical argument `init` specifies what element to
+-- start the search at; its default value is 1 and can be negative.  A
+-- value of true as a fourth optional argument `plain` turns off the
+-- pattern matching facilities, so the function does a plain "find
+-- substring" operation, with no characters in `patt` being considered
+-- magic.  Note that if `plain` is given, then `init` must be given as
+-- well.
+-- If it finds a match, then `find` returns the element index of
+-- `pathstrings` where this match occurs, and the full text of the
+-- matching element; otherwise it returns nil.
+local function find (pathstrings, patt, init, plain)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to find (string expected, got " .. type (pathstrings) .. ")")
+  assert (type (patt) == "string",
+    "bad argument #2 to find (string expected, got " .. type (patt) .. ")")
+  local paths = split (pathstrings, M.pathsep)
+  if plain then patt = escape_pattern (patt) end
+  init = init or 1
+  if init < 0 then init = #paths - init end
+  for i = init, #paths do
+    if paths[i]:find (patt) then return i, paths[i] end
+  end
+end
+
+
+-- Substitute special characters in a path string.
+local function pathsub (path)
+  return path:gsub ("%%?.", function (capture)
+    return case (capture, {
+           ["?"] = function ()  return M.path_mark end,
+           ["/"] = function ()  return M.dirsep end,
+                   function (s) return s:gsub ("^%%", "", 1) end,
+    })
+  end)
+end
+
+
+-- Normalize a path list by removing redundant `.` and `..` sections,
+-- and keeping only the first instance of duplicate elements.  Each
+-- argument can contain any number of package.pathsep delimited
+-- segments.  Any argument with no package.pathsep automatically
+-- converts "/" to package.dirsep and "?" to package.path_mark,
+-- unless immediately preceded by a "%" symbol.
+local function normalize (...)
+  assert (select ("#", ...) > 0, "wrong number of arguments to 'normalize'")
+  local i, paths, pathstrings = 1, {}, table.concat ({...}, M.pathsep)
+  for _, path in ipairs (split (pathstrings, M.pathsep)) do
+    path = pathsub (path):
+      gsub (catfile ("^[^", "]"), catfile (".", "%0")):
+      gsub (catfile ("", "%.", ""), M.dirsep):
+      gsub (catfile ("", "%.$"), ""):
+      gsub (catfile ("", "[^", "]+", "%.%.", ""), M.dirsep):
+      gsub (catfile ("", "[^", "]+", "%.%.$"), ""):
+      gsub (catfile ("%.", "%..", ""), catfile ("..", "")):
+      gsub (catfile ("", "$"), "")
+
+    -- Build an inverted table of elements to eliminate duplicates after
+    -- normalization.
+    if not paths[path] then
+      paths[path], i = i, i + 1
+    end
+  end
+  return table.concat (invert (paths), M.pathsep)
+end
+
+
+-- Like table.insert, for paths.
+local function insert (pathstrings, ...)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to insert (string expected, got " .. type (pathstrings) .. ")")
+  local paths = split (pathstrings, M.pathsep)
+  table.insert (paths, ...)
+  return normalize (unpack (paths))
+end
+
+
+-- Call `fn` with each path in `pathstrings`, or until `fn` returns
+-- non-nil.
+local function mappath (pathstrings, callback, ...)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to mappath (string expected, got " .. type (pathstrings) .. ")")
+  assert (type (callback) == "function",
+    "bad argument #2 to mappath (function expected, got " .. type (pathstrings) .. ")")
+  for _, path in ipairs (split (pathstrings, M.pathsep)) do
+    local r = callback (path, ...)
+    if r ~= nil then return r end
+  end
+end
+
+
+-- Like table.remove, for paths.
+local function remove (pathstrings, pos)
+  assert (type (pathstrings) == "string",
+    "bad argument #1 to remove (string expected, got " .. type (pathstrings) .. ")")
+  local paths = split (pathstrings, M.pathsep)
+  table.remove (paths, pos)
+  return table.concat (paths, M.pathsep)
+end
+
+
+std.package = merge (M, {
+  find      = find,
+  insert    = insert,
+  mappath   = mappath,
+  normalize = normalize,
+  remove    = remove,
+})
+
 
 
 --[[ ----------------- ]]--
