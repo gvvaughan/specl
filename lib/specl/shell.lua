@@ -240,7 +240,7 @@ do
       return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
     end,
 
-    expecting =  " exit status 0, with output containing:", 
+    expecting =  " exit status 0, with output containing:",
     but_got_status_with_output,
   }
 
