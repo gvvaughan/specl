@@ -1130,14 +1130,14 @@ current directory, you will need to explicitly re-enable loading Lua
 code from the current directory:
 
 {% highlight bash %}
-    LUA_PATH=`pwd`'/?.lua' specl --formatter=awesome specs/*_spec.yaml
+    LUA_PATH=`pwd`'/?.lua;;' specl --formatter=awesome
 {% endhighlight %}
 
 Otherwise you can load a formatter from the existing `LUA_PATH` by
 name, including built in formatters, like this:
 
 {% highlight bash %}
-    specl --formatter=tap specs/*_spec.yaml
+    specl --formatter=tap
 {% endhighlight %}
 
 Pass the `--help` option for help and brief documentation on usage of the
