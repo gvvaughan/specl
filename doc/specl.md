@@ -3,10 +3,10 @@ layout: default
 ---
 # SPECL
 
-[Specl][] is testing tool for [Lua][], providing a
-[Behaviour Driven Development][BDD] framework in the vein of [RSpec][].
+[Specl] is testing tool for [Lua], providing a
+[Behaviour Driven Development][BDD] framework in the vein of [RSpec].
 
- * textual descriptions of examples and groups ([spec files](#1-specifications) using [YAML][])
+ * textual descriptions of examples and groups ([spec files](#1-specifications) using [YAML])
  * extensible expectation language ([matchers](#2-matchers))
  * self-contained execution environments ([environments](#3-environments))
  * flexible and customizable reporting ([formatters](#4-formatters))
@@ -17,8 +17,8 @@ layout: default
 
 The `specl` command verifies that the behaviour of your software meets
 the specifications encoded in one or more _spec-files_. A spec-file is
-a [YAML][] structured file, laid out as groups of nested plain-English
-descriptions of specifications, with associated snippets of [Lua][]
+a [YAML] structured file, laid out as groups of nested plain-English
+descriptions of specifications, with associated snippets of [Lua]
 code that verify whether the software behaves as described.
 
 A tiny spec-file outline follows:
@@ -35,13 +35,13 @@ A tiny spec-file outline follows:
 The first significant line of any specification is the plain-English
 description of the first example group, ending with a `:` (colon).
 
-Underneath that are two examples, each starting with `- ` (minus, space)
+Underneath that are two examples, each starting with `-_` (minus, space)
 and separated by a `:` (colon) into a _description_ of some desired
-behaviour, and the associated [Lua][] code to demonstrate it.
+behaviour, and the associated [Lua] code to demonstrate it.
 
-The descriptions above follow the [RSpec][] convention of using
+The descriptions above follow the [RSpec] convention of using
 _describe_ as the first word of a group description, and _it_ as the
-first word of an example description.  [Specl][] doesn't enforce them,
+first word of an example description.  [Specl] doesn't enforce them,
 they are conventions after all, but `specl` output tends to look much
 better if you follow them.  There are more conventions regarding the
 choice of first word in a description under various other circumstances,
@@ -58,22 +58,22 @@ specifications.
 
 All of those specifications eventually boil down to lists of behaviour
 descriptions and example code, all indented as prescribed by the
-[YAML][] file-format.
+[YAML] file-format.
 
 
 ### 1.1 YAML
 
-[YAML][] makes for a very readable specification file-format, and allows
-embedded [Lua][] code right within the standard, as you saw in the last
+[YAML] makes for a very readable specification file-format, and allows
+embedded [Lua] code right within the standard, as you saw in the last
 section.  However, there are some rules to follow as you write your
-spec-files in order to maintain valid [YAML][] format that [Specl][] can
+spec-files in order to maintain valid [YAML] format that [Specl] can
 load correctly.
 
-Indenting with TAB characters is a syntax error, because the [YAML][]
+Indenting with TAB characters is a syntax error, because the [YAML]
 parser uses indentation columns to infer nesting.  It's easiest just to
 avoid putting TAB characters in your spec files entirely.
 
-Some punctuation is not allowed in an unquoted [YAML][] string, so you
+Some punctuation is not allowed in an unquoted [YAML] string, so you
 will need to force the parser to read the description as a string by
 surrounding it with `"` (double-quote mark) if you want to put any
 punctuation in the description text:
@@ -84,10 +84,10 @@ punctuation in the description text:
 
 Indentation of the code following an example description must be at
 least one column further in than the first **letter** of the description
-text above, because [YAML][] counts the leading `- ` (minus, space) as
+text above, because [YAML] counts the leading `-_` (minus, space) as
 part of the indentation whitespace.
 
-[Specl][] treats everything following the `:` (colon) as a Lua code:
+[Specl] treats everything following the `:` (colon) as a Lua code:
 
 {% highlight yaml %}
     - it concatenates all following indented lines to a single line:
@@ -95,14 +95,14 @@ part of the indentation whitespace.
         stack = Stack {}
 {% endhighlight %}
 
-By default [YAML][] removes indentation and line-breaks from the example
-code following the `:` separator, so that by the time [Lua][] receives
+By default [YAML] removes indentation and line-breaks from the example
+code following the `:` separator, so that by the time [Lua] receives
 the code, it's all on a single line.  More often than not, this isn't a
-problem, because the [Lua][] parser is not overly fussy about placement
+problem, because the [Lua] parser is not overly fussy about placement
 of line-breaks, but sometimes (to make sure there is a newline to
 terminate an embedded comment, for example) you'll need to prevent
-[YAML][] from giving [Lua][] everything on a single line. Use the
-literal block marker ` |` (space, pipe) after the `:` separator for
+[YAML] from giving [Lua] everything on a single line. Use the
+literal block marker `_|` (space, pipe) after the `:` separator for
 this:
 
 {% highlight yaml %}
@@ -112,11 +112,11 @@ this:
         ...
 {% endhighlight %}
 
-You also have to be careful about commenting within a spec-file. [YAML][]
-comments begin with ` #` (space, hash) and extend to the end of the line.
+You also have to be careful about commenting within a spec-file. [YAML]
+comments begin with `_#` (space, hash) and extend to the end of the line.
 You can use these anywhere outside of a Lua code block, including any
-lines immediately following a description before any actual [Lua][] code.
-[Lua][] comments don't work outside of a lua block, and [YAML][] comments
+lines immediately following a description before any actual [Lua] code.
+[Lua] comments don't work outside of a lua block, and [YAML] comments
 don't work inside a Lua block, so you have to pick the right comment
 character, depending where in the hierarchy it will go.
 
@@ -139,7 +139,7 @@ which in turn list more examples of their own:
 {% endhighlight %}
 
 By convention, the context descriptions start with the word "context",
-but [Specl][] doesn't enforce that tradition, so you should just try to
+but [Specl] doesn't enforce that tradition, so you should just try to
 write a description that makes the output easy to understand (see
 [Command Line](#5-command-line)).
 
@@ -147,7 +147,7 @@ Actually, description naming conventions aside, there is no difference
 between an example group and a context: Each serves to describe a group
 of following examples, or nested contexts.
 
-[Specl][] doesn't place any restrictions on how deeply you nest your
+[Specl] doesn't place any restrictions on how deeply you nest your
 contexts: 2 or 3 is very common, though you should seriously consider
 splitting up a spec if you are using more than 4 or 5 levels of nesting
 in a single file.
@@ -159,7 +159,7 @@ entries, you will ultimately want to include one or more actual
 _examples_. These too are best written with readable names in
 plain-English, as shown in the sample from the previous section, but
 (unlike contexts) they are followed by the associated example code in
-[Lua][], rather than containing more nested contexts.
+[Lua], rather than containing more nested contexts.
 
 {% highlight yaml %}
     describe a stack:
@@ -172,16 +172,16 @@ plain-English, as shown in the sample from the previous section, but
 {% endhighlight %}
 
 Traditionally, the example descriptions start with the words "it",
-"example" or "specify", but again, [Lua][] really doesn't mind what you
+"example" or "specify", but again, [Lua] really doesn't mind what you
 call them.
 
 ### 1.4. Expectations
 
-Each of your examples lists a series of expectations that [Specl][] runs
+Each of your examples lists a series of expectations that [Specl] runs
 to determine whether the specification for that part of your project is
-being met. Inside the [Lua][] part of each example, you should write a
+being met. Inside the [Lua] part of each example, you should write a
 small block of code that checks that the example being described meets
-your expectations. [Specl][] gives you a new `expect` command to check
+your expectations. [Specl] gives you a new `expect` command to check
 that each example evaluates as it should:
 
 {% highlight yaml %}
@@ -200,8 +200,11 @@ used to check whether that expression matched its expected evaluation.
 There are quite a few matchers already implemented in [Specl], and you
 can easily add new ones if they make your expectations more expressive.
 
-The [next section][matchers] describes the built in matchers in
-more detail.
+The [next section](#2-matchers) describes the built in matchers in
+more detail.  The `specl.shell` module provides some specialist matchers
+for checking whether shell commands have behaved according to
+specifications; see [the section on shell commands](#shell-commands) for
+more details on those.
 
 ### 1.5. Pending Examples
 
@@ -209,7 +212,7 @@ Often, you'll think of a useful expectation or behaviour that you don't
 have time to implement right now.  Noting it off-line somewhere, or even
 adding a commented out example is likely to lead to it being forgotten.
 Better to add it to your spec-file as a _pending example_ while it is
-still on your mind, so that [Specl][] can remind you that it needs
+still on your mind, so that [Specl] can remind you that it needs
 finishing -- but without contributing a full-blown failing expectation
 or specification.
 
@@ -221,12 +224,12 @@ associated Lua example code:
 {% endhighlight %}
 
 The built in formatters will show this as a non-failing unimplemented
-(**pending!**) example when the spec-files is run, so you can keep
-track of specifications you have yet to write.
+(**pending!**) example when the spec-file is checked, so you can keep
+track of specifications for code you have yet to write.
 
 Alternatively, if you have written a suitable specification, only to
 realise that you are specifying an unimplemented behaviour, just add
-the call to `pending ()` somewhere near the beginning of the example
+a call to `pending ()` somewhere near the beginning of the example
 to disable following _expectations_, without removing or commenting out
 the `expect` calls:
 
@@ -238,8 +241,8 @@ the `expect` calls:
           expect (#stack).to_be (0)
 {% endhighlight %}
 
-This prevents [Specl][] from counting the `expect` result as a failure,
-but crucially also allows [Specl][] to inform you when the expectation
+This prevents [Specl] from counting the `expect` result as a failure,
+but crucially also allows [Specl] to inform you when the expectation
 begins passing to remind you to remove stale `pending ()` calls from
 your specifications.
 
@@ -266,7 +269,7 @@ to the `pending` function call like this:
           expect ("underflow").to_error (stack.pop ())
 {% endhighlight %}
 
-Running [Specl][] now shows the string in the pending summary report:
+Running [Specl] now shows the string in the pending summary report:
 
 {% highlight yaml %}
     ?.....
@@ -294,19 +297,19 @@ in this case).  See
 [Inverting a Matcher with not](#inverting-a-matcher-with-not), for more
 about why that is.
 
-The matchers built in to [Specl][] are listed below.
+The matchers built in to [Specl] are listed below.
 
 ### 2.1. be
 
 This matches only when the result of `expect` is the exact same object
-as the matcher argument. For example, [Lua][] interns strings as they
+as the matcher argument. For example, [Lua] interns strings as they
 are compiled, so this expectation passes:
 
 {% highlight lua %}
     expect ("a string").to_be ("a string")
 {% endhighlight %}
 
-Conversely, [Lua][] constructs a new table object every time it reads
+Conversely, [Lua] constructs a new table object every time it reads
 one from the source, so this expectation fails:
 
 {% highlight lua %}
@@ -380,13 +383,13 @@ metamethod of any lua-stdlib `std.object` derived objects to coerce
 a table to test for matching keys or values in the expectation.
 
 If `expect` passes anything other than a string, table or `std.object`
-derivative to this matcher, [Specl][] aborts with an error; use
+derivative to this matcher, [Specl] aborts with an error; use
 `tostring` or similar if you need to.
 
 ### 2.5. match
 
 When a simple substring search is not appropriate, `match` will compare
-the expectation against a [Lua][] pattern:
+the expectation against a [Lua] pattern:
 
 {% highlight lua %}
     expect (backtrace).to_match ("\nparse.lua: [0-9]+:")
@@ -405,16 +408,16 @@ message contains the supplied substring, if any.
 ### 2.7. Inverting a matcher with not
 
 Oftentimes, in your specification you need to check that an expectation
-does **not** match a particular outcome, and [Specl][] has you covered
+does **not** match a particular outcome, and [Specl] has you covered
 there too. Rather than implement another set of matchers to do that
 though, you can just insert `not_` right in the matcher method name.
 
 You can write `not_` either before or after `to_`, whichever you find
 most readable. Some people are annoyed by split infinitives, but
-[Specl][] is not as grumpy as that, and will happily accept `to_not_`
+[Specl] is not as grumpy as that, and will happily accept `to_not_`
 or `not_to_` as entirely equivalent.
 
-[Specl][] will still call the matcher according to the root name (see
+[Specl] will still call the matcher according to the root name (see
 [Matchers](#2-matchers)), but inverts the result of the comparison
 before reporting a pass or fail:
 
@@ -432,14 +435,14 @@ but you can pass the string if it makes an expectation clearer.
 
 In addition to using matchers for straight one-to-one comparisons
 between the result of an `expect` and the argument provided to the
-matcher, [Specl][] has some shortcuts that can intercept the arguments
+matcher, [Specl] has some shortcuts that can intercept the arguments
 and adapt the comparison sequence.  These shortcuts are called
 _adaptors_.
 
 #### 2.8.1. Matching alternatives with any_of
 
 When you want to check whether an expectation matches among a list of
-alternatives, [Specl][] supports an `any_of` adaptor for any matcher:
+alternatives, [Specl] supports an `any_of` adaptor for any matcher:
 
 {% highlight lua %}
     expect (ctermid ()).to_match.any_of {"/.*tty%d+", "/.*pts%d+"}
@@ -457,7 +460,7 @@ an expectation succeeds only if none of the alternatives match:
 
 #### 2.8.2. Multiple matches with all_of
 
-When you need to ensure that several matches succeed, [Specl][] provides
+When you need to ensure that several matches succeed, [Specl] provides
 the `all_of` adaptor:
 
 {% highlight lua %}
@@ -474,7 +477,7 @@ For completeness, `all_of` can surely be combined with `not`, but the
 resulting expression is hard to understand, so I recommend that you
 don't use it.  Try running the following to see whether it behaves as
 you expect, and notice how carefully you have to think about it
-compared to the usual English inspired syntax of [Specl][]
+compared to the usual English inspired syntax of [Specl]
 expectations:
 
 {% highlight lua %}
@@ -490,7 +493,7 @@ supplied elements, it is far better to use:
 
 #### 2.8.3. Unordered matching with a_permutation_of
 
-While [Specl][] makes every effort to maintain ordering of elements in
+While [Specl] makes every effort to maintain ordering of elements in
 the tables (and objects) it uses, there are times when you really want
 to check the contents of an inherently unordered expectation - say,
 that `pairs` returns all the elements of a set containing functions
@@ -504,14 +507,14 @@ which can't be guaranteed to have the same sort order on every run.
 
 In this example, sorting `elements` before comparing them is dangerous,
 because we can't know what order the addresses of the functions it
-contains will have been assigned by [Lua][], but using `permutation_of`
+contains will have been assigned by [Lua], but using `permutation_of`
 here guarantees that `elements` contains the same elements as `fn_set`
 irrespective of order.
 
 Prior to the introduction of `a_permutation_of`, `all_of` was the nearest
 equivalent functionality - but `all_of` will not complain if `elements`
-has even more elements than what it `to_contain` at the time of
-comparison.
+has even more elements than what it is supposed `to_contain` at the time
+of comparison.
 
 ### 2.9. Custom Matchers
 
@@ -519,7 +522,7 @@ Just like the built in matchers described above, you can use the
 `Matcher` factory object from `specl.matchers` to register additional
 custom matchers to make your spec files easier to understand. The
 minimum required is a predicate method, which is then called by
-[Specl][] to determine whether the result of an `expect` parameter
+[Specl] to determine whether the result of an `expect` parameter
 matches the contents of the `to_` argument:
 
 {% highlight lua %}
@@ -532,14 +535,14 @@ matches the contents of the `to_` argument:
     ...
 {% endhighlight %}
 
-This is exactly how the `be` matcher is implemented, where [Specl][]
+This is exactly how the `be` matcher is implemented, where [Specl]
 passes the `actual` result from the expectation and the `expected`
 value from the `to_` argument -- and considers the expectation as
-a whole to have passed if they are both the same according to a [Lua][]
+a whole to have passed if they are both the same according to a [Lua]
 `==` comparison.
 
 Of course, our custom `be` matcher reimplementation is not available
-to spec files until it has been registered in [Specl][]s matcher table.
+to spec files until it has been registered in [Specl]s matcher table.
 You can do this in a `before` block, or your `spec_helper.lua` (see
 [Separating Helper Functions](#separating-helper-functions)).
 
@@ -608,11 +611,11 @@ method in the `Matcher` constructor:
 When constructed without a specific `format_alternatives` entry,
 `Matcher` uses the default format, similarly to how `table.concat`
 behaves with ", " separators, except that the final separator is always
-" or ", and the individual entries are stringified first.  If you want
-to make use of that format in your own matchers, it is available in
-`specl.util` as `concat`.  Again examples of this, and the more
-complicated shell output formatter (`specl.util.reformat`) are available
-in the source code, from `specl/shell.lua`.
+the string " or ", and the individual entries are stringified first.  If
+you want to make use of that format in your own matchers, it is
+available in `specl.util` as `concat`.  Again examples of this, and the
+more complicated shell output formatter (`specl.util.reformat`) are
+available in the source code, from `lib/specl/shell.lua`.
 
 One final feature of the `Matcher` constructor is that you can have it
 enforce a particular type (or types) for the `actual` parameter, by
@@ -631,7 +634,7 @@ Valid values for this list include any of the core Lua types as
 returned by the Lua `type` function, but also any extended types
 implemented as a table with a `type` field, such as the `process` and
 `command` objects defined by the `specl.shell` extensions, or anything
-else you care to build using the `specl.util.Object` base type (such
+else you care to build using the `specl.std.Object` base type (such
 as the `Matcher` factory object used throughout this section of the
 manual).
 
@@ -691,11 +694,11 @@ enforces that `expected`, the argument to `"the_same_size_as"`, is a
 non-empty table. See the API documentation for more details of how to
 use `type_check`.
 
-To make this adaptor work properly with [Specl][], it must return a
+To make this adaptor work properly with [Specl], it must return a
 boolean decribing whether the adaptor matched successfully, followed by
 an error message that specl will use if the overall expectation failed
 (which can happen even when we return `true`, if the expectation uses
-`to_not`).  Again, we use the `Matcher` object's format functions to
+`not_to_`).  Again, we use the `Matcher` object's format functions to
 ensure that any specialisations of this particular object will continue
 to behave properly with custom `format_` functions too.
 
@@ -712,7 +715,7 @@ additional adaptors to the existing `Matcher` objects too:
     end
 {% endhighlight %}
 
-And then [Specl][] will support expectations such as:
+And then [Specl] will support expectations such as:
 
 {% highlight yaml %}
     - transform:
@@ -738,7 +741,7 @@ conditions of another, and in order to focus on a given example without
 worrying what the earlier examples might have done when debugging a
 specification.
 
-[Specl][] achieves this by initialising a completely new environment in
+[Specl] achieves this by initialising a completely new environment in
 which to execute each example, then tearing it down afterwards to build
 another clean environment for executing the next example, and so on.
 
@@ -748,7 +751,7 @@ To keep examples as readable and concise as possible, it's best not to
 have too much code in each. For example, it's inefficient to repeat a
 few lines of set up and clean up around each expectation.
 
-Much like [RSpec][], [Specl][] supports the use of before and after
+Much like [RSpec], [Specl] supports the use of before and after
 functions to isolate that repeated code. A `before` is executed prior to
 every example, just after the new environment is initialised, and
 conversely `after` is executed immediately after the example has
@@ -765,22 +768,22 @@ their table keys are just a bare `before` or `after` respectively:
     ...
 {% endhighlight %}
 
-Note that, unlike normal [Lua][] code, we don't declare everything with
+Note that, unlike normal [Lua] code, we don't declare everything with
 `local` scope, since the environment is reset before each example, so no
 state leaks out.  And, eliding all the redundant `local` keywords makes
 for more concise example code in the specification.
 
 ### 3.2. Grouping Examples
 
-If you have used [RSpec][], you'll already know that it supports
+If you have used [RSpec], you'll already know that it supports
 `before(:each)` and `before(:all)`, and equivalents for `after`. But
 then goes to some lengths to warn that if you initialise any mutable
 state inside `before(:all)`, then you've provided a way to let one
-example leave side effects that could effect the behaviour of following
+example leave side effects that could affect the behaviour of following
 examples.
 
-[Specl][]'s `before` is equivalent to [RSpec][]'s `before(:each)`,
-although it has no `before(:all)` analogue (and likewise for `after`).
+[Specl]'s `before` is equivalent to [RSpec]'s `before(:each)`,
+and it has no `before(:all)` analogue (and likewise for `after`).
 However, [Specl] does support nested contexts, which are mainly useful
 for grouping, but also allow you to write a `before` function outside of
 a group, where it will behave as if it were a `before(:all)` inside the
@@ -816,7 +819,7 @@ helps the clarity of the specification files, and the helper code too,
 if you move as much of it as appropriate into a separate file, usually
 called `spec_helper.lua`.
 
-[Specl][] automatically loads the `spec_helper.lua` file from the same
+[Specl] automatically loads the `spec_helper.lua` file from the same
 directory as the spec file being loaded.  Thus, any global symbols set by
 `spec_helper.lua` are available to all the spec files it shares a
 directory with.
@@ -837,16 +840,16 @@ package.path = std.package.normalize (path, package.path)
 
 ## 4. Formatters
 
-As [Specl][] executes examples and tests the expectations of a
+As [Specl] executes examples and tests the expectations of a
 specification, it can displays its progress using a formatter.
 
-[Specl][] comes with two formatters already implemented, though you can
+[Specl] comes with two formatters already implemented, though you can
 write your own very easily if the format of the built in formatters
 doesn't suit you.
 
 ### 4.1. Progress Formatter
 
-The default formatter simply displays [Specl][]'s progress by writing a
+The default formatter simply displays [Specl]'s progress by writing a
 single period for every expectation that is met, or an `F` instead if an
 expectation is not met.  Once all the expectations have been evaluated,
 a one line summary follows:
@@ -891,9 +894,9 @@ a particular example easy to find within a large spec-file.
 
 ### 4.3. Custom Formatters
 
-A formatter is just a table of functions that [Specl][] can call as it
+A formatter is just a table of functions that [Specl] can call as it
 runs your specifications, so provided you supply the table keys that
-[Specl][] is expecting, you can write your own formatters:
+[Specl] is expecting, you can write your own formatters:
 
 {% highlight lua %}
     my_formatter = {
@@ -963,7 +966,7 @@ that typically begin with either `describe` or `context`) is nested
 inside.
 
 And finally, the function `expectations` is called after each example
-has been run, passing in a tables with the format shown below, with
+has been run, passing in a table with the format shown below, with
 one expectation entry for each `expect` call in that example, along with
 a similar table of nested descriptions as were passed to `spec`:
 
@@ -996,18 +999,18 @@ a call was made to `expect ()` from a pending example.  The two are
 necessary so that formatters can diagnose an unexpected `status == true`
 in a pending example, among other things.
 
-The standard [Specl][] formatters in the `specl/formatters/` sub-
-directory of your installation show how these functions can be used to
+The standard [Specl] formatters in the `lib/specl/formatters/` 
+directory of the sources show how these functions can be used to
 display progress using an output format of your choice.
 
-See the next section for details of how to get [Specl][] to load
+See the next section for details of how to get [Specl] to load
 your custom formatter.
 
 
 ## 5. Command Line
 
 Given a spec-file or two, along with the implementation of the code
-being checked against those specifications, you run [Specl][] inside the
+being checked against those specifications, you run [Specl] inside the
 project directory using the provided `specl` command.
 
 The `specl` command expects spec-files to be kept in a top-level
@@ -1050,8 +1053,8 @@ To use the `report` formatter instead, add the `-freport`
 option to the command line above.
 
 For finer grained selection of a subset of examples than by file,
-[Specl][] accepts any number of filters to match against the full nested
-[YAML][] path to each example, using the `--example=PATTERN` option.
+[Specl] accepts any number of filters to match against the full nested
+[YAML] path to each example, using the `--example=PATTERN` option.
 Given the following spec-file:
 
 {% highlight yaml %}
@@ -1068,7 +1071,7 @@ specify module:
 {% endhighlight %}
 
 The full name of an example is made by starting at the nearest top level
-[YAML][] description field, and concatenating all of the nested
+[YAML] description field, and concatenating all of the nested
 descriptions that lead to the example itself, but leaving off the very
 first word of each.  For example, you can tell `specl` to check the
 first two examples, named `module group one passes` and `module group
@@ -1078,9 +1081,9 @@ one hasn't decided yet` like this:
     specl --example 'group one'
 {% endhighlight %}
 
-[Specl][] will run all examples that match any one (or more) of the
+[Specl] will run all examples that match any one (or more) of the
 `--example` (or `-e`) arguments you give it.  Those arguments are
-interpreted as [Lua patterns][], so you must be careful to escape any
+interpreted as [Lua patterns], so you must be careful to escape any
 pattern meta-characters with an additional `%` (percent) character.
 Other than that, each argument is matched against the concatenated
 description path leading to each example with respect to pattern anchors
@@ -1104,13 +1107,13 @@ paste the `filename:NN:EE` directly into your next `specl` invocation:
 {% endhighlight %}
 
 Actually, the final `:EE` is always ignored, because there's no way
-for [Specl][] to tell what parts of the [Lua][] code in a given example
+for [Specl] to tell what parts of the [Lua] code in a given example
 are relevant to one `expect` statement or another, so it always checks
 the entire example.  You can omit the `:EE` when you type at the command
 line too.
 
 If you want to check more than a single non-passing example, without
-rechecking all of the specifications in a given file, [Specl][] also
+rechecking all of the specifications in a given file, [Specl] also
 accepts `+` prefixed line numbers prior to the file name argument:
 
 {% highlight bash %}
@@ -1144,14 +1147,264 @@ Pass the `--help` option for help and brief documentation on usage of the
 remaining available options.
 
 
-## 6. Not Yet Implemented
+## 6. Writing Program Specifications
+
+In addition to writing example code to specify the behaviour of [Lua]
+objects and modules, [Specl] is extremely useful for specifying the
+behaviour of other command-line programs.  In fact, [Specl] has a
+growing collection of specifications for itself in the form of
+spec-files!
+
+
+### 6.1. Shell Commands
+
+When a program can be executed from the shell, [Specl] provides the
+`specl.shell` module for running the program with specified options,
+arguments and standard input, and capturing the exit status and standard
+output and error streams.
+
+To use this module in your specifications you must require it, either in
+a `spec_helper.lua` file, or directly in the spec-file:
+
+{% highlight lua %}
+    shell = require "specl.shell"
+{% endhighlight %}
+
+
+#### 6.1.1. shell.spawn
+
+This function constructs a `Command` object from it's parameters and
+then executes it using Lua's `io.popen` function.  When called with a
+string, that string is the shell command that will be executed by
+`io.popen`:
+
+{% highlight lua %}
+    shell.spawn "echo foo"
+{% endhighlight %}
+
+Unfortunately, `io.popen` returns only the process output end of the
+command pipeline, so `spawn` (ab)uses shell redirections and temporary
+files to provide input, and collect output from the `Command`.  If you
+try to call `spawn` with a string that has its own redirections, that
+might defeat the redirections added by `spawn`, with unspecified results.
+In practice, this doesn't seem to be a real limitation.  If it turns out
+that this implementation has problems, then a future release of [Specl]
+will use [luaposix] or [alien] for finer control over the `Command`
+pipeline creation process.
+
+Alternatively, `spawn` accepts a command specification table with the
+command words in the array part of the table, with optional standard
+input at `stdin` and environment variable settings in `env`:
+
+{% highlight lua %}
+    shell.spawn {
+      "cat", "$FOO",
+      stdin = "foo",
+      env   = { FOO = "-" },
+    }
+{% endhighlight %}
+
+Calling `spawn` in this example first sets `FOO` to `-` in the shell
+environment of the `Command` object, and primes standard input with the
+text `foo`, ultimately executing `cat -`, which then copies standard
+input (`foo`) to standard output.
+
+The result of a successful execution of a `Command` object is a
+`Process` object that can be compared against expectations using any of
+the following matchers.
+
+If `expect` does not contain a `Process` object (either from a call to
+`spawn` or otherwise), when using these matchers, [Specl] will raise an
+error reporting what type was received instead.
+
+#### 6.1.2. exit
+
+This matcher succeeds when the `Process` captured by `expect` has the
+given exit status:
+
+{% highlight lua %}
+    expect (shell.spawn "exit 42").to_exit (42)
+{% endhighlight %}
+
+Naturally, the expectation fails if the exit status does not match.
+
+#### 6.1.3. succeed
+
+Often, specifying an exact exit status is not as clear as determining
+whether the `Process` exited normally or not:
+
+{% highlight lua %}
+    expect (shell.spawn "true").to_succeed ()
+{% endhighlight %}
+
+This is exactly equivalent to:
+
+{% highlight lua %}
+    expect (shell.spawn "true").to_exit (0)
+{% endhighlight %}
+
+This matcher fails if the exit status is non-zero.
+
+#### 6.1.4. fail
+
+Conversely, it's often useful to determine that the `Process` exited
+abnormally in an expectation:
+
+{% highlight lua %}
+    expect (shell.spawn "false").to_fail ()
+{% endhighlight %}
+
+This is entirely equivalent to:
+
+{% highlight lua %}
+    expect (shell.spawn "false").not_to_exit (0)
+{% endhighlight %}
+
+This matcher fails only when the exit status is zero.
+
+#### 6.1.5. output
+
+Of course, you won't get very far when all you can specify is the exit
+status of a `Process`.  This matcher is for specifying the entire
+standard output a `Process` should write throughout its execution:
+
+{% highlight lua %}
+    expect (shell.spawn "printf hello").to_output "hello"
+{% endhighlight %}
+
+#### 6.1.6. contain_output
+
+Where the `output` matcher works with `Process` output in a similar
+way to how the [`be`](#be) matcher works with raw strings, this
+`contain_output` matcher is equivalent to [`contain`](#contain):
+
+{% highlight lua %}
+    expect (shell.spawn "cat /etc/passwd").to_contain_output "root"
+{% endhighlight %}
+
+#### 6.1.7. match_output
+
+Where the `contain_output` matcher works with `Process` output in a
+similar way to how the [`contain`](#contain) matcher works with raw
+strings, this `match_output` matcher is equivalent to
+[`match`](#match):
+
+{% highlight lua %}
+    expect (shell.spawn "echo $RANDOM").to_match_output "%d+"
+{% endhighlight %}
+
+#### 6.1.8. succeed_with
+
+This matcher checks both that program exits normally, **and** that the
+`Process` outputs exactly the given text:
+
+{% highlight lua %}
+    expect (shell.spawn "printf hello").to_succeed_with "hello"
+{% endhighlight %}
+
+Conversely, `succeed_with` will fail if either the output differs, or
+the `Process` exits abnormally.
+
+#### 6.1.9. succeed_while_containing
+
+Similarly, you can check that the program exited normally, **and** that
+the `Process` contains the given text as a substring:
+
+{% highlight lua %}
+    expect (shell.spawn "cat /etc/hosts").
+      to_succeed_while_containing "localhost"
+{% endhighlight %}
+
+If the `Process` exited abnormally, or the given text is not found
+anywhere in its output, then `succeed_while_containing` fails.
+
+#### 6.1.10. succeed_while_matching
+
+You can also check that the program exited normally, **and** that the
+`Process` output matches the given [Lua] pattern with
+`succeed_while_matching`.
+
+{% highlight lua %}
+    expect (shell.spawn "echo $RANDOM").
+      to_succeed_while_matching "%d+"
+{% endhighlight %}
+
+#### 6.1.11. output_error
+
+Although it is useful to write specifications that check for expected
+`Process` output and exit status, you may have noticed that when those
+matchers fail, they will also show the content of standard error (if
+any).
+
+When you need to properly specify the content of standard error, use
+this matcher:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_output_error "sh: rspec: command not found"
+{% endhighlight %}
+
+#### 6.1.12. contain_error
+
+Note that [the previous example](#output_error) is likely to fail
+unexpectedly whenever `/bin/sh` outputs a different error message
+prefix, or if the error message text itself is slightly different on
+the host machine, or on a system with internationalised messages etc.
+
+Much like [`contain_output`](#contain_output), you can specify a
+substring to find in standard error with:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").to_contain_error "sh: rspec: "
+{% endhighlight %}
+
+#### 6.1.13. match_error
+
+Or similarly with [Lua] patterns using the `match_error` matcher:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").to_match_error "^[%w/]+: rspec: "
+{% endhighlight %}
+
+#### 6.1.14. fail_with
+
+When you need to ensure that the `Process` exited abnormally, in
+addition to producing exactly the given error output:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_fail_with "sh: rspec: command not found"
+{% endhighlight %}
+
+#### 6.1.15. fail_while_containing
+
+Or specifying a substring in addition to the abnormal exit:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_fail_while_containing "sh: rspec: "
+{% endhighlight %}
+
+#### 6.1.16. fail_while_matching
+
+Or more precisely still, an abnormal exit **and** a standard error that
+matches the given [Lua] pattern:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_fail_while_matching "^[%w/]+: rspec: "
+{% endhighlight %}
+
+## 7. Not Yet Implemented
 
 No support for mocks in the current version.
 
 
-[bdd]:   http://en.wikipedia.org/wiki/Behavior-driven_development
-[lua]:   http://www.lua.org
-[rspec]: http://github.com/rspec/rspec
-[specl]: http://github.com/gvvaughan/specl
-[yaml]:  http//yaml.org
+[alien]:    http://github.com/mascarenhas/alien
+[bdd]:      http://en.wikipedia.org/wiki/Behavior-driven_development
+[lua]:      http://www.lua.org
+[luaposix]: http://github.com/luaposix/luaposix
+[rspec]:    http://github.com/rspec/rspec
+[specl]:    http://github.com/gvvaughan/specl
+[yaml]:     http//yaml.org
 [lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1

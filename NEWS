@@ -2,6 +2,11 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features:
+
+  - Now that this API is stable, there is full documentation for
+    `specl.shell` in doc/specl.md.
+
 ** Bug fixes:
 
   - Specl no longer crashes when requiring system libraries (such as
