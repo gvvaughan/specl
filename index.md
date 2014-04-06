@@ -1130,28 +1130,278 @@ current directory, you will need to explicitly re-enable loading Lua
 code from the current directory:
 
 {% highlight bash %}
-    LUA_PATH=`pwd`'/?.lua' specl --formatter=awesome specs/*_spec.yaml
+    LUA_PATH=`pwd`'/?.lua;;' specl --formatter=awesome
 {% endhighlight %}
 
 Otherwise you can load a formatter from the existing `LUA_PATH` by
 name, including built in formatters, like this:
 
 {% highlight bash %}
-    specl --formatter=tap specs/*_spec.yaml
+    specl --formatter=tap
 {% endhighlight %}
 
 Pass the `--help` option for help and brief documentation on usage of the
 remaining available options.
 
 
-## 6. Not Yet Implemented
+## 6. Writing Program Specifications
+
+In addition to writing example code to specify the behaviour of [Lua]
+objects and modules, [Specl] is extremely useful for specifying the
+behaviour of other command-line programs.  In fact, [Specl] has a
+growing collection of specifications for itself in the form of
+spec-files!
+
+
+### 6.1. Shell Commands
+
+When a program can be executed from the shell, [Specl] provides the
+`specl.shell` module for running the program with specified options,
+arguments and standard input, and capturing the exit status and standard
+output and error streams.
+
+To use this module in your specifications you must require it, either in
+a `spec_helper.lua` file, or directly in the spec-file:
+
+{% highlight lua %}
+    shell = require "specl.shell"
+{% endhighlight %}
+
+
+#### 6.1.1. shell.spawn
+
+This function constructs a `Command` object from it's parameters and
+then executes it using Lua's `io.popen` function.  When called with a
+string, that string is the shell command that will be executed by
+`io.popen`:
+
+{% highlight lua %}
+    shell.spawn "echo foo"
+{% endhighlight %}
+
+Unfortunately, `io.popen` returns only the process output end of the
+command pipeline, so `spawn` (ab)uses shell redirections and temporary
+files to provide input, and collect output from the `Command`.  If you
+try to call `spawn` with a string that has its own redirections, that
+might defeat the redirections added by `spawn`, with unspecified results.
+In practice, this doesn't seem to be a real limitation.  If it turns out
+that this implementation has problems, then a future release of [Specl]
+will use [luaposix] or [alien] for finer control over the `Command`
+pipeline creation process.
+
+Alternatively, `spawn` accepts a command specification table with the
+command words in the array part of the table, with optional standard
+input at `stdin` and environment variable settings in `env`:
+
+{% highlight lua %}
+    shell.spawn {
+      "cat", "$FOO",
+      stdin = "foo",
+      env   = { FOO = "-" },
+    }
+{% endhighlight %}
+
+Calling `spawn` in this example first sets `FOO` to `-` in the shell
+environment of the `Command` object, and primes standard input with the
+text `foo`, ultimately executing `cat -`, which then copies standard
+input (`foo`) to standard output.
+
+The result of a successful execution of a `Command` object is a
+`Process` object that can be compared against expectations using any of
+the following matchers.
+
+If `expect` does not contain a `Process` object (either from a call to
+`spawn` or otherwise), when using these matchers, [Specl] will raise an
+error reporting what type was received instead.
+
+#### 6.1.2. exit
+
+This matcher succeeds when the `Process` captured by `expect` has the
+given exit status:
+
+{% highlight lua %}
+    expect (shell.spawn "exit 42").to_exit (42)
+{% endhighlight %}
+
+Naturally, the expectation fails if the exit status does not match.
+
+#### 6.1.3. succeed
+
+Often, specifying an exact exit status is not as clear as determining
+whether the `Process` exited normally or not:
+
+{% highlight lua %}
+    expect (shell.spawn "true").to_succeed ()
+{% endhighlight %}
+
+This is exactly equivalent to:
+
+{% highlight lua %}
+    expect (shell.spawn "true").to_exit (0)
+{% endhighlight %}
+
+This matcher fails if the exit status is non-zero.
+
+#### 6.1.4. fail
+
+Conversely, it's often useful to determine that the `Process` exited
+abnormally in an expectation:
+
+{% highlight lua %}
+    expect (shell.spawn "false").to_fail ()
+{% endhighlight %}
+
+This is entirely equivalent to:
+
+{% highlight lua %}
+    expect (shell.spawn "false").not_to_exit (0)
+{% endhighlight %}
+
+This matcher fails only when the exit status is zero.
+
+#### 6.1.5. output
+
+Of course, you won't get very far when all you can specify is the exit
+status of a `Process`.  This matcher is for specifying the entire
+standard output a `Process` should write throughout its execution:
+
+{% highlight lua %}
+    expect (shell.spawn "printf hello").to_output "hello"
+{% endhighlight %}
+
+#### 6.1.6. contain_output
+
+Where the `output` matcher works with `Process` output in a similar
+way to how the [`be`](#be) matcher works with raw strings, this
+`contain_output` matcher is equivalent to [`contain`](#contain):
+
+{% highlight lua %}
+    expect (shell.spawn "cat /etc/passwd").to_contain_output "root"
+{% endhighlight %}
+
+#### 6.1.7. match_output
+
+Where the `contain_output` matcher works with `Process` output in a
+similar way to how the [`contain`](#contain) matcher works with raw
+strings, this `match_output` matcher is equivalent to
+[`match`](#match):
+
+{% highlight lua %}
+    expect (shell.spawn "echo $RANDOM").to_match_output "%d+"
+{% endhighlight %}
+
+#### 6.1.8. succeed_with
+
+This matcher checks both that program exits normally, **and** that the
+`Process` outputs exactly the given text:
+
+{% highlight lua %}
+    expect (shell.spawn "printf hello").to_succeed_with "hello"
+{% endhighlight %}
+
+Conversely, `succeed_with` will fail if either the output differs, or
+the `Process` exits abnormally.
+
+#### 6.1.9. succeed_while_containing
+
+Similarly, you can check that the program exited normally, **and** that
+the `Process` contains the given text as a substring:
+
+{% highlight lua %}
+    expect (shell.spawn "cat /etc/hosts").
+      to_succeed_while_containing "localhost"
+{% endhighlight %}
+
+If the `Process` exited abnormally, or the given text is not found
+anywhere in its output, then `succeed_while_containing` fails.
+
+#### 6.1.10. succeed_while_matching
+
+You can also check that the program exited normally, **and** that the
+`Process` output matches the given [Lua] pattern with
+`succeed_while_matching`.
+
+{% highlight lua %}
+    expect (shell.spawn "echo $RANDOM").
+      to_succeed_while_matching "%d+"
+{% endhighlight %}
+
+#### 6.1.11. output_error
+
+Although it is useful to write specifications that check for expected
+`Process` output and exit status, you may have noticed that when those
+matchers fail, they will also show the content of standard error (if
+any).
+
+When you need to properly specify the content of standard error, use
+this matcher:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_output_error "sh: rspec: command not found"
+{% endhighlight %}
+
+#### 6.1.12. contain_error
+
+Note that [the previous example](#output_error) is likely to fail
+unexpectedly whenever `/bin/sh` outputs a different error message
+prefix, or if the error message text itself is slightly different on
+the host machine, or on a system with internationalised messages etc.
+
+Much like [`contain_output`](#contain_output), you can specify a
+substring to find in standard error with:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").to_contain_error "sh: rspec: "
+{% endhighlight %}
+
+#### 6.1.13. match_error
+
+Or similarly with [Lua] patterns using the `match_error` matcher:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").to_match_error "^[%w/]+: rspec: "
+{% endhighlight %}
+
+#### 6.1.14. fail_with
+
+When you need to ensure that the `Process` exited abnormally, in
+addition to producing exactly the given error output:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_fail_with "sh: rspec: command not found"
+{% endhighlight %}
+
+#### 6.1.15. fail_while_containing
+
+Or specifying a substring in addition to the abnormal exit:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_fail_while_containing "sh: rspec: "
+{% endhighlight %}
+
+#### 6.1.16. fail_while_matching
+
+Or more precisely still, an abnormal exit **and** a standard error that
+matches the given [Lua] pattern:
+
+{% highlight lua %}
+    expect (shell.spawn "rspec").
+      to_fail_while_matching "^[%w/]+: rspec: "
+{% endhighlight %}
+
+## 7. Not Yet Implemented
 
 No support for mocks in the current version.
 
 
-[bdd]:   http://en.wikipedia.org/wiki/Behavior-driven_development
-[lua]:   http://www.lua.org
-[rspec]: http://github.com/rspec/rspec
-[specl]: http://github.com/gvvaughan/specl
-[yaml]:  http//yaml.org
+[alien]:    http://github.com/mascarenhas/alien
+[bdd]:      http://en.wikipedia.org/wiki/Behavior-driven_development
+[lua]:      http://www.lua.org
+[luaposix]: http://github.com/luaposix/luaposix
+[rspec]:    http://github.com/rspec/rspec
+[specl]:    http://github.com/gvvaughan/specl
+[yaml]:     http//yaml.org
 [lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1
