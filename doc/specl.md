@@ -999,7 +999,7 @@ a call was made to `expect ()` from a pending example.  The two are
 necessary so that formatters can diagnose an unexpected `status == true`
 in a pending example, among other things.
 
-The standard [Specl] formatters in the `lib/specl/formatters/` 
+The standard [Specl] formatters in the `lib/specl/formatters/`
 directory of the sources show how these functions can be used to
 display progress using an output format of your choice.
 
