@@ -207,7 +207,10 @@ function run_examples (state, examples, descriptions, env)
 
         if state.opts.fail_fast then
           for _, expectation in ipairs (status.expectations) do
-            if expectation.status == false then keepgoing = false end
+            -- don't stop for passing or even failing pending examples
+            if not (expectation.status or expectation.pending) then
+              keepgoing = false
+            end
           end
         end
       end
