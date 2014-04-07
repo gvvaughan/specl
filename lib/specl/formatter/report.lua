@@ -47,8 +47,16 @@ local function tabulate (descriptions)
 end
 
 
-local function spec (descriptions, opts)
-  princ (opts.color, indent (descriptions) .. tabulate (descriptions))
+-- Show undisplayed context headers.
+local function show_contexts (descriptions, opts)
+  local previous, current = opts.previous or {}, {}
+  for i = 1, #descriptions - 1 do
+    current[i] = descriptions[i]
+    if i > #previous or current[i] ~= previous[i] then
+      princ (opts.color, indent (current) .. tabulate (current))
+    end
+  end
+  opts.previous = current
 end
 
 
@@ -60,6 +68,9 @@ local function expectations (status, descriptions, opts)
   local counts  = { fail = 0, pend = 0, unexpected = 0 }
 
   local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
+
+  -- Only show context lines for unfiltered examples.
+  show_contexts (descriptions, opts)
 
   if next (status.expectations) then
     local details = ""
@@ -204,7 +215,7 @@ end
 
 local M = {
   header       = nop,
-  spec         = spec,
+  spec         = nop,
   expectations = expectations,
   footer       = footer,
 }

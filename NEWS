@@ -7,6 +7,9 @@ Specl NEWS - User visible changes.
   - Now that this API is stable, there is full documentation for
     `specl.shell` in doc/specl.md.
 
+  - The report formatter no longer displays orphaned contexts of
+    filtered-out examples.
+
 ** Bug fixes:
 
   - Specl no longer crashes when requiring system libraries (such as
