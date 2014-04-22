@@ -137,6 +137,67 @@ end
 
 
 -- Run a Lua program in-process
+local function capture (fn, arg, stdin)
+  arg = arg or {}
+
+  -- Captured standard output and standard error.
+  local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
+
+  -- Execution environment.
+  local env = setmetatable ({}, {__index = _G})
+
+  env.io = {
+    stdin   = pin,
+    stdout  = pout,
+    stderr  = perr,
+
+    input   = function (h)
+                if Object.type (h) == "StrFile" then
+                  pin = h
+                elseif h then
+                  pin = io.input (h)
+                end
+                return pin or io.input ()
+              end,
+
+    output  = function (h)
+	        if h ~= nil then
+		  if io.type (pout) ~= "closed file" then pout:flush () end
+                  if Object.type (h) == "StrFile" then
+                    pout = h
+                  else
+                    pout = io.output (h)
+		  end
+                end
+		return pout or io.output ()
+              end,
+
+    type    = function (h)
+                if Object.type (h) == "StrFile" then
+                  return "file" -- virtual stdio streams cannot be closed
+                end
+                return io.type (h)
+              end,
+
+    write   = function (...)
+                env.io.output ():write (...)
+              end,
+  }
+
+  -- Capture print statements to process output.
+  env.print = function (...)
+                local t = {...}
+                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
+                env.io.output ():write (table.concat (t, "\t") .. "\n")
+              end
+
+  setfenv (fn, env)
+  local t = {fn (unpack (arg))}
+  return pout.buffer, perr.buffer, unpack (t)
+end
+
+
+-- Run a Lua program in-process
 local function call (main, arg, stdin)
   type_check ("call", {main}, {"Main"})
   arg = arg or {}
@@ -256,5 +317,6 @@ end
 
 
 return {
-  call = call,
+  call    = call,
+  capture = capture,
 }

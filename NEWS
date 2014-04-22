@@ -7,6 +7,23 @@ Specl NEWS - User visible changes.
   - Now that this API is stable, there is full documentation for
     `specl.shell` in doc/specl.md.
 
+  - New `specl.inprocess.capture` function for running examples that
+    interact with io streams.  `inprocess.capture` wraps a function call
+    so that standard input calls read from the supplied buffer, and any
+    output is captured rather than leaked:
+
+      inprocess.capture (function (...)
+        print (...)
+        io.stderr:write (io.stdin:read "*a")
+        return "first", 2
+      end,
+      {"foo", "bar"},
+      "input content")
+
+        => "foo\tbar\n", "input content", "first", 2
+
+    i.e. standard output, standard error, function return values
+
   - The report formatter no longer displays orphaned contexts of
     filtered-out examples.
 

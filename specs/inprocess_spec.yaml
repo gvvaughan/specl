@@ -49,6 +49,27 @@ specify inprocess:
     end
     expect (call (_G, execute, {"arg1", "arg2"})).to_succeed_with "arg1 arg2"
 
+
+- describe capture:
+  - before:
+      capture = inprocess.capture
+  - it captures standard output:
+      out = capture (function () io.write "hello" end)
+      expect (out).to_be "hello"
+  - it captures standard error:
+      _, err = capture (function () io.stderr:write "oh noes" end)
+      expect (err).to_be "oh noes"
+  - it isolates standard input:
+      input = "input string"
+      out = capture (function () io.write (io.stdin:read "*a") end, nil, input)
+      expect (out).to_be (input)
+  - it propagates arguments:
+      out = capture (function (...) print (...) end, {"one", 2})
+      expect (out).to_be ("one\t2\n")
+  - it propagates results:
+      _, __, x, y = capture (function (...) return unpack {...} end, {"one", 2})
+      expect ({x, y}).to_equal {"one", 2}
+
 - describe error:
   - before:
       execute = function () return error "he deed" end
