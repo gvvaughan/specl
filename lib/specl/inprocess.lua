@@ -136,15 +136,9 @@ local function inject (into, from)
 end
 
 
--- Run a Lua program in-process
-local function capture (fn, arg, stdin)
-  arg = arg or {}
-
-  -- Captured standard output and standard error.
+local function env_init (env, stdin)
+  -- Captured standard input, standard output and standard error.
   local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
-
-  -- Execution environment.
-  local env = setmetatable ({}, {__index = _G})
 
   env.io = {
     stdin   = pin,
@@ -191,6 +185,20 @@ local function capture (fn, arg, stdin)
                 env.io.output ():write (table.concat (t, "\t") .. "\n")
               end
 
+  return pout, perr
+end
+
+
+-- Run a Lua program in-process
+local function capture (fn, arg, stdin)
+  arg = arg or {}
+
+  -- Execution environment.
+  local env = setmetatable ({}, {__index = _G})
+
+  -- Captured standard output and standard error.
+  local pout, perr = env_init (env, stdin)
+
   setfenv (fn, env)
   local t = {fn (unpack (arg))}
   return pout.buffer, perr.buffer, unpack (t)
@@ -202,50 +210,12 @@ local function call (main, arg, stdin)
   type_check ("call", {main}, {"Main"})
   arg = arg or {}
 
-  -- Captured exit status, standard input, standard output and standard error.
-  local pstat = -1
-  local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
-
   -- Execution environment.
   local env = {}
 
-  env.io = {
-    stdin   = pin,
-    stdout  = pout,
-    stderr  = perr,
-
-    input   = function (h)
-                if Object.type (h) == "StrFile" then
-                  pin = h
-                elseif h then
-                  pin = io.input (h)
-                end
-                return pin or io.input ()
-              end,
-
-    output  = function (h)
-	        if h ~= nil then
-		  if io.type (pout) ~= "closed file" then pout:flush () end
-                  if Object.type (h) == "StrFile" then
-                    pout = h
-                  else
-                    pout = io.output (h)
-		  end
-                end
-		return pout or io.output ()
-              end,
-
-    type    = function (h)
-                if Object.type (h) == "StrFile" then
-                  return "file" -- virtual stdio streams cannot be closed
-                end
-                return io.type (h)
-              end,
-
-    write   = function (...)
-                env.io.output ():write (...)
-              end,
-  }
+  -- Captured exit status, standard output and standard error.
+  local pstat = -1
+  local pout, perr = env_init (env, stdin)
 
   env.os = {
     -- Capture exit status without quitting specl process itself.
@@ -259,13 +229,6 @@ local function call (main, arg, stdin)
              error ("env.os.exit", 0)
            end,
   }
-
-  -- Capture print statements to process output.
-  env.print = function (...)
-                local t = {...}
-                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
-                env.io.output ():write (table.concat (t, "\t") .. "\n")
-              end
 
   -- Instantiate with the execution environment so that sandboxed
   -- applications can see and manipulate it before continuing.
