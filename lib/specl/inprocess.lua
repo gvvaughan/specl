@@ -49,13 +49,25 @@ local StrFile = Object {
     lines   = nop,
 
     read    = function (self, mode)
+                mode = mode or "*l"
+                local b = self.pos
+
                 -- Obeys the spec, though may not match core file:read
                 -- error precisely.
                 if self.mode ~= "r" then
                   return nil, "Bad virtual file descriptor", 9
                 end
-                local b = self.pos
-                return case (mode or "*l", {
+
+                -- In this mode, return an empty string when input is exhausted...
+                if mode == "*a" then
+                  self.pos = #self.buffer + 1
+                  return self.buffer:sub (b)
+                end
+
+                -- ...otherwise return nil at end of file.
+                if self.buffer and self.pos > #self.buffer then return nil end
+
+                return case (mode, {
                   ["*n"] = function ()
                              local ok, e = self.buffer:find ("^%d*%.?%d+")
                              if ok then
@@ -68,11 +80,6 @@ local StrFile = Object {
                                return tonumber (self.buffer:sub (b, e), 16)
                              end
                              return nil
-                           end,
-
-                  ["*a"] = function ()
-                             self.pos = #self.buffer + 1
-                             return self.buffer:sub (b)
                            end,
 
                   ["*l"] = function ()

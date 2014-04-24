@@ -351,13 +351,28 @@ specify inprocess:
       pending "not yet implemented"
 
   - context with read:
+    - context using '*a':
+      - it reads all input:
+          subject = "a few\nlines\nof random\n   text\n"
+          expect (call (_G, function () io.stdout:write (io.stdin:read "*a") end, {}, subject)).
+            to_output (subject)
+      - it returns "" at end of file:
+          function execute ()
+            local discard = io.stdin:read "*a"
+            local eof = io.stdin:read "*a"
+            print (type (eof), eof)
+          end
+          expect (call (_G, execute, {}, "")).to_output "string\t\n"
     - context using '*n':
-      - it reads a decimal number:
+      - before:
           function execute ()
             local n = io.stdin:read "*n"
             print (type (n), n)
           end
-          expect (call (_G, execute, {}, "01234")).should_output "number\t1234\n"
+      - it reads a decimal number:
+          expect (call (_G, execute, {}, "01234")).to_output "number\t1234\n"
+      - it returns nil at end of file:
+          expect (call (_G, execute, {}, "")).to_output "nil\tnil\n"
 
   # This specifies our idealised logical behaviour, but actually differs
   # (necessarily) from seeking on the real standard input.
