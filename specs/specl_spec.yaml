@@ -185,7 +185,7 @@ describe specl:
         ".*\n" ..
         "Report bugs to [%w%.@:/]+%.\n$")
 
-  - it reads a spec from standard input with no arguments:
+  - it reads specs subdirectory with no arguments:
       expect (run_spec (yaml)).to_contain_output "All expectations met in "
   - it reads a spec from standard input for '-' filename argument:
       expect (run_spec {"-"; stdin = yaml}).
