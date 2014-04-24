@@ -46,7 +46,11 @@ local StrFile = Object {
 
     flush   = nop,
 
-    lines   = nop,
+    lines   = function (self, mode)
+		return function ()
+		  return self:read (mode or "*l")
+		end
+              end,
 
     read    = function (self, mode)
                 mode = mode or "*l"
@@ -69,15 +73,20 @@ local StrFile = Object {
 
                 return case (mode, {
                   ["*n"] = function ()
-                             local ok, e = self.buffer:find ("^%d*%.?%d+")
+                             local ok, e, cap = self.buffer:find ("^%s*0[xX](%x+)", b)
+                             if ok then
+                               self.pos = e + 1
+                               return tonumber (cap, 16)
+                             end
+                             local ok, e = self.buffer:find ("^%s*%d*%.?%d+[eE]%d+", b)
                              if ok then
                                self.pos = e + 1
                                return tonumber (self.buffer:sub (b, e))
                              end
-                             local ok, e = self.buffer:find ("^0[xX]%x*%.?%x+")
+                             local ok, e = self.buffer:find ("^%s*%d*%.?%d+", b)
                              if ok then
                                self.pos = e + 1
-                               return tonumber (self.buffer:sub (b, e), 16)
+                               return tonumber (self.buffer:sub (b, e))
                              end
                              return nil
                            end,
