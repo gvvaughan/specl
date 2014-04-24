@@ -480,6 +480,14 @@ specify inprocess:
           expect (call (_G, execute, {}, "01234")).to_output "number\t1234\n"
       - it returns nil at end of file:
           expect (call (_G, execute, {}, "")).to_output "nil\tnil\n"
+    - context passing multiple formats:
+      - it returns multiple results:
+          subject = "a string with\n3 lines\nin total"
+          function execute ()
+            print (io.stdin:read ("*l", "*n", "*L", 1, 3, "*a"))
+          end
+          expect (call (_G, execute, {}, subject)).
+            to_output "a string with\t3\t lines\n\ti\tn t\total\n"
 
   # This specifies our idealised logical behaviour, but actually differs
   # (necessarily) from seeking on the real standard input.

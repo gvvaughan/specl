@@ -46,71 +46,84 @@ local StrFile = Object {
 
     flush   = nop,
 
-    lines   = function (self, mode)
+    lines   = function (self, ...)
+	        local fmts = {...}
 		return function ()
-		  return self:read (mode or "*l")
+		  return self:read (unpack (fmts))
 		end
               end,
 
-    read    = function (self, mode)
-                mode = mode or "*l"
-                local b = self.pos
-
+    read    = function (self, ...)
                 -- Obeys the spec, though may not match core file:read
                 -- error precisely.
                 if self.mode ~= "r" then
                   return nil, "Bad virtual file descriptor", 9
                 end
 
-                -- In this mode, return an empty string when input is exhausted...
-                if mode == "*a" then
-                  self.pos = #self.buffer + 1
-                  return self.buffer:sub (b)
+                local r = {}
+                if select ("#", ...) == 0 then
+                  fmts = {"*l"}
+                else
+                  fmts = {...}
                 end
 
-                -- ...otherwise return nil at end of file.
-                if self.buffer and self.pos > #self.buffer then return nil end
+                for i = 1, #fmts do
+                  -- For this format, return an empty string when input is exhausted...
+                  if fmts[i] == "*a" then
+                    r[i] = self.buffer:sub (self.pos)
+                    self.pos = #self.buffer + 1
 
-                return case (mode, {
-                  ["*n"] = function ()
-                             local ok, e, cap = self.buffer:find ("^%s*0[xX](%x+)", b)
-                             if ok then
-                               self.pos = e + 1
-                               return tonumber (cap, 16)
-                             end
-                             local ok, e = self.buffer:find ("^%s*%d*%.?%d+[eE]%d+", b)
-                             if ok then
-                               self.pos = e + 1
-                               return tonumber (self.buffer:sub (b, e))
-                             end
-                             local ok, e = self.buffer:find ("^%s*%d*%.?%d+", b)
-                             if ok then
-                               self.pos = e + 1
-                               return tonumber (self.buffer:sub (b, e))
-                             end
-                             return nil
-                           end,
+                  -- ...otherwise return nil at end of file.
+	          elseif self.buffer and self.pos > #self.buffer then
+		    r[i] = nil
 
-                  ["*l"] = function ()
-                             local e = self.buffer:find ("\n", self.pos) or #self.buffer
-                             self.pos = e + 1
-                             return self.buffer:sub (b, e):gsub ("\n$", "")
-                           end,
+		  else
+		    local b = self.pos
+                    r[i] = case (fmts[i], {
+                      ["*n"] = function ()
+                                 local ok, e, cap = self.buffer:find ("^%s*0[xX](%x+)", b)
+                                 if ok then
+                                   self.pos = e + 1
+                                   return tonumber (cap, 16)
+                                 end
+                                 local ok, e = self.buffer:find ("^%s*%d*%.?%d+[eE]%d+", b)
+                                 if ok then
+                                   self.pos = e + 1
+                                   return tonumber (self.buffer:sub (b, e))
+                                 end
+                                 local ok, e = self.buffer:find ("^%s*%d*%.?%d+", b)
+                                 if ok then
+                                   self.pos = e + 1
+                                   return tonumber (self.buffer:sub (b, e))
+                                 end
+                                 return nil
+                               end,
 
-                  ["*L"] = function ()
-                             local e = self.buffer:find ("\n", self.pos) or #self.buffer
-                             self.pos = e + 1
-                             return self.buffer:sub (b, e)
-                           end,
+                      ["*l"] = function ()
+                                 local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                                 self.pos = e + 1
+                                 return self.buffer:sub (b, e):gsub ("\n$", "")
+                               end,
 
-                           function ()
-                             if type (mode) ~= "number" then
-                               return error ("bad argument #1 to 'read' (invalid option)", 3)
-                             end
-                             self.pos = self.pos + mode
-                             return self.buffer:sub (b, self.pos - 1)
-                           end,
-                })
+                      ["*L"] = function ()
+                                 local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                                 self.pos = e + 1
+                                 return self.buffer:sub (b, e)
+                               end,
+
+                               function ()
+                                 if type (fmts[i]) ~= "number" then
+                                   return error ("bad argument #1 to 'read' (invalid option)", 3)
+                                 end
+                                 self.pos = self.pos + fmts[i]
+                                 return self.buffer:sub (b, self.pos - 1)
+                               end,
+                    })
+		  end
+                end
+
+		if select ("#", r) == 0 then return nil end
+		return unpack (r)
               end,
 
     seek    = function (self, whence, offset)
