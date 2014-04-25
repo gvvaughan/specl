@@ -21,7 +21,7 @@
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = fa462e078db949dd56abc2af582757ea
+old_NEWS_hash = bb7c6d94d56ccf2920aee55c999ffbe8
 
 update_copyright_env = \
 	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
