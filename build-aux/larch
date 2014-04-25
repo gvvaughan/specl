@@ -220,6 +220,13 @@ test -n "$LUA" || {
   done
 }
 
+# We don't want user environment settings changing the behaviour of this
+# script:
+LUA_INIT=
+export LUA_INIT
+LUA_INIT_5_2=
+export LUA_INIT_5_2=
+
 # Reexecute using the interpreter suppiled in LUA, or found above.
 exec "$LUA" "$0" "$@"
 ]]SH

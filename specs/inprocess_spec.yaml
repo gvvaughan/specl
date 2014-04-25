@@ -49,6 +49,27 @@ specify inprocess:
     end
     expect (call (_G, execute, {"arg1", "arg2"})).to_succeed_with "arg1 arg2"
 
+
+- describe capture:
+  - before:
+      capture = inprocess.capture
+  - it captures standard output:
+      out = capture (function () io.write "hello" end)
+      expect (out).to_be "hello"
+  - it captures standard error:
+      _, err = capture (function () io.stderr:write "oh noes" end)
+      expect (err).to_be "oh noes"
+  - it isolates standard input:
+      input = "input string"
+      out = capture (function () io.write (io.stdin:read "*a") end, nil, input)
+      expect (out).to_be (input)
+  - it propagates arguments:
+      out = capture (function (...) print (...) end, {"one", 2})
+      expect (out).to_be ("one\t2\n")
+  - it propagates results:
+      _, __, x, y = capture (function (...) return unpack {...} end, {"one", 2})
+      expect ({x, y}).to_equal {"one", 2}
+
 - describe error:
   - before:
       execute = function () return error "he deed" end
@@ -169,10 +190,21 @@ specify inprocess:
           to_output "\n"
 
   - context with lines:
-      pending "not yet implemented"
+    - it returns a function: |
+        expect (call (_G, function () print (io.stdout:lines ()) end)).
+          to_match_output "function: 0x%x+"
+    - it diagnoses failure:
+        function execute ()
+          local iter = io.stdout:lines ()
+          print (iter ())
+        end
+        expect (call (_G, execute)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
 
   - context with read:
     - it diagnoses failure:
+        expect (call (_G, function () print (io.stdout:read ()) end)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
         expect (call (_G, function () print (io.stdout:read "*a") end)).
           to_output "nil\tBad virtual file descriptor\t9\n"
         expect (call (_G, function () print (io.stdout:read "not a mode") end)).
@@ -247,7 +279,16 @@ specify inprocess:
           to_output "\n"
 
   - context with lines:
-      pending "not yet implemented"
+    - it returns a function: |
+        expect (call (_G, function () print (io.stderr:lines ()) end)).
+          to_match_output "function: 0x%x+"
+    - it diagnoses failure:
+        function execute ()
+          local iter = io.stderr:lines ()
+          print (iter ())
+        end
+        expect (call (_G, execute)).
+          to_output "nil\tBad virtual file descriptor\t9\n"
 
   - context with read:
     - it diagnoses failure:
@@ -327,16 +368,126 @@ specify inprocess:
           to_output "\n"
 
   - context with lines:
-      pending "not yet implemented"
+    - it diagnoses a bad argument:
+        function execute ()
+          local fn = io.stdin:lines "not a real mode"
+          print (fn ())
+        end
+        expect (call (_G, execute)).to_contain_error "bad argument"
+    - context with no argument:
+      - it returns a function: |
+          expect (call (_G, function () print (io.stdout:lines ()) end)).
+            to_match_output "function: 0x%x+"
+      - it iterates over lines:
+          function execute ()
+            local n = 0
+            for l in io.stdin:lines () do
+              n = n + 1
+              print (n, l)
+            end
+          end
+          expect (call (_G, execute, {}, "one\ntwo\nthree")).
+            to_output "1\tone\n2\ttwo\n3\tthree\n"
+    - context with *n argument:
+      - it returns a function: |
+          expect (call (_G, function () print (io.stdout:lines ()) end)).
+            to_match_output "function: 0x%x+"
+      - it iterates over numbers:
+          function execute ()
+            local n = 0
+            for l in io.stdin:lines "*n" do
+              n = n + 1
+              print (n, l)
+            end
+          end
+          expect (call (_G, execute, {}, "10\n 2.022\t0x30\t4.5e6")).
+            to_output "1\t10\n2\t2.022\n3\t48\n4\t4500000\n"
+    - context with *a argument:
+      - it returns a function: |
+          expect (call (_G, function () print (io.stdout:lines ()) end)).
+            to_match_output "function: 0x%x+"
+      - it returns everything:
+          function execute ()
+            local fn = io.stdin:lines "*a"
+            print (1, fn ())
+          end
+          expect (call (_G, execute, {}, "one\ntwo\nthree")).
+            to_output "1\tone\ntwo\nthree\n"
+    - context with *l argument:
+      - it returns a function: |
+          expect (call (_G, function () print (io.stdout:lines ()) end)).
+            to_match_output "function: 0x%x+"
+      - it iterates over lines stripping EOL:
+          function execute ()
+            local n = 0
+            for l in io.stdin:lines "*l" do
+              n = n + 1
+              print (n, l)
+            end
+          end
+          expect (call (_G, execute, {}, "one\ntwo\nthree")).
+            to_output "1\tone\n2\ttwo\n3\tthree\n"
+    - context with *L argument:
+      - it returns a function: |
+          expect (call (_G, function () print (io.stdout:lines ()) end)).
+            to_match_output "function: 0x%x+"
+      - it iterates over lines retaining EOL:
+          function execute ()
+            local n = 0
+            for l in io.stdin:lines "*L" do
+              n = n + 1
+              print (n, l)
+            end
+          end
+          expect (call (_G, execute, {}, "one\ntwo\nthree")).
+            to_output "1\tone\n\n2\ttwo\n\n3\tthree\n"
+    - context with numeric argument:
+      - it returns a function: |
+          expect (call (_G, function () print (io.stdout:lines ()) end)).
+            to_match_output "function: 0x%x+"
+      - it iterates over byte chunks:
+          function execute ()
+            local n = 0
+            for l in io.stdin:lines (2) do
+              n = n + 1
+              print (n, l)
+            end
+          end
+          expect (call (_G, execute, {}, "one\n2")).
+            to_output "1\ton\n2\te\n\n3\t2\n"
+
 
   - context with read:
+    - context using '*a':
+      - it reads all input:
+          subject = "a few\nlines\nof random\n   text\n"
+          expect (call (_G, function () io.stdout:write (io.stdin:read "*a") end, {}, subject)).
+            to_output (subject)
+      - it returns "" at end of file:
+          function execute ()
+            local discard = io.stdin:read "*a"
+            local eof = io.stdin:read "*a"
+            print (type (eof), eof)
+          end
+          expect (call (_G, execute, {}, "")).to_output "string\t\n"
     - context using '*n':
-      - it reads a decimal number:
+      - before:
           function execute ()
             local n = io.stdin:read "*n"
             print (type (n), n)
           end
-          expect (call (_G, execute, {}, "01234")).should_output "number\t1234\n"
+      - it reads a decimal number:
+          expect (call (_G, execute, {}, "01234")).to_output "number\t1234\n"
+      - it returns nil at end of file:
+          expect (call (_G, execute, {}, "")).to_output "nil\tnil\n"
+    - context passing multiple formats:
+      - it returns multiple results:
+          subject = "a string with\n3 lines\nin total"
+          function execute ()
+            print (io.stdin:read ("*l", "*n", "*L", 1, 3, "*a"))
+          end
+          expect (call (_G, execute, {}, subject)).
+            to_output "a string with\t3\t lines\n\ti\tn t\total\n"
 
   # This specifies our idealised logical behaviour, but actually differs
   # (necessarily) from seeking on the real standard input.

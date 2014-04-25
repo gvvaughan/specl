@@ -1,5 +1,45 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 12 (2014-04-25) [stable]
+
+** New features:
+
+  - Now that this API is stable, there is full documentation for
+    `specl.shell` in doc/specl.md.
+
+  - New `specl.inprocess.capture` function for running examples that
+    interact with io streams.  `inprocess.capture` wraps a function call
+    so that standard input calls read from the supplied buffer, and any
+    output is captured rather than leaked:
+
+      inprocess.capture (function (...)
+        print (...)
+        io.stderr:write (io.stdin:read "*a")
+        return "first", 2
+      end,
+      {"foo", "bar"},
+      "input content")
+
+        => "foo\tbar\n", "input content", "first", 2
+
+    i.e. standard output, standard error, function return values
+
+  - The report formatter no longer displays orphaned contexts of
+    filtered-out examples.
+
+** Bug fixes:
+
+  - Specl no longer crashes when requiring system libraries (such as
+    math, bit32 etc) from examples or spec_helpers.
+
+  - The `--fail-fast` option no longer stops when encountering a failing
+    expectation in a pending example.
+
+  - Ignore any LUA_INIT or LUA_INIT_5_2 settings in the execution
+    environment, since they can easily corrupt the behaviour of example
+    code.  If you need to write examples that deliberately interact with
+    those envvars, use `specl.shell` to isolate them correctly.
+
 * Noteworthy changes in release 11 (2014-04-05) [stable]
 
 ** New features:

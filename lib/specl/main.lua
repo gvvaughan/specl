@@ -35,7 +35,7 @@ local optspec = [[
 specl (@PACKAGE_NAME@) @VERSION@
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
-Copyright (C) 2013, Gary V. Vaughan
+Copyright (C) 2014, Gary V. Vaughan
 @PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
 You may redistribute copies of @PACKAGE_NAME@ under the terms of the GNU
 General Public License; either version 3, or any later version.

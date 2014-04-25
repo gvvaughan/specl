@@ -291,9 +291,9 @@ update-old-NEWS-hash: NEWS
 ANNOUNCE_ENV	= LUA_INIT= LUA_PATH='$(abs_srcdir)/?-git-1.rockspec'
 ANNOUNCE_PRINT	= $(ANNOUNCE_ENV) $(LUA) -l$(PACKAGE) -e
 
-_PRE	= "    http://raw."
+_PRE	= "    https://raw.githubusercontent"
 _POST	= "/release-v$(VERSION)/$(PACKAGE)-$(VERSION)-$(rockspec_revision).rockspec"
-GITHUB_ROCKSPEC	= (source.url:gsub ("^git://", $(_PRE)):gsub ("%.git$$", $(_POST)))
+GITHUB_ROCKSPEC	= (source.url:gsub ("^git://github", $(_PRE)):gsub ("%.git$$", $(_POST)))
 
 announcement: NEWS
 # Not $(AM_V_GEN) since the output of this command serves as

@@ -202,7 +202,7 @@ DIST_COMMON = $(srcdir)/local.mk $(srcdir)/specs/specs.mk \
 	$(srcdir)/Makefile.am $(top_srcdir)/configure \
 	$(am__configure_deps) $(srcdir)/travis.yml.in \
 	$(dist_bin_SCRIPTS) $(dist_noinst_SCRIPTS) $(dist_lua_DATA) \
-	$(dist_noinst_DATA) COPYING build-aux/install-sh \
+	$(dist_noinst_DATA) COPYING THANKS build-aux/install-sh \
 	build-aux/missing $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing
 subdir = .
@@ -402,7 +402,7 @@ install_exec_hooks =
 lib_LTLIBRARIES = 
 man_MANS = doc/specl.1
 save_release_files = $(scm_rockspec)
-old_NEWS_hash = 7a587ba98ed0457bc660bbf8bd0daf1e
+old_NEWS_hash = fa462e078db949dd56abc2af582757ea
 update_copyright_env = \
 	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
 	UPDATE_COPYRIGHT_USE_INTERVALS=1 \

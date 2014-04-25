@@ -1,9 +1,130 @@
-2014-04-05  Gary V. Vaughan  <gary@gnu.org>
+2014-04-25  Gary V. Vaughan  <gary@gnu.org>
 
-	Release version 11
+	Release version 12
 	* NEWS: Record release date.
 
-	foobar
+	slingshot: sync with upstream.
+	* slingshot: Update to latest upstream revision, for corrections
+	to github url scheme.
+
+2014-04-24  Gary V. Vaughan  <gary@gnu.org>
+
+	inprocess: support multiple format arguments to StrFile:read.
+	* specs/inprocess_spec.yaml: Specify behaviour of read with
+	multiple format arguments.
+	* lib/specl/inprocess.lua (StrFile:read): Support multiple format
+	arguments.
+
+	inprocess: implement StrFile:lines.
+	* specs/inprocess_spec.yaml (inprocess): Specify behaviour of
+	StrFile lines method when called on standard virtual streams.
+	* lib/specl/inprocess.lua (StrFile): Implement lines method.
+
+	inprocess: return correct eof markers from StrFile:read.
+	* specs/inprocess_spec.yaml (with read): Specify that read returns
+	the empty string for end of file when called with "*a", or nil
+	otherwise.
+	* lib/specl/inprocess (StrFile:read): Handle "*a" early, so that
+	the empty string is returned, otherwise return nil for end of file
+	before further processing.
+
+	specs: correct wording for no argument example.
+	* specs/specl_spec.yaml (specl): When called with no arguments,
+	specl now reads files from the specs subdirectory; reword
+	description to reflect that.
+
+2014-04-23  Gary V. Vaughan  <gary@gnu.org>
+
+	refactor: move shared initialisation into separate functions.
+	* lib/specl/inprocess.lua (env_init): Shared initialisation.
+	(capture, call): Use it.
+
+	inprocess: new `capture` API, for isolating functions from io.
+	Provide a way to write examples that call functions which would
+	otherwise use Specl's io streams, by isolation all io for later
+	inspection.
+	* specs/inprocess_spec.yaml (capture): Specify behaviour of new
+	capture API.
+	* lib/specl/inprocess.lua (capture): Implement it.
+	* NEWS: Update.
+
+2014-04-21  Gary V. Vaughan  <gary@gnu.org>
+
+	larch: ignore user LUA_INIT environment variables.
+	* build-aux/larch (preamble): Reset LUA_INIT and LUA_INIT_5_2
+	before re-executing with Lua interpreter.
+	* THANKS: Add Reuben Thomas.
+	* NEWS: Update.
+	Reported by Reuben Thomas.
+
+2014-04-07  Gary V. Vaughan  <gary@gnu.org>
+
+	doc: use https url for direct luarocks install url.
+	* README.md: Use https url for direct luarcoks install url.
+
+	docs: update direct luarocks install url.
+	* README.md: Update direct luarocks install url.
+
+	report: elide contexts for filtered-out examples.
+	* specs/formatter/report_spec.yaml: Specify output of report
+	formatter when some examples are filtered out.
+	* lib/specl/formatter/report.lua (spec): Remove.
+	Adjust all callers.
+	(show_contexts): New function to show not yet displayed context
+	lines for filtered-in examples.
+	(expectations): Use it.
+	* NEWS: Update.
+
+	doc: remove trailing whitespace.
+	* doc/specl.md: Remove trailing whitespace.
+
+	specl: fix premature fail fast for failing expect() after pending().
+	* specs/specl_spec.yaml (when failing fast): Specify behaviour of
+	--fail-fast (and -1) options.
+	* lib/specl/runner.lua (run_examples): Only stop when a failing
+	expect () does not follow a call to pending().
+	* NEWS (Bug fixes): Update.
+
+2014-04-06  Gary V. Vaughan  <gary@gnu.org>
+
+	doc: new specl.shell documentation.
+	Now that the specl.shell API is stable, document it.
+	* doc/specl.md (Writing Program Specifications): New chapter
+	documenting specl.shell.
+	* NEWS: Update.
+
+2014-04-05  Gary V. Vaughan  <gary@gnu.org>
+
+	environments: support requiring core modules in spec-files.
+	* specs/environment_spec.yaml (when requiring a module): Specify
+	behaviour when requiring a core module.
+	* lib/specl/runner.lua (initenv): A core module only has an entry
+	in `package.loaded`, but not in `package.preloaded`... and in any
+	case has no side-effects to capture since it's table is available
+	from _G in the outermost environment. So we can safely skip the
+	previously failing code for capturing side-effects when running
+	a module load function.
+	* NEWS: Update with note about bug-fix.
+
+	specl: add specifications for --version and --help.
+	* specs/specl_spec.yaml: Add specifications for --version and
+	--help output.
+	* lib/specl/main.lua (optspec): Bump copyright year in version
+	output text.
+
+	doc: remove spurious specs/*_spec.yaml arguments in examples.
+	* doc/specl.md (Command Line): Specl automatically loads all
+	files ending with `_spec.yaml` from the `specs` directory, so no
+	need to write it out long hand.
+
+	doc: sync with gh-pages branch.
+	* doc/specl.md: Sync with gh-pages index.md, for kramdown support.
+
+	maint: post-release administrivia.
+	* configure.ac (AC_INIT): Bump release version to 12.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	configury: set SPECL correctly in VPATH builds.
 	* specs/specs.mk (SPECL_ENV): Make sure SPECL is set correctly

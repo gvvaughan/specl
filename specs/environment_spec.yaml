@@ -124,6 +124,9 @@ describe environments:
         mutated_inner_symbol = false
         requirestring "mutated_inner_symbol = true"
         expect (mutated_inner_symbol).to_be (true)
+    - it supports requiring core modules:
+        expect (type (require "os")).to_be "table"
+        expect (type (require "io".open)).to_be "function"
 
 - context when executing a load function:
     - before: |

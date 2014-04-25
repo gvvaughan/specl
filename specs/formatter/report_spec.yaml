@@ -205,3 +205,41 @@ describe report:
           "  %-:3:1: FAILED expectation 1:\n" ..
           "  expecting exactly 0, but got 1\n"
         )
+
+- context when filtered:
+  - before: |
+      function specl (args)
+        return run_spec {
+          "-freport", args,
+          stdin = "specify specl:\n" ..
+                  "- describe option one:\n" ..
+                  "  - context group one:\n" ..
+                  "    - it passes:\n" ..
+                  "        expect (1).to_be (1)\n" .. -- line 5
+                  "    - it hasn't decided yet:\n" ..
+                  "        pending ()\n" ..           -- line 7
+                  "        expect (1).to_be (0)\n" ..
+                  "  - context group two:\n" ..
+                  "    - it fails:\n" ..
+                  "        expect (1).to_be (0)\n" .. -- line 11
+                  "- describe option two:\n" ..
+                  "  - context group three:\n" ..
+                  "    - it passes again:\n" ..
+                  "        expect (1).to_be (1)\n" .. -- line 15
+                  "    - it still hasn't decided:\n" ..
+                  "  - context group four:\n" ..
+                  "    - it fails again:\n" ..
+                  "        expect (1).to_be (0)\n"    -- line 19
+        }
+      end
+
+  - it displays contexts for filtered examples:
+      expect (specl "+11").to_match_output "specl%s+option one%s+group two%s+fails"
+      expect (specl "+15").to_match_output "specl%s+option two%s+group three%s+passes again"
+  - it elides contexts for skipped examples:
+      expect (specl "+11").not_to_match_output.any_of {
+        "option one%s+group one%s+", "option two", "group three", "group four",
+      }
+      expect (specl "+15").not_to_match_output.any_of {
+        "option one", "group one", "group two", "group four",
+      }

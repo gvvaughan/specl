@@ -170,7 +170,22 @@ describe specl:
         to_contain_error "error: unrecognised option '--notarealoption'"
       expect (run_spec {"-,", stdin = yaml}).
         to_contain_error "error: unrecognised option '-,'"
-  - it reads a spec from standard input with no arguments:
+  - it responds to --version with appropriate version text:
+      expect (run_spec {"--version"}).should_succeed_while_matching (
+        "^specl %(Specl%) %d+\n" ..
+        "Written by Gary V%. Vaughan <%w+@[%w%.]+>, 2013\n" ..
+        "\n" ..
+        os.date ("Copyright %%(C%%) %Y, Gary V%%. Vaughan\n") ..
+        ".*ABSOLUTELY NO WARRANTY.*$")
+  - it responds to --help with appropriate help text: |
+      expect (run_spec {"--help"}).should_succeed_while_matching (
+        "^Usage: specl %[OPTION%]%.%.%. %[FILE%]%.%.%.\n" ..
+        "\n" ..
+        "Behaviour Driven Development for Lua%.\n" ..
+        ".*\n" ..
+        "Report bugs to [%w%.@:/]+%.\n$")
+
+  - it reads specs subdirectory with no arguments:
       expect (run_spec (yaml)).to_contain_output "All expectations met in "
   - it reads a spec from standard input for '-' filename argument:
       expect (run_spec {"-"; stdin = yaml}).
@@ -182,6 +197,51 @@ describe specl:
       expect (run_spec (yaml)).not_to_exit (0)
   - it outputs results from a formatter specified on the command line:
       expect (run_spec {"--formatter=tap"; stdin = yaml}).to_contain_output "1..1"
+
+  - context when failing fast:
+    - before: |
+        function specl (args)
+          return run_spec {
+            "-freport", "-v", args,
+            stdin = "specify specl:\n" ..
+                    "- it passes:\n" ..
+                    "    expect (1).to_be (1)\n" ..
+                    "- it hasn't decided yet:\n" ..
+                    "    pending ()\n" ..
+                    "    expect (1).to_be (0)\n" ..
+                    "- it fails:\n" ..
+                    "    expect (1).to_be (0)\n" ..
+                    "- it doesn't get this far:\n" ..
+                    "    expect (1).to_be (1)\n" ..
+                    "- it stil hasn't decided:\n" ..
+                    "- it fails again:\n" ..
+                    "    expect (1).to_be (0)\n"
+           }
+         end
+    - it checks earlier passing examples:
+        expect (specl "--fail-fast").to_contain_output "\n1 passed,"
+        expect (specl "-1").to_contain_output "\n1 passed,"
+    - it checks earlier pending examples:
+        expect (specl "--fail-fast").to_contain_output " hasn't decided yet"
+        expect (specl "-1").to_contain_output " hasn't decided yet"
+    - it stops at the first failing example:
+        expect (specl "--fail-fast").to_contain_output " 1 failed "
+        expect (specl "-1").to_contain_output " 1 failed "
+    - it does not check later passing examples:
+        expect (specl "--fail-fast").
+          not_to_contain_output "doesn't get this far"
+        expect (specl "-1").
+          not_to_contain_output "doesn't get this far"
+    - it does not check later pending examples:
+        expect (specl "--fail-fast").
+          not_to_contain_output "still hasn't decided"
+        expect (specl "-1").
+          not_to_contain_output "still hasn't decided"
+    - it does not check later failing examples:
+        expect (specl "--fail-fast").
+          not_to_contain_output "fails again"
+        expect (specl "-1").
+          not_to_contain_output "fails again"
 
   - context when using a custom formatter:
     - before: |

@@ -46,55 +46,84 @@ local StrFile = Object {
 
     flush   = nop,
 
-    lines   = nop,
+    lines   = function (self, ...)
+	        local fmts = {...}
+		return function ()
+		  return self:read (unpack (fmts))
+		end
+              end,
 
-    read    = function (self, mode)
+    read    = function (self, ...)
                 -- Obeys the spec, though may not match core file:read
                 -- error precisely.
                 if self.mode ~= "r" then
                   return nil, "Bad virtual file descriptor", 9
                 end
-                local b = self.pos
-                return case (mode or "*l", {
-                  ["*n"] = function ()
-                             local ok, e = self.buffer:find ("^%d*%.?%d+")
-                             if ok then
-                               self.pos = e + 1
-                               return tonumber (self.buffer:sub (b, e))
-                             end
-                             local ok, e = self.buffer:find ("^0[xX]%x*%.?%x+")
-                             if ok then
-                               self.pos = e + 1
-                               return tonumber (self.buffer:sub (b, e), 16)
-                             end
-                             return nil
-                           end,
 
-                  ["*a"] = function ()
-                             self.pos = #self.buffer + 1
-                             return self.buffer:sub (b)
-                           end,
+                local r = {}
+                if select ("#", ...) == 0 then
+                  fmts = {"*l"}
+                else
+                  fmts = {...}
+                end
 
-                  ["*l"] = function ()
-                             local e = self.buffer:find ("\n", self.pos) or #self.buffer
-                             self.pos = e + 1
-                             return self.buffer:sub (b, e):gsub ("\n$", "")
-                           end,
+                for i = 1, #fmts do
+                  -- For this format, return an empty string when input is exhausted...
+                  if fmts[i] == "*a" then
+                    r[i] = self.buffer:sub (self.pos)
+                    self.pos = #self.buffer + 1
 
-                  ["*L"] = function ()
-                             local e = self.buffer:find ("\n", self.pos) or #self.buffer
-                             self.pos = e + 1
-                             return self.buffer:sub (b, e)
-                           end,
+                  -- ...otherwise return nil at end of file.
+	          elseif self.buffer and self.pos > #self.buffer then
+		    r[i] = nil
 
-                           function ()
-                             if type (mode) ~= "number" then
-                               return error ("bad argument #1 to 'read' (invalid option)", 3)
-                             end
-                             self.pos = self.pos + mode
-                             return self.buffer:sub (b, self.pos - 1)
-                           end,
-                })
+		  else
+		    local b = self.pos
+                    r[i] = case (fmts[i], {
+                      ["*n"] = function ()
+                                 local ok, e, cap = self.buffer:find ("^%s*0[xX](%x+)", b)
+                                 if ok then
+                                   self.pos = e + 1
+                                   return tonumber (cap, 16)
+                                 end
+                                 local ok, e = self.buffer:find ("^%s*%d*%.?%d+[eE]%d+", b)
+                                 if ok then
+                                   self.pos = e + 1
+                                   return tonumber (self.buffer:sub (b, e))
+                                 end
+                                 local ok, e = self.buffer:find ("^%s*%d*%.?%d+", b)
+                                 if ok then
+                                   self.pos = e + 1
+                                   return tonumber (self.buffer:sub (b, e))
+                                 end
+                                 return nil
+                               end,
+
+                      ["*l"] = function ()
+                                 local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                                 self.pos = e + 1
+                                 return self.buffer:sub (b, e):gsub ("\n$", "")
+                               end,
+
+                      ["*L"] = function ()
+                                 local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                                 self.pos = e + 1
+                                 return self.buffer:sub (b, e)
+                               end,
+
+                               function ()
+                                 if type (fmts[i]) ~= "number" then
+                                   return error ("bad argument #1 to 'read' (invalid option)", 3)
+                                 end
+                                 self.pos = self.pos + fmts[i]
+                                 return self.buffer:sub (b, self.pos - 1)
+                               end,
+                    })
+		  end
+                end
+
+		if select ("#", r) == 0 then return nil end
+		return unpack (r)
               end,
 
     seek    = function (self, whence, offset)
@@ -136,17 +165,9 @@ local function inject (into, from)
 end
 
 
--- Run a Lua program in-process
-local function call (main, arg, stdin)
-  type_check ("call", {main}, {"Main"})
-  arg = arg or {}
-
-  -- Captured exit status, standard input, standard output and standard error.
-  local pstat = -1
+local function env_init (env, stdin)
+  -- Captured standard input, standard output and standard error.
   local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
-
-  -- Execution environment.
-  local env = {}
 
   env.io = {
     stdin   = pin,
@@ -186,6 +207,45 @@ local function call (main, arg, stdin)
               end,
   }
 
+  -- Capture print statements to process output.
+  env.print = function (...)
+                local t = {...}
+                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
+                env.io.output ():write (table.concat (t, "\t") .. "\n")
+              end
+
+  return pout, perr
+end
+
+
+-- Run a Lua program in-process
+local function capture (fn, arg, stdin)
+  arg = arg or {}
+
+  -- Execution environment.
+  local env = setmetatable ({}, {__index = _G})
+
+  -- Captured standard output and standard error.
+  local pout, perr = env_init (env, stdin)
+
+  setfenv (fn, env)
+  local t = {fn (unpack (arg))}
+  return pout.buffer, perr.buffer, unpack (t)
+end
+
+
+-- Run a Lua program in-process
+local function call (main, arg, stdin)
+  type_check ("call", {main}, {"Main"})
+  arg = arg or {}
+
+  -- Execution environment.
+  local env = {}
+
+  -- Captured exit status, standard output and standard error.
+  local pstat = -1
+  local pout, perr = env_init (env, stdin)
+
   env.os = {
     -- Capture exit status without quitting specl process itself.
     exit = function (code)
@@ -198,13 +258,6 @@ local function call (main, arg, stdin)
              error ("env.os.exit", 0)
            end,
   }
-
-  -- Capture print statements to process output.
-  env.print = function (...)
-                local t = {...}
-                for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
-                env.io.output ():write (table.concat (t, "\t") .. "\n")
-              end
 
   -- Instantiate with the execution environment so that sandboxed
   -- applications can see and manipulate it before continuing.
@@ -256,5 +309,6 @@ end
 
 
 return {
-  call = call,
+  call    = call,
+  capture = capture,
 }
