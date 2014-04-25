@@ -8,7 +8,7 @@ description = {
 }
 source = {
   dir = "specl-release-v12",
-  url = "http://github.com/gvvaughan/specl/archive/release-v12.zip",
+  url = "https://github.com/gvvaughan/specl/archive/release-v12.zip",
 }
 dependencies = {
   "luamacro >= 2.0",
