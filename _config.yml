@@ -4,7 +4,7 @@ account: gvvaughan
 name:         Specl
 description:  Behaviour Driven Development for Lua.
 forkme:       "https://github.com/gvvaughan/specl"
-release-no:   11
+release-no:   12
 
 url:      "http://gvvaughan.github.io/specl"
 markdown: kramdown
