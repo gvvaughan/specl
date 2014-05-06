@@ -2,6 +2,12 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Bug fixes:
+
+  - The report formatter would not display subsequent repeats of a
+    context description after the first under some circumstances.  It
+    now displays context descriptions correctly in that case too.
+
 
 * Noteworthy changes in release 12 (2014-04-25) [stable]
 

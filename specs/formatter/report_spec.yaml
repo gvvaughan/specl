@@ -243,3 +243,19 @@ describe report:
       expect (specl "+15").not_to_match_output.any_of {
         "option one", "group one", "group two", "group four",
       }
+
+- context with repeated description elements:
+  - it does not elide repeats: |
+      function specl ()
+        return run_spec { "-freport",
+          stdin = "specify specl:\n" ..
+                  "- context one:\n" ..
+                  "  - context sub-group:\n" ..
+                  "    - it is:\n" ..
+                  "- context two:\n" ..
+                  "  - context sub-group:\n" ..
+                  "    - it is:\n"
+        }
+      end
+
+      expect (specl ()).to_match_output "\n%s+sub%-group\n.*\n%s+sub%-group\n"
