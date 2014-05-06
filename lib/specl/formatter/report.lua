@@ -52,8 +52,9 @@ local function show_contexts (descriptions, opts)
   local previous, current = opts.previous or {}, {}
   for i = 1, #descriptions - 1 do
     current[i] = descriptions[i]
-    if i >= #previous or current[i] ~= previous[i] then
+    if i > #previous or current[i] ~= previous[i] then
       princ (opts.color, indent (current) .. tabulate (current))
+      previous = {}
     end
   end
   opts.previous = current

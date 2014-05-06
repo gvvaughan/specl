@@ -257,5 +257,15 @@ describe report:
                   "    - it is:\n"
         }
       end
-
       expect (specl ()).to_match_output "\n%s+sub%-group\n.*\n%s+sub%-group\n"
+  - it does not repeat contexts consecutively: |
+      function specl ()
+        return run_spec { "-freport",
+          stdin = "specify specl:\n" ..
+                  "- context one:\n" ..
+                  "  - context sub-group:\n" ..
+                  "    - it is: expect (1).to_be (1)\n" ..
+                  "    - it is too: expect (2).to_be (2)\n"
+        }
+      end
+      expect (specl ()).to_match_output "%s+one%s+sub%-group%s+is%s+is too"
