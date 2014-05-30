@@ -282,6 +282,51 @@ Running [Specl] now shows the string in the pending summary report:
 {% endhighlight %}
 
 
+### 1.6. Skipping Examples
+
+There is no need for a formal `skip` command in [Specl]; the example
+execution engine will not display the descriptions of examples that have
+no live expectations.
+
+{% highlight yaml %}
+    - specify Set:
+      - before:
+          Set = require "std.set"
+      - it supports the hash operator: |
+          set = Set {"foo", "bar", "bar"}
+          if tonumber (_VERSION:match "Lua (%d+%.%d+)") >= 5.2 then
+            expect (#set).to_be (2)
+          end
+      - it reports membership:
+          set = Set {"baz"}
+          expect (Set.member (set, "foo")).not_to_be (true)
+          expect (Set.member (set, "baz")).to_be (true)
+{% endhighlight %}
+
+When running this spec-file with the [Lua] 5.2 interpreter, the
+hash example expectation fires, and its result is reported:
+
+{% highlight yaml %}
+    Set
+      supports the hash operator
+      reports membership
+{% endhighlight %}
+
+However, with [Lua] 5.1 (which does not respect the `__len` metamethod
+of tables with the hash operator), the `if` expression will be false, and
+so the `expect` command is not executed.  In that case, formatters do
+not report that result, effectively skipping the example:
+
+{% highlight yaml %}
+    Set
+      reports membership
+{% endhighlight %}
+
+Note that, like `pending` examples, the example Lua code **is**
+executed and needs to be well formed, it is just ignored by formatters
+when reporting the results from a spec-file.
+
+
 ## 2. Matchers
 
 When `expect` looks up a matcher to validate an expectation, the
