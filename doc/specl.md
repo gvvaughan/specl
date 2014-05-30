@@ -266,7 +266,7 @@ to the `pending` function call like this:
       - it cannot remove an element when empty:
           pending "issue #26"
           stack = Stack {}
-          expect ("underflow").to_error (stack.pop ())
+          expect (stack.pop ()).to_error "underflow"
 {% endhighlight %}
 
 Running [Specl] now shows the string in the pending summary report:
