@@ -28,7 +28,7 @@ local have_posix, posix = pcall (require, "posix")
 local function nop () end
 
 
-local files -- forward declaration
+local files, timersub -- forward declarations
 
 if have_posix then
 
@@ -47,6 +47,8 @@ if have_posix then
     return t
   end
 
+  timersub = posix.sys and posix.sys.timersub or posix.timersub
+
 else
 
   files = nop
@@ -56,17 +58,17 @@ end
 
 -- Use higher resolution timers from luaposix if available.
 local function gettimeofday ()
-  if not (have_posix and posix.timersub) then
+  if not (have_posix and timersub) then
     return os.time ()
   end
   return posix.gettimeofday ()
 end
 
 local function timesince (earlier)
-  if not (have_posix and posix.timersub) then
+  if not (have_posix and timersub) then
     return os.time () - earlier
   end
-  local elapsed = posix.timersub (posix.gettimeofday (), earlier)
+  local elapsed = timersub (posix.gettimeofday (), earlier)
   return (elapsed.usec / 1000000) + elapsed.sec
 end
 

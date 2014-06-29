@@ -4,6 +4,8 @@ Specl NEWS - User visible changes.
 
 ** Bug fixes:
 
+  - Enhanced resolution timers now also work with luaposix > 31.
+
   - The report formatter would not display subsequent repeats of a
     context description after the first under some circumstances.  It
     now displays context descriptions correctly in that case too.
