@@ -22,7 +22,7 @@ local loader  = require "specl.loader"
 local runner  = require "specl.runner"
 
 from "specl.std"  import Object, table.clone, table.merge
-from "specl.util" import files, gettimeofday, map
+from "specl.util" import files, gettimeofday, have_posix, map
 
 
 -- Make a shallow copy of the pristine global environment, so that the
@@ -141,7 +141,7 @@ end
 -- Process files and line filters specified on the command-line.
 local function process_args (self, parser)
   if #self.arg == 0 then
-    if pcall (require, "posix") then
+    if have_posix then
       return parser:opterr "could not find spec files in './specs/'"
     else
       return parser:opterr "install luaposix to autoload spec files from './specs/'"

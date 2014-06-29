@@ -10,6 +10,11 @@ Specl NEWS - User visible changes.
     context description after the first under some circumstances.  It
     now displays context descriptions correctly in that case too.
 
+  - Don't prevent examples from loading a different luaposix than the
+    installed default loaded by Specl.  This allows the luaposix specs
+    to work in the build tree without priming LUA_CPATH and LUA_PATH
+    before calling specl, for example.
+
 
 * Noteworthy changes in release 12 (2014-04-25) [stable]
 

@@ -220,12 +220,20 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
+
+-- Don't prevent examples from loading a different luaposix.
+for _, reload in pairs {"posix", "posix_c", "posix.sys"} do
+  package.loaded[reload] = nil
+end
+
+
 local M = {
   -- Functions
   concat         = concat,
   deepcopy       = deepcopy,
   files          = files,
   gettimeofday   = gettimeofday,
+  have_posix     = have_posix,
   indent         = indent,
   nop            = nop,
   map            = map,
