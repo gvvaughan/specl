@@ -2,6 +2,7 @@ SPECL
 =====
 
 [![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png?branch=master)](http://travis-ci.org/gvvaughan/specl/builds)
+[![Stories in Ready](https://badge.waffle.io/gvvaughan/specl.png?label=ready&title=Ready)](https://waffle.io/gvvaughan/specl)
 
 [Specl][] is a testing tool for [Lua][], providing a
 [Behaviour Driven Development][BDD] framework in the vein of [RSpec][].
