@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/gvvaughan/specl.png?label=ready&title=Ready)](https://waffle.io/gvvaughan/specl)
 SPECL
 =====
 
