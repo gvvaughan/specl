@@ -17,11 +17,11 @@ Installation
 
 There's no need to download a [Specl][] release, or clone the git repo,
 unless you want to modify the code.  If you use [LuaRocks][], you can
-use it to install the latest release from it's repository:
+use it to install the latest release from its repository:
 
     luarocks install specl
 
-Or from the rockspec in a release tarball:
+Or from the rockspec inside the release tarball:
 
     luarocks make specl-?-1.rockspec
 
@@ -46,7 +46,7 @@ See [INSTALL][] for instructions for `configure`.
 Documentation
 -------------
 
-Specl includes [Markdown formatted documentation][github.io].
+Specl includes [comprehensive documentation][github.io].
 
 
 [autoconf]:  http://gnu.org/s/autoconf
