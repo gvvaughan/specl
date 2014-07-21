@@ -15,6 +15,9 @@ Specl NEWS - User visible changes.
     to work in the build tree without priming LUA_CPATH and LUA_PATH
     before calling specl, for example.
 
+  - `inprocess.capture` now supports capturing results of a functable
+    call.
+
 
 * Noteworthy changes in release 12 (2014-04-25) [stable]
 

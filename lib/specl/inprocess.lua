@@ -228,6 +228,15 @@ local function capture (fn, arg, stdin)
   -- Captured standard output and standard error.
   local pout, perr = env_init (env, stdin)
 
+  -- Unwrap functables.
+  if type (fn) == "table" then
+    local call = std.func.metamethod (fn, "__call")
+    if call then
+      setfenv (call, env)
+      fn = function (...) return call (fn, ...) end
+    end
+  end
+
   setfenv (fn, env)
   local t = {fn (unpack (arg))}
   return pout.buffer, perr.buffer, unpack (t)

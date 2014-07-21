@@ -63,6 +63,9 @@ specify inprocess:
       input = "input string"
       out = capture (function () io.write (io.stdin:read "*a") end, nil, input)
       expect (out).to_be (input)
+  - it unwraps functables:
+      functable = setmetatable ({}, {__call = function (self) io.write "hello" end })
+      expect (capture (functable)).to_be "hello"
   - it propagates arguments:
       out = capture (function (...) print (...) end, {"one", 2})
       expect (out).to_be ("one\t2\n")
