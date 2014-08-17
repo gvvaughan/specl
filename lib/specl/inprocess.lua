@@ -226,11 +226,27 @@ local function capture (fn, arg, stdin)
   local env = setmetatable ({}, {__index = _G})
 
   -- Captured standard output and standard error.
+  local pstat = 0
   local pout, perr = env_init (env, stdin)
+
+  env.os = {
+    -- Capture exit status without quitting specl process itself.
+    exit = function (code)
+             case (tostring (code), {
+               ["false"] = function () pstat = 1 end,
+               ["true"]  = function () pstat = 0 end,
+                           function () pstat = code end,
+             })
+             -- Abort execution now that status is set.
+             error ("env.os.exit", 0)
+           end,
+  }
 
   setfenv (fn, env)
   local t = {fn (unpack (arg))}
-  return pout.buffer, perr.buffer, unpack (t)
+  local process = Process { pstat, pout.buffer, perr.buffer}
+  for i, v in ipairs (t) do process[i] = v end
+  return process
 end
 
 

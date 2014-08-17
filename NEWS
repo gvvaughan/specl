@@ -2,6 +2,17 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features:
+
+  - `inprocess.capture` returns a `Process` object, suitable for
+    matching using the `specl.shell` matchers.
+
+** Incompatible changes:
+
+  - `inprocess.capture` returns a `Process`, not a pair of strings
+    and the call results. Call results are still available in the array
+    part of the returned `Process`.
+
 ** Bug fixes:
 
   - Enhanced resolution timers now also work with luaposix > 31.

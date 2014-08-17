@@ -54,24 +54,24 @@ specify inprocess:
   - before:
       capture = inprocess.capture
   - it captures standard output:
-      out = capture (function () io.write "hello" end)
-      expect (out).to_be "hello"
+      expect (capture (function () io.write "hello" end)).
+        to_output "hello"
   - it captures standard error:
-      _, err = capture (function () io.stderr:write "oh noes" end)
-      expect (err).to_be "oh noes"
+      expect (capture (function () io.stderr:write "oh noes" end)).
+        to_output_error "oh noes"
   - it isolates standard input:
       input = "input string"
-      out = capture (function () io.write (io.stdin:read "*a") end, nil, input)
-      expect (out).to_be (input)
+      expect (capture (function () io.write (io.stdin:read "*a") end,
+                       nil, input)).to_output (input)
   - it unwraps functables:
       functable = setmetatable ({}, {__call = function (self) io.write "hello" end })
-      expect (capture (functable)).to_be "hello"
+      expect (capture (functable)).to_output "hello"
   - it propagates arguments:
-      out = capture (function (...) print (...) end, {"one", 2})
-      expect (out).to_be ("one\t2\n")
+      expect (capture (function (...) print (...) end, {"one", 2})).
+        to_output "one\t2\n"
   - it propagates results:
-      _, __, x, y = capture (function (...) return unpack {...} end, {"one", 2})
-      expect ({x, y}).to_equal {"one", 2}
+      t = capture (function (...) return unpack {...} end, {"one", 2})
+      expect ({t[1], t[2]}).to_equal {"one", 2}
 
 - describe error:
   - before:
