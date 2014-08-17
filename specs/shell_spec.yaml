@@ -141,10 +141,15 @@ describe shell:
       - it fails when the output does not contain the match text:
           yaml = preamble .. "(spawn 'printf hello').to_contain_output '~'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no output is generated:
+          yaml = preamble .. "(spawn 'true').to_contain_output '~'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the output does not contain the match text:
           expect (spawn "printf hello").not_to_contain_output "~"
+      - it succeeds when no output is generated:
+          expect (spawn "true").not_to_contain_output "~"
       - it fails when the output contains the match text:
           yaml = preamble .. "(spawn 'printf hello').not_to_contain_output 'e'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -221,12 +226,17 @@ describe shell:
       - it fails when the output mismatches:
           yaml = preamble .. "(spawn 'printf hell').to_succeed_while_containing 'hello'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no output is generated:
+          yaml = preamble .. "(spawn 'true').to_succeed_while_containing 'hello'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the exit status mismatches:
           expect (spawn "printf hell && exit 3").not_to_succeed_while_containing "hell"
       - it succeeds when the output mismatches:
           expect (spawn "printf hell").not_to_succeed_while_containing "hello"
+      - it succeeds when no output is generated:
+          expect (spawn "true").not_to_succeed_while_containing "hello"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf hello').not_to_succeed_while_containing 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -269,10 +279,15 @@ describe shell:
       - it fails when the output mismatches:
           yaml = preamble .. "(spawn 'printf hello').to_output 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no output is generated:
+          yaml = preamble .. "(spawn 'true').to_output 'hell'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the output mismatches:
           expect (spawn "printf hello").not_to_output "hell"
+      - it succeeds when no output is generated:
+          expect (spawn "true").not_to_output "hell"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf hello').not_to_output 'hello'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -349,12 +364,17 @@ describe shell:
       - it fails when the output mismatches:
           yaml = preamble .. "(spawn 'printf hello').to_succeed_with 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no output is generated:
+          yaml = preamble .. "(spawn 'true').to_succeed_with 'hell'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the exit status mismatches:
           expect (spawn "printf hello && exit 3").not_to_succeed_with "hell"
       - it succeeds when the output mismatches:
           expect (spawn "printf hello").not_to_succeed_with "hell"
+      - it succeeds when no output is generated:
+          expect (spawn "true").not_to_succeed_with "hell"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf hello').not_to_succeed_with 'hello'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -397,10 +417,15 @@ describe shell:
       - it fails when the output mismatches:
           yaml = preamble .. "(spawn 'printf hello').to_match_output '%s+'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no output is generated:
+          yaml = preamble .. "(spawn 'true').to_match_output '%s+'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the output mismatches:
           expect (spawn "printf hello").not_to_match_output "%s+"
+      - it succeeds when no output is generated:
+          expect (spawn "true").not_to_match_output "%s+"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf hello').not_to_match_output '%S+'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -477,12 +502,17 @@ describe shell:
       - it fails when the output mismatches:
           yaml = preamble .. "(spawn 'printf hello').to_succeed_while_matching 'hel+$'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no output is generated:
+          yaml = preamble .. "(spawn 'true').to_succeed_while_matching 'hel+$'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the exit status mismatches:
           expect (spawn "printf hell && exit 3").not_to_succeed_while_matching "hel+$"
       - it succeeds when the output mismatches:
           expect (spawn "printf hello").not_to_succeed_while_matching "hel+$"
+      - it succeeds when no output is generated:
+          expect (spawn "true").not_to_succeed_while_matching "hel+$"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf hell').not_to_succeed_while_matching 'hell+$'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -550,14 +580,20 @@ describe shell:
     - context when called normally:
       - it succeeds when the error output contains the match text:
           expect (spawn "printf hello >&2").to_contain_error "e"
-      - it fails when the output mismatches:
+      - it fails when the error output mismatches:
           yaml = preamble ..
                  "(spawn 'printf hello >&2').to_contain_error '~'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no error output is generated:
+          yaml = preamble ..
+                 "(spawn 'printf hello').to_contain_error '~'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
-      - it succeeds when the output mismatches:
+      - it succeeds when the error output mismatches:
           expect (spawn "printf hello >&2").not_to_contain_error "~"
+      - it succeeds when no error output is generated:
+          expect (spawn "printf hello").not_to_contain_error "~"
       - it fails when the output matches:
           yaml = preamble ..
                  "(spawn 'printf hello >&2').not_to_contain_error 'e'"
@@ -632,15 +668,20 @@ describe shell:
       - it fails when the exit status mismatches:
           yaml = preamble .. "(spawn 'printf >&2 hello').to_fail_while_containing 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
-      - it fails when the output mismatches:
+      - it fails when the error output mismatches:
           yaml = preamble .. "(spawn 'printf >&2 hell && exit 3').to_fail_while_containing 'hello'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when the no error output is generated:
+          yaml = preamble .. "(spawn 'printf hell && exit 3').to_fail_while_containing 'hello'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the exit status mismatches:
           expect (spawn "printf >&2 hello").not_to_fail_while_containing "hell"
-      - it succeeds when the output mismatches:
+      - it succeeds when the error output mismatches:
           expect (spawn "printf >&2 hell && exit 3").not_to_fail_while_containing "hello"
+      - it succeeds when no error output is generated:
+          expect (spawn "printf hell && exit 3").not_to_fail_while_containing "hello"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf >&2 hello && exit 3').not_to_fail_while_containing 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -684,11 +725,17 @@ describe shell:
           yaml = preamble ..
                  "(spawn 'printf hello >&2').to_output_error 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no error output is generated:
+          yaml = preamble ..
+                 "(spawn 'printf hello').to_output_error 'hell'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
-      - it succeeds when the output mismatches:
+      - it succeeds when the error output mismatches:
           expect (spawn "printf hello >&2").not_to_output "hell"
-      - it fails when the output matches:
+      - it succeeds when no error output is generated:
+          expect (spawn "printf hello").not_to_output "hell"
+      - it fails when the error output matches:
           yaml = preamble ..
                  "(spawn 'printf hello >&2').not_to_output_error 'hello'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
@@ -762,16 +809,21 @@ describe shell:
       - it fails when the exit status mismatches:
           yaml = preamble .. "(spawn 'printf >&2 hell').to_fail_with 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
-      - it fails when the output mismatches:
+      - it fails when the error output mismatches:
           yaml = preamble .. "(spawn 'printf >&2 hello && exit 3').to_fail_with 'hell'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no error output is generated:
+          yaml = preamble .. "(spawn 'printf hello && exit 3').to_fail_with 'hell'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the exit status mismatches:
           expect (spawn "printf >&2 hell").not_to_fail_with "hell"
-      - it succeeds when the output mismatches:
+      - it succeeds when the error output mismatches:
           expect (spawn "printf >&2 hello && exit 3").not_to_fail_with "hell"
-      - it fails when the output matches:
+      - it succeeds when no error output is generated:
+          expect (spawn "printf hello && exit 3").not_to_fail_with "hell"
+      - it fails when the error output matches:
           yaml = preamble .. "(spawn 'printf >&2 hello && exit 3').not_to_fail_with 'hello'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
 
@@ -814,10 +866,16 @@ describe shell:
           yaml = preamble ..
                  "(spawn 'printf hello >&2').to_match_error '%s+'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no error output is generated:
+          yaml = preamble ..
+                 "(spawn 'printf hello').to_match_error '%s+'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the error output mismatches:
           expect (spawn "printf hello >&2").not_to_match_error "%s+"
+      - it succeeds when no error output is generated:
+          expect (spawn "printf hello").not_to_match_error "%s+"
       - it fails when the error output matches:
           yaml = preamble ..
                  "(spawn 'printf hello >&2').not_to_match_error '%S+'"
@@ -892,15 +950,20 @@ describe shell:
       - it fails when the exit status mismatches:
           yaml = preamble .. "(spawn 'printf >&2 hell').to_fail_while_matching 'hel+$'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
-      - it fails when the output mismatches:
+      - it fails when the error output mismatches:
           yaml = preamble .. "(spawn 'printf >&2 hello && exit 3').to_fail_while_matching 'hel+$'"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when no error output is generated:
+          yaml = preamble .. "(spawn 'printf hello && exit 3').to_fail_while_matching 'hel+$'"
           expect (run_spec (yaml)).to_contain_output (fail_1)
 
     - context when called with not_ prefix:
       - it succeeds when the exit status mismatches:
           expect (spawn "printf >&2 hell").not_to_fail_while_matching "hel+$"
-      - it succeeds when the output mismatches:
+      - it succeeds when the error output mismatches:
           expect (spawn "printf >&2 hello && exit 3").not_to_fail_while_matching "hel+$"
+      - it succeeds when no error output is generated:
+          expect (spawn "printf hello && exit 3").not_to_fail_while_matching "hel+$"
       - it fails when the output matches:
           yaml = preamble .. "(spawn 'printf >&2 hell && exit 3').not_to_fail_while_matching 'hel+$'"
           expect (run_spec (yaml)).to_contain_output (fail_1)

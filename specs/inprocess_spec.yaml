@@ -53,25 +53,43 @@ specify inprocess:
 - describe capture:
   - before:
       capture = inprocess.capture
-  - it captures standard output:
-      expect (capture (function () io.write "hello" end)).
-        to_output "hello"
-  - it captures standard error:
-      expect (capture (function () io.stderr:write "oh noes" end)).
-        to_output_error "oh noes"
-  - it isolates standard input:
-      input = "input string"
-      expect (capture (function () io.write (io.stdin:read "*a") end,
-                       nil, input)).to_output (input)
-  - it unwraps functables:
-      functable = setmetatable ({}, {__call = function (self) io.write "hello" end })
-      expect (capture (functable)).to_output "hello"
-  - it propagates arguments:
-      expect (capture (function (...) print (...) end, {"one", 2})).
-        to_output "one\t2\n"
+
   - it propagates results:
       t = capture (function (...) return unpack {...} end, {"one", 2})
       expect ({t[1], t[2]}).to_equal {"one", 2}
+  - it propagates arguments:
+      expect (capture (function (...) print (...) end, {"one", 2})).
+        to_output "one\t2\n"
+
+  - context when matching normally:
+    - it matches standard output:
+        expect (capture (function () io.write "hello" end)).
+          to_output "hello"
+    - it matches standard error:
+        expect (capture (function () io.stderr:write "oh noes" end)).
+          to_output_error "oh noes"
+    - it isolates standard input:
+        input = "input string"
+        expect (capture (function () io.write (io.stdin:read "*a") end,
+                         nil, input)).to_output (input)
+    - it unwraps functables:
+        functable = setmetatable ({}, {__call = function (self) io.write "hello" end })
+        expect (capture (functable)).to_output "hello"
+
+  - context when matching with not_ prefix:
+    - it matches no standard output:
+        expect (capture (function () io.stderr:write "hello" end)).
+          not_to_output "hello"
+    - it matches no standard error:
+        expect (capture (function () io.write "oh noes" end)).
+          not_to_output_error "oh noes"
+    - it isolates standard input:
+        input = "input string"
+        expect (capture (function () io.stderr:write (io.stdin:read "*a") end,
+                         nil, input)).not_to_output (input)
+    - it unwraps functables:
+        functable = setmetatable ({}, {__call = function (self) io.stderr:write "hello" end })
+        expect (capture (functable)).not_to_output "hello"
 
 - describe error:
   - before:

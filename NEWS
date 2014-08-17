@@ -29,6 +29,14 @@ Specl NEWS - User visible changes.
   - `inprocess.capture` now supports capturing results of a functable
     call.
 
+  - `specl.shell` matchers now correctly succeed when using `not_`
+    prefixes to specify that a `Process` should not contain some error
+    or standard output text, and that `Process` stream contains `nil`
+    to indicate the stream was not written at all. For example:
+
+      expect (capture (function () print "stdout" end)).
+        not_to_contain_error "stderr"
+
 
 * Noteworthy changes in release 12 (2014-04-25) [stable]
 
