@@ -39,9 +39,9 @@ specify inprocess:
     end
 
 - it diagnoses malformed inprocess field in Main object:
-    expect (inprocess.call (Base)).to_error "table expected, found nil"
+    expect (inprocess.call (Base)).to_raise "table expected, found nil"
     expect (inprocess.call (Base {inprocess = "{}"})).
-      to_error "table expected, found string"
+      to_raise "table expected, found string"
 
 - it propagates arguments to Main object:
     function execute (self)

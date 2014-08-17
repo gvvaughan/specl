@@ -7,6 +7,10 @@ Specl NEWS - User visible changes.
   - `inprocess.capture` returns a `Process` object, suitable for
     matching using the `specl.shell` matchers.
 
+  - New `to_raise` matcher as an alias for `to_error` to avoid flagging
+    capitalised error messages in error matcher argument with Slingshot
+    sanity checks.
+
 ** Incompatible changes:
 
   - `inprocess.capture` returns a `Process`, not a pair of strings

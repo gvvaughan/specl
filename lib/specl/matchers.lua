@@ -290,7 +290,7 @@ matchers.copy = Matcher {
 
 
 -- Matches if any error is raised inside `expect`.
-matchers.error = Matcher {
+matchers.raise = Matcher {
   function (self, actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
@@ -322,6 +322,10 @@ matchers.error = Matcher {
            reformat (alternatives, adaptor)
   end,
 }
+
+
+-- For backwards compatibility:
+matchers.error = matchers.raise
 
 
 -- Matches if <actual> matches <pattern>.

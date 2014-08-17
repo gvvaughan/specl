@@ -17,9 +17,9 @@ before: |
 describe shell:
 - describe Command instance:
   - it diagnoses incompatible arguments:
-      expect (Command ()).to_error "string or table expected, got no value"
+      expect (Command ()).to_raise "string or table expected, got no value"
       expect (Command (function () end)).
-        to_error "string or table expected, got function"
+        to_raise "string or table expected, got function"
 
   - it is a command factory:
       expect (Command "echo").to_instantiate_a "Command"
@@ -28,7 +28,7 @@ describe shell:
 
 - describe spawn:
   - it diagnoses incompatible arguments:
-      expect (spawn ()).to_error "string, table or Command expected"
+      expect (spawn ()).to_raise "string, table or Command expected"
 
   - it is a process factory:
       expect (spawn (Command "echo")).to_instantiate_a "Process"
@@ -40,9 +40,9 @@ describe shell:
   - describe exit:
     # There's also a few ugly, but considerably faster than a full fork,
     # cases where we can tickle a Lua error in-process, and wrap it in a
-    # `to_error` to check the behaviour of an expectation or matcher.
+    # `to_raise` to check the behaviour of an expectation or matcher.
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_exit (0)).to_error "Process expected"
+        expect (expect ("meh").to_exit (0)).to_raise "Process expected"
 
     # The other exceptions are where we want to test that an expectation
     # fails correctly, which involves using the shell extensions to fork
@@ -78,7 +78,7 @@ describe shell:
 
   - describe succeed:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_succeed ()).to_error "Process expected"
+        expect (expect ("meh").to_succeed ()).to_raise "Process expected"
 
     - it displays actual and expected output on failure:
         yaml = preamble .. "(spawn 'exit 3').to_succeed ()"
@@ -102,7 +102,7 @@ describe shell:
 
   - describe output_containing:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_contain_output "meh").to_error "Process expected"
+        expect (expect ("meh").to_contain_output "meh").to_raise "Process expected"
     - it displays actual and expected output on failure: |
         yaml = preamble .. "(spawn 'printf hello').to_contain_output '~'"
         expect (run_spec (yaml)).
@@ -157,7 +157,7 @@ describe shell:
 
   - describe succeed_while_containing:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_succeed_while_containing "meh").to_error "Process expected"
+        expect (expect ("meh").to_succeed_while_containing "meh").to_raise "Process expected"
     - it displays actual and expected exit status on failure: |
         yaml = preamble .. "(spawn 'exit 3').to_succeed_while_containing 'hell'"
         expect (run_spec (yaml)).
@@ -244,7 +244,7 @@ describe shell:
 
   - describe output:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_output "meh").to_error "Process expected"
+        expect (expect ("meh").to_output "meh").to_raise "Process expected"
     - it displays actual and expected output on failure: |
         yaml = preamble .. "(spawn 'printf hello').to_output 'hell'"
         expect (run_spec (yaml)).
@@ -295,7 +295,7 @@ describe shell:
 
   - describe succeed_with:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_succeed_with "meh").to_error "Process expected"
+        expect (expect ("meh").to_succeed_with "meh").to_raise "Process expected"
     - it displays actual and expected exit status on failure: |
         yaml = preamble .. "(spawn 'exit 3').to_succeed_with 'hell'"
         expect (run_spec (yaml)).
@@ -382,7 +382,7 @@ describe shell:
 
   - describe output_matching:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_match_output "meh").to_error "Process expected"
+        expect (expect ("meh").to_match_output "meh").to_raise "Process expected"
     - it displays actual and expected output on failure:
         yaml = preamble .. "(spawn 'printf hello').to_match_output '%s+'"
         expect (run_spec (yaml)).
@@ -433,7 +433,7 @@ describe shell:
 
   - describe succeed_while_matching:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_succeed_while_matching "meh").to_error "Process expected"
+        expect (expect ("meh").to_succeed_while_matching "meh").to_raise "Process expected"
     - it displays actual and expected exit status on failure: |
         yaml = preamble .. "(spawn 'exit 3').to_succeed_while_matching 'hell'"
         expect (run_spec (yaml)).
@@ -520,7 +520,7 @@ describe shell:
 
   - describe fail:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_fail ()).to_error "Process expected"
+        expect (expect ("meh").to_fail ()).to_raise "Process expected"
 
     - it displays actual and expected output on failure:
         yaml = preamble .. "(spawn 'exit 0').to_fail ()"
@@ -544,7 +544,7 @@ describe shell:
 
   - describe output_error_containing:
     - it diagnoses incompatible arguments:
-        expect (expect ("eh").to_contain_error "eh").to_error "Process expected"
+        expect (expect ("eh").to_contain_error "eh").to_raise "Process expected"
     - it displays actual and expected output on failure: |
         yaml = preamble .. "(spawn 'printf hello >&2').to_contain_error '~'"
         expect (run_spec (yaml)).
@@ -602,7 +602,7 @@ describe shell:
 
   - describe fail_while_containing:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_fail_while_containing "meh").to_error "Process expected"
+        expect (expect ("meh").to_fail_while_containing "meh").to_raise "Process expected"
     - it displays actual and expected exit status on failure: |
         yaml = preamble .. "(spawn 'printf >&2 hello').to_fail_while_containing 'hell'"
         expect (run_spec (yaml)).
@@ -689,7 +689,7 @@ describe shell:
 
   - describe output_error:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_output_error "meh").to_error "Process expected"
+        expect (expect ("meh").to_output_error "meh").to_raise "Process expected"
     - it displays actual and expected output on failure: |
         yaml = preamble .. "(spawn 'printf hello >&2').to_output_error 'hell'"
         expect (run_spec (yaml)).
@@ -743,7 +743,7 @@ describe shell:
 
   - describe fail_with:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_fail_with "meh").to_error "Process expected"
+        expect (expect ("meh").to_fail_with "meh").to_raise "Process expected"
     - it displays actual and expected exit status on failure: |
         yaml = preamble .. "(spawn 'printf >&2 hell').to_fail_with 'hell'"
         expect (run_spec (yaml)).
@@ -830,7 +830,7 @@ describe shell:
 
   - describe output_error_matching:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_match_error "meh").to_error "Process expected"
+        expect (expect ("meh").to_match_error "meh").to_raise "Process expected"
     - it displays actual and expected output on failure: |
         yaml = preamble .. "(spawn 'printf hello >&2').to_match_error '%s+'"
         expect (run_spec (yaml)).
@@ -884,7 +884,7 @@ describe shell:
 
   - describe fail_while_matching:
     - it diagnoses incompatible arguments:
-        expect (expect ("meh").to_fail_while_matching "meh").to_error "Process expected"
+        expect (expect ("meh").to_fail_while_matching "meh").to_raise "Process expected"
     - it displays actual and expected exit status on failure: |
         yaml = preamble .. "(spawn 'printf >&2 hell').to_fail_while_matching 'hel+$'"
         expect (run_spec (yaml)).
