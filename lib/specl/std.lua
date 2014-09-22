@@ -376,6 +376,18 @@ local function dirname (path)
 end
 
 
+-- Write arguments to io.output() or given handle.
+local function writelines (h, ...)
+  if io.type (h) ~= "file" then
+    io.write (h, "\n")
+    h = io.output ()
+  end
+  for _,v in ipairs {...} do
+    h:write (v, "\n")
+  end
+end
+
+
 -- Process files specified on the command-line.
 local function process_files (fn)
   if #arg == 0 then
@@ -397,6 +409,7 @@ std.io = {
   catfile       = catfile,
   dirname       = dirname,
   process_files = process_files,
+  writelines    = writelines,
 }
 
 

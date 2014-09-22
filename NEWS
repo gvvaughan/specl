@@ -4,6 +4,10 @@ Specl NEWS - User visible changes.
 
 ** New features:
 
+  - Required files loaded from spec-file directories are now loaded
+    inside the function environment of the running example, and so have
+    access to Specl's Lua extensions, such as `expect` and matchers.
+
   - `inprocess.capture` returns a `Process` object, suitable for
     matching using the `specl.shell` matchers.
 

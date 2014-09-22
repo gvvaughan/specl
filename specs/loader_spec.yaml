@@ -1,0 +1,218 @@
+before:
+  dir = Tmpdir ()
+
+after:
+  # Only works if `dir` is already empty, so examples must carefully
+  # delete any temporary files they create to keep dir clean.
+  dir:remove ()
+
+
+specify loader:
+- describe require:
+  - context without spec_helper:
+    - it works independently: |
+        spec = dir:file ("spec_spec.yaml",
+                   "describe loader: expect (1).to_be (1)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+        spec:remove ()
+
+    - it does not expand macros outside spec directories:
+        #
+        # `- TMPDIR
+        #     +- lib
+        #     |    `- no-macro.lua
+        #     `- specs
+        #          `- no-macro_spec.yaml
+        #
+        libdir  = dir:subdir "lib"
+        modfile = libdir:file ("no-macro.lua",
+                      "local function expect (x) return x end",
+                      "return { no_macro = expect }")
+        specdir = dir:subdir "specs"
+        spec    = specdir:file ("no-macro_spec.yaml",
+                      "before:",
+                      "  package.path = '" .. libdir.path .. "/?.lua;' .. package.path",
+                      "  M = require 'no-macro'",
+                      "describe no-macro:",
+                      "  expect (M.no_macro (42)).to_be (42)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+
+        spec:remove () specdir:remove () modfile:remove () libdir:remove ()
+
+    - it does expand macros in spec directories:
+        modfile = dir:file ("do-macro.lua",
+                      "local function do_macro ()",
+                      "  it ('expands macros', function ()",
+                      "    expect (error 'oh noes!').to_raise 'oh noes!'",
+                      "  end)",
+                      "end",
+                      "return {do_macro = do_macro}")
+        spec    = dir:file ("do-macro_spec.yaml",
+                      "before:",
+                      "  M = require 'do-macro'",
+                      "describe do-macro:",
+                      "  M.do_macro ()")
+        expect (run_spec {"-freport", spec.path}).
+          to_succeed_while_containing "expands macros"
+
+        spec:remove () modfile:remove ()
+
+  - context with spec_helper:
+    - before:
+        helper = dir:file ("spec_helper.lua",
+                     "function who () return false end",
+                     "function do_macro ()",
+                     "  it ('expands macros', function ()",
+                     "    expect (error 'oh noes!').to_raise 'oh noes!'",
+                     "  end)",
+                     "end")
+    - after:
+        helper:remove ()
+
+    - it works with an explicit require:
+        spec = dir:file ("spec_spec.yaml",
+                   "before:",
+                   "  require 'spec_helper'",
+                   "describe loader:",
+                   "  expect (who ()).to_be (false)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+        spec:remove ()
+
+    - it autoloads from the spec-file directory:
+        spec = dir:file ("spec_spec.yaml",
+                   "describe loader:",
+                   "  expect (who ()).to_be (false)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+        spec:remove ()
+
+    - it does not expand macros outside spec directories:
+        #
+        # `- TMPDIR
+        #     +- lib
+        #     |    `- no-macro.lua
+        #     +- no-macro_spec.yaml
+        #     `- spec_helper.lua
+        #
+        libdir  = dir:subdir "lib"
+        modfile = libdir:file ("no-macro.lua",
+                      "local function expect (x) return x end",
+                      "return { no-macro = expect }")
+        spec    = dir:file ("no-macro_spec.yaml",
+                      "before:",
+                      "  package.path = '" .. libdir.path .. "/?.lua;' .. package.path",
+                      "  M = require 'no-macro'",
+                      "describe no-macro:",
+                      "  expect (M.no_macro (42)).to_be (42)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+
+        spec:remove () modfile:remove () libdir:remove ()
+
+    - it does expand macros in spec directories:
+        modfile = dir:file ("do-macro.lua",
+                      "local function do_macro ()",
+                      "  it ('expands macros', function ()",
+                      "    expect (error 'oh noes!').to_raise 'oh noes!'",
+                      "  end)",
+                      "end",
+                      "return {do_macro = do_macro}")
+        spec    = dir:file ("do-macro_spec.yaml",
+                      "before:",
+                      "  M = require 'do-macro'",
+                      "describe do-macro:",
+                      "  M.do_macro ()")
+        expect (run_spec {"-freport", spec.path}).
+          to_succeed_while_containing "expands macros"
+
+        spec:remove () modfile:remove ()
+
+
+  - context with multiple spec_helper files:
+    - before:
+        bogus   = dir:file ("spec_helper.lua",
+                      "function who () return false end")
+        specdir = dir:subdir "specs"
+        helper  = specdir:file ("spec_helper.lua",
+                      "function who () return true end")
+    - after:
+        helper:remove () specdir:remove () bogus:remove ()
+
+    - it works with an explicit require:
+        spec    = specdir:file ("require_spec.yaml",
+                      "before:",
+                      "  require 'spec_helper'",
+                      "describe loader:",
+                      "  expect (who ()).to_be (true)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+        spec:remove ()
+
+    - it autoloads from the current spec-file directory:
+        #
+        # `- TMPDIR
+        #     +- specs
+        #     +    +- autoload_spec.yaml
+        #     |    `- spec_helper.lua
+        #     `- spec_helper.lua
+        #
+        spec    = specdir:file ("autoload_spec.yaml",
+                      "describe subspec:",
+                      "  expect (who ()).to_be (true)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+        spec:remove ()
+
+    - it does not expand macros outside spec directories:
+        #
+        # `- TMPDIR
+        #     +- lib
+        #     |    `- no-macro.lua
+        #     +- specs
+        #     |    +- no-macro_spec.yaml
+        #     |    `- spec_helper.lua
+        #     `- spec_helper.lua
+        #
+        moddir  = dir:subdir "lib"
+        modfile = moddir:file ("no-macro.lua",
+                      "local function expect (x) return x end",
+                      "return { no-macro = expect }")
+        spec    = specdir:file ("no-macro_spec.yaml",
+                      "before:",
+                      "  package.path = '" .. moddir.path .. "/?.lua;' .. package.path",
+                      "  M = require 'no-macro'",
+                      "describe no-macro:",
+                      "  expect (M.no_macro (42)).to_be (42)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+
+        spec:remove () modfile:remove () moddir:remove ()
+
+    - it does expand macros in spec directories:
+        #
+        # `- TMPDIR
+        #     +- specs
+        #     |    +- do-macro.lua
+        #     |    +- do-macro_spec.yaml
+        #     |    `- spec_helper.lua
+        #     `- spec_helper.lua
+        #
+        modfile = specdir:file ("do-macro.lua",
+                      "local function do_macro ()",
+                      "  it ('expands macros', function ()",
+                      "    expect (error 'oh noes!').to_raise 'oh noes!'",
+                      "  end)",
+                      "end",
+                      "return {do_macro = do_macro}")
+        spec    = specdir:file ("do-macro_spec.yaml",
+                      "before:",
+                      "  M = require 'do-macro'",
+                      "describe do-macro:",
+                      "  M.do_macro ()")
+        expect (run_spec {"-freport", spec.path}).
+          to_succeed_while_containing "expands macros"
+
+        spec:remove () modfile:remove ()

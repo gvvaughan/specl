@@ -211,7 +211,7 @@ function run_examples (state, examples, descriptions, env)
     fenv.pending = function (...) return matchers.pending (state, ...) end
 
     fenv.it = function (description, example)
-      local definition = { example = example, line = line }
+      local definition = { example = example, line = line or "unknown"}
 
       table.insert (descriptions, "it " .. description)
       if run_example (state, definition, descriptions, fenv) == false then

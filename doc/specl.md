@@ -882,6 +882,13 @@ local path = std.io.catfile ("lib", "?.lua")
 package.path = std.package.normalize (path, package.path)
 {% endhighlight %}
 
+Furthermore, [Specl] automatically loads the `spec_helper.lua` file in
+the function environment of the outer-most `before` block (a virtual
+`before` is created at runtime if necessary), so it has access to all
+of Specl's [Lua] extensions, such as `expect` and matchers.  See
+[Programmatic Specifications](#programmatic-specifications) for some
+examples of how to take advantage of this.
+
 
 ## 4. Formatters
 
@@ -1487,6 +1494,21 @@ As you can see, we can call `it` with a description string, followed by
 a [thunk], which interact with [formatters](#4-formatters) in precisely
 the same fashion as a separate [YAML] `it` description and example in
 that position would have.
+
+For even further simplification of repetitive boiler-plate code you
+can define a function in `spec_helper.lua` that adds a series of
+parameterized examples when called from an example block in any
+spec-file:
+
+{% highlight lua %}
+    - describe system-specific feature:
+        if have_feature then
+          diagnose_badargs (M, "system_specific (string)")
+        end
+{% endhighlight %}
+
+Where the `diagnose_badargs` function is defined in `spec_helper.lua`,
+with a series of `it` calls such as those in the previous example above.
 
 
 ## 7. Not Yet Implemented
