@@ -1440,6 +1440,55 @@ matches the given [Lua] pattern:
       to_fail_while_matching "^[%w/]+: rspec: "
 {% endhighlight %}
 
+
+### 6.2. Programmatic Specifications
+
+At times, especially with large or complex specifications, it can feel
+as though [YAML] forces you to write a lot of boiler plate [Lua] over
+and over again across related examples.  Actually, [YAML] was chosen as
+the file format for _spec-files_ purely to help organise and separate
+examples as your specifications are fleshed out; but, when it starts to
+get in the way, you can usually move boiler plate code into a helper
+function and simply call that function each time you need to use it.
+
+However, that doesn't work when the boiler plate crosses examples:
+
+{% highlight lua %}
+    - describe system-specific feature:
+      - it diagnoses missing arguments:
+          if have_feature then
+            expect (system_specific ()).to_raise "bad argument"
+          end
+      - it diagnoses wrong argument types:
+          if have_feature then
+            expect (system_specific (false)).to_raise "string expected"
+          end
+{% endhighlight %}
+
+What we really want to do here is skip the entire group on systems that
+do not support that particular feature.  We could write a wrapper
+function to call `expect`, and sometimes that's a useful idiom; but
+here, we can use a programmatic `it` inside the outer `describe` group,
+and then wrap the whole example in an `if`, like so:
+
+{% highlight lua %}
+    - describe system-specific feature:
+        if have_feature then
+          it ("diagnoses missing arguments", function ()
+            expect (system_specific ()).to_raise "bad argument"
+          end)
+          it ("diagnoses wrong argument types", function ()
+            expect (system_specific (false)).to_raise "string expected"
+          end)
+        end
+{% endhighlight %}
+
+As you can see, we can call `it` with a description string, followed by
+a [thunk], which interact with [formatters](#4-formatters) in precisely
+the same fashion as a separate [YAML] `it` description and example in
+that position would have.
+
+
 ## 7. Not Yet Implemented
 
 No support for mocks in the current version.
@@ -1451,5 +1500,6 @@ No support for mocks in the current version.
 [luaposix]: http://github.com/luaposix/luaposix
 [rspec]:    http://github.com/rspec/rspec
 [specl]:    http://github.com/gvvaughan/specl
+[thunk]:    https://en.wikipedia.org/wiki/Thunk
 [yaml]:     http//yaml.org
 [lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1

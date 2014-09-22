@@ -153,8 +153,44 @@ describe report:
           "  %-:3:1: PENDING expectation 1: see issue 123\n"
         )
 
+
+- context with passing expectation:
+  - before: |
+      yaml = "describe report:\n" ..
+             "- it is passing:\n" ..
+             "    expect (1).to_be (1)\n"
+      argt = {"-freport", stdin = yaml}
+
+  - it exits with zero status:
+      expect (run_spec (argt)).to_exit (0)
+  - it reports 100% expectations met:
+      expect (run_spec (argt)).
+        to_contain_output "Met 100.00% of 1 expectations."
+  - it reports the passing example:
+      expect (run_spec (argt)).to_match_output "\n1 passed,"
+
+
+- context with passing 'it' expectation:
+  - before: |
+      yaml = "describe report:\n" ..
+             '  it ("is passing", function ()\n' ..
+             "    expect (1).to_be (1)\n" ..
+             "  end)\n"
+      argt   = {"-freport", stdin = yaml}
+
+  - it exits with zero status:
+      expect (run_spec (argt)).to_exit (0)
+  - it reports the 'it' description:
+      expect (run_spec (argt)).to_contain_output "is passing"
+  - it reports 100% expectations met:
+      expect (run_spec (argt)).
+        to_contain_output "Met 100.00% of 1 expectations."
+  - it reports the passing example:
+      expect (run_spec (argt)).to_match_output "\n1 passed,"
+
+
 - context with failing expectation:
-  - before:
+  - before: |
       yaml = "describe report:\n" ..
              "- it is failing:\n" ..
              "    expect (1).to_be (0)\n"
@@ -205,6 +241,62 @@ describe report:
           "  %-:3:1: FAILED expectation 1:\n" ..
           "  expecting exactly 0, but got 1\n"
         )
+
+
+- context with failing 'it' expectation:
+  - before: |
+      yaml = "describe report:\n" ..
+             "  it ('is failing', function ()\n" ..
+             "    expect (1).to_be (0)\n" ..
+             "  end)\n"
+
+  - context in non-verbose mode:
+    - before:
+        argt = {"-freport", stdin = yaml}
+    - it exits with non-zero status:
+        expect (run_spec (argt)).not_to_exit (0)
+    - it reports 0% expectations met:
+        expect (run_spec (argt)).
+          to_contain_output "Met 0.00% of 1 expectations."
+    - it reports the failing example:
+        expect (run_spec (argt)).to_match_output " 1 failed "
+    - it appends failing suffix to the example output: |
+        expect (run_spec (argt)).to_match_output (
+          "report\n" ..
+          "  is failing %(1 failing%)\n"
+        )
+    - it lists failing example in report summary: |
+        expect (run_spec (argt)).to_match_output (
+          "Summary of failed expectations:\n" ..
+          "%- report is failing:\n" ..
+          "  FAILED expectation 1: expecting exactly 0, but got 1\n"
+        )
+
+  - context in verbose mode:
+    - before:
+        argt = {"-freport", "-v", stdin = yaml}
+    - it exits with non-zero status:
+        expect (run_spec (argt)).not_to_exit (0)
+    - it reports 0% expectations met:
+        expect (run_spec (argt)).
+          to_contain_output "Met 0.00% of 1 expectations."
+    - it reports the failing example:
+        expect (run_spec (argt)).to_match_output " 1 failed "
+    - it appends failing summary to the example output: |
+        expect (run_spec (argt)).to_match_output (
+          "report\n" ..
+          "  is failing\n" ..
+          "    %-:2:1: FAILED expectation 1:\n" ..
+          "    expecting exactly 0, but got 1\n"
+        )
+    - it lists failing example in report summary: |
+        expect (run_spec (argt)).to_match_output (
+          "Summary of failed expectations:\n" ..
+          "%- report is failing:\n" ..
+          "  %-:2:1: FAILED expectation 1:\n" ..
+          "  expecting exactly 0, but got 1\n"
+        )
+
 
 - context when filtered:
   - before: |

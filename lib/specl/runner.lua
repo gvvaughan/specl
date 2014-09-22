@@ -200,9 +200,29 @@ end
 -- Run each of EXAMPLES under ENV in order.
 function run_examples (state, examples, descriptions, env)
   local block = function (example, blockenv)
-    local fenv   = util.deepcopy (blockenv)
+    local keepgoing = true
+    local fenv = util.deepcopy (blockenv)
+
+    -- There is only one, otherwise we can't maintain example order.
+    local description, definition = next (example)
+    local line = definition.line
+
     fenv.expect  = function (...) return matchers.expect  (state, ...) end
     fenv.pending = function (...) return matchers.pending (state, ...) end
+
+    fenv.it = function (description, example)
+      local definition = { example = example, line = line }
+
+      table.insert (descriptions, "it " .. description)
+      if run_example (state, definition, descriptions, fenv) == false then
+	keepgoing = false
+      end
+      table.remove (descriptions)
+
+      -- Make sure we don't leak status into the calling or following
+      -- example, since this `it` invocation is from inside `run_example`.
+      matchers.init (state)
+    end
 
     initenv (state, fenv)
 
@@ -211,26 +231,18 @@ function run_examples (state, examples, descriptions, env)
       examples.before.example ()
     end
 
-    -- There is only one, otherwise we can't maintain example order.
-    local description, definition = next (example)
-
-    local keepgoing = true
     if definition.example then
-
       -- An example, execute it.
       table.insert (descriptions, description)
       if run_example (state, definition, descriptions, fenv) == false then
 	keepgoing = false
       end
       table.remove (descriptions)
-
     else
-
       -- A nested context, revert back to run_contexts.
       if run_contexts (state, example, descriptions, fenv) == false then
         keepgoing = false
       end
-
     end
 
     if examples.after ~= nil then
@@ -300,7 +312,6 @@ end
 
 local M = {
   run         = run,
-  run_example = run_example,
 }
 
 

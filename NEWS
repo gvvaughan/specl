@@ -11,6 +11,10 @@ Specl NEWS - User visible changes.
     capitalised error messages in error matcher argument with Slingshot
     sanity checks.
 
+  - New programmatic `it` function for building example groups and
+    helper functions directly in Lua, whenever YAML starts to get in the
+    way.  See documentation for examples.
+
 ** Incompatible changes:
 
   - `inprocess.capture` returns a `Process`, not a pair of strings
