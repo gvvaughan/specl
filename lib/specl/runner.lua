@@ -149,13 +149,56 @@ end
 --[[ ============= ]]--
 
 
-local run_examples, run_contexts, run
+local run_example, run_examples, run_contexts, run
+
+
+-- Execute an example in a clean new sub-environment; as long as there
+-- are no filters, or the filters for the source line of this definition
+-- or inclusive example pattern is true.
+function run_example (state, definition, descriptions, fenv)
+  local formatter = state.opts.formatter
+  local filters   = state.spec.filters
+  local inclusive = (filters == nil) or (filters[definition.line])
+  local keepgoing = true
+
+  if not inclusive then
+    local source = table.concat (map (strip1st, descriptions))
+    for _, pattern in ipairs (filters.inclusive or {}) do
+      if source:match (pattern) then
+        inclusive = true
+        break
+      end
+    end
+  end
+
+  if inclusive then
+    matchers.init (state)
+
+    setfenv (definition.example, fenv)
+    definition.example ()
+
+    local status = merge ({
+      filename = state.spec.filename,
+      line     = definition.line,
+    }, matchers.status (state))
+    state:accumulator (formatter.expectations (status, descriptions, state.opts))
+
+    if state.opts.fail_fast then
+      for _, expectation in ipairs (status.expectations) do
+        -- don't stop for passing or even failing pending examples
+        if not (expectation.status or expectation.pending) then
+          keepgoing = false
+        end
+      end
+    end
+  end
+
+  return keepgoing
+end
 
 
 -- Run each of EXAMPLES under ENV in order.
 function run_examples (state, examples, descriptions, env)
-  local formatter = state.opts.formatter
-
   local block = function (example, blockenv)
     local fenv   = util.deepcopy (blockenv)
     fenv.expect  = function (...) return matchers.expect  (state, ...) end
@@ -174,54 +217,20 @@ function run_examples (state, examples, descriptions, env)
     local keepgoing = true
     if definition.example then
 
-      -- An example, execute it in a clean new sub-environment; as long
-      -- as there are no filters, or the filters for the source line of
-      -- this definition or inclusive example pattern is true.
-
-      local filters = state.spec.filters
-      local inclusive = (filters == nil) or (filters[definition.line])
-
+      -- An example, execute it.
       table.insert (descriptions, description)
-
-      if not inclusive then
-	local source = table.concat (map (strip1st, descriptions))
-        for _, pattern in ipairs (filters.inclusive or {}) do
-          if source:match (pattern) then
-            inclusive = true
-	    break
-	  end
-	end
+      if run_example (state, definition, descriptions, fenv) == false then
+	keepgoing = false
       end
-
-      if inclusive then
-        matchers.init (state)
-
-        setfenv (definition.example, fenv)
-        definition.example ()
-
-        local status = merge ({
-          filename = state.spec.filename,
-	  line     = definition.line,
-        }, matchers.status (state))
-	state:accumulator (formatter.expectations (status, descriptions, state.opts))
-
-        if state.opts.fail_fast then
-          for _, expectation in ipairs (status.expectations) do
-            -- don't stop for passing or even failing pending examples
-            if not (expectation.status or expectation.pending) then
-              keepgoing = false
-            end
-          end
-        end
-      end
-
       table.remove (descriptions)
 
     else
+
       -- A nested context, revert back to run_contexts.
       if run_contexts (state, example, descriptions, fenv) == false then
         keepgoing = false
       end
+
     end
 
     if examples.after ~= nil then
@@ -290,7 +299,8 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  run       = run,
+  run         = run,
+  run_example = run_example,
 }
 
 
