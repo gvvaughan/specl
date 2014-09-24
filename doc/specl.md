@@ -1475,30 +1475,31 @@ However, that doesn't work when the boiler plate crosses examples:
 What we really want to do here is skip the entire group on systems that
 do not support that particular feature.  We could write a wrapper
 function to call `expect`, and sometimes that's a useful idiom; but
-here, we can use a programmatic `it` inside the outer `describe` group,
-and then wrap the whole example in an `if`, like so:
+here, we can use a programmatic `examples` inside the outer `describe`
+group, and then wrap the whole example in an `if`, like so:
 
 {% highlight lua %}
     - describe system-specific feature:
         if have_feature then
-          it ("diagnoses missing arguments", function ()
+          examples {["it diagnoses missing arguments"] = function ()
             expect (system_specific ()).to_raise "bad argument"
-          end)
-          it ("diagnoses wrong argument types", function ()
+          end}
+          examples {["it diagnoses wrong argument types"] = function ()
             expect (system_specific (false)).to_raise "string expected"
-          end)
+          end}
         end
 {% endhighlight %}
 
-As you can see, we can call `it` with a description string, followed by
-a [thunk], which interact with [formatters](#4-formatters) in precisely
-the same fashion as a separate [YAML] `it` description and example in
-that position would have.
+As you can see, we can call `examples` with a one element table using
+the description string as a key, followed by a [thunk] for a value. A
+programmatic specificiation written this way interacts with
+[formatters](#4-formatters) in precisely the same fashion as a separate
+[YAML] `it` description and example in that position would have done.
 
 For even further simplification of repetitive boiler-plate code you
-can define a function in `spec_helper.lua` that adds a series of
-parameterized examples when called from an example block in any
-spec-file:
+can write the examples calls in a function in your `spec_helper.lua`
+file, which adds that same series of parameterized examples when called
+from an example block in any spec-file:
 
 {% highlight lua %}
     - describe system-specific feature:
@@ -1506,9 +1507,6 @@ spec-file:
           diagnose_badargs (M, "system_specific (string)")
         end
 {% endhighlight %}
-
-Where the `diagnose_badargs` function is defined in `spec_helper.lua`,
-with a series of `it` calls such as those in the previous example above.
 
 
 ## 7. Not Yet Implemented

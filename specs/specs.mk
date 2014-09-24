@@ -32,6 +32,7 @@ specl_SPECS =						\
 	$(srcdir)/specs/inprocess_spec.yaml		\
 	$(srcdir)/specs/loader_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/runner_spec.yaml		\
 	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/should_spec.yaml		\
 	$(srcdir)/specs/specl_spec.yaml			\

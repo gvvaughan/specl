@@ -44,9 +44,9 @@ specify loader:
     - it does expand macros in spec directories:
         modfile = dir:file ("do-macro.lua",
                       "local function do_macro ()",
-                      "  it ('expands macros', function ()",
+                      "  examples {it_expands_macros = function ()",
                       "    expect (error 'oh noes!').to_raise 'oh noes!'",
-                      "  end)",
+                      "  end}",
                       "end",
                       "return {do_macro = do_macro}")
         spec    = dir:file ("do-macro_spec.yaml",
@@ -64,9 +64,9 @@ specify loader:
         helper = dir:file ("spec_helper.lua",
                      "function who () return false end",
                      "function do_macro ()",
-                     "  it ('expands macros', function ()",
+                     "  examples {it_expands_macros = function ()",
                      "    expect (error 'oh noes!').to_raise 'oh noes!'",
-                     "  end)",
+                     "  end}",
                      "end")
     - after:
         helper:remove ()
@@ -115,9 +115,9 @@ specify loader:
     - it does expand macros in spec directories:
         modfile = dir:file ("do-macro.lua",
                       "local function do_macro ()",
-                      "  it ('expands macros', function ()",
+                      "  examples {it_expands_macros = function ()",
                       "    expect (error 'oh noes!').to_raise 'oh noes!'",
-                      "  end)",
+                      "  end}",
                       "end",
                       "return {do_macro = do_macro}")
         spec    = dir:file ("do-macro_spec.yaml",
@@ -202,9 +202,9 @@ specify loader:
         #
         modfile = specdir:file ("do-macro.lua",
                       "local function do_macro ()",
-                      "  it ('expands macros', function ()",
+                      "  examples {it_expands_macros = function ()",
                       "    expect (error 'oh noes!').to_raise 'oh noes!'",
-                      "  end)",
+                      "  end}",
                       "end",
                       "return {do_macro = do_macro}")
         spec    = specdir:file ("do-macro_spec.yaml",

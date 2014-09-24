@@ -210,17 +210,36 @@ function run_examples (state, examples, descriptions, env)
     fenv.expect  = function (...) return matchers.expect  (state, ...) end
     fenv.pending = function (...) return matchers.pending (state, ...) end
 
-    fenv.it = function (description, example)
-      local definition = { example = example, line = line or "unknown"}
+    fenv.examples = function (t)
+      -- FIXME: robust argument type-checking!
+      local description, definition = next (t)
+      if type (definition) == "function" then
+	local example = { example = definition, line = line or "unknown" }
 
-      table.insert (descriptions, "it " .. description)
-      if run_example (state, definition, descriptions, fenv) == false then
-	keepgoing = false
+        table.insert (descriptions, (description:gsub ("_", " ")))
+	if run_example (state, example, descriptions, fenv) == false then
+          keepgoing = false
+	end
+	table.remove (descriptions)
+
+      elseif type (definition) == "table" then
+	local examples = {}
+	for i, example in ipairs (definition) do
+	  k, v = next (example)
+	  examples[i] = { [k:gsub ("_", " ")] = { example = v, line = line or "unknown" } }
+	end
+
+        table.insert (descriptions, (description:gsub ("_", " ")))
+        if run_examples (state, examples, descriptions, fenv) == false then
+          keepgoing = false
+        end
+	table.remove (descriptions)
+
       end
-      table.remove (descriptions)
 
       -- Make sure we don't leak status into the calling or following
-      -- example, since this `it` invocation is from inside `run_example`.
+      -- example, since this `examples` invocation is from inside
+      -- `run_examples`.
       matchers.init (state)
     end
 
