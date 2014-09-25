@@ -49,6 +49,12 @@ Specl NEWS - User visible changes.
       expect (capture (function () print "stdout" end)).
         not_to_contain_error "stderr"
 
+  - After loading system modules it depends on, Specl removes them
+    from the Lua module cache so that other versions of those same
+    modules (yaml, posix, posix.sys) can use Specl to check their own
+    behaviours by loading the to-be-checked versions from
+    `spec_helper.lua`.
+
 
 * Noteworthy changes in release 12 (2014-04-25) [stable]
 
