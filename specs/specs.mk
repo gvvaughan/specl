@@ -22,7 +22,7 @@
 ## ------ ##
 
 SPECL     = $(srcdir)/bin/specl
-SPECL_ENV = SPECL=$(SPECL)
+SPECL_ENV += SPECL=$(SPECL)
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\

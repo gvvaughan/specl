@@ -1,11 +1,19 @@
 local hell = require "specl.shell"
 local std  = require "specl.std"
 
-math.randomseed (os.time ())
+local top_srcdir = os.getenv "top_srcdir" or "."
+local top_builddir = os.getenv "top_builddir" or "."
 
-package.path = std.package.normalize ("lib/?.lua", package.path)
+package.path = std.package.normalize (
+                 top_builddir .. "/lib/?.lua",
+                 top_srcdir .. "/lib/?.lua",
+                 package.path
+               )
 
 local Object = std.Object
+
+
+math.randomseed (os.time ())
 
 function spawn_specl (params)
   local SPECL = os.getenv ("SPECL") or "bin/specl"
