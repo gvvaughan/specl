@@ -20,6 +20,19 @@ Specl NEWS - User visible changes.
     helper functions directly in Lua, whenever YAML starts to get in the
     way.  See documentation for examples.
 
+  - New `specl.badargs` module provides `format` to generate standard
+    argument error messages that can be passed to matchers to ensure
+    correct error message formatting:
+
+        expect (posix.write ()).to_raise (format ("write", 1, "int"))
+
+    And `diagnose`, which writes a full set of expectations to check all
+    missing, extraneous and badly typed arguments are diagnosed
+    correctly:
+
+        - context with bad arguments:
+            badargs.diagnose (posix.write "(int, string)")
+
 ** Incompatible changes:
 
   - `inprocess.capture` returns a `Process`, not a pair of strings

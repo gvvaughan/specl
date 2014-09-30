@@ -52,6 +52,7 @@ dist_bin_SCRIPTS += bin/specl
 specldir = $(luadir)/specl
 
 dist_specl_DATA =					\
+	lib/specl/badargs.lua				\
 	lib/specl/color.lua				\
 	lib/specl/compat.lua				\
 	lib/specl/inprocess.lua				\
