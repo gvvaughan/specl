@@ -23,8 +23,8 @@ local macro = require "macro"
 local yaml  = require "yaml"
 
 from "specl.compat" import loadstring
-from "specl.std"    import io.catfile, package.dirsep, package.pathsep,
-                      package.path_mark, string.escape_pattern, string.slurp
+from "specl.std"    import io.catfile, io.dirname, io.slurp, package.dirsep,
+  package.normalize, package.pathsep, package.path_mark, string.escape_pattern
 from "specl.util"   import nop
 
 
@@ -294,10 +294,10 @@ local parser_mt = {
 
 -- Parser object constructor.
 local function Parser (filename, s, unicode)
-  local dir  = std.io.dirname (filename)
+  local dir  = dirname (filename)
 
   -- Add this spec-file directory to the macro-expanded spec_path list.
-  spec_path = std.package.normalize (catfile (dir, path_mark .. ".lua"), spec_path)
+  spec_path = normalize (catfile (dir, path_mark .. ".lua"), spec_path)
 
   local object = {
     unicode  = unicode,

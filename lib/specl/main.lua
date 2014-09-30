@@ -21,9 +21,10 @@
 local loader  = require "specl.loader"
 local runner  = require "specl.runner"
 
-from "specl.std"  import Object, table.clone, table.merge
+from "specl.std"  import object, optparse, io.slurp, table.clone, table.merge
 from "specl.util" import files, gettimeofday, have_posix, map
 
+local Object = object {}
 
 -- Make a shallow copy of the pristine global environment, so that the
 -- future state of the Specl environment is not exposed to spec files.
@@ -116,7 +117,7 @@ end
 -- Called by process_args() to concatenate YAML formatted
 -- specifications in each <arg>
 local function compile (self, arg)
-  local s, errmsg = std.string.slurp ()
+  local s, errmsg = slurp ()
   if errmsg ~= nil then
     io.stderr:write (errmsg .. "\n")
     os.exit (1)
@@ -189,7 +190,7 @@ end
 -- Execute this program.
 local function execute (self)
   -- Parse command line options.
-  local parser = require "specl.optparse" (optspec)
+  local parser = optparse (optspec)
 
   parser:on ("color", parser.required, parser.boolean)
   parser:on ({"f", "format", "formatter"},

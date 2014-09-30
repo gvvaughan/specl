@@ -21,9 +21,10 @@
 
 from "specl.compat" import setfenv, xpcall
 from "specl.shell"  import Process
-from "specl.std"    import Object, func.case, table.clone, table.merge
+from "specl.std"    import object, functional.case, table.clone, table.merge
 from "specl.util"   import nop, type_check
 
+local Object = object {}
 
 local StrFile = Object {
   _type = "StrFile",
@@ -175,7 +176,7 @@ local function env_init (env, stdin)
     stderr  = perr,
 
     input   = function (h)
-                if Object.type (h) == "StrFile" then
+                if object.type (h) == "StrFile" then
                   pin = h
                 elseif h then
                   pin = io.input (h)
@@ -186,7 +187,7 @@ local function env_init (env, stdin)
     output  = function (h)
 	        if h ~= nil then
 		  if io.type (pout) ~= "closed file" then pout:flush () end
-                  if Object.type (h) == "StrFile" then
+                  if object.type (h) == "StrFile" then
                     pout = h
                   else
                     pout = io.output (h)
@@ -196,7 +197,7 @@ local function env_init (env, stdin)
               end,
 
     type    = function (h)
-                if Object.type (h) == "StrFile" then
+                if object.type (h) == "StrFile" then
                   return "file" -- virtual stdio streams cannot be closed
                 end
                 return io.type (h)

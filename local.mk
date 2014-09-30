@@ -97,7 +97,6 @@ bin_specl_SOURCES =					\
 	lib/specl/loader.lua				\
 	lib/specl/main.lua				\
 	lib/specl/matchers.lua				\
-        lib/specl/optparse.lua				\
 	lib/specl/runner.lua				\
 	lib/specl/shell.lua				\
 	lib/specl/std.lua				\

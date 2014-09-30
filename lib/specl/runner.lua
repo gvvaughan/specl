@@ -23,7 +23,7 @@ local compat     = require "specl.compat"
 local matchers   = require "specl.matchers"
 
 from "specl.compat" import loadstring, setfenv
-from "specl.std"    import string.slurp, string.split, table.merge
+from "specl.std"    import io.slurp, string.split, table.merge
 from "specl.util"   import map, strip1st
 
 

@@ -10,7 +10,8 @@ package.path = std.package.normalize (
                  package.path
                )
 
-local Object = std.Object
+local object = std.object
+local Object = object {}
 
 
 math.randomseed (os.time ())
@@ -176,7 +177,7 @@ do
   -- Matches if the type of <actual> is <expect>.
   matchers.instantiate_a = Matcher {
     function (self, actual, expect)
-      return (Object.type (actual) == expect)
+      return (object.type (actual) == expect)
     end,
 
     format_expect = function (self, expect)
@@ -184,7 +185,7 @@ do
     end,
 
     format_actual = function (self, actual)
-      return " a " .. Object.type (actual)
+      return " a " .. object.type (actual)
     end,
   }
 end

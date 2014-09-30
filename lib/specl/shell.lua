@@ -21,8 +21,10 @@
 -- Additional commands useful for writing command-line specs.
 
 
-from "specl.std"  import Object, string.escape_pattern
+from "specl.std"  import object, string.escape_pattern
 from "specl.util" import type_check
+
+local Object = object {}
 
 
 local function shell_quote (s)
@@ -38,7 +40,7 @@ local Command = Object {
     type_check ("Command",
       {self, params}, {{"Command", "table"}, {"string", "table"}})
 
-    local kind = Object.type (params)
+    local kind = object.type (params)
     if kind == "string" then params = {params} end
 
     local cmd = table.concat (params, " ")
@@ -46,7 +48,7 @@ local Command = Object {
 
     -- Flatten the command itself to a string.
     self.cmd = cmd
-    if Object.type (cmd) == "table" then
+    if object.type (cmd) == "table" then
       -- Subshell is required to make sure redirections are captured,
       -- and environment is already set in time for embedded references.
       self.cmd = table.concat (cmd, " ")
@@ -85,7 +87,7 @@ local Process = Object {
 -- Run a command in a subprocess
 local function spawn (o)
   type_check ("spawn", {o}, {{"string", "table", "Command"}})
-  if Object.type (o) ~= "Command" then o = Command (o) end
+  if object.type (o) ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.
   local fout = os.tmpname ()

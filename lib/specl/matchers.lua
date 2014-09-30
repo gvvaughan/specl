@@ -21,9 +21,11 @@
 local color = require "specl.color"
 
 from "specl.util" import type_check
-from "specl.std"  import Object, string.chomp, string.escape_pattern,
+from "specl.std"  import object, string.chomp, string.escape_pattern,
                     string.prettytostring, string.tostring, table.clone,
                     table.empty, table.merge, table.size, table.totable
+
+local Object = object {}
 
 local M = {}
 
@@ -214,7 +216,7 @@ local function objcmp (o1, o2)
   if type (o1) ~= "table" or type (o2) ~= "table" then return false end
 
   -- cache extended types
-  local type1, type2 = Object.type (o1), Object.type (o2)
+  local type1, type2 = object.type (o1), object.type (o2)
 
   -- different types are unequal
   if type1 ~= type2 then return false end
@@ -384,8 +386,8 @@ matchers.contain = Matcher {
                 self:format_alternatives ("a permutation of", expected, actual, ...) ..
                 "but got" .. self:format_actual (actual, expect, ...)
 
-    if Object.type (actual) ~= "table" then actual = totable (actual) end
-    if Object.type (expected) ~= "table" then expected = totable (expected) end
+    if object.type (actual) ~= "table" then actual = totable (actual) end
+    if object.type (expected) ~= "table" then expected = totable (expected) end
 
     if size (actual) == size (expected) then
       -- first, check whether expected values are a permutation of actual keys
@@ -425,7 +427,7 @@ matchers.contain = Matcher {
     if type (expect) == "string" and type (actual) == "string" then
       return " string containing " .. q(expect) .. ", "
     else
-      return " " .. Object.type (actual) .. " containing " .. q(expect) .. ", "
+      return " " .. object.type (actual) .. " containing " .. q(expect) .. ", "
     end
   end,
 
@@ -435,7 +437,7 @@ matchers.contain = Matcher {
     else
       alternatives = concat (alternatives, adaptor, ":quoted")
     end
-    return " " .. Object.type (actual) .. " containing " ..
+    return " " .. object.type (actual) .. " containing " ..
            adaptor .. " " .. alternatives .. ", "
   end,
 }
