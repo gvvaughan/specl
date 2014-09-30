@@ -1,0 +1,41 @@
+#!/bin/sh
+SH=--[[						# -*- mode: lua; -*-
+# If LUA is not set, search PATH for something suitable.
+test -n "$LUA" || {
+  # Check that the supplied binary is executable and returns a compatible
+  # Lua version number.
+  func_vercheck ()
+  {
+    test -x "$1" && {
+      case `$1 -e 'print (_VERSION)' 2>/dev/null` in
+        *"Lua "5\.[12]*) LUA=$1 ;;
+      esac
+    }
+  }
+
+  save_IFS="$IFS"
+  LUA=
+  for x in lua lua5.2 lua5.1; do
+    IFS=:
+    for dir in $PATH; do
+      IFS="$save_IFS"
+      func_vercheck "$dir/$x"
+      test -n "$LUA" && break
+    done
+    IFS="$save_IFS"
+    test -n "$LUA" && break
+  done
+}
+
+# We don't want user environment settings changing the behaviour of this
+# script:
+LUA_INIT=
+export LUA_INIT
+LUA_INIT_5_2=
+export LUA_INIT_5_2=
+
+# Reexecute using the interpreter suppiled in LUA, or found above.
+exec "$LUA" "$0" "$@"
+]]SH
+
+require "specl.main" (arg):execute ()

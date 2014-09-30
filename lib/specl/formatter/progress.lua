@@ -20,8 +20,10 @@
 
 
 local color = require "specl.color"
+local util  = require "specl.util"
 
-from "specl.util" import map, nop, strip1st, timesince
+local map, nop, strip1st, timesince =
+  util.map, util.nop, util.strip1st, util.timesince
 
 
 -- Color writing.

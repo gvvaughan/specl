@@ -19,9 +19,10 @@
 -- MA 02111-1301, USA.
 
 
-from "specl.std" import object
-
+local std = require "specl.std"
 local have_posix, posix = pcall (require, "posix")
+
+local object = std.object
 
 
 -- A null operation function.

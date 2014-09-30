@@ -20,8 +20,10 @@
 
 
 local color = require "specl.color"
+local util  = require "specl.util"
 
-from "specl.util" import indent, map, nop, strip1st, timesince
+local indent, map, nop, strip1st, timesince =
+  util.indent, util.map, util.nop, util.strip1st, util.timesince
 
 
 -- Color printing.

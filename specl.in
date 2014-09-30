@@ -1,0 +1,42 @@
+#! /bin/sh
+# @configure_input@
+
+# Environment setting wrapper for uninstalled specl.
+# Written by Gary V. Vaughan, 2013
+#
+# Copyright (C) 2013-2014 Gary V. Vaughan
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Be Bourne compatible
+if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
+  emulate sh
+  NULLCMD=:
+  # Zsh 3.x and 4.x performs word splitting on ${1+"$@"}, which
+  # is contrary to our usage.  Disable this feature.
+  alias -g '${1+"$@"}'='"$@"'
+  setopt NO_GLOB_SUBST
+else
+  case `(set -o) 2>/dev/null` in *posix*) set -o posix;; esac
+fi
+
+LUA_PATH="\
+@abs_top_builddir@/lib/?.lua;\
+@abs_top_srcdir@/lib/?.lua;\
+${LUA_PATH+$LUA_PATH;}\
+;"
+export LUA_PATH
+
+exec "@abs_top_srcdir@/bin/specl" \
+      ${1+"$@"}
+exit 1

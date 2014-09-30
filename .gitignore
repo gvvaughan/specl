@@ -10,12 +10,12 @@
 /Makefile.in
 /README
 /aclocal.m4
-/bin
 /config.h
 /config.h.in
 /config.log
 /config.status
 /configure
+/specl
 /specl-*.rockspec
 /specl-*.tar.gz
 /stamp-h1
@@ -35,5 +35,6 @@ build-aux/rockspecs.mk
 build-aux/sanity.mk
 build-aux/specl.mk
 build-aux/update-copyright
+lib/specl/version.lua
 m4/
 travis.yml.in

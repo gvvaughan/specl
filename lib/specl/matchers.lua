@@ -19,11 +19,15 @@
 -- MA 02111-1301, USA.
 
 local color = require "specl.color"
+local std   = require "specl.std"
+local util  = require "specl.util"
 
-from "specl.util" import type_check
-from "specl.std"  import object, string.chomp, string.escape_pattern,
-                    string.prettytostring, string.tostring, table.clone,
-                    table.empty, table.merge, table.size, table.totable
+local object = std.object
+local chomp, escape_pattern, prettytostring, tostring =
+  std.string.chomp, std.string.escape_pattern, std.string.prettytostring, std.string.tostring
+local clone, empty, merge, size, totable =
+  std.table.clone, std.table.empty, std.table.merge, std.table.size, std.table.totable
+local type_check = util.type_check
 
 local Object = object {}
 
@@ -492,7 +496,8 @@ local function expect (state, ok, actual)
           message = message and ("not " .. message)
         end
 
-	from state import expectations, ispending, stats
+	local expectations, ispending, stats =
+	  state.expectations, state.ispending, state.stats
 
         if ispending ~= nil then
           -- stats.pend is updated by pending ()

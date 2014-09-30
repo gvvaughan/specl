@@ -20,9 +20,12 @@
 
 -- Additional commands useful for writing command-line specs.
 
+local std  = require "specl.std"
+local util = require "specl.util"
 
-from "specl.std"  import object, string.escape_pattern
-from "specl.util" import type_check
+local object, escape_pattern = std.object, std.string.escape_pattern
+local type_check = util.type_check
+
 
 local Object = object {}
 

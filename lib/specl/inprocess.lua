@@ -19,10 +19,17 @@
 -- MA 02111-1301, USA.
 
 
-from "specl.compat" import setfenv, xpcall
-from "specl.shell"  import Process
-from "specl.std"    import object, functional.case, table.clone, table.merge
-from "specl.util"   import nop, type_check
+local compat = require "specl.compat"
+local shell  = require "specl.shell"
+local std    = require "specl.std"
+local util   = require "specl.util"
+
+local setfenv, xpcall = compat.setfenv, compat.xpcall
+local Process = shell.Process
+local case, object = std.functional.case, std.object
+local clone, merge = std.table.clone, std.table.merge
+local nop, type_check = util.nop, util.type_check
+
 
 local Object = object {}
 

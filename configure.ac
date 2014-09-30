@@ -40,4 +40,6 @@ AC_PROG_SED
 dnl Generate output files
 SS_CONFIG_TRAVIS
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([specl], [chmod 555 specl])
+AC_CONFIG_FILES([lib/specl/version.lua], [chmod 444 lib/specl/version.lua])
 AC_OUTPUT

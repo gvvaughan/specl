@@ -21,7 +21,7 @@
 ## Specs. ##
 ## ------ ##
 
-SPECL     = $(srcdir)/bin/specl
+SPECL     = $(top_builddir)/specl
 SPECL_ENV += SPECL=$(SPECL)
 
 specl_SPECS =						\

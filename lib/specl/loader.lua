@@ -22,10 +22,16 @@
 local macro = require "macro"
 local yaml  = require "yaml"
 
-from "specl.compat" import loadstring
-from "specl.std"    import io.catfile, io.dirname, io.slurp, package.dirsep,
-  package.normalize, package.pathsep, package.path_mark, string.escape_pattern
-from "specl.util"   import nop
+local compat = require "specl.compat"
+local std    = require "specl.std"
+local util   = require "specl.util"
+
+local loadstring = compat.loadstring
+local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
+local dirsep, normalize, pathsep, path_mark =
+  std.package.dirsep, std.package.normalize, std.package.pathsep, std.package.path_mark
+local escape_pattern = std.string.escape_pattern
+local nop = util.nop
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"

@@ -19,12 +19,15 @@
 -- MA 02111-1301, USA.
 
 
-local compat     = require "specl.compat"
-local matchers   = require "specl.matchers"
+local compat   = require "specl.compat"
+local matchers = require "specl.matchers"
+local std      = require "specl.std"
+local util     = require "specl.util"
 
-from "specl.compat" import loadstring, setfenv
-from "specl.std"    import io.slurp, string.split, table.merge
-from "specl.util"   import map, strip1st
+local loadstring, setfenv = compat.loadstring, compat.setfenv
+local slurp, split, merge =
+  std.io.slurp, std.string.split, std.table.merge
+local map, strip1st = util.map, util.strip1st
 
 
 --[[ ================= ]]--

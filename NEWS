@@ -29,6 +29,13 @@ Specl NEWS - User visible changes.
     path, rather than carrying its own copies of parts of stdlib it wants
     to use.
 
+  - Specl now installs as a selection of library files (in the module
+    subdirectory `specl`), and a thin wrapper script that sets up the
+    execution environment and then calls `specl.main (arg):execute ()`.
+    This simplifies debugging, and remove all the infrastructure for
+    expanding `from` macros, and concatenating the resulting sources, as
+    well as allowing piece-meal loading of specl modules.
+
 ** Bug fixes:
 
   - Enhanced resolution timers now also work with luaposix > 31.
