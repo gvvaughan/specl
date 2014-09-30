@@ -15,7 +15,7 @@ specify inprocess:
       write  = io.write,
     }
 
-    Base = require "specl.std".Object {
+    Base = require "specl.std".object {
       _type = "Main",
 
       _init = function (self, arg)

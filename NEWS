@@ -25,6 +25,10 @@ Specl NEWS - User visible changes.
     and the call results. Call results are still available in the array
     part of the returned `Process`.
 
+  - Specl now requires latest stdlib v40 to be installed on the module
+    path, rather than carrying its own copies of parts of stdlib it wants
+    to use.
+
 ** Bug fixes:
 
   - Enhanced resolution timers now also work with luaposix > 31.
