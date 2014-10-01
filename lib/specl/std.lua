@@ -1,8 +1,12 @@
 --- Load Lua stdlib into `specl.std` namespace.
 
--- Handle to the stdlib modules.
-_DEBUG = false
+-- First handle debug_init and _DEBUG, being careful not to affect
+-- DEBUG disposition of subsequent example loaders for std.debug_init!
+local init = require "std.debug_init"
+init._DEBUG = false
 
+
+-- Handle to the stdlib modules.
 local M = require "std"
 
 -- Check minimum version requirement.
