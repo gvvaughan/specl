@@ -44,7 +44,7 @@ end
 --[[ ================= ]]--
 
 -- Don't prevent examples from loading a different stdlib.
-map (function (k) package.loaded[k] = nil end, pairs,
+map (function (e) package.loaded[e] = nil end, M.list.elems,
      filter (function (k) return (k == "std") or (k:match "^std%.") end, pairs,
              package.loaded))
 
