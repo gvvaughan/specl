@@ -17,6 +17,7 @@
 /configure
 /specl
 /specl-*.rockspec
+!specl-git-*.rockspec
 /specl-*.tar.gz
 /stamp-h1
 GNUmakefile

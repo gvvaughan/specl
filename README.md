@@ -28,7 +28,7 @@ Or from the rockspec inside the release tarball:
 To install current git master from [GitHub][specl] (for testing):
 
     luarocks install \
-      https://raw.githubusercontent.com/gvvaughan/specl/release/specl-git-1.rockspec
+      https://raw.githubusercontent.com/gvvaughan/specl/master/specl-git-1.rockspec
 
 To install without [LuaRocks][], clone the sources from the
 [repository][specl], and then run the following commands:
