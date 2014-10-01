@@ -37,8 +37,40 @@ map (function (n) M[n] = require ("std." .. n) end, elems, {
 })
 
 
+
+--[[ ===================== ]]--
+--[[ Import from "Future". ]]--
+--[[ ===================== ]]--
+
+
+-- Patch up some holes in stdlib v40 here, mostly to make the transition
+-- to v41 less fiddly later on.
+
+
+-- Version in stdlib v40 is hoplessly b0rked :(
+M.functional.bind = function (fn, argt)
+  return function (...)
+    local arg, i = {}, 1
+    for i, v in pairs (argt) do arg[i] = v end
+    for _, v in ipairs {...} do
+      while arg[i] ~= nil do i = i + 1 end
+      arg[i] = v
+    end
+    return fn (unpack (arg))
+  end
+end
+
+
+-- Not implemented in stdlib v40
 M.io.dirname = M.io.dirname or function (path)
   return path:gsub (M.io.catfile ("", "[^", "]*$"), "")
+end
+
+
+-- Not implemented in stdlib v40
+M.table.len = M.table.len or function (t)
+  local m = (getmetatable (t) or {}).__len
+  return type (m) == "function" and m (t) or #t
 end
 
 
