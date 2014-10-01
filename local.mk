@@ -49,14 +49,12 @@ include specs/specs.mk
 
 dist_bin_SCRIPTS += bin/specl
 
-luaspecldir = $(luadir)/specl
+specldir = $(luadir)/specl
 
-dist_luaspecl_DATA =					\
+dist_specl_DATA =					\
+	lib/specl/badargs.lua				\
 	lib/specl/color.lua				\
 	lib/specl/compat.lua				\
-	lib/specl/formatter/progress.lua		\
-	lib/specl/formatter/report.lua			\
-	lib/specl/formatter/tap.lua			\
 	lib/specl/inprocess.lua				\
 	lib/specl/loader.lua				\
 	lib/specl/main.lua				\
@@ -66,6 +64,14 @@ dist_luaspecl_DATA =					\
 	lib/specl/std.lua				\
 	lib/specl/util.lua				\
 	lib/specl/version.lua				\
+	$(NOTHING_ELSE)
+
+formatterdir = $(specldir)/formatter
+
+dist_formatter_DATA =					\
+	lib/specl/formatter/progress.lua		\
+	lib/specl/formatter/report.lua			\
+	lib/specl/formatter/tap.lua			\
 	$(NOTHING_ELSE)
 
 man_MANS += doc/specl.1
