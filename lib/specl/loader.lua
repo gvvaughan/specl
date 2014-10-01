@@ -61,7 +61,14 @@ local spec_path = ""
 -- @return compiled module as a function, or error message if not found
 local function expandmacros (name)
   local errbuf = {}
-  for m in spec_path:gmatch ("([^" .. escape_pattern (pathsep) .. "]+)") do
+
+  -- Use spec_path by default, but also package.path for specl submodules.
+  local search_path = spec_path
+  if name:match "^specl%." then
+    search_path = search_path .. pathsep .. package.path
+  end
+
+  for m in search_path:gmatch ("([^" .. escape_pattern (pathsep) .. "]+)") do
     local path = m:gsub (escape_pattern (path_mark), (name:gsub ("%.", dirsep)))
     local fh, err = io.open (path, "r")
     if fh == nil then
