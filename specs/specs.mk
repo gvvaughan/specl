@@ -21,8 +21,8 @@
 ## Specs. ##
 ## ------ ##
 
-SPECL     = $(srcdir)/bin/specl
-SPECL_ENV = SPECL=$(SPECL)
+SPECL     = $(top_builddir)/specl
+SPECL_ENV += SPECL=$(SPECL)
 
 specl_SPECS =						\
 	$(srcdir)/specs/environment_spec.yaml		\
@@ -30,7 +30,9 @@ specl_SPECS =						\
 	$(srcdir)/specs/formatter/progress_spec.yaml	\
 	$(srcdir)/specs/formatter/report_spec.yaml	\
 	$(srcdir)/specs/inprocess_spec.yaml		\
+	$(srcdir)/specs/loader_spec.yaml		\
 	$(srcdir)/specs/matchers_spec.yaml		\
+	$(srcdir)/specs/runner_spec.yaml		\
 	$(srcdir)/specs/shell_spec.yaml			\
 	$(srcdir)/specs/should_spec.yaml		\
 	$(srcdir)/specs/specl_spec.yaml			\

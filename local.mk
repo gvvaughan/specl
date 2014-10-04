@@ -17,11 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+## ------------ ##
+## Environment. ##
+## ------------ ##
+
+std_path = $(abs_srcdir)/lib/?.lua
+LUA_ENV  = LUA_PATH="$(std_path);$(LUA_PATH)"
+
+
 ## ---------- ##
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = fa462e078db949dd56abc2af582757ea
+old_NEWS_hash = bb7c6d94d56ccf2920aee55c999ffbe8
 
 update_copyright_env = \
 	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
@@ -33,88 +41,61 @@ update_copyright_env = \
 ## Declarations. ##
 ## ------------- ##
 
-dist_noinst_SCRIPTS	=
-dist_noinst_DATA	=
-
 include specs/specs.mk
 
 ## ------ ##
 ## Build. ##
 ## ------ ##
 
-LARCH     = $(srcdir)/build-aux/larch
-
-LUAM_OPTS = -llarch.from -d
-LUAM_ENV  = LUA_PATH="$(srcdir)/lib/?.lua;$(LUA_PATH)"
-
-# These files are distributed in $(srcdir), and we need to be careful
-# not to regenerate them unnecessarily, as that triggers rebuilds of
-# dependers that might require tools not installed on the build machine.
-
-$(srcdir)/bin/specl: $(dist_noinst_DATA)
-	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
-	test -d "$$d" || $(MKDIR_P) "$$d"
-	$(AM_V_GEN)$(LARCH) -e 'require "specl.main" (arg):execute ()' $(bin_specl_SOURCES) \
-	| sed							\
-	  -e 's|@PACKAGE_BUGREPORT''@|$(PACKAGE_BUGREPORT)|g'	\
-	  -e 's|@PACKAGE_NAME''@|$(PACKAGE_NAME)|g'		\
-	  -e 's|@VERSION''@|$(VERSION)|g' > '$@T'
-	$(AM_V_at)$(LUAM_ENV) $(LUAM) $(LUAM_OPTS) '$@T' > '$@'
-	$(AM_V_at)rm -f '$@T'
-	$(AM_V_at)chmod 755 '$@'
-
-$(srcdir)/doc/specl.1: $(srcdir)/bin/specl
-	@d=`echo '$@' |sed 's|/[^/]*$$||'`;			\
-	test -d "$$d" || $(MKDIR_P) "$$d"
-## Exit gracefully if specl.1 is not writeable, such as during distcheck!
-	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
-	then						\
-	  $(LUAM_ENV)					\
-	  builddir='$(builddir)'			\
-	  $(HELP2MAN)					\
-	    '--output=$@'				\
-	    '--no-info'					\
-	    '--name=Specl'				\
-	    $(srcdir)/bin/specl;			\
-	fi
-
-
-## ------------- ##
-## Installation. ##
-## ------------- ##
-
-man_MANS += doc/specl.1
-
 dist_bin_SCRIPTS += bin/specl
 
-bin_specl_SOURCES =					\
+specldir = $(luadir)/specl
+
+dist_specl_DATA =					\
+	lib/specl/badargs.lua				\
 	lib/specl/color.lua				\
 	lib/specl/compat.lua				\
-	lib/specl/formatter/progress.lua		\
-	lib/specl/formatter/report.lua			\
-	lib/specl/formatter/tap.lua			\
 	lib/specl/inprocess.lua				\
 	lib/specl/loader.lua				\
 	lib/specl/main.lua				\
 	lib/specl/matchers.lua				\
-        lib/specl/optparse.lua				\
 	lib/specl/runner.lua				\
 	lib/specl/shell.lua				\
 	lib/specl/std.lua				\
 	lib/specl/util.lua				\
+	lib/specl/version.lua				\
 	$(NOTHING_ELSE)
 
-dist_noinst_DATA += $(bin_specl_SOURCES)
+formatterdir = $(specldir)/formatter
+
+dist_formatter_DATA =					\
+	lib/specl/formatter/progress.lua		\
+	lib/specl/formatter/report.lua			\
+	lib/specl/formatter/tap.lua			\
+	$(NOTHING_ELSE)
+
+man_MANS += doc/specl.1
+
+$(srcdir)/doc/specl.1: $(srcdir)/specl
+	@d=`echo '$@' |sed 's|/[^/]*$$||'`;		\
+	test -d "$$d" || $(MKDIR_P) "$$d"
+## Exit gracefully if specl.1 is not writeable, such as during distcheck!
+	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; \
+	then						\
+	  $(HELP2MAN)					\
+	    '--output=$@'				\
+	    '--no-info'					\
+	    '--name=Specl'				\
+	    $(srcdir)/specl;				\
+	fi
+
+## Use a builtin rockspec build with root at $(srcdir)/lib.
+mkrockspecs_args = --module-dir $(srcdir)/lib
+
 
 ## ------------- ##
 ## Distribution. ##
 ## ------------- ##
-
-dist_noinst_SCRIPTS += build-aux/larch
-
-dist_noinst_DATA +=					\
-	lib/larch/from.lua				\
-	$(NOTHING_ELSE)
 
 EXTRA_DIST +=						\
 	doc/specl.1					\
@@ -124,10 +105,6 @@ EXTRA_DIST +=						\
 ## ------------ ##
 ## Maintenance. ##
 ## ------------ ##
-
-CLEANFILES +=						\
-	bin/specl					\
-	$(NOTHING_ELSE)
 
 DISTCLEANFILES +=					\
 	doc/specl.1					\

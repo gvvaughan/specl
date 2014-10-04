@@ -1,9 +1,20 @@
 local hell = require "specl.shell"
 local std  = require "specl.std"
 
-package.path = std.package.normalize ("lib/?.lua", package.path)
+local top_srcdir = os.getenv "top_srcdir" or "."
+local top_builddir = os.getenv "top_builddir" or "."
 
-local Object = std.Object
+package.path = std.package.normalize (
+                 top_builddir .. "/lib/?.lua",
+                 top_srcdir .. "/lib/?.lua",
+                 package.path
+               )
+
+local object = std.object
+local Object = object {}
+
+
+math.randomseed (os.time ())
 
 function spawn_specl (params)
   local SPECL = os.getenv ("SPECL") or "bin/specl"
@@ -71,15 +82,37 @@ end
 --[[ ================ ]]--
 
 
+TMPDIR = os.getenv "TMPDIR" or os.getenv "TMP" or "/tmp"
+
+
+local function append (path, ...)
+  local n = select ("#", ...)
+  if n > 0 then
+    local fh = io.open (path, "a")
+    std.io.writelines (fh, ...)
+    fh:close ()
+  end
+  return n
+end
+
+
+-- Create a temporary file.
+-- @usage
+--   h = Tmpfile ()        -- empty generated filename
+--   h = Tmpfile (content) -- save *content* to generated filename
+--   h = Tmpfile (name, line, line, line) -- write *line*s to *name*
 Tmpfile = Object {
   _type = "Tmpfile",
 
-  _init = function (self, content)
-    self.path = os.tmpname ()
-    if type (content) == "string" then
-      local fh = io.open (self.path, "w")
-      fh:write (content)
-      fh:close ()
+  path = nil,
+
+  _init = function (self, path, ...)
+    if select ("#", ...) == 0 then
+      self.path = os.tmpname ()
+      append (self.path, path, ...)
+    else
+      self.path = path
+      append (path, ...)
     end
     return self
   end,
@@ -92,14 +125,39 @@ Tmpfile = Object {
     return self.path:gsub (".*/", "")
   end,
 
-  append = function (self, s)
-    local fh = io.open (self.path, "a")
-    fh:write (s)
-    fh:close ()
+  append = function (self, ...)
+    return append (self.path, ...)
   end,
 
   remove = function (self)
-    os.remove (self.path)
+    return os.remove (self.path)
+  end,
+}
+
+
+Tmpdir = Object {
+  _type = "Tmpdir",
+
+  tmpdir = std.io.catfile (TMPDIR, "specl_" .. math.random (65536)),
+
+  path = nil,
+
+  _init = function (self, dirname)
+    self.path = dirname or self.tmpdir
+    os.execute ("mkdir " .. self.path)
+    return self
+  end,
+
+  file = function (self, name, ...)
+    return Tmpfile (std.io.catfile (self.path, name), ...)
+  end,
+
+  subdir = function (self, name)
+    return Tmpdir (std.io.catfile (self.path, name))
+  end,
+
+  remove = function (self)
+    return os.remove (self.path)
   end,
 }
 
@@ -119,7 +177,7 @@ do
   -- Matches if the type of <actual> is <expect>.
   matchers.instantiate_a = Matcher {
     function (self, actual, expect)
-      return (Object.type (actual) == expect)
+      return (object.type (actual) == expect)
     end,
 
     format_expect = function (self, expect)
@@ -127,7 +185,7 @@ do
     end,
 
     format_actual = function (self, actual)
-      return " a " .. Object.type (actual)
+      return " a " .. object.type (actual)
     end,
   }
 end

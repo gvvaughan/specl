@@ -11,7 +11,5 @@ and suggestions.
 
  * Gary V. Vaughan <gary@gnu.org>:
    Designed and implemented Specl.
- * Reuben Thomas <rrt@sc3d.org>:
-   Wrote all of the specl/std.lua function for lua-stdlib.
  * François Perrad <francois.perrad@gadz.org>:
    Contributed specl/formatters/tap.lua.

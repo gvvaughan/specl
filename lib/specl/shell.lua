@@ -20,9 +20,14 @@
 
 -- Additional commands useful for writing command-line specs.
 
+local std  = require "specl.std"
+local util = require "specl.util"
 
-from "specl.std"  import Object, string.escape_pattern
-from "specl.util" import type_check
+local object, escape_pattern = std.object, std.string.escape_pattern
+local type_check = util.type_check
+
+
+local Object = object {}
 
 
 local function shell_quote (s)
@@ -38,7 +43,7 @@ local Command = Object {
     type_check ("Command",
       {self, params}, {{"Command", "table"}, {"string", "table"}})
 
-    local kind = Object.type (params)
+    local kind = object.type (params)
     if kind == "string" then params = {params} end
 
     local cmd = table.concat (params, " ")
@@ -46,7 +51,7 @@ local Command = Object {
 
     -- Flatten the command itself to a string.
     self.cmd = cmd
-    if Object.type (cmd) == "table" then
+    if object.type (cmd) == "table" then
       -- Subshell is required to make sure redirections are captured,
       -- and environment is already set in time for embedded references.
       self.cmd = table.concat (cmd, " ")
@@ -85,7 +90,7 @@ local Process = Object {
 -- Run a command in a subprocess
 local function spawn (o)
   type_check ("spawn", {o}, {{"string", "table", "Command"}})
-  if Object.type (o) ~= "Command" then o = Command (o) end
+  if object.type (o) ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.
   local fout = os.tmpname ()
@@ -227,7 +232,7 @@ do
   -- Matches if the output of a process contains <expect>.
   matchers.contain_output = ProcessMatcher {
     function (self, actual, expect)
-      return (string.match (actual.output, escape_pattern (expect)) ~= nil)
+      return (actual.output or ""):match (escape_pattern (expect)) ~= nil
     end,
 
     expecting = " output containing:", but_got_output,
@@ -237,7 +242,8 @@ do
   -- Matches if the process exits normally with output containing <expect>
   matchers.succeed_while_containing = ProcessMatcher {
     function (self, actual, expect)
-      return (actual.status == 0) and (string.match (actual.output, escape_pattern (expect)) ~= nil)
+      return (actual.status == 0) and
+             ((actual.output or ""):match (escape_pattern (expect)) ~= nil)
     end,
 
     expecting =  " exit status 0, with output containing:",
@@ -248,7 +254,7 @@ do
   -- Matches if the output of a process is exactly <expect>.
   matchers.output = ProcessMatcher {
     function (self, actual, expect)
-      return (actual.output == expect)
+      return actual.output == expect
     end,
 
     expecting = " output:", but_got_output,
@@ -268,7 +274,7 @@ do
   -- Matches if the output of a process matches <pattern>.
   matchers.match_output = ProcessMatcher {
     function (self, actual, pattern)
-      return (string.match (actual.output, pattern) ~= nil)
+      return (actual.output or ""):match (pattern) ~= nil
     end,
 
     expecting = " output matching:", but_got_output,
@@ -278,7 +284,8 @@ do
   -- Matches if the process exits normally with output matching <expect>
   matchers.succeed_while_matching = ProcessMatcher {
     function (self, actual, pattern)
-      return (actual.status == 0) and (string.match (actual.output, pattern) ~= nil)
+      return (actual.status == 0) and
+             ((actual.output or ""):match (pattern) ~= nil)
     end,
 
     expecting = " exit status 0, with output matching:",
@@ -289,7 +296,7 @@ do
   -- Matches if the exit status of a process is <expect>.
   matchers.fail = ProcessMatcher {
     function (self, actual)
-      return (actual.status ~= 0)
+      return actual.status ~= 0
     end,
 
     format_expect = function (self, expect)
@@ -303,7 +310,7 @@ do
   -- Matches if the error output of a process contains <expect>.
   matchers.contain_error = ProcessMatcher {
     function (self, actual, expect)
-      return (string.match (actual.errout, escape_pattern (expect)) ~= nil)
+      return (actual.errout or ""):match (escape_pattern (expect)) ~= nil
     end,
 
     expecting = " error output containing:", but_got_errout,
@@ -313,7 +320,8 @@ do
   -- Matches if the process exits normally with output containing <expect>
   matchers.fail_while_containing = ProcessMatcher {
     function (self, actual, expect)
-      return (actual.status ~= 0) and (string.match (actual.errout, escape_pattern (expect)) ~= nil)
+      return (actual.status ~= 0) and
+             ((actual.errout or ""):match (escape_pattern (expect)) ~= nil)
     end,
 
     expecting = " non-zero exit status, with error output containing:",
@@ -324,7 +332,7 @@ do
   -- Matches if the error output of a process is exactly <expect>.
   matchers.output_error = ProcessMatcher {
     function (self, actual, expect)
-      return (actual.errout == expect)
+      return actual.errout == expect
     end,
 
     expecting = " error output:", but_got_errout,
@@ -345,7 +353,7 @@ do
   -- Matches if the error output of a process matches <pattern>.
   matchers.match_error = ProcessMatcher {
     function (self, actual, pattern)
-      return (string.match (actual.errout, pattern) ~= nil)
+      return (actual.errout or ""):match (pattern) ~= nil
     end,
 
     expecting = " error output matching:", but_got_errout,
@@ -355,7 +363,8 @@ do
   -- Matches if the process exits normally with output matching <expect>
   matchers.fail_while_matching = ProcessMatcher {
     function (self, actual, pattern)
-      return (actual.status ~= 0) and (string.match (actual.errout, pattern) ~= nil)
+      return (actual.status ~= 0) and
+             ((actual.errout or ""):match (pattern) ~= nil)
     end,
 
     expecting = " non-zero exit status, with error output matching:",

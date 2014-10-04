@@ -19,11 +19,19 @@
 -- MA 02111-1301, USA.
 
 
-from "specl.compat" import setfenv, xpcall
-from "specl.shell"  import Process
-from "specl.std"    import Object, func.case, table.clone, table.merge
-from "specl.util"   import nop, type_check
+local compat = require "specl.compat"
+local shell  = require "specl.shell"
+local std    = require "specl.std"
+local util   = require "specl.util"
 
+local setfenv, xpcall = compat.setfenv, compat.xpcall
+local Process = shell.Process
+local case, object = std.functional.case, std.object
+local clone, merge = std.table.clone, std.table.merge
+local nop, type_check = util.nop, util.type_check
+
+
+local Object = object {}
 
 local StrFile = Object {
   _type = "StrFile",
@@ -175,7 +183,7 @@ local function env_init (env, stdin)
     stderr  = perr,
 
     input   = function (h)
-                if Object.type (h) == "StrFile" then
+                if object.type (h) == "StrFile" then
                   pin = h
                 elseif h then
                   pin = io.input (h)
@@ -186,7 +194,7 @@ local function env_init (env, stdin)
     output  = function (h)
 	        if h ~= nil then
 		  if io.type (pout) ~= "closed file" then pout:flush () end
-                  if Object.type (h) == "StrFile" then
+                  if object.type (h) == "StrFile" then
                     pout = h
                   else
                     pout = io.output (h)
@@ -196,7 +204,7 @@ local function env_init (env, stdin)
               end,
 
     type    = function (h)
-                if Object.type (h) == "StrFile" then
+                if object.type (h) == "StrFile" then
                   return "file" -- virtual stdio streams cannot be closed
                 end
                 return io.type (h)
@@ -226,11 +234,27 @@ local function capture (fn, arg, stdin)
   local env = setmetatable ({}, {__index = _G})
 
   -- Captured standard output and standard error.
+  local pstat = 0
   local pout, perr = env_init (env, stdin)
+
+  env.os = {
+    -- Capture exit status without quitting specl process itself.
+    exit = function (code)
+             case (tostring (code), {
+               ["false"] = function () pstat = 1 end,
+               ["true"]  = function () pstat = 0 end,
+                           function () pstat = code end,
+             })
+             -- Abort execution now that status is set.
+             error ("env.os.exit", 0)
+           end,
+  }
 
   setfenv (fn, env)
   local t = {fn (unpack (arg))}
-  return pout.buffer, perr.buffer, unpack (t)
+  local process = Process { pstat, pout.buffer, perr.buffer}
+  for i, v in ipairs (t) do process[i] = v end
+  return process
 end
 
 

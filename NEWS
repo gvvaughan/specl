@@ -1,5 +1,86 @@
 Specl NEWS - User visible changes.
 
+* Noteworthy changes in release 13 (2014-10-04) [stable]
+
+** New features:
+
+  - Specl's own modules, and modules loaded from spec-file directories
+    are now loaded inside the function environment of the running
+    example, and so have access to Specl's Lua extensions, such as
+    `expect` and matchers.
+
+  - `inprocess.capture` returns a `Process` object, suitable for
+    matching using the `specl.shell` matchers.
+
+  - New `to_raise` matcher as an alias for `to_error` to avoid flagging
+    capitalised error messages in error matcher argument with Slingshot
+    sanity checks.
+
+  - New programmatic `examples` function for building example groups and
+    helper functions directly in Lua, whenever YAML starts to get in the
+    way.  See documentation for examples.
+
+  - New `specl.badargs` module provides `format` to generate standard
+    argument error messages that can be passed to matchers to ensure
+    correct error message formatting:
+
+        expect (posix.write ()).to_raise (format ("write", 1, "int"))
+
+    And `diagnose`, which writes a full set of expectations to check all
+    missing, extraneous and badly typed arguments are diagnosed
+    correctly:
+
+        - context with bad arguments:
+            badargs.diagnose (posix.write "(int, string)")
+
+** Incompatible changes:
+
+  - `inprocess.capture` returns a `Process`, not a pair of strings
+    and the call results. Call results are still available in the array
+    part of the returned `Process`.
+
+  - Specl now requires latest stdlib v40 to be installed on the module
+    path, rather than carrying its own copies of parts of stdlib it wants
+    to use.
+
+  - Specl now installs as a selection of library files (in the module
+    subdirectory `specl`), and a thin wrapper script that sets up the
+    execution environment and then calls `specl.main (arg):execute ()`.
+    This simplifies debugging, and remove all the infrastructure for
+    expanding `from` macros, and concatenating the resulting sources, as
+    well as allowing piece-meal loading of specl modules.
+
+** Bug fixes:
+
+  - Enhanced resolution timers now also work with luaposix > 31.
+
+  - The report formatter would not display subsequent repeats of a
+    context description after the first under some circumstances.  It
+    now displays context descriptions correctly in that case too.
+
+  - Don't prevent examples from loading a different luaposix than the
+    installed default loaded by Specl.  This allows the luaposix specs
+    to work in the build tree without priming LUA_CPATH and LUA_PATH
+    before calling specl, for example.
+
+  - `inprocess.capture` now supports capturing results of a functable
+    call.
+
+  - `specl.shell` matchers now correctly succeed when using `not_`
+    prefixes to specify that a `Process` should not contain some error
+    or standard output text, and that `Process` stream contains `nil`
+    to indicate the stream was not written at all. For example:
+
+      expect (capture (function () print "stdout" end)).
+        not_to_contain_error "stderr"
+
+  - After loading system modules it depends on, Specl removes them
+    from the Lua module cache so that other versions of those same
+    modules (yaml, posix, posix.sys) can use Specl to check their own
+    behaviours by loading the to-be-checked versions from
+    `spec_helper.lua`.
+
+
 * Noteworthy changes in release 12 (2014-04-25) [stable]
 
 ** New features:

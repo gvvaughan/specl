@@ -19,7 +19,7 @@ dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
 AC_PREREQ([2.68])
 
 dnl Initialise autoconf and automake
-AC_INIT([Specl], [12], [http://github.com/gvvaughan/specl/issues])
+AC_INIT([Specl], [13], [http://github.com/gvvaughan/specl/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -40,4 +40,6 @@ AC_PROG_SED
 dnl Generate output files
 SS_CONFIG_TRAVIS
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([specl], [chmod 555 specl])
+AC_CONFIG_FILES([lib/specl/version.lua], [chmod 444 lib/specl/version.lua])
 AC_OUTPUT

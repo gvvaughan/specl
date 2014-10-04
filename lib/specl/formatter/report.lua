@@ -20,8 +20,10 @@
 
 
 local color = require "specl.color"
+local util  = require "specl.util"
 
-from "specl.util" import indent, map, nop, strip1st, timesince
+local indent, map, nop, strip1st, timesince =
+  util.indent, util.map, util.nop, util.strip1st, util.timesince
 
 
 -- Color printing.
@@ -54,6 +56,7 @@ local function show_contexts (descriptions, opts)
     current[i] = descriptions[i]
     if i > #previous or current[i] ~= previous[i] then
       princ (opts.color, indent (current) .. tabulate (current))
+      previous = {}
     end
   end
   opts.previous = current

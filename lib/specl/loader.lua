@@ -22,9 +22,16 @@
 local macro = require "macro"
 local yaml  = require "yaml"
 
-from "specl.compat" import loadstring
-from "specl.std"    import io.catfile, package.path_mark
-from "specl.util"   import nop
+local compat = require "specl.compat"
+local std    = require "specl.std"
+local util   = require "specl.util"
+
+local loadstring = compat.loadstring
+local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
+local dirsep, normalize, pathsep, path_mark =
+  std.package.dirsep, std.package.normalize, std.package.pathsep, std.package.path_mark
+local escape_pattern = std.string.escape_pattern
+local nop = util.nop
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
@@ -41,6 +48,56 @@ macro.define ("expect", function (get)
   end
   return out, true -- pass through 'expect' token
 end)
+
+
+-- A list of directories we've loaded yaml spec-files from.  Any other
+-- files required from these directories are macro-expanded during
+-- loading.
+local spec_path = ""
+
+
+--- Search spec_path for module name.
+-- @string name module name to load
+-- @return compiled module as a function, or error message if not found
+local function expandmacros (name)
+  local errbuf = {}
+
+  -- Use spec_path by default, but also package.path for specl submodules.
+  local search_path = spec_path
+  if name:match "^specl%." then
+    search_path = search_path .. pathsep .. package.path
+  end
+
+  for m in search_path:gmatch ("([^" .. escape_pattern (pathsep) .. "]+)") do
+    local path = m:gsub (escape_pattern (path_mark), (name:gsub ("%.", dirsep)))
+    local fh, err = io.open (path, "r")
+    if fh == nil then
+      errbuf[#errbuf + 1] = "\topen file '" .. path .. "' failed: " .. err
+    else
+
+      -- Found and opened...
+      local source = slurp (fh)
+      local content, err = macro.substitute_tostring (source)
+      if content == nil and err ~= nil then
+        errbuf[#errbuf + 1] = "\tmacro expansion failed in '" .. path.. "': " .. err
+      else
+
+	-- ...and macro substituted...
+        local loadfn, err = loadstring (content, name)
+        if type (loadfn) ~= "function" then
+         errbuf[#errbuf + 1] = "\tloadstring '" .. path .. "' failed: " .. err
+        else
+
+          -- ...and successfully loaded! Return it!
+          return loadfn
+        end
+      end
+    end
+  end
+
+  -- Paths exhausted, return the list of failed attempts.
+  return table.concat (errbuf, "\n")
+end
 
 
 -- Metatable for Parser objects.
@@ -250,8 +307,10 @@ local parser_mt = {
 
 -- Parser object constructor.
 local function Parser (filename, s, unicode)
-  local dir  = std.io.dirname (filename)
-  local path = std.package.normalize (catfile (dir, path_mark .. ".lua"))
+  local dir  = dirname (filename)
+
+  -- Add this spec-file directory to the macro-expanded spec_path list.
+  spec_path = normalize (catfile (dir, path_mark .. ".lua"), spec_path)
 
   local object = {
     unicode  = unicode,
@@ -265,11 +324,16 @@ local function Parser (filename, s, unicode)
 
     -- Used to simplify requiring from the spec file directory.
     preamble = string.format ([[
-      package.path = require "specl.std".package.normalize ("%s", package.path)
+      package.path = "%s"
+
+      -- Expand macros in spec_helper.
+      local loader    = require "specl.loader"
+      local spec_path = "%s"
 
       -- Autoload spec_helper from spec-file directory, if any.
+      table.insert (package.loaders, 1, loader.expandmacros)
       pcall (require, "spec_helper")
-    ]], path)
+    ]], package.path, spec_path)
   }
   return setmetatable (object, parser_mt)
 end
@@ -314,9 +378,16 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
+-- Don't prevent examples from loading a different luaposix.
+for _, reload in pairs {"yaml", "lyaml"} do
+  package.loaded[reload] = nil
+end
+
+
 local M = {
-  load = load,
-  null = null,
+  expandmacros = expandmacros,
+  load         = load,
+  null         = null,
 }
 
 return M

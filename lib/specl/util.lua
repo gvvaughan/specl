@@ -19,16 +19,17 @@
 -- MA 02111-1301, USA.
 
 
-from "specl.std" import Object
-
+local std = require "specl.std"
 local have_posix, posix = pcall (require, "posix")
+
+local object = std.object
 
 
 -- A null operation function.
 local function nop () end
 
 
-local files -- forward declaration
+local files, timersub -- forward declarations
 
 if have_posix then
 
@@ -47,6 +48,8 @@ if have_posix then
     return t
   end
 
+  timersub = posix.sys and posix.sys.timersub or posix.timersub
+
 else
 
   files = nop
@@ -56,17 +59,17 @@ end
 
 -- Use higher resolution timers from luaposix if available.
 local function gettimeofday ()
-  if not (have_posix and posix.timersub) then
+  if not (have_posix and timersub) then
     return os.time ()
   end
   return posix.gettimeofday ()
 end
 
 local function timesince (earlier)
-  if not (have_posix and posix.timersub) then
+  if not (have_posix and timersub) then
     return os.time () - earlier
   end
-  local elapsed = posix.timersub (posix.gettimeofday (), earlier)
+  local elapsed = timersub (posix.gettimeofday (), earlier)
   return (elapsed.usec / 1000000) + elapsed.sec
 end
 
@@ -114,7 +117,7 @@ local function concat (alternatives, infix, quoted)
 
   if quoted ~= nil then
     alternatives = map (function (v)
-                          if Object.type (v) ~= "string" then
+                          if object.type (v) ~= "string" then
                             return std.string.tostring (v)
                           else
                             return ("%q"):format (v)
@@ -126,10 +129,10 @@ local function concat (alternatives, infix, quoted)
 end
 
 
--- Simplified Object.type, that just returns "object" for non-primitive
+-- Simplified object.type, that just returns "object" for non-primitive
 -- types, or else the primitive type name.
 local function xtype (x)
-  if type (x) == "table" and Object.type (x) ~= "table" then
+  if type (x) == "table" and object.type (x) ~= "table" then
     return "object"
   end
   return type (x)
@@ -139,10 +142,10 @@ end
 -- Write a function call type error similar to how Lua core does it.
 local function type_error (name, i, arglist, typelist)
   local actual = "no value"
-  if arglist[i] then actual = Object.type (arglist[i]) end
+  if arglist[i] then actual = object.type (arglist[i]) end
 
   local expected = typelist[i]
-  if Object.type (expected) ~= "table" then expected = {expected} end
+  if object.type (expected) ~= "table" then expected = {expected} end
   expected = concat (expected, " or "):gsub ("#table", "non-empty table")
 
   error ("bad argument #" .. tostring (i) .. " to '" .. name ..
@@ -163,12 +166,12 @@ end
 local function type_check (name, arglist, typelist)
   for i, v in ipairs (typelist) do
     if v ~= "any" then
-      if Object.type (v) ~= "table" then v = {v} end
+      if object.type (v) ~= "table" then v = {v} end
 
       if i > #arglist then
         type_error (name, i, arglist, typelist)
       end
-      local a = Object.type (arglist[i])
+      local a = object.type (arglist[i])
 
       -- check that argument at `i` has one of the types at typelist[i].
       local ok = false
@@ -180,7 +183,7 @@ local function type_check (name, arglist, typelist)
           end
 
         elseif check == "object" then
-          if type (arglist[i]) == "table" and Object.type (arglist[i]) ~= "table" then
+          if type (arglist[i]) == "table" and object.type (arglist[i]) ~= "table" then
             ok = true
             break
           end
@@ -218,12 +221,20 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
+
+-- Don't prevent examples from loading a different luaposix.
+for _, reload in pairs {"posix", "posix_c", "posix.sys"} do
+  package.loaded[reload] = nil
+end
+
+
 local M = {
   -- Functions
   concat         = concat,
   deepcopy       = deepcopy,
   files          = files,
   gettimeofday   = gettimeofday,
+  have_posix     = have_posix,
   indent         = indent,
   nop            = nop,
   map            = map,

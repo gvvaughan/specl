@@ -19,12 +19,15 @@
 -- MA 02111-1301, USA.
 
 
-local compat     = require "specl.compat"
-local matchers   = require "specl.matchers"
+local compat   = require "specl.compat"
+local matchers = require "specl.matchers"
+local std      = require "specl.std"
+local util     = require "specl.util"
 
-from "specl.compat" import loadstring, setfenv
-from "specl.std"    import string.slurp, string.split, table.merge
-from "specl.util"   import map, strip1st
+local loadstring, setfenv = compat.loadstring, compat.setfenv
+local slurp, split, merge =
+  std.io.slurp, std.string.split, std.table.merge
+local map, strip1st = util.map, util.strip1st
 
 
 --[[ ================= ]]--
@@ -149,17 +152,99 @@ end
 --[[ ============= ]]--
 
 
-local run_examples, run_contexts, run
+local run_example, run_examples, run_contexts, run
+
+
+-- Execute an example in a clean new sub-environment; as long as there
+-- are no filters, or the filters for the source line of this definition
+-- or inclusive example pattern is true.
+function run_example (state, definition, descriptions, fenv)
+  local formatter = state.opts.formatter
+  local filters   = state.spec.filters
+  local inclusive = (filters == nil) or (filters[definition.line])
+  local keepgoing = true
+
+  if not inclusive then
+    local source = table.concat (map (strip1st, descriptions))
+    for _, pattern in ipairs (filters.inclusive or {}) do
+      if source:match (pattern) then
+        inclusive = true
+        break
+      end
+    end
+  end
+
+  if inclusive then
+    matchers.init (state)
+
+    setfenv (definition.example, fenv)
+    definition.example ()
+
+    local status = merge ({
+      filename = state.spec.filename,
+      line     = definition.line,
+    }, matchers.status (state))
+    state:accumulator (formatter.expectations (status, descriptions, state.opts))
+
+    if state.opts.fail_fast then
+      for _, expectation in ipairs (status.expectations) do
+        -- don't stop for passing or even failing pending examples
+        if not (expectation.status or expectation.pending) then
+          keepgoing = false
+        end
+      end
+    end
+  end
+
+  return keepgoing
+end
 
 
 -- Run each of EXAMPLES under ENV in order.
 function run_examples (state, examples, descriptions, env)
-  local formatter = state.opts.formatter
-
   local block = function (example, blockenv)
-    local fenv   = util.deepcopy (blockenv)
+    local keepgoing = true
+    local fenv = util.deepcopy (blockenv)
+
+    -- There is only one, otherwise we can't maintain example order.
+    local description, definition = next (example)
+    local line = definition.line
+
     fenv.expect  = function (...) return matchers.expect  (state, ...) end
     fenv.pending = function (...) return matchers.pending (state, ...) end
+
+    fenv.examples = function (t)
+      -- FIXME: robust argument type-checking!
+      local description, definition = next (t)
+      if type (definition) == "function" then
+	local example = { example = definition, line = line or "unknown" }
+
+        table.insert (descriptions, (description:gsub ("_", " ")))
+	if run_example (state, example, descriptions, fenv) == false then
+          keepgoing = false
+	end
+	table.remove (descriptions)
+
+      elseif type (definition) == "table" then
+	local examples = {}
+	for i, example in ipairs (definition) do
+	  k, v = next (example)
+	  examples[i] = { [k:gsub ("_", " ")] = { example = v, line = line or "unknown" } }
+	end
+
+        table.insert (descriptions, (description:gsub ("_", " ")))
+        if run_examples (state, examples, descriptions, fenv) == false then
+          keepgoing = false
+        end
+	table.remove (descriptions)
+
+      end
+
+      -- Make sure we don't leak status into the calling or following
+      -- example, since this `examples` invocation is from inside
+      -- `run_examples`.
+      matchers.init (state)
+    end
 
     initenv (state, fenv)
 
@@ -168,55 +253,13 @@ function run_examples (state, examples, descriptions, env)
       examples.before.example ()
     end
 
-    -- There is only one, otherwise we can't maintain example order.
-    local description, definition = next (example)
-
-    local keepgoing = true
     if definition.example then
-
-      -- An example, execute it in a clean new sub-environment; as long
-      -- as there are no filters, or the filters for the source line of
-      -- this definition or inclusive example pattern is true.
-
-      local filters = state.spec.filters
-      local inclusive = (filters == nil) or (filters[definition.line])
-
+      -- An example, execute it.
       table.insert (descriptions, description)
-
-      if not inclusive then
-	local source = table.concat (map (strip1st, descriptions))
-        for _, pattern in ipairs (filters.inclusive or {}) do
-          if source:match (pattern) then
-            inclusive = true
-	    break
-	  end
-	end
+      if run_example (state, definition, descriptions, fenv) == false then
+	keepgoing = false
       end
-
-      if inclusive then
-        matchers.init (state)
-
-        setfenv (definition.example, fenv)
-        definition.example ()
-
-        local status = merge ({
-          filename = state.spec.filename,
-	  line     = definition.line,
-        }, matchers.status (state))
-	state:accumulator (formatter.expectations (status, descriptions, state.opts))
-
-        if state.opts.fail_fast then
-          for _, expectation in ipairs (status.expectations) do
-            -- don't stop for passing or even failing pending examples
-            if not (expectation.status or expectation.pending) then
-              keepgoing = false
-            end
-          end
-        end
-      end
-
       table.remove (descriptions)
-
     else
       -- A nested context, revert back to run_contexts.
       if run_contexts (state, example, descriptions, fenv) == false then
@@ -290,7 +333,7 @@ end
 --[[ ----------------- ]]--
 
 local M = {
-  run       = run,
+  run         = run,
 }
 
 

@@ -1,4 +1,317 @@
+2014-10-04  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 13
+	* NEWS: Record release date.
+
+	badargs: helpers for argchecking specs.
+	* lib/specl/badargs.lua: New file.
+	(init):  Lua core style bad argument error message generator
+	factory.
+	(diagnosebadargs): Use new programmatic examples to inject specs
+	for expected bad argument diagnostics according to `specifier`
+	argument.
+	* local.mk (dist_specl_DATA): Add lib/specl/badargs.lua.
+	* NEWS: Update.
+
+2014-10-01  Gary V. Vaughan  <gary@gnu.org>
+
+	std: add table.len and fix buggy stdlib v40 functional.bind.
+	* lib/specl/std.lua (std.functional.bind): Overwrite stdlib v40's
+	broken functional.bind with a simplified v41-like implementation.
+	(std.table.len): Implement this future stdlib API.
+
+	specl: expand macros when requiring specl submodules.
+	* lib/specl/loader.lua (expandmacros): Append package.path to
+	search directories for specl submodules.
+	* NEWS: Update.
+
+	maint: remove bogus file reference in local.mk.
+	* local.mk (dist_specl_DATA): Remove lib/specl/badargs.lua.
+
+	configury: correctly install formatters to formatter subdir.
+	* local.mk (luaspecldir, dist_luaspecl_DATA): Rename from these...
+	(specldir, dist_specl_DATA): ...to these.
+	(formatterdir): New macro.  Formatter subdirectory.
+	(dist_specl_DATA): Move formatter/progress.lua,
+	formatter/report.lua and formatter/tap.lua from here...
+	(dist_formatter_DATA): ...to here.
+
+	std: don't leak _DEBUG settings into global environment.
+	* lib/specl/std.lua (_DEBUG): Remove side effecting global.
+	(init): Load and access _DEBUG table entries directly.
+
+	maint: store git master rockspec file on git master branch.
+	It's really easy for git master to change incompatibly with the
+	specl-git-1.rockspec from the previous release, so maintain and
+	advertise it on its own branch.
+	* .gitignore: Don't ignore specl-git-1.rockspec.
+	* specl-git-1.rockspec: Save to version control.
+	* README.md: Adjust git rockspec URL.
+
+	std: use correct iterator to erase std modules from package.loaded.
+	* lib/specl/std.lua: With stdlib v40, std.functional.filter
+	returns a flat list that must be iterated over by std.list.elems
+	when passed through to v40 std.functional.map.
+
+	refactor: install as library files and caller script.
+	* build-aux/larch, lib/larch/from.lua: Remove. We no longer need
+	to compile a single executable from library sources.
+	* local.mk: Adjust.
+	* lib/specl/formatter/progress.lua, lib/specl/formatter/report.lua,
+	lib/specl/formatter/tap.lua, lib/specl/inprocess.lua,
+	lib/specl/loader.lua, lib/specl/main.lua, lib/specl/matchers.lua,
+	lib/specl/runner.lua, lib/specl/shell.lua, lib/specl/util.lua:
+	Manually unroll `from` macro calls, which are no longer expanded
+	by larch.
+	* specl.in: New in-tree wrapper script.
+	* bin/specl: Much simplified wrapper, now checked in.
+	* specs/specs.mk: Adjust accordingly.
+	* lib/specl/main (optspec): Move from here...
+	* lib/specl/version.lua.in: New file. ...to here, where @AUTOCONF@
+	variables can expanded.
+	* configure.ac (AC_CONFIG_FILES): Add lib/specl/version.lua, and
+	specl,
+	* .gitignore: Remove bin.  Add specl and lib/specl/version.lua.
+	* AUTHORS: Remove references to local stdlib.
+	* NEWS: Update.
+
+2014-09-30  Gary V. Vaughan  <gary@gnu.org>
+
+	specs: fix an unresolved reference to std.Object.
+	* specs/inprocess_spec.yaml: Spell `"specl.std".Object` with a
+	lower-case `o` to match imported stdlib module layout.
+	* NEWS: Update.
+
+	refactor: use installed stdlib.
+	* lib/specl/std.lua: No need to carry around local copies of
+	stdlib pieces we use; load installed stdlib modules into the specl
+	namespace, and clear the package.loaded cache so that examples
+	can load and check behaviours of another version of stdlib than
+	the one specl loaded for itself.
+	Adjust all callers.
+	(std.io.dirname): Set a fallback for this function, not exported
+	by stdlib v40.
+	* rockspec.conf (dependencies): Add stdlib v40.
+	* lib/specl/optparse.lua: Remove.  Use the installed std.optparse.
+	Adjust all callers.
+	* local.mk (bin_specl_SOURCES): Remove lib/specl/optparse.lua.
+
+2014-09-26  Gary V. Vaughan  <gary@gnu.org>
+
+	specs: use 'raise' matcher consistently.
+	* specs/matchers_spec.yaml: Use 'raise' matcher consistently.
+
+	slingshot: sync with upstream for SPECL_ENV improvements.
+	* slingshot: Sync with upstream.
+	* specs/spec_helper.lua (package.path): Update according to
+	advice in slingshot release notes.
+	* specs/specs.mk (SPECL_ENV): Likewise.
+
+	rockspec: bump lyaml requirement to v5.
+	* rockspec.conf (dependencies): Bump lyaml to v5 or better.
+
+2014-09-25  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: don't cache loaded module dependencies.
+	* lib/specl/loader.lua: Remove yaml and lyaml handles from the
+	loaded module cache.  We still have a handle for internal use,
+	and now the spec-files in the lyaml project check the in-tree
+	module behaviours rather than picking up Specl's already loaded
+	version from the install tree.
+	* NEWS: Update.
+
+2014-09-24  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: generalize `it` into `examples` for programmatic specs.
+	* specs/runner_spec.yaml: New file.  Exercise examples syntax.
+	* specs/specs.mk (specl_SPECS): Add specs/runner_spec.yaml.
+	* lib/specl/runner.lua (run_examples): Remove `it` from function
+	environment.
+	Add new `examples` definition to function environment.
+	* specs/formatter/report_spec.yaml, specs/loader_spec.yaml:
+	Update accordingly.
+	* doc/specl.md (Programmatic Specifications): Likewise.
+	* NEWS: Update.
+
+2014-09-23  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: expand macros when loading from spec directories.
+	* lib/specl/std.lua (io.writelines): Copy from upstream stdlib.
+	* specs/spec_helper.lua: Set randomseed for tmp directory name
+	randomisation.
+	(TMPDIR): Set to environment TMPDIR or TMP or fall back to /tmp
+	if all else fails.
+	(append): Factored out of Tmpfile.
+	(Tmpfile): Adjust _init function to accept an optional path and
+	zero or more lines to write to the file.
+	(append): Simplify using std.io.writelines.
+	(Tmpdir): New object.  Manage a directory of Tmpfile objects.
+	* specs/specl_spec.yaml: Adjust Tmpfile calls accordingly.
+	* specs/loader_spec.yaml: New file. Specify loading behaviours.
+	* specs/specs.mk (specl_SPECS): Add specs/loader_spec.yaml.
+	* lib/specl/loader.lua (spec_path): Track spec-file directories.
+	(expandmacros): New searcher for `package.loaders` that runs
+	loaded source files from `spec_path` through
+	`macro.substitute_string` with `expect` macro already defined.
+	(Parser.preamble): Use it when autoloading `spec_helper.lua`.
+	* lib/specl/runner.lua (run_examples): When running an example
+	from the function environment definition of `it`, set the line
+	number of the definition to "unknown" if we don't have a line
+	number from the YAML parser.
+	* doc/specl.md (Programmatic Specifications): Document it.
+	* NEWS: Update.
+
+2014-09-22  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: support programmatic `it` calls.
+	* specs/formatter/report_spec.yaml (with passing 'it' expectation)
+	(with failing 'it' expectation): Specify behaviour of programmatic
+	`it` calls.
+	* lib/specl/runner.lua (run_examples): Inject `it` implementation
+	into the function execution environment.
+	* doc/specl.md (Programmatic Specifications): Document idiomatic
+	use of `it` calls.
+	* NEWS: Update.
+
+	travis: regenerate .travis.yml for latest luarocks stable.
+	* .travis.yml: Regenerate.
+
+	refactor: factor run_example out of runner.run_examples.
+	* lib/specl/runner.lua (run_example): New function.  Factored
+	out...
+	(run_examples): ...of this.
+
+2014-08-17  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: `to_raise` as an alias for `to_error`.
+	Avoid spurious matches for capitalised error messages from
+	Slingshot sanity checks.
+	* specs/matchers_spec.yaml (raise): Specify behaviours of new
+	alias.
+	* lib/specl/matchers.lua (error): Rename from this...
+	(raise): ...to this.
+	(error): Reinstate as an alias for the new `raise` matcher.
+	* specs/inprocess_spec.yaml, specs/shell_spec.yaml: Use `raise`
+	matcher by default.
+	* NEWS: Update.
+
+	shell: succeed with a `not_` versus `nil` streams.
+	* specs/shell_spec.yaml: Specify behaviours with a `not_` matcher
+	against a `nil` stream.
+	* specs/inprocess_spec.yaml (capture): Likewise.
+	* lib/specl/shell.lua (contain_output, succeed_while_containing)
+	(output, match_output, succeed_while_matching, fail)
+	(contain_error, fail_while_containing, output_error)
+	(match_error, fail_while_matching): Treat a `nil` valued stream
+	as "" before calling string.match on it!
+	* NEWS: Update.
+
+	inprocess: return a Process object from capture.
+	* lib/specl/inprocess.lua (capture): Return a Process object.
+	* specs/inprocess_spec.lua (capture): Adjust.
+	* NEWS: Update.
+
+	slingshot: sync with upstream, for slack notifications.
+	* slingshot: Sync with upstream.
+	* bootstrap: Update from slingshot.
+	* bootstrap.conf (slingshot_files):
+	Remove m4/ax_compare_version.m4.
+	* .slackid: New file.
+	* .travis.yml: Regenerate.
+
+	refactor: unwrap functables more generally.
+	* lib/specl/inprocess.lua (capture): Move functable unwrapping
+	from here...
+	* lib/specl/compat.lua (setfenv): ...to here.
+
+2014-07-21  Gary V. Vaughan  <gary@gnu.org>
+
+	inprocess: support functables with capture.
+	* specs/inprocess_spec.yaml (capture): Specify behaviour of
+	capture when passed a functable.
+	* lib/specl/inprocess.lua (capture): If the captured function is
+	a functable, unwrap it.
+	* NEWS: Update.
+
+2014-07-18  Gary V. Vaughan  <gary@vaughan.pe>
+
+	maint: improve README.md text.
+	* README.md: Remove spurious apostrophe from "it's"
+
+2014-07-17  Gary V. Vaughan  <gary@gnu.org>
+
+	Merge branch 'waffle-iron-master'
+
+2014-07-17  Making GitHub Delicious.  <iron@waffle.io>
+
+	add waffle.io badge
+
+2014-06-29  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: remove posix libraries from cache after use.
+	* lib/specl/util.lua: After saving references to the luaposix
+	functions this file uses, remove cached posix libraries in case
+	an example specl runs changes package.cpath and wants to check
+	behaviours of another luaposix installed there.
+	(have_posix): Export.
+	* lib/specl/main.lua: Import util.have_posix.
+	(process_args): Use have_posix rather than the cached table to
+	determine whether posix.files was available.
+	* NEWS: Update.
+
+	specl: luaposix >= v32 compatibility.
+	posix.timersub is now posix.sys.timersub.
+	* lib/specl/util.lua (timersub): Local handle for posix.timersub
+	with older luaposix releases, posix.sys.timersub for recent
+	releases otherwise nil for ancient releases.
+	(gettimeofday, timesince): Adjust.
+	* NEWS: Update.
+
+2014-05-30  Gary V. Vaughan  <gary@gnu.org>
+
+	doc: correct argument order for error matcher.
+	The order of error matcher arguments was reversed with Specl 5.
+	* doc/specl.md (Pending Examples): Fix error matcher argument
+	order to match contemporary usage.
+
+	doc: add a subsection on skipping examples.
+	* doc/specl.md (Skipping Examples): New subsection demonstrating
+	how to skip examples programatically.
+
+2014-05-21  Gary V. Vaughan  <gary@gnu.org>
+
+	slingshot: sync with upstream.
+	* slingshot: Sync with upstream for grep GNUism fix.
+	* bootstrap.conf (buildreq): Don't set a git version number, or
+	else `GIT=true ./bootstrap` doesn't work!
+
+	configury: bump release version.
+	* configure.ac (AC_INIT): Bump release version to 13.
+
+2014-05-06  Gary V. Vaughan  <gary@gnu.org>
+
+	formatters: don't repeat contexts on every example.
+	The previous fix printed previously elided contexts too often.
+	* specs/formatter/report_spec.yaml
+	(does not repeat contexts consecutively): Specify a single output
+	for a non-filtered context with multiple nested examples.
+	* lib/specl/formatter/report.lua (show_contexts): Implement new
+	behaviour.
+
+	formatters: don't elide repeated nested contexts.
+	* specs/formatter/report_spec.yaml
+	(with repeated description elements): Specify the output when
+	different yaml branches share an element description.
+	* lib/specl/formatter/report.lua (show_contexts): Adjust to
+	match specified behaviour.
+	* NEWS: Update.
+
 2014-04-25  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 12
 	* NEWS: Record release date.
@@ -316,7 +629,7 @@
 	(deepcopy): Rewrite for full and correct loop-detecting algorithm.
 	Adjust all callers to use deepcopy() instead of cow().
 
-2014-03-23  Gary V. Vaughan  <gary@gnu.org>
+2014-03-22  Gary V. Vaughan  <gary@gnu.org>
 
 	inprocess: new feature to run Lua programs inside Specl process.
 	* specs/inprocess_spec.yaml: New file. Specify capturing exit
@@ -332,7 +645,7 @@
 	* lib/specl/util.lua (files): If posix.dir returns nil, for a
 	missing directory, pass back an empty results table.
 
-2014-03-22  Gary V. Vaughan  <gary@gnu.org>
+2014-03-21  Gary V. Vaughan  <gary@gnu.org>
 
 	progress: don't try to animate a '>' pseudo-cursor in output.
 	Using ^H to backspace over the '>' character to simulate moving
@@ -401,7 +714,7 @@
 	* specs/formatter/progress_spec.yaml: New specifications.
 	* specs/specs.mk (specl_SPECS): Add it.
 
-2014-03-06  Gary V. Vaughan  <gary@gnu.org>
+2014-03-05  Gary V. Vaughan  <gary@gnu.org>
 
 	refactor: use string prefix instead of function in shell matchers.
 	* lib/specl/shell.lua (ProcessMatcher._init)
@@ -465,8 +778,6 @@
 	(Matcher._parmtypes): Specify that `matchp` must be a function
 	during instantiation.
 
-2014-03-05  Gary V. Vaughan  <gary@gnu.org>
-
 	refactor: simplify Matcher:_init ().
 	* lib/specl/matchers.lua (Matcher:_init): Use clone_rename ()
 	instead of manual parameter merge.  Simplify accordingly.
@@ -497,7 +808,7 @@
 	Adjust all callers.
 	* NEWS: Update.
 
-2014-03-05  Gary V. Vaughan  <gary@gnu.org>
+2014-03-04  Gary V. Vaughan  <gary@gnu.org>
 
 	shell: new `fail_with` and `succeed_with` matchers.
 	* specs/shell_spec.yaml: Specify behaviour of new matchers.
@@ -510,7 +821,7 @@
 		lib/specl/shell.lua
 		specs/shell_spec.yaml
 
-2014-03-05  Gary V. Vaughan  <gary@gnu.org>
+2014-03-04  Gary V. Vaughan  <gary@gnu.org>
 
 	shell: new `fail` and `succeed` matchers.
 	* specs/shell_spec.yaml (describe fail matcher): Specify
@@ -542,7 +853,7 @@
 	--fail-fast.
 	* NEWS: Update.
 
-2014-03-01  Gary V. Vaughan  <gary@gnu.org>
+2014-02-28  Gary V. Vaughan  <gary@gnu.org>
 
 	specl: diagnose unrecognised command-line options.
 	* specs/specl_spec.yaml: Specify behaviour for unrecognised
@@ -551,8 +862,6 @@
 	to diagnose unrecognised options.
 	(execute): Adjust accordingly.
 	* NEWS: Updated.
-
-2014-02-28  Gary V. Vaughan  <gary@gnu.org>
 
 	refactor: improve locality of reference.
 	* lib/specl/shell.lua (Command): Fix a comment typo.
@@ -657,13 +966,13 @@
 	* doc/specl.md (Command line): Update.
 	* NEWS: Update.
 
+2014-02-03  Gary V. Vaughan  <gary@gnu.org>
+
 	optparse: sync with upstream.
 	* lib/specl/optparse.lua: Sync with upstream for latest fixes.
 	* specs/optparse_spec.yaml: Remove.  No longer owned by this
 	project.
 	* specs/specs.mk (specl_SPECS): Remove optparse_specl.yaml.
-
-2014-02-03  Gary V. Vaughan  <gary@gnu.org>
 
 	specl: filter examples by line-number with +NN argument.
 	* specs/specl_spec.yaml: Specify behaviour of +NN argument.
@@ -927,11 +1236,11 @@
 	* doc/specl.md: ...to here.
 	* local.mk, rockspec.conf: Adjust.
 
+2013-12-08  Gary V. Vaughan  <gary@gnu.org>
+
 	slingshot: sync with upstream.
 	* slingshot: Pick up latest release with fixes for build.type =
 	"builtin" rockspecs.
-
-2013-12-08  Gary V. Vaughan  <gary@gnu.org>
 
 	docs: remove trailing whitespace.
 	* docs/specl.md: Remove trailing whitespace for 'make dist'.
@@ -1001,7 +1310,7 @@
 	the result of loadstring to package.preload to speed up subsequent
 	loads.
 
-2013-12-06  Gary V. Vaughan  <gary@gnu.org>
+2013-12-05  Gary V. Vaughan  <gary@gnu.org>
 
 	matchers: new contain.a_permutation_of adaptor.
 	* specs/matchers_spec.yaml: Specify expected behaviour of a new
@@ -1045,8 +1354,6 @@
 	* lib/specl/matchers.lua (reformat): Replace 'previded' with
 	'provided'.
 
-2013-12-05  Gary V. Vaughan  <gary@gnu.org>
-
 	util: simplify type_error implementation.
 	* lib/specl/util.lua (type_error): convert single types to a
 	typelist, then use util.concat unconditionally.
@@ -1059,6 +1366,8 @@
 	* lib/specl/std.lua (totable): When passed a string, return a
 	table of each character in the string.
 
+2013-12-04  Gary V. Vaughan  <gary@gnu.org>
+
 	docs: fix a typo in specl.md.
 	* docs/specl.md: Replace 'succed' with 'succeed'.
 
@@ -1067,8 +1376,6 @@
 	long form summaries read better. "matchers be matcher displays
 	expected and actual output for failures" becomes "matcher be
 	displays expected and actual output for failures".
-
-2013-12-04  Gary V. Vaughan  <gary@gnu.org>
 
 	matchers: support custom adaptors.
 	Declare adaptor functions as regular Object fields so they can
@@ -1676,11 +1983,11 @@
 	Merge pull request #9 from rrthomas/master
 	.gitignore: add bin/
 
-2013-05-09  Reuben Thomas  <rrt@sc3d.org>
+2013-05-08  Reuben Thomas  <rrt@sc3d.org>
 
 	.gitignore: remove release-notes-* and add bin/
 
-2013-05-09  Gary V. Vaughan  <gary@gnu.org>
+2013-05-08  Gary V. Vaughan  <gary@gnu.org>
 
 	maint: post-release administrivia.
 	* configure.ac (AC_INIT): Bump version number to 7.
@@ -1712,8 +2019,6 @@
 	(matchers.contain): Use it.
 	* specl/shell.lua (matchers.contain_output)
 	(matchers.contain_error): Likewise.
-
-2013-05-08  Gary V. Vaughan  <gary@gnu.org>
 
 	docs: convert to jekyll markdown format.
 	Updating the docs site is now a simple matter of copying this
@@ -1904,6 +2209,8 @@
 	util: fix a misnamed local variable declaration.
 	* specl/util.lua (type_error): Declare `expected` correctly.
 
+2013-05-03  Gary V. Vaughan  <gary@gnu.org>
+
 	shell: support running and matching state of shell commands.
 	* specs/shell_spec.yaml: Specify desired behaviour for supporting
 	executing and matching results from shell commands.
@@ -1950,7 +2257,7 @@
 	`require "foo"` to import foo's global symbols into the local
 	environment, even when foo uses modern `return API_table` style.
 
-2013-05-02  Gary V. Vaughan  <gary@gnu.org>
+2013-05-01  Gary V. Vaughan  <gary@gnu.org>
 
 	maint: update slingshot.
 	* local.mk: Move local changes from Makefile.am to here, to
@@ -1964,8 +2271,6 @@
 	* specs/formatters_spec.yaml, specs/matchers_spec.yaml,
 	specs/spec_helper.lua, specs/specl_spec.yaml, src/src.mk: Update
 	local specl path to new bin/specl location.
-
-2013-05-01  Gary V. Vaughan  <gary@gnu.org>
 
 	travis: make check in verbose mode.
 	* .travis.yml: Regenerate.
@@ -2260,6 +2565,8 @@
 	maint: bump version to 5.
 	* configure.ac (AC_INIT): Bump version number to 5.
 
+2013-04-08  Gary V. Vaughan  <gary@gnu.org>
+
 	matchers: error matcher no longer requires reversed arguments.
 	* specs/matchers_spec.yaml (error matcher): Specify all the
 	behaviours of a normal argument order `should_error` based
@@ -2279,8 +2586,6 @@
 	other matchers, plus a new `ok` parameter.
 	* specs/matchers_spec.yaml: Fill in the remaining specifications
 	for all currently implemnted matchers.
-
-2013-04-08  Gary V. Vaughan  <gary@gnu.org>
 
 	docs: reorganise and simplify.
 	* README.md: Move usage documentation from here...
@@ -2567,6 +2872,8 @@
 	(Custom Formatters): Describe API changes necessary to support
 	display of pending expectations and examples.
 
+2013-03-18  Gary V. Vaughan  <gary@gnu.org>
+
 	refactor: move command pipe managment into environment sandbox.
 	Generalize the output and exit status capturing functions into
 	the outermost environment sandbox, where it can be used by any
@@ -2599,8 +2906,6 @@
 	specl.std.
 	* specl/specl.in: Import those APIs from specl.util instead of
 	specl.std.
-
-2013-03-18  Gary V. Vaughan  <gary@gnu.org>
 
 	refactor: use canonical util.nop everywhere.
 	* specl/specl.lua (nop): Remove.
@@ -2994,12 +3299,10 @@
 	* src/specl.mk (src_specl_DEPS): Add yaml/lyaml.la.
 	Reported by Reuben Thomas at https://github.com/gvvaughan/specl/issues/1.
 
-2013-03-07  Gary V. Vaughan  <gary@gnu.org>
+2013-03-06  Gary V. Vaughan  <gary@gnu.org>
 
 	maint: bump version to 3.
 	* configure.ac (AC_INIT): Bump version number to 3.
-
-2013-03-06  Gary V. Vaughan  <gary@gnu.org>
 
 	rockspecs: correct source.url and source.dir for github.
 	* specl-rockspec.lua (source.url, source.dir): Remove '-1' suffix.
@@ -3079,6 +3382,8 @@
 	standard input.
 	* README.md: Update documentation. Particularly removing the
 	notes about dealing with quirks of `!lua`.
+
+2013-02-27  Gary V. Vaughan  <gary@gnu.org>
 
 	specs: specify exit statuses
 	* specs/specl_spec.yaml (describe specl): New examples to specify
@@ -3198,6 +3503,8 @@
 	* src/specl.in (package.path): Inject pkgluadir substitution.
 	(PATH_DATA, PATH_DOCDIR): Remove.  Unused variables.
 
+2013-02-24  Gary V. Vaughan  <gary@gnu.org>
+
 	configury: add rockspec machinery.
 	* specl-rockspec.lua: New file. Rockspec data.
 	* build-aux/mkrockspecs.lua: New file. Reuben's templating
@@ -3205,8 +3512,6 @@
 	* GNUmakefile (luarocks-config.lua, rockspecs): Use it to build
 	rockspecs.
 	* src/specl.mk (EXTRA_DIST): Add build-aux/mkrockspecs.lua.
-
-2013-02-24  Gary V. Vaughan  <gary@gnu.org>
 
 	specs: specl specs for specl.
 	* src/specl.mk (check-local): Run specs with 'make check'.
@@ -3331,6 +3636,8 @@
 	maint: fix mistakes in pasted copyright header.
 	* src/specl.lua: Actually, not part of GNU Zile, and didn't exist
 	at all for the first 4 years of the 2009-2013 copyright range.
+
+2013-02-19  Gary V. Vaughan  <gary@gnu.org>
 
 	maint: add README.
 	* README.md: New file. Barely useful at the moment...
