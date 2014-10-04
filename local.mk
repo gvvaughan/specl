@@ -29,7 +29,7 @@ LUA_ENV  = LUA_PATH="$(std_path);$(LUA_PATH)"
 ## Bootstrap. ##
 ## ---------- ##
 
-old_NEWS_hash = bb7c6d94d56ccf2920aee55c999ffbe8
+old_NEWS_hash = 834faf4ed2f9261ecb800847cbeeb875
 
 update_copyright_env = \
 	UPDATE_COPYRIGHT_HOLDER='Gary V. Vaughan' \
