@@ -266,7 +266,7 @@ to the `pending` function call like this:
       - it cannot remove an element when empty:
           pending "issue #26"
           stack = Stack {}
-          expect ("underflow").to_error (stack.pop ())
+          expect (stack.pop ()).to_error "underflow"
 {% endhighlight %}
 
 Running [Specl] now shows the string in the pending summary report:
@@ -280,6 +280,51 @@ Running [Specl] now shows the string in the pending summary report:
 
     All expectations met, but 1 still pending, in 0.00332 seconds.
 {% endhighlight %}
+
+
+### 1.6. Skipping Examples
+
+There is no need for a formal `skip` command in [Specl]; the example
+execution engine will not display the descriptions of examples that have
+no live expectations.
+
+{% highlight yaml %}
+    - specify Set:
+      - before:
+          Set = require "std.set"
+      - it supports the hash operator: |
+          set = Set {"foo", "bar", "bar"}
+          if tonumber (_VERSION:match "Lua (%d+%.%d+)") >= 5.2 then
+            expect (#set).to_be (2)
+          end
+      - it reports membership:
+          set = Set {"baz"}
+          expect (Set.member (set, "foo")).not_to_be (true)
+          expect (Set.member (set, "baz")).to_be (true)
+{% endhighlight %}
+
+When running this spec-file with the [Lua] 5.2 interpreter, the
+hash example expectation fires, and its result is reported:
+
+{% highlight yaml %}
+    Set
+      supports the hash operator
+      reports membership
+{% endhighlight %}
+
+However, with [Lua] 5.1 (which does not respect the `__len` metamethod
+of tables with the hash operator), the `if` expression will be false, and
+so the `expect` command is not executed.  In that case, formatters do
+not report that result, effectively skipping the example:
+
+{% highlight yaml %}
+    Set
+      reports membership
+{% endhighlight %}
+
+Note that, like `pending` examples, the example Lua code **is**
+executed and needs to be well formed, it is just ignored by formatters
+when reporting the results from a spec-file.
 
 
 ## 2. Matchers
@@ -836,6 +881,13 @@ local path = std.io.catfile ("lib", "?.lua")
 
 package.path = std.package.normalize (path, package.path)
 {% endhighlight %}
+
+Furthermore, [Specl] automatically loads the `spec_helper.lua` file in
+the function environment of the outer-most `before` block (a virtual
+`before` is created at runtime if necessary), so it has access to all
+of Specl's [Lua] extensions, such as `expect` and matchers.  See
+[Programmatic Specifications](#programmatic-specifications) for some
+examples of how to take advantage of this.
 
 
 ## 4. Formatters
@@ -1395,6 +1447,68 @@ matches the given [Lua] pattern:
       to_fail_while_matching "^[%w/]+: rspec: "
 {% endhighlight %}
 
+
+### 6.2. Programmatic Specifications
+
+At times, especially with large or complex specifications, it can feel
+as though [YAML] forces you to write a lot of boiler plate [Lua] over
+and over again across related examples.  Actually, [YAML] was chosen as
+the file format for _spec-files_ purely to help organise and separate
+examples as your specifications are fleshed out; but, when it starts to
+get in the way, you can usually move boiler plate code into a helper
+function and simply call that function each time you need to use it.
+
+However, that doesn't work when the boiler plate crosses examples:
+
+{% highlight lua %}
+    - describe system-specific feature:
+      - it diagnoses missing arguments:
+          if have_feature then
+            expect (system_specific ()).to_raise "bad argument"
+          end
+      - it diagnoses wrong argument types:
+          if have_feature then
+            expect (system_specific (false)).to_raise "string expected"
+          end
+{% endhighlight %}
+
+What we really want to do here is skip the entire group on systems that
+do not support that particular feature.  We could write a wrapper
+function to call `expect`, and sometimes that's a useful idiom; but
+here, we can use a programmatic `examples` inside the outer `describe`
+group, and then wrap the whole example in an `if`, like so:
+
+{% highlight lua %}
+    - describe system-specific feature:
+        if have_feature then
+          examples {["it diagnoses missing arguments"] = function ()
+            expect (system_specific ()).to_raise "bad argument"
+          end}
+          examples {["it diagnoses wrong argument types"] = function ()
+            expect (system_specific (false)).to_raise "string expected"
+          end}
+        end
+{% endhighlight %}
+
+As you can see, we can call `examples` with a one element table using
+the description string as a key, followed by a [thunk] for a value. A
+programmatic specificiation written this way interacts with
+[formatters](#4-formatters) in precisely the same fashion as a separate
+[YAML] `it` description and example in that position would have done.
+
+For even further simplification of repetitive boiler-plate code you
+can write the examples calls in a function in your `spec_helper.lua`
+file, which adds that same series of parameterized examples when called
+from an example block in any spec-file:
+
+{% highlight lua %}
+    - describe system-specific feature:
+        if have_feature then
+          diagnose_badargs (M, "system_specific (string)")
+        end
+{% endhighlight %}
+
+
 ## 7. Not Yet Implemented
 
 No support for mocks in the current version.
@@ -1406,5 +1520,6 @@ No support for mocks in the current version.
 [luaposix]: http://github.com/luaposix/luaposix
 [rspec]:    http://github.com/rspec/rspec
 [specl]:    http://github.com/gvvaughan/specl
+[thunk]:    https://en.wikipedia.org/wiki/Thunk
 [yaml]:     http//yaml.org
 [lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1
