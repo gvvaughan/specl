@@ -223,8 +223,10 @@ end
 
 
 -- Don't prevent examples from loading a different luaposix.
-for _, reload in pairs {"posix", "posix_c", "posix.sys"} do
-  package.loaded[reload] = nil
+for k in pairs (package.loaded) do
+  if k == "posix" or k == "posix_c" or k:match "^posix%." then
+    package.loaded[k] = nil
+  end
 end
 
 
