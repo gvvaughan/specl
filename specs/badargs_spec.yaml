@@ -1,0 +1,77 @@
+before: |
+  badargs = require "specl.badargs"
+
+  re_badargmsg = "^bad argument #%d+ to '[%w_][%w_%d]*' (.*)$"
+
+specify badargs:
+- describe format:
+  - before:
+      f = badargs.format
+
+  - context with one too many args:
+    - it returns a bad argument message:
+        expect (f ("fnord", 42)).to_match (re_badargmsg)
+    - it reports argument count failure:
+        expect (f ("fnord", 42)).
+          to_contain "(no more than 41 arguments expected, got 42)"
+        expect (f ("fnord", 2)).
+          to_contain "(no more than 1 argument expected, got 2)"
+    - it reports failed argument: |
+        expect (f ("fnord", 42)).to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42)).to_contain "'fnord'"
+
+  - context with way too many args:
+    - it returns a bad argument message:
+        expect (f ("fnord", 0, 42)).to_match (re_badargmsg)
+    - it reports argument count failure:
+        expect (f ("fnord", 0, 42)).
+          to_contain "(no more than 0 arguments expected, got 42)"
+        expect (f ("fnord", 1, 42)).
+          to_contain "(no more than 1 argument expected, got 42)"
+    - it reports failed argument: |
+        expect (f ("fnord", 1, 42)).to_contain " #2 "
+    - it reports failed function:
+        expect (f ("fnord", 1, 42)).to_contain "'fnord'"
+
+  - context with missing argument check:
+    - it returns a bad argument message:
+        expect (f ("fnord", 42, "number")).
+          to_match (re_badargmsg)
+    - it reports table field type mismatch:
+        expect (f ("fnord", 42, "number")).
+          to_contain "(number expected, got no value)"
+    - it reports failed argument: |
+        expect (f ("fnord", 42, "number")).
+          to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42, "number")).
+          to_contain "'fnord'"
+
+  - context with argument type check:
+    - it returns a bad argument message:
+        expect (f ("fnord", 42, "number", "string")).
+          to_match (re_badargmsg)
+    - it reports table field type mismatch:
+        expect (f ("fnord", 42, "number",  "string")).
+          to_contain "(number expected, got string)"
+    - it reports failed argument: |
+        expect (f ("fnord", 42, "number", "string")).
+          to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42, "number", "string")).
+          to_contain "'fnord'"
+
+  - context with field type check:
+    - it returns a bad argument message:
+        expect (f ("fnord", 42, "number", "gnar", "string")).
+          to_match (re_badargmsg)
+    - it reports table field type mismatch:
+        expect (f ("fnord", 42, "number", "gnar", "string")).
+          to_contain "(number expected for field 'gnar', got string)"
+    - it reports failed argument: |
+        expect (f ("fnord", 42, "number", "gnar", "string")).
+          to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42, "number", "gnar", "string")).
+          to_contain "'fnord'"

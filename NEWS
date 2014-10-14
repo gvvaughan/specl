@@ -2,6 +2,13 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Incompatible changes:
+
+  - 'badargs.format' now formats message with the word "arguments" for
+    all ordinal values except exactly 1, where "argument" is used.
+    Previously, Specl erroneously used "argument" for ordinal values of
+    less than or equal to 1.
+
 
 * Noteworthy changes in release 13 (2014-10-04) [stable]
 

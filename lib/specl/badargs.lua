@@ -214,7 +214,7 @@ local function format (fname, i, want, field, got)
 
   if got == nil and type (want) == "number" then
     local s = "bad argument #%d to '%s' (no more than %d argument%s expected, got %d)"
-    return s:format (i + 1, fname, i, i > 1 and "s" or "", want)
+    return s:format (i + 1, fname, i, i == 1 and "" or "s", want)
   elseif field ~= nil then
     local s = "bad argument #%d to '%s' (%s expected for field '%s', got %s)"
     return s:format (i, fname, want, field, got or "no value")
