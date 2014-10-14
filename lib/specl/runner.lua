@@ -219,7 +219,7 @@ function run_examples (state, examples, descriptions, env)
       if type (definition) == "function" then
 	local example = { example = definition, line = line or "unknown" }
 
-        table.insert (descriptions, (description:gsub ("_", " ")))
+        table.insert (descriptions, description)
 	if run_example (state, example, descriptions, fenv) == false then
           keepgoing = false
 	end

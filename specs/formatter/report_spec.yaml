@@ -173,7 +173,7 @@ describe report:
 - context with passing 'examples' expectation:
   - before: |
       yaml = "describe report:\n" ..
-             '  examples {it_is_passing = function ()\n' ..
+             "  examples {['it is passing'] = function ()\n" ..
              "    expect (1).to_be (1)\n" ..
              "  end}\n"
       argt   = {"-freport", stdin = yaml}
@@ -246,7 +246,7 @@ describe report:
 - context with failing 'examples' expectation:
   - before: |
       yaml = "describe report:\n" ..
-             "  examples {it_is_failing = function ()\n" ..
+             "  examples {['it is failing'] = function ()\n" ..
              "    expect (1).to_be (0)\n" ..
              "  end}\n"
 
