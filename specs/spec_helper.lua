@@ -68,8 +68,7 @@ function run_spec (params)
 
     if params.stdin then argt[#argt + 1] = "-" end
 
-    local proc = inprocess.call (Main, argt, params.stdin)
-    return proc
+    return inprocess.call (Main, argt, params.stdin)
   end
 
   error ("inprocess_spec was expecting a string or table, but got a "..type (params))
