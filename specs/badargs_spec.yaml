@@ -75,3 +75,26 @@ specify badargs:
     - it reports failed function:
         expect (f ("fnord", 42, "number", "gnar", "string")).
           to_contain "'fnord'"
+
+
+- describe diagnose:
+  - before:
+      preamble = "before:\n" ..
+                 "  badargs = require 'specl.badargs'\n" ..
+                 "specify diagnoses:\n" ..
+                 "- context with bad arguments:\n"
+
+  - context with no parameters:
+    - before:
+        yaml   = preamble ..
+                 "  - it checks for too many arguments:\n" ..
+                 "      f = function (...)\n" ..
+                 "        error (badargs.format ('f', 1))\n" ..
+                 "      end\n" ..
+                 "      badargs.diagnose (f, 'f ()')"
+        argt = {"-freport", stdin = yaml}
+    - it exits successfully:
+        expect (run_spec (argt)).to_exit (0)
+    - it diagnoses too many arguments:
+        expect (run_spec (argt)).
+          to_contain_output "diagnoses more than maximum of 0 arguments"

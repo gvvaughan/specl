@@ -49,6 +49,21 @@ local function setfenv (f, t)
 end
 
 
+local getfenv = getfenv or function (fn)
+  fn = fn or 1
+  if type (fn) == "number" then
+    fn = debug.getinfo (fn + 1, "f").func
+  end
+  local name, env
+  local up = 0
+  repeat
+    up = up + 1
+    name, env = debug.getupvalue (fn, up)
+  until name == '_ENV' or name == nil
+  return env
+end
+
+
 local loadstring = loadstring or function (chunk, chunkname)
   return load (chunk, chunkname)
 end
@@ -75,6 +90,7 @@ end
 --[[ ----------------- ]]--
 
 return {
+  getfenv    = getfenv,
   loadstring = loadstring,
   setfenv    = setfenv,
   xpcall     = xpcall,

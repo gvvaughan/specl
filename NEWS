@@ -9,6 +9,13 @@ Specl NEWS - User visible changes.
     Previously, Specl erroneously used "argument" for ordinal values of
     less than or equal to 1.
 
+** Bug fixes:
+
+  - `specl.inprocess` now propagates function environments correctly,
+    so examples inside the `inprocess.call` are not tallied to the
+    main specl counters; `formatter.report` does not lose track of what
+    descriptions have been displayed after an `inprocess.call`; etc.
+
 
 * Noteworthy changes in release 13 (2014-10-04) [stable]
 

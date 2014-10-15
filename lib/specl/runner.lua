@@ -177,6 +177,10 @@ function run_example (state, definition, descriptions, fenv)
   if inclusive then
     matchers.init (state)
 
+    -- Propagate nested environments to functions that might be called
+    -- from inside the example.
+    local badargs  = require "specl.badargs"
+    setfenv (badargs.diagnose, fenv)
     setfenv (definition.example, fenv)
     definition.example ()
 
@@ -210,8 +214,15 @@ function run_examples (state, examples, descriptions, env)
     local description, definition = next (example)
     local line = definition.line
 
-    fenv.expect  = function (...) return matchers.expect  (state, ...) end
-    fenv.pending = function (...) return matchers.pending (state, ...) end
+    fenv.expect = function (...)
+      return matchers.expect (state, ...)
+    end
+    setfenv (fenv.expect, fenv)
+
+    fenv.pending = function (...)
+      return matchers.pending (state, ...)
+    end
+    setfenv (fenv.pending, fenv)
 
     fenv.examples = function (t)
       -- FIXME: robust argument type-checking!
@@ -245,6 +256,7 @@ function run_examples (state, examples, descriptions, env)
       -- `run_examples`.
       matchers.init (state)
     end
+    setfenv (fenv.examples, fenv)
 
     initenv (state, fenv)
 

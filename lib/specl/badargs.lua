@@ -24,10 +24,12 @@
 ]]
 
 
-local std = require "specl.std"
+local std    = require "specl.std"
+local compat = require "specl.compat"
 
 local split  = std.string.split
 local invert = std.table.invert
+local getfenv, setfenv = compat.getfenv, compat.setfenv
 
 
 --- Return the last element of a list-like table.
@@ -384,6 +386,11 @@ local function diagnose (fn, decl)
   for _, v in pairs (types) do
     if v:match "%[.*%]" then typemin = typemin - 1 end
   end
+
+  -- Ensure the following functions are executed in the environment that
+  -- this function is inside.
+  setfenv (examples, getfenv ())
+  setfenv (expect, getfenv ())
 
   local arglist = {}
   for i, argtype in ipairs (type_specs) do
