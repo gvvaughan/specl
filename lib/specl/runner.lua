@@ -29,6 +29,11 @@ local slurp, split, merge =
   std.io.slurp, std.string.split, std.table.merge
 local map, strip1st = util.map, util.strip1st
 
+-- Protect against examples misusing or resetting keywords.
+local error, ipairs, pairs, type, rawset, setmetatable, unpack =
+      error, ipairs, pairs, type, rawset, setmetatable, unpack
+
+
 
 --[[ ================= ]]--
 --[[ Helper Functions. ]]--

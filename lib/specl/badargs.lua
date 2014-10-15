@@ -32,6 +32,10 @@ local invert = std.table.invert
 local getfenv, setfenv = compat.getfenv, compat.setfenv
 
 
+-- Protect against examples misusing or resetting keywords.
+local ipairs, pairs, type, unpack = ipairs, pairs, type, unpack
+
+
 --- Return the last element of a list-like table.
 -- @tparam list l a list-like table
 -- @return the last element of *l*
