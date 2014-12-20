@@ -2,24 +2,24 @@
 
 -- First handle debug_init and _DEBUG, being careful not to affect
 -- DEBUG disposition of subsequent example loaders for std.debug_init!
-local init = require "std.debug_init"
-init._DEBUG = false
+local _DEBUG = require "std.debug_init"._DEBUG
+_DEBUG.argcheck = false
 
 
 -- Handle to the stdlib modules.
 local M = require "std"
 
 -- Check minimum version requirement.
-M.string.require_version ("std", "40")
+M.require ("std", "41")
 
 
 local F = M.functional
 local filter, lambda, map = F.filter, F.lambda, F.map
-local elems = M.list.elems
+local ielems = M.ielems
 
 
 -- Cache submodule handles into local `std` above.
-map (function (n) M[n] = require ("std." .. n) end, elems, {
+map (function (n) M[n] = require ("std." .. n) end, ielems, {
   "container",
   "debug",
   "functional",
@@ -38,50 +38,13 @@ map (function (n) M[n] = require ("std." .. n) end, elems, {
 
 
 
---[[ ===================== ]]--
---[[ Import from "Future". ]]--
---[[ ===================== ]]--
-
-
--- Patch up some holes in stdlib v40 here, mostly to make the transition
--- to v41 less fiddly later on.
-
-
--- Version in stdlib v40 is hoplessly b0rked :(
-M.functional.bind = function (fn, argt)
-  return function (...)
-    local arg, i = {}, 1
-    for i, v in pairs (argt) do arg[i] = v end
-    for _, v in ipairs {...} do
-      while arg[i] ~= nil do i = i + 1 end
-      arg[i] = v
-    end
-    return fn (unpack (arg))
-  end
-end
-
-
--- Not implemented in stdlib v40
-M.io.dirname = M.io.dirname or function (path)
-  return path:gsub (M.io.catfile ("", "[^", "]*$"), "")
-end
-
-
--- Not implemented in stdlib v40
-M.table.len = M.table.len or function (t)
-  local m = (getmetatable (t) or {}).__len
-  return type (m) == "function" and m (t) or #t
-end
-
-
-
 --[[ ================= ]]--
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
 
 -- Don't prevent examples from loading a different stdlib.
-map (function (e) package.loaded[e] = nil end, M.list.elems,
-     filter (function (k) return (k == "std") or (k:match "^std%.") end, pairs,
+map (function (e) package.loaded[e] = nil end,
+     filter (function (k) return k:match "^std%." or k == "std" end,
              package.loaded))
 
 return M
