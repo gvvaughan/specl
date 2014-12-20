@@ -94,6 +94,9 @@ local function initenv (state, env)
   env.require = function (m)
     local errmsg, import, loaded, loadfn
 
+    compat.intercept_loaders (package)
+    compat.intercept_loaders (env.package)
+
     -- temporarily switch to the environment package context.
     local save = {
       cpath = package.cpath, path = package.path, loaders = package.loaders,
