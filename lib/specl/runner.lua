@@ -30,8 +30,8 @@ local slurp, split, merge =
 local examplename = util.examplename
 
 -- Protect against examples misusing or resetting keywords.
-local error, ipairs, pairs, type, rawset, setmetatable, unpack =
-      error, ipairs, pairs, type, rawset, setmetatable, unpack
+local error, ipairs, pairs, type, rawset, setmetatable =
+      error, ipairs, pairs, type, rawset, setmetatable
 
 
 

@@ -69,6 +69,12 @@ local loadstring = loadstring or function (chunk, chunkname)
 end
 
 
+-- Lua 5.3 has table.unpack but not _G.unpack;
+-- Lua 5.2 has both table.unpack and _G.unpack;
+-- Lua 5.1 has _G.unpack but not table.unpack!
+local unpack = table.unpack or unpack
+
+
 do
   local have_xpcall_args
   local function catch (arg) have_xpcall_args = arg end
@@ -93,5 +99,6 @@ return {
   getfenv    = getfenv,
   loadstring = loadstring,
   setfenv    = setfenv,
+  unpack     = unpack,
   xpcall     = xpcall,
 }

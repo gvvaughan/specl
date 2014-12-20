@@ -29,11 +29,11 @@ local compat = require "specl.compat"
 
 local split  = std.string.split
 local invert = std.table.invert
-local getfenv, setfenv = compat.getfenv, compat.setfenv
+local getfenv, setfenv, unpack = compat.getfenv, compat.setfenv, compat.unpack
 
 
 -- Protect against examples misusing or resetting keywords.
-local ipairs, pairs, type, unpack = ipairs, pairs, type, unpack
+local ipairs, pairs, type = ipairs, pairs, type
 
 
 --- Return the last element of a list-like table.
