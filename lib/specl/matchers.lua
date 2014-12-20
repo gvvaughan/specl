@@ -22,9 +22,9 @@ local color = require "specl.color"
 local std   = require "specl.std"
 local util  = require "specl.util"
 
-local object, pairs = std.object, std.pairs
-local chomp, escape_pattern, prettytostring, tostring =
-  std.string.chomp, std.string.escape_pattern, std.string.prettytostring, std.string.tostring
+local object, pairs, tostring = std.object, std.pairs, std.tostring
+local chomp, escape_pattern, prettytostring =
+  std.string.chomp, std.string.escape_pattern, std.string.prettytostring
 local clone, empty, merge, size =
   std.table.clone, std.table.empty, std.table.merge, std.table.size
 local type_check = util.type_check

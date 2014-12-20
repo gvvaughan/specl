@@ -120,7 +120,7 @@ local function concat (alternatives, infix, quoted)
   if quoted ~= nil then
     alternatives = map (function (v)
                           if object.type (v) ~= "string" then
-                            return std.string.tostring (v)
+                            return std.tostring (v)
                           else
                             return ("%q"):format (v)
                           end
