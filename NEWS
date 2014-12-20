@@ -2,6 +2,10 @@ Specl NEWS - User visible changes.
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features
+
+  - Preliminary Lua 5.3 support.
+
 ** Incompatible changes:
 
   - 'badargs.format' now formats message with the word "arguments" for
