@@ -87,7 +87,7 @@ local function expectations (status, descriptions, opts)
         end
         pend = pend .. color.pend ..
               "PENDING expectation " ..  i .. color.reset .. ": " ..
-              color.warn .. expectation.pending
+              color.warn .. expectation.pending .. color.reset
 
         if expectation.status == true then
           counts.unexpected = counts.unexpected + 1

@@ -55,9 +55,9 @@ local function expectations (status, descriptions, opts)
 	  reports.pend = reports.pend .. fileline .. i .. ": " .. color.reset
 	end
         reports.pend = reports.pend ..
-	  color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
+	  color.pend .. "PENDING expectation " .. i .. color.reset .. ": "
 
-        reports.pend = reports.pend .. color.warn .. expectation.pending
+        reports.pend = reports.pend .. color.warn .. expectation.pending .. color.reset
 
         if expectation.status == true then
           writc (opts.color, color.strong .. "?")
