@@ -27,7 +27,7 @@ local util     = require "specl.util"
 local loadstring, setfenv = compat.loadstring, compat.setfenv
 local slurp, split, merge =
   std.io.slurp, std.string.split, std.table.merge
-local map, strip1st = util.map, util.strip1st
+local examplename = util.examplename
 
 -- Protect against examples misusing or resetting keywords.
 local error, ipairs, pairs, type, rawset, setmetatable, unpack =
@@ -170,9 +170,9 @@ function run_example (state, definition, descriptions, fenv)
   local keepgoing = true
 
   if not inclusive then
-    local source = table.concat (map (strip1st, descriptions))
+    local title = examplename (descriptions)
     for _, pattern in ipairs (filters.inclusive or {}) do
-      if source:match (pattern) then
+      if title:match (pattern) then
         inclusive = true
         break
       end

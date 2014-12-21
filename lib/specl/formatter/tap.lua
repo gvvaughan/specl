@@ -3,22 +3,21 @@
 
 local util = require "specl.util"
 
-local map, nop, strip1st =
-  util.map, util.nop, util.strip1st
+local examplename, nop = util.examplename, util.nop
 
 local curr_test = 0
 
 
 -- Diagnose any failed expectations in situ.
 local function expectations (status, descriptions)
-  local name = table.concat (map (strip1st, descriptions), " ")
+  local title = examplename (descriptions)
 
   if next (status.expectations) then
     for _, expectation in ipairs (status.expectations) do
       local fail = (expectation.status == false)
       curr_test = curr_test + 1
       if fail then io.write "not " end
-      io.write ("ok " .. curr_test .. " " .. name)
+      io.write ("ok " .. curr_test .. " " .. title)
       io.write "\n"
       if expectation.status == "pending" then
         print "# PENDING expectation: Not Implemented Yet"
@@ -29,7 +28,7 @@ local function expectations (status, descriptions)
     end
   elseif status.ispending then
     print ("#   " .. tostring (curr_test):gsub (".", "-") .. " " ..
-           name .. "\n#    PENDING example: Not Implemented Yet")
+           title .. "\n#    PENDING example: Not Implemented Yet")
   end
 end
 
