@@ -150,7 +150,12 @@ local function execute (self)
 
   -- Process all specfiles when none are given explicitly.
   if #self.arg == 0 then
-    self.arg = map (specfilter, files "specs")
+    local specs, errmsg = files "./specs"
+    if specs == nil then
+      parser:opterr (errmsg)
+    else
+      self.arg = map (specfilter, specs)
+    end
   end
 
   self:process_args (parser)

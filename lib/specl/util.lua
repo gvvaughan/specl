@@ -52,7 +52,9 @@ if have_posix then
 
 else
 
-  files = nop
+  files = function (root, t)
+    return nil, "install luaposix to autoload spec files from '" .. tostring (root) .. "/'"
+  end
 
 end
 

@@ -19,6 +19,9 @@ Specl NEWS - User visible changes.
     main specl counters; `formatter.report` does not lose track of what
     descriptions have been displayed after an `inprocess.call`; etc.
 
+  - When expecting automatic execution of specfiles in ./specs/*,
+    without luaposix installed, error is diagnosed properly.
+
 
 * Noteworthy changes in release 13 (2014-10-04) [stable]
 
