@@ -14,27 +14,29 @@ M.require ("std", "41")
 
 
 local F = M.functional
-local filter, lambda, map = F.filter, F.lambda, F.map
-local ielems = M.ielems
+local filter, lambda, map, reduce = F.filter, F.lambda, F.map, F.reduce
+local set = M.operator.set
 
 
 -- Cache submodule handles into local `std` above.
-map (function (n) M[n] = require ("std." .. n) end, ielems, {
-  "container",
-  "debug",
-  "functional",
-  "io",
-  "list",
-  "math",
-  "object",
-  "optparse",
-  "package",
-  "set",
-  "strbuf",
-  "string",
-  "table",
-  "tree",
-})
+reduce (set, M,
+  map (lambda '_2, require ("std." .. _2)', {
+    "container",
+    "debug",
+    "functional",
+    "io",
+    "list",
+    "math",
+    "object",
+    "optparse",
+    "package",
+    "set",
+    "strbuf",
+    "string",
+    "table",
+    "tree",
+  })
+)
 
 
 
@@ -44,7 +46,6 @@ map (function (n) M[n] = require ("std." .. n) end, ielems, {
 
 -- Don't prevent examples from loading a different stdlib.
 map (function (e) package.loaded[e] = nil end,
-     filter (function (k) return k:match "^std%." or k == "std" end,
-             package.loaded))
+     filter (lambda '|k| k:match "^std%." or k == "std"', package.loaded))
 
 return M
