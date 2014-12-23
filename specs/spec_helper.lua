@@ -47,7 +47,7 @@ function spawn_specl (params)
     return hell.spawn {cmd; env = env, stdin = params.stdin}
   end
 
-  error ("run_spec was expecting a string or table, but got a "..type (params))
+  error ("specl_spawn was expecting a string or table, but got a "..type (params))
 end
 
 
@@ -71,7 +71,7 @@ function run_spec (params)
     return inprocess.call (Main, argt, params.stdin)
   end
 
-  error ("inprocess_spec was expecting a string or table, but got a "..type (params))
+  error ("run_spec was expecting a string or table, but got a "..type (params))
 end
 
 
