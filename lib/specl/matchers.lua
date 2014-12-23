@@ -22,7 +22,8 @@ local color = require "specl.color"
 local std   = require "specl.std"
 local util  = require "specl.util"
 
-local object, pairs, tostring = std.object, std.pairs, std.tostring
+local getmetamethod, object, pairs, tostring =
+  std.getmetamethod, std.object, std.pairs, std.tostring
 local chomp, escape_pattern, prettytostring =
   std.string.chomp, std.string.escape_pattern, std.string.prettytostring
 local clone, empty, merge, size =
