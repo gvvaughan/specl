@@ -204,7 +204,7 @@ local function env_init (env, stdin)
               end,
 
     type    = function (h)
-                if object.type (h) == "StrFile" then
+                if (getmetatable (h) or {})._type == "StrFile" then
                   return "file" -- virtual stdio streams cannot be closed
                 end
                 return io.type (h)
