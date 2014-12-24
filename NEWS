@@ -9,6 +9,9 @@ Specl NEWS - User visible changes.
     Previously, Specl erroneously used "argument" for ordinal values of
     less than or equal to 1.
 
+  - Ancient code to replace underscores in example description with
+    spaces has finally removed.
+
 ** Bug fixes:
 
   - `specl.inprocess` now propagates function environments correctly,
