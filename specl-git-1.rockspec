@@ -22,6 +22,6 @@ build = {
     "bin",
     "doc",
   },
-  install_command = "make install luadir='$(LUADIR)'",
+  install_command = "make install luadir='$(LUADIR)' luaexecdir='$(LIBDIR)'",
   type = "command",
 }
