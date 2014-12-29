@@ -418,6 +418,7 @@ specify inprocess:
             local n = 0
             for l in io.stdin:lines "*n" do
               n = n + 1
+              if l == math.floor (l) then l = math.floor (l) end
               print (n, l)
             end
           end
