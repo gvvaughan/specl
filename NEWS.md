@@ -1,14 +1,14 @@
-Specl NEWS - User visible changes.
+# Specl NEWS - User visible changes.
 
-* Noteworthy changes in release ?.? (????-??-??) [?]
+## Noteworthy changes in release ?.? (????-??-??) [?]
 
-** New features
+### New features
 
   - Preliminary Lua 5.3 support.
 
-** Incompatible changes:
+### Incompatible changes:
 
-  - 'badargs.format' now formats message with the word "arguments" for
+  - `badargs.format` now formats message with the word "arguments" for
     all ordinal values except exactly 1, where "argument" is used.
     Previously, Specl erroneously used "argument" for ordinal values of
     less than or equal to 1.
@@ -16,7 +16,7 @@ Specl NEWS - User visible changes.
   - Ancient code to replace underscores in example description with
     spaces has finally removed.
 
-** Bug fixes:
+### Bug fixes:
 
   - `specl.inprocess` now propagates function environments correctly,
     so examples inside the `inprocess.call` are not tallied to the
@@ -27,9 +27,9 @@ Specl NEWS - User visible changes.
     without luaposix installed, error is diagnosed properly.
 
 
-* Noteworthy changes in release 13 (2014-10-04) [stable]
+## Noteworthy changes in release 13 (2014-10-04) [stable]
 
-** New features:
+### New features:
 
   - Specl's own modules, and modules loaded from spec-file directories
     are now loaded inside the function environment of the running
@@ -51,16 +51,20 @@ Specl NEWS - User visible changes.
     argument error messages that can be passed to matchers to ensure
     correct error message formatting:
 
-        expect (posix.write ()).to_raise (format ("write", 1, "int"))
+    ```lua
+    expect (posix.write ()).to_raise (format ("write", 1, "int"))
+    ```
 
     And `diagnose`, which writes a full set of expectations to check all
     missing, extraneous and badly typed arguments are diagnosed
     correctly:
 
-        - context with bad arguments:
-            badargs.diagnose (posix.write "(int, string)")
+    ```yaml
+    - context with bad arguments:
+        badargs.diagnose (posix.write "(int, string)")
+    ```
 
-** Incompatible changes:
+### Incompatible changes:
 
   - `inprocess.capture` returns a `Process`, not a pair of strings
     and the call results. Call results are still available in the array
@@ -77,7 +81,7 @@ Specl NEWS - User visible changes.
     expanding `from` macros, and concatenating the resulting sources, as
     well as allowing piece-meal loading of specl modules.
 
-** Bug fixes:
+### Bug fixes:
 
   - Enhanced resolution timers now also work with luaposix > 31.
 
@@ -98,8 +102,10 @@ Specl NEWS - User visible changes.
     or standard output text, and that `Process` stream contains `nil`
     to indicate the stream was not written at all. For example:
 
-      expect (capture (function () print "stdout" end)).
-        not_to_contain_error "stderr"
+    ```lua
+    expect (capture (function () print "stdout" end)).
+      not_to_contain_error "stderr"
+    ```
 
   - After loading system modules it depends on, Specl removes them
     from the Lua module cache so that other versions of those same
@@ -108,9 +114,9 @@ Specl NEWS - User visible changes.
     `spec_helper.lua`.
 
 
-* Noteworthy changes in release 12 (2014-04-25) [stable]
+## Noteworthy changes in release 12 (2014-04-25) [stable]
 
-** New features:
+### New features:
 
   - Now that this API is stable, there is full documentation for
     `specl.shell` in doc/specl.md.
@@ -120,22 +126,24 @@ Specl NEWS - User visible changes.
     so that standard input calls read from the supplied buffer, and any
     output is captured rather than leaked:
 
-      inprocess.capture (function (...)
-        print (...)
-        io.stderr:write (io.stdin:read "*a")
-        return "first", 2
-      end,
-      {"foo", "bar"},
-      "input content")
+    ```lua
+    inprocess.capture (function (...)
+      print (...)
+      io.stderr:write (io.stdin:read "*a")
+      return "first", 2
+    end,
+    {"foo", "bar"},
+    "input content")
 
-        => "foo\tbar\n", "input content", "first", 2
+    --> "foo\tbar\n", "input content", "first", 2
+    ```
 
     i.e. standard output, standard error, function return values
 
   - The report formatter no longer displays orphaned contexts of
     filtered-out examples.
 
-** Bug fixes:
+### Bug fixes:
 
   - Specl no longer crashes when requiring system libraries (such as
     math, bit32 etc) from examples or spec_helpers.
@@ -148,15 +156,15 @@ Specl NEWS - User visible changes.
     code.  If you need to write examples that deliberately interact with
     those envvars, use `specl.shell` to isolate them correctly.
 
-* Noteworthy changes in release 11 (2014-04-05) [stable]
+## Noteworthy changes in release 11 (2014-04-05) [stable]
 
-** New features:
+### New features:
 
   - Built-in matchers compare nested tables and objects in about 25% of
     the time required previously, and is optimised for tail-call
     elimination for non-tree like structures.
 
-  - Specl now loads a 'spec_helper.lua' from the same directory as the
+  - Specl now loads a `spec_helper.lua` from the same directory as the
     spec file being executed into the example environment automatically,
     so there's no need to manually require it from a `before:` block in
     each spec file any more.
@@ -164,7 +172,7 @@ Specl NEWS - User visible changes.
   - You can easily run Specl from the top of your source tree without
     any special LUA_PATH munging in Makefiles or wrapper scripts. Just
     set `package.path` and `package.cpath` to find the code being specced
-    out in a 'spec_helper.lua' in each directory containing spec files.
+    out in a `spec_helper.lua` in each directory containing spec files.
 
   - When invoked with no filename arguments, `specl` will check all your
     specifications, as long as they have names ending in `_spec.yaml` and
@@ -186,12 +194,16 @@ Specl NEWS - User visible changes.
     number either by pasting from the output of a failed or pending
     expectation in verbose mode, by invoking specl as:
 
-        specl specs/some_spec.yaml:44:1
+    ```bash
+    specl specs/some_spec.yaml:44:1
+    ```
 
     or with as many `+NN` as necessary to select several examples from
     the following file:
 
-        specl +44 +48 specs/some_spec.yaml
+    ```bash
+    specl +44 +48 specs/some_spec.yaml
+    ```
 
     or a combination of the above. Note that the final `:1` in the
     former is ignored and can be omitted (it is the ordinal number of an
@@ -205,43 +217,55 @@ Specl NEWS - User visible changes.
   - New `copy` matcher, to specify that an object should be an identical
     copy of the expected value, but not the same object:
 
-      t = {"foo"}
-      expect (table.clone (t)).to_copy (t)
+    ```lua
+    t = {"foo"}
+    expect (table.clone (t)).to_copy (t)
+    ```
 
   - You can `require "specl.shell"` for a swathe of additional matchers
     to specify results from a `Process` object:
 
       a) For exit statuses, use:
 
-           expect (shell.spawn "exit 42").to_exit (42)
-           expect (shell.spawn "exit 0").to_succeed ()
-           expect (shell.spawn "/bin/false").to_fail ()
+         ```lua
+         expect (shell.spawn "exit 42").to_exit (42)
+         expect (shell.spawn "exit 0").to_succeed ()
+         expect (shell.spawn "/bin/false").to_fail ()
+         ```
 
       b) For checking the contents of the output stream, use:
 
-           expect (...).to_output "exact content"
-           expect (...).to_contain_output  "substring"
-           expect (...).to_match_output "pattern"
+         ```lua
+         expect (...).to_output "exact content"
+         expect (...).to_contain_output  "substring"
+         expect (...).to_match_output "pattern"
+         ```
 
       d) To require zero exit status with specified output stream
          contents:
 
-           expect (...).to_succeed_with "exact content"
-           expect (...).to_succeed_while_containing "substring"
-           expect (...).to_succeed_while_matching "pattern"
+         ```lua
+         expect (...).to_succeed_with "exact content"
+         expect (...).to_succeed_while_containing "substring"
+         expect (...).to_succeed_while_matching "pattern"
+         ```
 
       c) To check the standard error stream instead:
 
-           expect (...).to_output_error "exact content"
-           expect (...).to_contain_error "substring"
-           expect (...).to_match_error "pattern"
+         ```lua
+         expect (...).to_output_error "exact content"
+         expect (...).to_contain_error "substring"
+         expect (...).to_match_error "pattern"
+         ```
 
       e) To require non-zero exit status with specified error stream
          contents:
 
-           expect (...).to_fail_with "exact content"
-           expect (...).to_fail_while_containing "substring"
-           expect (...).to_fail_while_matching "pattern"
+         ```lua
+         expect (...).to_fail_with "exact content"
+         expect (...).to_fail_while_containing "substring"
+         expect (...).to_fail_while_matching "pattern"
+         ```
 
   - New experimental `specl.inprocess` module provides a way to run
     carefully written Lua programs inside the Specl process, saving a
@@ -250,7 +274,7 @@ Specl NEWS - User visible changes.
     75% off the time spent in `make check`: from over 20secs to under
     5secs on my machine.
 
-** Incompatible changes:
+### Incompatible changes:
 
   - Invoking `specl` with no filename arguments no longer reads specs
     from standard input.  You must explicitly pass a "-" argument to get
@@ -275,16 +299,18 @@ Specl NEWS - User visible changes.
     parameter in the unnamed matching predicate function and the
     following optional functions accepted by the constructor:
 
-      function (self, actual, expect)
-      function format_actual (self, actual, ...)
-      format_expect (self, expect, ...)
-      format_alternatives (self, adaptor, alternatives, ...)
+    ```lua
+    function (self, actual, expect)
+    function format_actual (self, actual, ...)
+    format_expect (self, expect, ...)
+    format_alternatives (self, adaptor, alternatives, ...)
+    ```
 
     If you have added any custom matchers to your spec files, be sure
     to insert the `self` parameter to match the new calling convention
     as soon as you upgrade, or they will not work with this release.
 
-** Bug fixes:
+### Bug fixes:
 
   - Setting table elements from outer environment tables no longer leak
     into sibling examples.  For example, changing entries in the _G
@@ -294,18 +320,18 @@ Specl NEWS - User visible changes.
   - Unrecognised command-line options are diagnosed properly.
 
 
-* Noteworthy changes in release 10 (2014-01-15) [stable]
+## Noteworthy changes in release 10 (2014-01-15) [stable]
 
-** Bug fixes:
+### Bug fixes:
 
   - Using specl.shell when Specl itself and the process being
     spawned require different versions of Lua no longer crashes
     with corrupted shared package.path settings.
 
 
-* Noteworthy changes in release 9 (2013-12-09) [stable]
+## Noteworthy changes in release 9 (2013-12-09) [stable]
 
-** New features:
+### New features:
 
   - Vastly improved error diagnostics for syntax errors in spec
     files, reporting filename and line-number of error locations,
@@ -314,29 +340,31 @@ Specl NEWS - User visible changes.
   - Support for custom per-matcher adaptors. See docs/specl.md for
     documentation.
 
-  - New 'a_permutation_of' adaptor for contain matcher, that allows
+  - New `a_permutation_of` adaptor for contain matcher, that allows
     expectations for operations that are inherently unordered:
 
-      t = {}
-      for _, v in pairs (a_big_table) do t[#t + 1] = v end
-      expect (a_big_table).should_contain.a_permutation_of (t)
+    ```lua
+    t = {}
+    for _, v in pairs (a_big_table) do t[#t + 1] = v end
+    expect (a_big_table).should_contain.a_permutation_of (t)
+    ```
 
     It will fail unless the same set of elements are present in the
     expect argument values, or the expect argument keys; like the
-    other 'contain' adaptors it works with strings and objects too.
+    other `contain` adaptors it works with strings and objects too.
 
-  - New '--unicode' command-line option to support unicode in spec
+  - New `--unicode` command-line option to support unicode in spec
     files, at the expense of inaccurate line-numbers in error
     messages.
 
   - Works correctly without ansicolors installed (albeit without
     displaying any color!).
 
-  - If 'luaposix' is installed where Specl can find it, the report
+  - If `luaposix` is installed where Specl can find it, the report
     and progress formatters will use it to display the time spent
     running specifications much more accurately.
 
-** Incompatible changes:
+### Incompatible changes:
 
   - Requires lyaml 4 or newer.
 
@@ -351,28 +379,30 @@ Specl NEWS - User visible changes.
     expected object type name (rather than just: "table") from the
     FAIL report.
 
-** Bug fixes:
+### Bug fixes:
 
   - Help2man is no longer required to install specl from the
     distribution tarball.
 
 
-* Noteworthy changes in release 8 (2013-06-26) [stable]
+## Noteworthy changes in release 8 (2013-06-26) [stable]
 
-** New features:
+### New features:
 
   - Can now be installed directly from a release tarball by `luarocks`.
     No need to run `./configure` or `make`, unless you want to install
     to a custom location, or do not use LuaRocks.
 
-  - A new 'all_of' adaptor for any matcher:
+  - A new `all_of` adaptor for any matcher:
 
-     expect (mytable).should_contain.all_of {x, y, z}
+    ```lua
+    expect (mytable).should_contain.all_of {x, y, z}
+    ```
 
-  - 'contain' matcher handles std.object module derived objects by
+  - `contain` matcher handles std.object module derived objects by
     coercing them to tables.
 
-  - 'equal' matcher performs a deep comparison of std.object module
+  - `equal` matcher performs a deep comparison of std.object module
     derived objects' contents.
 
   - `./bootstrap` runs slowly again with 4800 lines of code
@@ -382,14 +412,14 @@ Specl NEWS - User visible changes.
     more robust, reducing the chances you'll end up with a still-born
     release.
 
-** Bug fixes:
+### Bug fixes:
 
-  - Avoid 'nan%' divide-by-zero error output from report formatter.
+  - Avoid `nan%` divide-by-zero error output from report formatter.
 
   - Built in report formatter displays argument strings to pending
     calls from examples consistently.
 
-** Incompatible changes:
+### Incompatible changes:
 
   - API change in matchers, generalizing the former `format_any_of` to
     `format_alternatives`, with a new `adaptor` parameter for use with
@@ -408,24 +438,28 @@ Specl NEWS - User visible changes.
     either manually copy the symbols you need or use a fully qualified
     name.  Previously:
 
-      # Don't do this!
-      before:
-        require "specl.shell"
-      describe spawn:
-        expect (spawn "printf hello").should_output "hello"
+    ```yaml
+    # Don't do this!
+    before:
+      require "specl.shell"
+    describe spawn:
+      expect (spawn "printf hello").should_output "hello"
+    ```
 
     Much better:
 
-      # Do this instead.
-      before:
-        spawn = (require "specl.shell").spawn
-      describe spawn:
-        expect (spawn "printf hello").should_output "hello"
+    ```yaml
+    # Do this instead.
+    before:
+      spawn = (require "specl.shell").spawn
+    describe spawn:
+      expect (spawn "printf hello").should_output "hello"
+    ```
 
 
-* Noteworthy changes in release 7 (2013-05-13) [stable]
+## Noteworthy changes in release 7 (2013-05-13) [stable]
 
-** Bug fixes:
+### Bug fixes:
 
   - Add missing documentation for `matchers.Matcher.format_any_of`.
 
@@ -439,26 +473,28 @@ Specl NEWS - User visible changes.
   - Add missing close parenthesis in non-verbose mode report
     formatter summaries with failing or pending expectations.
 
-** Incompatible changes:
+### Incompatible changes:
 
   - While not encouraged, one word descriptions are now supported,
     and are displayed correctly by the bundled formatters.
 
 
-* Noteworthy changes in release 6 (2013-05-09) [stable]
+## Noteworthy changes in release 6 (2013-05-09) [stable]
 
-** This release is a significant upgrade, with many new features,
-   and, no doubt, some new bugs.
+  - This release is a significant upgrade, with many new features,
+    and, no doubt, some new bugs.
 
-** New features:
+### New features:
 
-  - Top level 'before' and 'after' functions are supported.
+  - Top level `before` and `after` functions are supported.
 
   - A proper, documented, API for adding custom matchers.
 
-  - A new 'any_of' method for any matcher:
+  - A new `any_of` method for any matcher:
 
-     expect (ctermid ()).should_match.any_of {"/.*tty.*", "/.*pts.*"}
+    ```lua
+    expect (ctermid ()).should_match.any_of {"/.*tty.*", "/.*pts.*"}
+    ```
 
   - You can `require "specl.shell"` from a spec file (usually in the
     initial top-level `before`) to get access to a shell Command
@@ -469,70 +505,72 @@ Specl NEWS - User visible changes.
     so that `require` can find and load other Lua files in the same
     directory.
 
-  - Additional YAML "documents" from a spec file with '---' and '...'
+  - Additional YAML "documents" from a spec file with `---` and `...`
     stream separators are no longer ignored; but treated as additional
     unnamed documents.
 
   - Report formatter displays inline expectation summaries for each
     example when not in verbose mode.
 
-** Incompatible changes:
+### Incompatible changes:
 
   - Documentation is now in Jekyll format markdown for easy website
     regeneration.
 
   - Calling require in a spec file now runs in the local environment,
-    giving access to 'global' symbols from the newly loaded file from
+    giving access to `global` symbols from the newly loaded file from
     the local namespace.  Conversely, access to those same symbols is
     no longer available from "_G", the global environment table.
 
 
-* Noteworthy changes in release 5 (2013-04-29) [stable]
+## Noteworthy changes in release 5 (2013-04-29) [stable]
 
-** This release is a significant upgrade.
+### This release is a significant upgrade.
 
-** New features:
+### New features:
 
   - Documentation reorganisation.  README.md is much simplified, with
     full documentation still in markdown at docs/specl.md.  The html
     documentation at http://gvvaughan.github.io/specl will be updated
     with every release from now on.
 
-** Bug fixes:
+### Bug fixes:
 
-  - './bootstrap' runs quickly with 4800 lines of code removed.
+  - `./bootstrap` runs quickly with 4800 lines of code removed.
 
-  - './configure' runs quickly with the remaining C macros removed.
+  - `./configure` runs quickly with the remaining C macros removed.
 
-  - 'progress' and 'report' formatters now report elapsed time rather
+  - `progress` and `report` formatters now report elapsed time rather
     than cpu time in their footer output.
 
-  - The 'specl' LUA_PATH no longer picks up its own 'specl.std' module
-    by mistake when a spec file requires the lua-stdlib 'std' module.
+  - The `specl` LUA_PATH no longer picks up its own `specl.std` module
+    by mistake when a spec file requires the lua-stdlib `std` module.
 
-** Incompatible changes:
+### Incompatible changes:
 
-  - The 'should_error' matcher now takes arguments in the same order
-    as the other matchers. LuaMacro injects a 'pcall' into every
-    'expect' invocation, so the specifications are written
+  - The `should_error` matcher now takes arguments in the same order
+    as the other matchers. LuaMacro injects a `pcall` into every
+    `expect` invocation, so the specifications are written
     intuitively:
 
-        expect (error "failed").should_error "failed"
+    ```lua
+    expect (error "failed").should_error "failed"
+    ```
 
   - The Specl-1 Lua format for spec files is no longer supported, in
     part to clean up a lot of otherwise unused code, but also because
     Lua specs were accumulating too much magic to be easy to write by
     hand.
 
-  - 'build-aux' speclc and the bundled generated 'specs/*_spec.lua'
+  - `build-aux` speclc and the bundled generated `specs/*_spec.lua`
     specs have been removed.
 
 
-* Noteworthy changes in release 4 (2013-04-07) [beta]
+## Noteworthy changes in release 4 (2013-04-07) [beta]
 
-** This release is a minor update.
+  - This release is a minor update.
 
-** New features:
+### New features:
 
   - Now tested against Lua 5.1, Lua 5.2 and luajit-2.0 on every commit,
     thanks to travis-ci.org.
@@ -544,22 +582,22 @@ Specl NEWS - User visible changes.
 
   - API for custom formatters is richer and clearer.
 
-** Bug fixes:
+### Bug fixes:
 
   - Specs propagate user LUA_PATH settings to specl forks in Specls own
     own specifications.
 
 
-* Noteworthy changes in release 3 (2013-03-20) [beta]
+## Noteworthy changes in release 3 (2013-03-20) [beta]
 
-** This release is a significant upgrade.
+  - This release is a significant upgrade.
 
-** New features:
+### New features:
 
   - lyaml was spun out to a separate luarock, now required.
 
   - Initial support for pending examples, either using the new
-    'pending ()' function, or having an example description with an
+    `pending ()` function, or having an example description with an
     empty definition.
 
   - pending and failed expectations are now summarized in the footer of
@@ -580,7 +618,7 @@ Specl NEWS - User visible changes.
   - Many more specifications for Specl were added, now that specl is
     featureful enough to support BDD development of itself.
 
-** Bug fixes:
+### Bug fixes:
 
   - Error message from invalid Lua in example definitions are now
     reported correctly.
@@ -590,14 +628,14 @@ Specl NEWS - User visible changes.
   - Specl no longer uses lua-stdlib (to break a cyclic dependency
     when using specl to run lua-stdlib spec-files).
 
-** Incompatible changes:
+### Incompatible changes:
 
   - `-v` now behaves differently, and simply requests more verbose
     output from the selected formatter, use `-freport` to select the
     report formatter like `-v` did in release 2 and earlier.
 
 
-* Noteworthy changes in release 2 (2013-03-07) [beta]
+## Noteworthy changes in release 2 (2013-03-07) [beta]
 
   - Now compatible with Lua 5.2 *and* Lua 5.1.
 
@@ -609,10 +647,10 @@ Specl NEWS - User visible changes.
   - Includes some YAML specifications for Specl.
 
 
-* Noteworthy changes in release 1 (2013-02-26) [alpha]
+## Noteworthy changes in release 1 (2013-02-26) [alpha]
 
-** Initial proof-of concept for an RSpec inspired framework for and in
-   Lua.
+  - Initial proof-of concept for an RSpec inspired framework for and in
+    Lua.
 
-** The spec file syntax is a bit horrid in pure Lua, but the next
-   release uses YAML and is much nicer!
+  - The spec file syntax is a bit horrid in pure Lua, but the next
+    release uses YAML and is much nicer!
