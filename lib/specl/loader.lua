@@ -110,8 +110,9 @@ local parser_mt = {
 
     -- Raise a parse error.
     error = function (self, errmsg)
-      io.stderr:write (self.filename .. ":" .. self.mark.line .. ":" ..
-                       self.mark.column .. ": " .. errmsg .. "\n")
+      io.stderr:write (string.format ("%s:%d:%d: %s\n", self.filename,
+                                      self.mark.line, self.mark.column,
+				      errmsg))
       os.exit (1)
     end,
 
@@ -120,16 +121,16 @@ local parser_mt = {
       local f, errmsg = macro.substitute_tostring (s)
       if f == nil then
         -- Replace the error message from macro; it's just internal gunk.
-        errmsg = self.filename .. ":" .. tostring (self.mark.line) ..
-                 ": parse error near 'expect', while collecting arguments"
+        errmsg = string.format ("%s:%d: parse error near 'expect', while collecting arguments",
+	                        self.filename, self.mark.line)
       else
         f, errmsg = loadstring (f)
       end
       if f == nil then
         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
         if msg ~= nil then
-          line = line + self.mark.line - 1
-          errmsg = self.filename .. ":" .. tostring (line) .. ": " .. msg
+          line = tonumber (line) + self.mark.line - 1
+          errmsg = string.format ("%s:%d: %s", self.filename, line, msg)
         end
       end
       if errmsg ~= nil then
@@ -174,8 +175,8 @@ local parser_mt = {
       end
       self.event = event
       self.mark  = {
-        line   = tostring (self.event.start_mark.line + 1),
-        column = tostring (self.event.start_mark.column + 1),
+        line   = self.event.start_mark.line + 1,
+        column = self.event.start_mark.column + 1,
       }
       return self:type ()
     end,
@@ -316,7 +317,7 @@ local function Parser (filename, s, unicode)
     unicode  = unicode,
     anchors  = {},
     input    = s,
-    mark     = { line = "0", column = "0" },
+    mark     = { line = 0, column = 0 },
     next     = yaml.parser (s),
 
     -- strip leading './'

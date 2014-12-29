@@ -113,7 +113,7 @@ local function process_args (self, parser)
     -- Accumulate unclaimed filters in the Main object.
     if line ~= nil then
       self.filters = self.filters or {}
-      self.filters[line] = true
+      self.filters[tonumber (line)] = true
     end
 
     -- Process filename.
