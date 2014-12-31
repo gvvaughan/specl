@@ -25,6 +25,7 @@ SPECL     = $(top_builddir)/specl
 SPECL_ENV += SPECL=$(SPECL)
 
 specl_SPECS =						\
+	$(srcdir)/specs/badargs_spec.yaml		\
 	$(srcdir)/specs/environment_spec.yaml		\
 	$(srcdir)/specs/custom_formatters_spec.yaml	\
 	$(srcdir)/specs/formatter/progress_spec.yaml	\

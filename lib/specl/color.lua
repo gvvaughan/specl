@@ -48,7 +48,7 @@ local colormap = {
   good     = good,
   bad      = bad,
   warn     = "%{red}",
-  strong   = "%{bright white}",
+  strong   = "%{bright}",
 
   reset    = "%{reset}",
   match    = "%{green}",

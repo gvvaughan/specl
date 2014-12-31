@@ -24,7 +24,7 @@ local shell  = require "specl.shell"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
-local setfenv, xpcall = compat.setfenv, compat.xpcall
+local setfenv, unpack, xpcall = compat.setfenv, compat.unpack, compat.xpcall
 local Process = shell.Process
 local case, object = std.functional.case, std.object
 local clone, merge = std.table.clone, std.table.merge
@@ -204,7 +204,7 @@ local function env_init (env, stdin)
               end,
 
     type    = function (h)
-                if object.type (h) == "StrFile" then
+                if (getmetatable (h) or {})._type == "StrFile" then
                   return "file" -- virtual stdio streams cannot be closed
                 end
                 return io.type (h)

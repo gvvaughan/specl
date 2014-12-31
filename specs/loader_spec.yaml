@@ -44,7 +44,7 @@ specify loader:
     - it does expand macros in spec directories:
         modfile = dir:file ("do-macro.lua",
                       "local function do_macro ()",
-                      "  examples {it_expands_macros = function ()",
+                      "  examples {['it expands macros'] = function ()",
                       "    expect (error 'oh noes!').to_raise 'oh noes!'",
                       "  end}",
                       "end",
@@ -64,7 +64,7 @@ specify loader:
         helper = dir:file ("spec_helper.lua",
                      "function who () return false end",
                      "function do_macro ()",
-                     "  examples {it_expands_macros = function ()",
+                     "  examples {['it expands macros'] = function ()",
                      "    expect (error 'oh noes!').to_raise 'oh noes!'",
                      "  end}",
                      "end")
@@ -115,7 +115,7 @@ specify loader:
     - it does expand macros in spec directories:
         modfile = dir:file ("do-macro.lua",
                       "local function do_macro ()",
-                      "  examples {it_expands_macros = function ()",
+                      "  examples {['it expands macros'] = function ()",
                       "    expect (error 'oh noes!').to_raise 'oh noes!'",
                       "  end}",
                       "end",
@@ -202,7 +202,7 @@ specify loader:
         #
         modfile = specdir:file ("do-macro.lua",
                       "local function do_macro ()",
-                      "  examples {it_expands_macros = function ()",
+                      "  examples {['it expands macros'] = function ()",
                       "    expect (error 'oh noes!').to_raise 'oh noes!'",
                       "  end}",
                       "end",

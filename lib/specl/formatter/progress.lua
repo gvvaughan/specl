@@ -22,8 +22,8 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local map, nop, strip1st, timesince =
-  util.map, util.nop, util.strip1st, util.timesince
+local examplename, nop, timesince =
+  util.examplename, util.nop, util.timesince
 
 
 -- Color writing.
@@ -55,9 +55,9 @@ local function expectations (status, descriptions, opts)
 	  reports.pend = reports.pend .. fileline .. i .. ": " .. color.reset
 	end
         reports.pend = reports.pend ..
-	  color.pend .. "PENDING expectation " ..  i .. color.reset .. ": "
+	  color.pend .. "PENDING expectation " .. i .. color.reset .. ": "
 
-        reports.pend = reports.pend .. color.warn .. expectation.pending
+        reports.pend = reports.pend .. color.warn .. expectation.pending .. color.reset
 
         if expectation.status == true then
           writc (opts.color, color.strong .. "?")
@@ -100,15 +100,13 @@ local function expectations (status, descriptions, opts)
   io.stdout:flush ()
 
   -- Add description titles.
+  local title = examplename (descriptions)
+  title = color.listpre .. color.subhead .. title .. color.listpost
   if reports.pend ~= "" then
-    reports.pend = color.listpre .. color.subhead ..
-                   table.concat (map (strip1st, descriptions), " ") ..
-                   color.listpost .. reports.pend .. "\n"
+    reports.pend = title .. reports.pend .. "\n"
   end
   if reports.fail ~= "" then
-    reports.fail = color.listpre .. color.subhead ..
-                   table.concat (map (strip1st, descriptions), " ") ..
-                   color.listpost .. reports.fail .. "\n"
+    reports.fail = title .. reports.fail .. "\n"
   end
 
   return reports

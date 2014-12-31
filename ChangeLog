@@ -1,3 +1,194 @@
+2014-12-31  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.0.0
+	* NEWS.md: Record release date.
+
+	specs: make some spurious travis failures pending.
+	* specs/badargs_spec.yaml: Until we understand why these examples
+	fail on Travis (but not on my own Ubuntu 12.04 test VM), mark some
+	spurious failures as pending, even though they work otherwise!
+
+	specl: make re-execute code Lua 5.3 and luajit compatible.
+	* bin/specl: Accept 'Lua 5.3' version string from REPL.
+	Try lua5.3 and luajit in command PATH search.
+	Unset LUA_INIT_5_3.
+
+	NEWS.md: Reformat in github markdown.
+	* NEWS: Move from here...
+	* NEWS.md: ...to here.  Reformat in github markdown.
+	* local.mk (old_NEWS_hash): Update.
+	* .gitignore: Add NEWS.
+
+	specl: line numbers and filters use integer keys.
+	* lib/specl/loader.lua (parser_mt.error): Use string.format to
+	convert integers for error messages.
+	(parser_mt.compile): Likewise.
+	(parser_mt.parse): Set lines and columns to integers.
+	(Parser): Set mark line and column to integer 0.
+	* lib/specl/main.lua (process_args): Make sure line number filters
+	are stored with integer keys.
+
+	specs: remove unsupported underscores in example descriptions.
+	* specs/runner_spec.yaml (runner): Remove unsupported underscores
+	in example descriptions.
+
+	specs: adjust for Lua 5.3 compatibility.
+	* specs/spec_helper.lua (unpack): Load a working `unpack` function
+	into the spec environment.
+	* specs/inprocess_spec.yaml: Convert whole floats to integers
+	before display.
+
+	compat: intercept and correct package.loaders on Lua 5.3.
+	Lua 5.3 has renamed package.loaders to package.searchers.
+	* lib/specl/compat.lua (package_mt): Metatable to redirect
+	references to package.loaders on Lua 5.3, and vice versa for
+	package.searchers on Lua 5.1 and 5.2.
+	(intercept_loaders): Apply the metatable.
+	* lib/specl/loader.lua (Parser): Apply the metatable in the before
+	preamble.
+	* lib/specl/runner.lua (initenv): Likewise when initialising new
+	execution environments.
+
+	refactor: encapsulate a portable unpack symbol in specl.compat.
+	* lib/specl/compat.lua (unpack): Set to an appropriate function
+	that works on Lua 5.1 through 5.3.
+	* lib/specl/badargs.lua (unpack): Use compat.unpack everywhere.
+	* lib/specl/inprocess.lua (unpack): Likewise.
+	* lib/specl/runner.lua (unpack): Remove unused symbol.
+
+	configury: support Lua 5.3.
+	* configure.ac (AC_INIT): Bump version to 14.0.0.
+	(AX_PROG_LUA): Support Lua 5.3.
+	* NEWS: Update.
+
+	slingshot: sync with upstream, for Lua 5.3.0 support.
+	* slingshot: Sync with upstream.
+	* bootstrap: Update from slingshot.
+	* bootstrap.conf (require_bootstrap_uptodate): Remove.
+	(slingshot_files): Remove unused slingshot.m4.
+	* configure.ac (SS_CONFIG_TRAVIS): Remove.
+	* specl-git-1.rockspec: Regenerate.
+	* .travis.yml: Regenerate.
+
+2014-12-24  Gary V. Vaughan  <gary@gnu.org>
+
+	matchers: import std.getmetamethod before use.
+	* lib/specl/matchers.lua: stdlib >= 41 no longer monkey patches
+	the global table with a getmetamethod function, so import it
+	explicitly from std.
+
+	specs: update bit-rotted error messages.
+	* specs/spec_helper.lua (spawn_specl, run_spec): Use the correct
+	function name for error messages.
+
+	refactor: use pure lambda strings to simplify specl.std.
+	* lib/specl/std.lua (M): Use the new std.operator.set to
+	load std submodules into specl.std table using only pure lambda
+	functions.
+
+	refactor: use std.functional.map and remove specl.util.map.
+	* lib/specl/util (map): Remove.
+	Adjust all callers and simplify accordingly.
+	(examplename): Factor out this common call sequence into a
+	utility function.
+	Adjust all client code, and simplify accordingly.
+
+	maint: std.string.tostring is deprecated by stdlib 41.
+	* lib/specl/match.lua (tostring): Import std.tostring instead of
+	deprecated std.string.tostring.
+	* lib/specl/util.lua (concat): Likewise.
+
+	maint: std.object >= v41 do not support __totable metamethods.
+	* lib/specl/matchers.lua (totable): A compatibility function
+	over new std.pairs implementation.
+
+	maint: update to stdlib >= 41.
+	* lib/specl/std.lua (init, std.string.require_version)
+	(std.list.elems): Refactor from these...
+	(_DEBUG, std.require, std.ielems): ...to these.
+	(std.functional.bind, std.io.dirname, std.table.len): Remove
+	overrides, allow use of exported versions of the same.
+	* rockspec.conf (dependencies): Bump stdlib requirement to >= 41.
+	* specl-git-1.rockspec: Regenerate.
+
+	inprocess: break an infinite loop in env.io.type.
+	* lib/specl/inprocess.lua (env_init): Inside the type method,
+	get the `_type` value directly from the metatable instead of
+	calling std.object.type, which in turn may call back into the
+	env.io.type method.
+
+	specl: diagnose missing luaposix during argument parsing.
+	* lib/specl/util.lua (files): Return an error when luaposix was
+	required but missing.
+	* lib/specl/main.lua (execute): Display any error returned from
+	util.files.
+	* NEWS: Update.
+
+	specl: use bold rather than bright white for lua errors.
+	* lib/specl/color.lua (colormap): Use bold attribute for strong
+	markup.
+
+	maint: add missing NEWS items since release v13.
+	* NEWS: Note change of treatment of underscores in example
+	descriptions.
+
+2014-10-15  Gary V. Vaughan  <gary@gnu.org>
+
+	specl: protect nested calls against keyword abuse in examples.
+	* lib/specl/badargs.lua, lib/specl/runner.lua: When running the
+	functions exported by these modules in the example function
+	environments, bind keywords locally in case the code in the
+	example abuses them before the call.
+
+	specl: propagate nested inprocess environments correctly.
+	* lib/specl/compat.lua (getfenv): New function to emulate Lua
+	getfenv in Lua 5.2.
+	* lib/specl/badargs.lua (diagnose): Propagate environment of
+	diagnose to calls of expect and examples for the rest of the
+	function.
+	* lib/specl/runner.lua (run_examples): Set environments of expect,
+	pending and examples to block environment.
+	(run_example): Likewise for badargs.diagnose.
+	* specs/badargs_spec.yaml (diagnose): Specify behaviour
+	accordingly.
+	* NEWS: Update.
+
+	refactor: eliminate spurious temporary local variable.
+	* specs/spec_helper.lua (run_spec): Factor away spurious 'proc'
+	local.
+
+2014-10-14  Gary V. Vaughan  <gary@gnu.org>
+
+	badargs: specify format behaviours.
+	* specs/badargs_spec.yaml: New file.  Specify format behaviours.
+	* specs/specs.mk (specl_SPECS): Add badargs_spec.yaml.
+	* lib/specl/badargs.lua (format): Only return "argument" for
+	exactly one argument, otherwise "arguments".
+	* NEWS: Update.
+
+	specl: remove support for underscores in examples description.
+	* lib/specl/runner.lua (run_examples): Remove support for
+	replacing underscores with spaces in examples description.
+	* specs/formatter/report_spec.yaml, specs/loader_spec.yaml:
+	Adjust accordingly.
+
+	maint: unload luaposix > v32 correctly.
+	* lib/specl/util.lua: Unload any module with a name prefixed by
+	"posix", in order that autoloaded submodules for an installed
+	recent luaposix are dropped in favour of test versions as
+	necessary.
+
+2014-10-05  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: remove bogus Zile reference from bootstrap.conf.
+	* bootstrap.conf: Remove bogus Zile reference.
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* configure.ac (AC_INIT): Bump release version to 14.
+	* local.mk (old_NEWS_hash): Auto-update.
+
 2014-10-04  Gary V. Vaughan  <gary@gnu.org>
 
 	Release version 13

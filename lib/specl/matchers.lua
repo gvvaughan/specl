@@ -22,16 +22,33 @@ local color = require "specl.color"
 local std   = require "specl.std"
 local util  = require "specl.util"
 
-local object = std.object
-local chomp, escape_pattern, prettytostring, tostring =
-  std.string.chomp, std.string.escape_pattern, std.string.prettytostring, std.string.tostring
-local clone, empty, merge, size, totable =
-  std.table.clone, std.table.empty, std.table.merge, std.table.size, std.table.totable
+local getmetamethod, object, pairs, tostring =
+  std.getmetamethod, std.object, std.pairs, std.tostring
+local chomp, escape_pattern, prettytostring =
+  std.string.chomp, std.string.escape_pattern, std.string.prettytostring
+local clone, empty, merge, size =
+  std.table.clone, std.table.empty, std.table.merge, std.table.size
 local type_check = util.type_check
 
 local Object = object {}
 
 local M = {}
+
+
+-- Stdlib >= v41 objects do not support __totable metamethods.
+local function totable (obj)
+  local r, i
+  if type (obj) == "table" or getmetamethod (obj, "__pairs") then
+    -- Fetch all key:value pairs where possible...
+    r = {}
+    for k, v in pairs (obj) do r[k] = v end
+  elseif type (obj) == "string" then
+    -- ...or explode a raw string into a table of characters.
+    r, i = {}, 1
+    obj:gsub ("(.)", function (c) i, r[i] = i + 1, c end)
+  end
+  return r
+end
 
 
 -- Quote strings nicely, and coerce non-strings into strings.

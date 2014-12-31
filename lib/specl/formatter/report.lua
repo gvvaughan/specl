@@ -22,8 +22,8 @@
 local color = require "specl.color"
 local util  = require "specl.util"
 
-local indent, map, nop, strip1st, timesince =
-  util.indent, util.map, util.nop, util.strip1st, util.timesince
+local examplename, indent, nop, strip1st, timesince =
+  util.examplename, util.indent, util.nop, util.strip1st, util.timesince
 
 
 -- Color printing.
@@ -87,7 +87,7 @@ local function expectations (status, descriptions, opts)
         end
         pend = pend .. color.pend ..
               "PENDING expectation " ..  i .. color.reset .. ": " ..
-              color.warn .. expectation.pending
+              color.warn .. expectation.pending .. color.reset
 
         if expectation.status == true then
           counts.unexpected = counts.unexpected + 1
@@ -159,15 +159,13 @@ local function expectations (status, descriptions, opts)
   end
 
   -- Add description titles.
+  local title = examplename (descriptions)
+  title = color.listpre .. color.subhead .. title .. color.listpost
   if reports.pend ~= "" then
-    reports.pend = color.listpre .. color.subhead ..
-                   table.concat (map (strip1st, descriptions), " ") ..
-                   color.listpost .. reports.pend .. "\n"
+    reports.pend = title .. reports.pend .. "\n"
   end
   if reports.fail ~= "" then
-    reports.fail = color.listpre .. color.subhead ..
-                   table.concat (map (strip1st, descriptions), " ") ..
-                   color.listpost .. reports.fail .. "\n"
+    reports.fail = title .. reports.fail .. "\n"
   end
 
   return reports

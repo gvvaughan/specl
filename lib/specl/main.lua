@@ -25,10 +25,11 @@ local util    = require "specl.util"
 local version = require "specl.version"
 
 local object, optparse = std.object, std.optparse
+local map = std.functional.map
 local slurp = std.io.slurp
 local clone, merge = std.table.clone, std.table.merge
-local files, gettimeofday, have_posix, map =
-  util.files, util.gettimeofday, util.have_posix, util.map
+local files, gettimeofday, have_posix =
+  util.files, util.gettimeofday, util.have_posix
 local optspec = version.optspec
 
 
@@ -54,7 +55,7 @@ end
 
 
 -- Return `filename` if it has a specfile-like filename, else nil.
-local function specfilter (filename)
+local function specfilter (_, filename)
   return filename:match "_spec%.yaml$" and filename or nil
 end
 
@@ -112,7 +113,7 @@ local function process_args (self, parser)
     -- Accumulate unclaimed filters in the Main object.
     if line ~= nil then
       self.filters = self.filters or {}
-      self.filters[line] = true
+      self.filters[tonumber (line)] = true
     end
 
     -- Process filename.
@@ -150,7 +151,12 @@ local function execute (self)
 
   -- Process all specfiles when none are given explicitly.
   if #self.arg == 0 then
-    self.arg = map (specfilter, files "specs")
+    local specs, errmsg = files "./specs"
+    if specs == nil then
+      parser:opterr (errmsg)
+    else
+      self.arg = map (specfilter, specs)
+    end
   end
 
   self:process_args (parser)

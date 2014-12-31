@@ -1,5 +1,5 @@
 package = "specl"
-version = "13-1"
+version = "14.0.0-1"
 description = {
   detailed = "Develop and run BDD specs written in Lua for RSpec style workflow.",
   homepage = "http://gvvaughan.github.io/specl",
@@ -7,14 +7,14 @@ description = {
   summary = "Behaviour Driven Development for Lua",
 }
 source = {
-  dir = "specl-release-v13",
-  url = "http://github.com/gvvaughan/specl/archive/release-v13.zip",
+  dir = "specl-release-v14.0.0",
+  url = "http://github.com/gvvaughan/specl/archive/release-v14.0.0.zip",
 }
 dependencies = {
   "luamacro >= 2.0",
-  "lua >= 5.1",
+  "lua >= 5.1, < 5.4",
   "lyaml >= 5",
-  "stdlib == 40",
+  "stdlib >= 41",
 }
 external_dependencies = nil
 build = {

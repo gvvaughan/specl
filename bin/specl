@@ -8,14 +8,14 @@ test -n "$LUA" || {
   {
     test -x "$1" && {
       case `$1 -e 'print (_VERSION)' 2>/dev/null` in
-        *"Lua "5\.[12]*) LUA=$1 ;;
+        *"Lua "5\.[123]*) LUA=$1 ;;
       esac
     }
   }
 
   save_IFS="$IFS"
   LUA=
-  for x in lua lua5.2 lua5.1; do
+  for x in lua lua5.3 lua5.2 lua5.1 luajit; do
     IFS=:
     for dir in $PATH; do
       IFS="$save_IFS"
@@ -33,6 +33,8 @@ LUA_INIT=
 export LUA_INIT
 LUA_INIT_5_2=
 export LUA_INIT_5_2=
+LUA_INIT_5_3=
+export LUA_INIT_5_3=
 
 # Reexecute using the interpreter suppiled in LUA, or found above.
 exec "$LUA" "$0" "$@"

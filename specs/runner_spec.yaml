@@ -1,13 +1,13 @@
 specify runner:
 - describe report:
-    examples {it_works = function () expect (1).to_be (1) end}
+    examples {["it works"] = function () expect (1).to_be (1) end}
 
 - describe it:
-    examples {it_does_pass = function () expect (1).to_be (1) end}
-    examples {it_does_not_fail = function () expect (0).not_to_be (1) end}
+    examples {["it does pass"] = function () expect (1).to_be (1) end}
+    examples {["it does not fail"] = function () expect (0).not_to_be (1) end}
 
 - describe examples:
-    examples {context_with_one_context = {
-      {it_does_pass     = function () expect (1).to_be (1) end},
-      {it_does_not_fail = function () expect (0).not_to_be (1) end},
+    examples {["context with one context"] = {
+      {["it does pass"]     = function () expect (1).to_be (1) end},
+      {["it does not fail"] = function () expect (0).not_to_be (1) end},
     }}

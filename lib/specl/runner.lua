@@ -27,7 +27,12 @@ local util     = require "specl.util"
 local loadstring, setfenv = compat.loadstring, compat.setfenv
 local slurp, split, merge =
   std.io.slurp, std.string.split, std.table.merge
-local map, strip1st = util.map, util.strip1st
+local examplename = util.examplename
+
+-- Protect against examples misusing or resetting keywords.
+local error, ipairs, pairs, type, rawset, setmetatable =
+      error, ipairs, pairs, type, rawset, setmetatable
+
 
 
 --[[ ================= ]]--
@@ -88,6 +93,9 @@ local function initenv (state, env)
   -- examples that load it.
   env.require = function (m)
     local errmsg, import, loaded, loadfn
+
+    compat.intercept_loaders (package)
+    compat.intercept_loaders (env.package)
 
     -- temporarily switch to the environment package context.
     local save = {
@@ -165,9 +173,9 @@ function run_example (state, definition, descriptions, fenv)
   local keepgoing = true
 
   if not inclusive then
-    local source = table.concat (map (strip1st, descriptions))
+    local title = examplename (descriptions)
     for _, pattern in ipairs (filters.inclusive or {}) do
-      if source:match (pattern) then
+      if title:match (pattern) then
         inclusive = true
         break
       end
@@ -177,6 +185,10 @@ function run_example (state, definition, descriptions, fenv)
   if inclusive then
     matchers.init (state)
 
+    -- Propagate nested environments to functions that might be called
+    -- from inside the example.
+    local badargs  = require "specl.badargs"
+    setfenv (badargs.diagnose, fenv)
     setfenv (definition.example, fenv)
     definition.example ()
 
@@ -210,8 +222,15 @@ function run_examples (state, examples, descriptions, env)
     local description, definition = next (example)
     local line = definition.line
 
-    fenv.expect  = function (...) return matchers.expect  (state, ...) end
-    fenv.pending = function (...) return matchers.pending (state, ...) end
+    fenv.expect = function (...)
+      return matchers.expect (state, ...)
+    end
+    setfenv (fenv.expect, fenv)
+
+    fenv.pending = function (...)
+      return matchers.pending (state, ...)
+    end
+    setfenv (fenv.pending, fenv)
 
     fenv.examples = function (t)
       -- FIXME: robust argument type-checking!
@@ -219,7 +238,7 @@ function run_examples (state, examples, descriptions, env)
       if type (definition) == "function" then
 	local example = { example = definition, line = line or "unknown" }
 
-        table.insert (descriptions, (description:gsub ("_", " ")))
+        table.insert (descriptions, description)
 	if run_example (state, example, descriptions, fenv) == false then
           keepgoing = false
 	end
@@ -245,6 +264,7 @@ function run_examples (state, examples, descriptions, env)
       -- `run_examples`.
       matchers.init (state)
     end
+    setfenv (fenv.examples, fenv)
 
     initenv (state, fenv)
 

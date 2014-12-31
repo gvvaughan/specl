@@ -24,10 +24,16 @@
 ]]
 
 
-local std = require "specl.std"
+local std    = require "specl.std"
+local compat = require "specl.compat"
 
 local split  = std.string.split
 local invert = std.table.invert
+local getfenv, setfenv, unpack = compat.getfenv, compat.setfenv, compat.unpack
+
+
+-- Protect against examples misusing or resetting keywords.
+local ipairs, pairs, type = ipairs, pairs, type
 
 
 --- Return the last element of a list-like table.
@@ -214,7 +220,7 @@ local function format (fname, i, want, field, got)
 
   if got == nil and type (want) == "number" then
     local s = "bad argument #%d to '%s' (no more than %d argument%s expected, got %d)"
-    return s:format (i + 1, fname, i, i > 1 and "s" or "", want)
+    return s:format (i + 1, fname, i, i == 1 and "" or "s", want)
   elseif field ~= nil then
     local s = "bad argument #%d to '%s' (%s expected for field '%s', got %s)"
     return s:format (i, fname, want, field, got or "no value")
@@ -384,6 +390,11 @@ local function diagnose (fn, decl)
   for _, v in pairs (types) do
     if v:match "%[.*%]" then typemin = typemin - 1 end
   end
+
+  -- Ensure the following functions are executed in the environment that
+  -- this function is inside.
+  setfenv (examples, getfenv ())
+  setfenv (expect, getfenv ())
 
   local arglist = {}
   for i, argtype in ipairs (type_specs) do

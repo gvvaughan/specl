@@ -173,7 +173,7 @@ describe specl:
         to_contain_error "error: unrecognised option '-,'"
   - it responds to --version with appropriate version text:
       expect (run_spec {"--version"}).should_succeed_while_matching (
-        "^specl %(Specl%) %d+\n" ..
+        "^specl %(Specl%) %d[%.%d]*\n" ..
         "Written by Gary V%. Vaughan <%w+@[%w%.]+>, 2013\n" ..
         "\n" ..
         os.date ("Copyright %%(C%%) %Y, Gary V%%. Vaughan\n") ..

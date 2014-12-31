@@ -1,6 +1,8 @@
 local hell = require "specl.shell"
 local std  = require "specl.std"
 
+unpack = table.unpack or unpack
+
 local top_srcdir = os.getenv "top_srcdir" or "."
 local top_builddir = os.getenv "top_builddir" or "."
 
@@ -47,7 +49,7 @@ function spawn_specl (params)
     return hell.spawn {cmd; env = env, stdin = params.stdin}
   end
 
-  error ("run_spec was expecting a string or table, but got a "..type (params))
+  error ("specl_spawn was expecting a string or table, but got a "..type (params))
 end
 
 
@@ -68,11 +70,10 @@ function run_spec (params)
 
     if params.stdin then argt[#argt + 1] = "-" end
 
-    local proc = inprocess.call (Main, argt, params.stdin)
-    return proc
+    return inprocess.call (Main, argt, params.stdin)
   end
 
-  error ("inprocess_spec was expecting a string or table, but got a "..type (params))
+  error ("run_spec was expecting a string or table, but got a "..type (params))
 end
 
 

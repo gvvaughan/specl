@@ -22,6 +22,7 @@
 local std = require "specl.std"
 local have_posix, posix = pcall (require, "posix")
 
+local ielems, map = std.ielems, std.functional.map
 local object = std.object
 
 
@@ -52,7 +53,9 @@ if have_posix then
 
 else
 
-  files = nop
+  files = function (root, t)
+    return nil, "install luaposix to autoload spec files from '" .. tostring (root) .. "/'"
+  end
 
 end
 
@@ -94,19 +97,6 @@ local function deepcopy (t)
 end
 
 
--- Map function F over elements of T and return a table of results.
-local function map (f, t)
-  local r = {}
-  for _, v in pairs (t) do
-    local o = f (v)
-    if o then
-      table.insert (r, o)
-    end
-  end
-  return r
-end
-
-
 -- Concatenate elements of table ALTERNATIVES much like `table.concat`
 -- except the separator is always ", ".  If INFIX is provided, the
 -- final separotor uses that instead of ", ".  If QUOTED is not nil or
@@ -118,11 +108,11 @@ local function concat (alternatives, infix, quoted)
   if quoted ~= nil then
     alternatives = map (function (v)
                           if object.type (v) ~= "string" then
-                            return std.string.tostring (v)
+                            return std.tostring (v)
                           else
                             return ("%q"):format (v)
                           end
-                        end, alternatives)
+                        end, ielems, alternatives)
   end
 
   return table.concat (alternatives, ", "):gsub (", ([^,]+)$", infix .. "%1")
@@ -212,7 +202,14 @@ end
 -- where S contains some whitespace initially (i.e single words are
 -- returned unchanged).
 local function strip1st (s)
-  return s:gsub ("^%s*%w+%s+", "")
+  return (s:gsub ("^%s*%w+%s+", ""))
+end
+
+
+-- Return elements of DESCRIPTIONS concatenated after removing the
+-- first word of each item.
+local function examplename (descriptions)
+  return table.concat (map (strip1st, ielems, descriptions), " ")
 end
 
 
@@ -223,8 +220,10 @@ end
 
 
 -- Don't prevent examples from loading a different luaposix.
-for _, reload in pairs {"posix", "posix_c", "posix.sys"} do
-  package.loaded[reload] = nil
+for k in pairs (package.loaded) do
+  if k == "posix" or k == "posix_c" or k:match "^posix%." then
+    package.loaded[k] = nil
+  end
 end
 
 
@@ -232,12 +231,12 @@ local M = {
   -- Functions
   concat         = concat,
   deepcopy       = deepcopy,
+  examplename    = examplename,
   files          = files,
   gettimeofday   = gettimeofday,
   have_posix     = have_posix,
   indent         = indent,
   nop            = nop,
-  map            = map,
   strip1st       = strip1st,
   timesince      = timesince,
   type           = xtype,
