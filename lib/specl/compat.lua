@@ -1,7 +1,7 @@
 -- Compatibility between 5.1, 5.2 and 5.3
 -- Written by Gary V. Vaughan, 2013
 --
--- Copyright (c) 2013-2014 Gary V. Vaughan
+-- Copyright (c) 2013-2015 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
