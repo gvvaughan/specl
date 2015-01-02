@@ -99,7 +99,7 @@ install:
     done'
 
   # Build from rockspec.
-  - export ROCKSPEC=specl-14.0.0-1.rockspec
+  - export ROCKSPEC=specl-14.1.0-1.rockspec
   - 'test -f "$ROCKSPEC" || ROCKSPEC=specl-git-1.rockspec'
   - sudo luarocks make $ROCKSPEC LUA="$LUA"
 
