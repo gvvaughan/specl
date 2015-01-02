@@ -347,6 +347,41 @@ matchers.raise = Matcher {
 }
 
 
+-- Matches if a matching error is raised inside `expect`.
+matchers.raise_matching = Matcher {
+  function (self, actual, expect, ok)
+    if expect ~= nil then
+      if not ok then -- "not ok" means an error occurred
+        ok = not actual:match (expect)
+      end
+    end
+    return not ok
+  end,
+
+  -- force a new-line, let the display engine take care of indenting.
+  format_actual = function (self, actual, _, ok)
+    if ok then
+      return " no error"
+    else
+      return ":" .. reformat (actual)
+    end
+  end,
+
+  format_expect = function (self, expect)
+    if expect ~= nil then
+      return " an error matching:" .. reformat (expect)
+    else
+      return " an error"
+    end
+  end,
+
+  format_alternatives = function (self, adaptor, alternatives)
+    return " an error matching " .. adaptor .. ":" ..
+           reformat (alternatives, adaptor)
+  end,
+}
+
+
 -- For backwards compatibility:
 matchers.error = matchers.raise
 

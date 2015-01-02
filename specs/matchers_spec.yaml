@@ -849,6 +849,83 @@ describe matcher:
 
 - describe error:
   - it displays expected and actual output for failures: |
+      yaml = preamble .. "(error 'cheese').to_error 'ham'"
+      expect (run_spec (yaml)).
+        to_match_output ('expecting an error containing:\n' ..
+                        '%s*| ham\n' ..
+                        '%s*but got:\n' ..
+                        '%s*| .*cheese')
+  - it displays all expected and actual output for all_of failures: |
+      yaml = preamble .. "(error 'cheese').to_error.all_of {'green eggs', 'ham'}"
+      expect (run_spec (yaml)).
+        to_match_output ('expecting an error containing all of:\n' ..
+                        '%s*| green eggs\n' ..
+                        '%s*and:\n' ..
+                        '%s*| ham\n' ..
+                        '%s*but got:\n' ..
+                        '%s*| .*cheese')
+  - it displays all expected and actual output for any_of failures: |
+      yaml = preamble .. "(error 'cheese').to_error.any_of {'green eggs', 'ham'}"
+      expect (run_spec (yaml)).
+        to_match_output ('expecting an error containing any of:\n' ..
+                        '%s*| green eggs\n' ..
+                        '%s*or:\n' ..
+                        '%s*| ham\n' ..
+                        '%s*but got:\n' ..
+                        '%s*| .*cheese')
+
+  - context with 'error':
+    - it succeeds if there is an error that contains the message:
+        expect (error "error message").to_error "error"
+    - it succeeds if there is an error that contains all of the messages:
+        expect (error "error message").to_error.
+          all_of {"error", "message"}
+    - it succeeds if there is an error that contains any of the messages:
+        expect (error "error message").to_error.
+          any_of {"fail", "error", "bogus"}
+    - it succeeds if there is any error with no message argument:
+        expect (error "error message").to_error ()
+    - it fails if there is an error that does not contain the message:
+        yaml = preamble .. "(error 'error message').to_error 'failed'"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails if there is an error that does not contain all listed messages:
+        yaml = preamble .. "(error 'error message').to_error." ..
+               "all_of {'error', 'message', 'exploded'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails if there is an error that does not contain any listed message:
+        yaml = preamble .. "(error 'error message').to_error." ..
+               "any_of {'failed', 'succeeded', 'exploded'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails if there is no error nor any message argument:
+        yaml = preamble .. "('not an error').to_error ()"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails if there is no error:
+        yaml = preamble .. "('not an error').to_error 'error'"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+  - context with 'not_error':
+    - it succeeds if there is no error:
+        expect ("not an error").not_to_error "error"
+    - it succeeds if there is no error nor any message argument:
+        expect ("not an error").not_to_error ()
+    - it succeeds if there is an error that does not contain the message:
+        expect (error "error message").not_to_error "failed"
+    - it succeeds if there is an error that does not contain any listed message:
+        expect (error "error message").not_to_error.
+          any_of {"failed", "suceeded", "exploded"}
+    - it fails if there is any error with no message argument:
+        yaml = preamble .. "(error 'error message').not_to_error ()"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails if there is an error that contains the message:
+        yaml = preamble .. "(error 'error message').not_to_error 'error'"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails if there is an error that contains any listed message:
+        yaml = preamble .. "(error 'error message').not_to_error." ..
+               "any_of {'fail', 'error', 'bogus'}"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+
+- describe raise:
+  - it displays expected and actual output for failures: |
       yaml = preamble .. "(error 'cheese').to_raise 'ham'"
       expect (run_spec (yaml)).
         to_match_output ('expecting an error containing:\n' ..
@@ -875,6 +952,8 @@ describe matcher:
                         '%s*| .*cheese')
 
   - context with 'raise':
+    - it matches a literal substring:
+        expect (error "%.%d%w%").to_raise ".%d%"
     - it succeeds if there is an error that contains the message:
         expect (error "error message").to_raise "error"
     - it succeeds if there is an error that contains all of the messages:
@@ -923,79 +1002,82 @@ describe matcher:
                "any_of {'fail', 'error', 'bogus'}"
         expect (run_spec (yaml)).to_contain_output (fail_1)
 
-- describe raise:
+
+- describe raise_matching:
   - it displays expected and actual output for failures: |
-      yaml = preamble .. "(error 'cheese').to_raise 'ham'"
+      yaml = preamble .. "(error 'cheese').to_raise_matching 'ham'"
       expect (run_spec (yaml)).
-        to_match_output ('expecting an error containing:\n' ..
+        to_match_output ('expecting an error matching:\n' ..
                         '%s*| ham\n' ..
                         '%s*but got:\n' ..
                         '%s*| .*cheese')
   - it displays all expected and actual output for all_of failures: |
-      yaml = preamble .. "(error 'cheese').to_raise.all_of {'green eggs', 'ham'}"
+      yaml = preamble .. "(error 'cheese').to_raise_matching.all_of {'green eggs', 'ham'}"
       expect (run_spec (yaml)).
-        to_match_output ('expecting an error containing all of:\n' ..
+        to_match_output ('expecting an error matching all of:\n' ..
                         '%s*| green eggs\n' ..
                         '%s*and:\n' ..
                         '%s*| ham\n' ..
                         '%s*but got:\n' ..
                         '%s*| .*cheese')
   - it displays all expected and actual output for any_of failures: |
-      yaml = preamble .. "(error 'cheese').to_raise.any_of {'green eggs', 'ham'}"
+      yaml = preamble .. "(error 'cheese').to_raise_matching.any_of {'green eggs', 'ham'}"
       expect (run_spec (yaml)).
-        to_match_output ('expecting an error containing any of:\n' ..
+        to_match_output ('expecting an error matching any of:\n' ..
                         '%s*| green eggs\n' ..
                         '%s*or:\n' ..
                         '%s*| ham\n' ..
                         '%s*but got:\n' ..
                         '%s*| .*cheese')
 
-  - context with 'raise':
-    - it succeeds if there is an error that contains the message:
-        expect (error "error message").to_raise "error"
-    - it succeeds if there is an error that contains all of the messages:
-        expect (error "error message").to_raise.
+  - context with 'raise_matching':
+    - it matches a Lua pattern:
+        expect (error "%.%d%w%").to_raise_matching "%.%%d%%"
+    - it succeeds if there is an error that matches the message:
+        expect (error "error message").to_raise_matching "error"
+    - it succeeds if there is an error that matches all of the messages:
+        expect (error "error message").to_raise_matching.
           all_of {"error", "message"}
-    - it succeeds if there is an error that contains any of the messages:
-        expect (error "error message").to_raise.
+    - it succeeds if there is an error that matches any of the messages:
+        expect (error "error message").to_raise_matching.
           any_of {"fail", "error", "bogus"}
     - it succeeds if there is any error with no message argument:
-        expect (error "error message").to_raise ()
+        expect (error "error message").to_raise_matching ()
     - it fails if there is an error that does not contain the message:
-        yaml = preamble .. "(error 'error message').to_raise 'failed'"
+        yaml = preamble .. "(error 'error message').to_raise_matching 'failed'"
         expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is an error that does not contain all listed messages:
-        yaml = preamble .. "(error 'error message').to_raise." ..
+        yaml = preamble .. "(error 'error message').to_raise_matching." ..
                "all_of {'error', 'message', 'exploded'}"
         expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is an error that does not contain any listed message:
-        yaml = preamble .. "(error 'error message').to_raise." ..
+        yaml = preamble .. "(error 'error message').to_raise_matching." ..
                "any_of {'failed', 'succeeded', 'exploded'}"
         expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is no error nor any message argument:
-        yaml = preamble .. "('not an error').to_raise ()"
+        yaml = preamble .. "('not an error').to_raise_matching ()"
         expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails if there is no error:
-        yaml = preamble .. "('not an error').to_raise 'error'"
+        yaml = preamble .. "('not an error').to_raise_matching 'error'"
         expect (run_spec (yaml)).to_contain_output (fail_1)
-  - context with 'not_raise':
+  - context with 'not_raise_matching':
     - it succeeds if there is no error:
-        expect ("not an error").not_to_raise "error"
+        expect ("not an error").not_to_raise_matching "error"
     - it succeeds if there is no error nor any message argument:
-        expect ("not an error").not_to_raise ()
+        expect ("not an error").not_to_raise_matching ()
     - it succeeds if there is an error that does not contain the message:
-        expect (error "error message").not_to_raise "failed"
+        expect (error "error message").not_to_raise_matching "failed"
     - it succeeds if there is an error that does not contain any listed message:
-        expect (error "error message").not_to_raise.
+        expect (error "error message").not_to_raise_matching.
           any_of {"failed", "suceeded", "exploded"}
     - it fails if there is any error with no message argument:
-        yaml = preamble .. "(error 'error message').not_to_raise ()"
+        yaml = preamble .. "(error 'error message').not_to_raise_matching ()"
         expect (run_spec (yaml)).to_contain_output (fail_1)
-    - it fails if there is an error that contains the message:
-        yaml = preamble .. "(error 'error message').not_to_raise 'error'"
+    - it fails if there is an error that matches the message:
+        yaml = preamble .. "(error 'error message').not_to_raise_matching 'error'"
         expect (run_spec (yaml)).to_contain_output (fail_1)
-    - it fails if there is an error that contains any listed message:
-        yaml = preamble .. "(error 'error message').not_to_raise." ..
+    - it fails if there is an error that matches any listed message:
+        yaml = preamble .. "(error 'error message').not_to_raise_matching." ..
                "any_of {'fail', 'error', 'bogus'}"
         expect (run_spec (yaml)).to_contain_output (fail_1)
 

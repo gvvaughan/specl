@@ -266,7 +266,7 @@ to the `pending` function call like this:
       - it cannot remove an element when empty:
           pending "issue #26"
           stack = Stack {}
-          expect (stack.pop ()).to_error "underflow"
+          expect (stack.pop ()).to_raise "underflow"
 {% endhighlight %}
 
 Running [Specl] now shows the string in the pending summary report:
@@ -440,17 +440,26 @@ the expectation against a [Lua] pattern:
     expect (backtrace).to_match ("\nparse.lua: [0-9]+:")
 {% endhighlight %}
 
-### 2.6. error
+### 2.6. raise
 
 Specifications for error conditions are a great idea! And this matcher
 checks both that an `error` was raised and that the subsequent error
 message contains the supplied substring, if any.
 
 {% highlight lua %}
-    expect (next (nil)).to_error ("table expected")
+    expect (next (nil)).to_raise ("table expected")
 {% endhighlight %}
 
-### 2.7. Inverting a matcher with not
+### 2.7. raise_matching
+
+Much like `raise` above, but instead of searching for a substring, this
+matcher checks against a Lua pattern:
+
+{% highlight lua %}
+    expect (t.fn ()).to_raise_matching "bad argument #1 to '%w[%.%w]*'"
+{% endhighlight %}
+
+### 2.8. Inverting a matcher with not
 
 Oftentimes, in your specification you need to check that an expectation
 does **not** match a particular outcome, and [Specl] has you covered
@@ -469,14 +478,14 @@ before reporting a pass or fail:
 {% highlight lua %}
     expect ({}).not_to_be ({})
     expect (tostring (hex)).not_to_contain ("[g-zG-Z]")
-    expect (next {}).not_to_error ()
+    expect (next {}).not_to_raise ()
 {% endhighlight %}
 
-Note that the last `not_to_error` example doesn't pass the error
-message substring that _to not_ match, because it is never checked,
+Note that the last `not_to_raise` example doesn't pass the error
+message substring that _to not_ matches, because it is never checked,
 but you can pass the string if it makes an expectation clearer.
 
-### 2.8. Matcher adaptors
+### 2.9. Matcher adaptors
 
 In addition to using matchers for straight one-to-one comparisons
 between the result of an `expect` and the argument provided to the
@@ -484,7 +493,7 @@ matcher, [Specl] has some shortcuts that can intercept the arguments
 and adapt the comparison sequence.  These shortcuts are called
 _adaptors_.
 
-#### 2.8.1. Matching alternatives with any_of
+#### 2.9.1. Matching alternatives with any_of
 
 When you want to check whether an expectation matches among a list of
 alternatives, [Specl] supports an `any_of` adaptor for any matcher:
@@ -503,7 +512,7 @@ an expectation succeeds only if none of the alternatives match:
     expect (type "x").not_to_be.any_of {"table", "nil"}
 {% endhighlight %}
 
-#### 2.8.2. Multiple matches with all_of
+#### 2.9.2. Multiple matches with all_of
 
 When you need to ensure that several matches succeed, [Specl] provides
 the `all_of` adaptor:
@@ -536,7 +545,7 @@ supplied elements, it is far better to use:
     expect ({non_boolean_result}).not_to_contain.any_of {true, false}
 {% endhighlight %}
 
-#### 2.8.3. Unordered matching with a_permutation_of
+#### 2.9.3. Unordered matching with a_permutation_of
 
 While [Specl] makes every effort to maintain ordering of elements in
 the tables (and objects) it uses, there are times when you really want
@@ -561,7 +570,7 @@ equivalent functionality - but `all_of` will not complain if `elements`
 has even more elements than what it is supposed `to_contain` at the time
 of comparison.
 
-### 2.9. Custom Matchers
+### 2.10. Custom Matchers
 
 Just like the built in matchers described above, you can use the
 `Matcher` factory object from `specl.matchers` to register additional
@@ -686,7 +695,7 @@ manual).
 Adding custom matcher with this API automatically handles lookups
 with `to_` and inverting matchers with the `not_` string.
 
-#### 2.9.1. Custom Adaptors
+#### 2.10.1. Custom Adaptors
 
 When you create a custom matcher, it can often improve the
 expressiveness of your spec files to allow additional custom adaptors

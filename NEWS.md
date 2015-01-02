@@ -7,6 +7,8 @@
   - `badargs.diagnose` also accepts '?' in lieu of a proper function
     name in argument errors (as often returned by LuaJIT).
 
+  - New matcher `raise_matching` compares an error against a Lua pattern.
+
 
 ## Noteworthy changes in release 14.0.0 (2014-12-31) [stable]
 
