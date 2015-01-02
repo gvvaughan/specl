@@ -248,10 +248,10 @@ function run_examples (state, examples, descriptions, env)
 	local examples = {}
 	for i, example in ipairs (definition) do
 	  k, v = next (example)
-	  examples[i] = { [k:gsub ("_", " ")] = { example = v, line = line or "unknown" } }
+	  examples[i] = { [k] = { example = v, line = line or "unknown" } }
 	end
 
-        table.insert (descriptions, (description:gsub ("_", " ")))
+        table.insert (descriptions, (description))
         if run_examples (state, examples, descriptions, fenv) == false then
           keepgoing = false
         end
