@@ -2,6 +2,11 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - `badargs.diagnose` also accepts '?' in lieu of a proper function
+    name in argument errors (as often returned by LuaJIT).
+
 
 ## Noteworthy changes in release 14.0.0 (2014-12-31) [stable]
 

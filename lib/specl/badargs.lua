@@ -401,7 +401,10 @@ local function diagnose (fn, decl)
     if not nilok (argtype) and i <= typemin and (not fin or i < typemin) then
       examples {
         ["it diagnoses missing argument #" .. tostring (i)] = function ()
-          expect (fn (unpack (arglist))).to_raise (format (fname, i, argtype))
+          expect (fn (unpack (arglist))).to_raise.any_of {
+	    format ("?", i, argtype),	-- recent LuaJIT
+	    format (fname, i, argtype),	-- PUC-Rio Lua
+          }
         end
       }
     end
@@ -410,18 +413,22 @@ local function diagnose (fn, decl)
       poisonarglist (arglist, i, argtype)
       examples {
 	[diagnose_badarg_description (i, argtype)] = function ()
-          expect (fn (unpack (arglist))).
-	    to_raise (format (fname, i, argtype, showarg (type (arglist[i]))))
+          expect (fn (unpack (arglist))).to_raise.any_of {
+	    format ("?", i, argtype, showarg (type (arglist[i]))),
+	    format (fname, i, argtype, showarg (type (arglist[i]))),
+          }
 	end
       }
       local containertype = poisoncontainerarglist (arglist, i, argtype)
       if containertype ~= nil then
+	local s = "bad argument #%d to '%s' (%s expected, got %s at index 2"
         examples {
 	  ["it diagnoses argument #" .. tostring (i) .. " type not " .. containertype] =
 	    function ()
-	      expect (fn (unpack (arglist))).to_raise (string.format (
-	        "bad argument #%d to '%s' (%s expected, got %s at index 2",
-	        i, fname, containertype, type (arglist[i][2])))
+	      expect (fn (unpack (arglist))).to_raise.any_of {
+	        s:format (i, "?", containertype, type (arglist[i][2])),
+	        s:format (i, fname, containertype, type (arglist[i][2])),
+	      }
 	    end
 	}
       end
@@ -436,7 +443,10 @@ local function diagnose (fn, decl)
     arglist[max + 1] = false
     examples {
       ["it diagnoses more than maximum of " .. max .. " arguments"] = function ()
-        expect (fn (unpack (arglist))).to_raise (format (fname, max + 1))
+        expect (fn (unpack (arglist))).to_raise.any_of {
+	  format (fname, max + 1),
+	  format ("?", max + 1),
+        }
       end
     }
   end
