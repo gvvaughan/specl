@@ -317,7 +317,7 @@ matchers.raise = Matcher {
   function (self, actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
-        ok = not actual:match (".*" .. escape_pattern (expect) .. ".*")
+        ok = not actual:match (escape_pattern (expect))
       end
     end
     return not ok
