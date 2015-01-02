@@ -7,6 +7,13 @@
   - `badargs.diagnose` also accepts '?' in lieu of a proper function
     name in argument errors (as often returned by LuaJIT).
 
+  - `badargs.format` will produce a `bad field` diagnostic when called
+    as:
+
+    ```lua
+    badargs.format ("function_name", narg, nil, "field_name")
+    ```
+
   - New matcher `raise_matching` compares an error against a Lua pattern.
 
 

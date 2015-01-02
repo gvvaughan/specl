@@ -215,6 +215,11 @@ end
 -- @usage
 --   expect (fn ()).to_error (badargs.format (fname, 1, "function"))
 local function format (fname, i, want, field, got)
+  if want == nil and field ~= nil then
+    local s = "bad argument #%d to '%s' (invalid field name '%s')"
+    return s:format (i, fname, field)
+  end
+
   if got == nil then field, got = nil, field end -- field is optional
   if want == nil then i, want = i - 1, i end     -- numbers only for narg error
 
