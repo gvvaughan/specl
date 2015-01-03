@@ -1,4 +1,79 @@
+2015-01-03  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.1.0
+	* NEWS.md: Record release date.
+
+	slingshot: sync with upstream, for latest 5.3.0 release tarball.
+	* slingshot: Sync with upstream.
+	* bootstrap: Sync with slingshot.
+	* .travis.yml: Regenerate.
+
+	configury: bump release version to 14.1.0.
+	* configure.ac (AC_INIT): Bump release version to 14.1.0.
+	* .travis.yml: Regenerate.
+
+	configury: add ldoc to bootstrap prerequisites.
+	* bootstrap.conf (buildreq): Add ldoc.
+
+	badargs: support invalid field diagnostics.
+	* lib/specl/badargs.lua (format): Return an invalid field error
+	message when called with a field name but no expected type arg.
+	* NEWS.md: Update.
+
+	matchers: support new `raise_matching` matcher.
+	* specs/matchers_spec.yaml (error): Correct specifications to
+	exercise `error` matcher instead of `raise`.
+	(raise): Specify behaviour with pattern meta-characters.
+	(raise_matching): Specify behaviours for pattern matching error
+	matcher.
+	* lib/specl/matchers.lua (matchers.raise_matching): Implement new
+	matcher to meet specifications.
+	* doc/specl.md (raise_matching): Document new matcher.
+	* NEWS.md: Update.
+
+	refactor: simplify raise matcher implementation.
+	* lib/specl/matchers.lua (matchers.raise): Remove spurious .*
+	elements from match pattern.
+
+	badargs: accept '?' as function name from Lua in diagnose.
+	LuaJIT in particular often fails to find the name of a function,
+	so we must accept '?' when checking error message contents.
+	* lib/specl/badargs.lua (diagnose): Accept either the correct
+	name of the function, or '?' in error messages raised when
+	forcing argument errors.
+	* NEWS.md: Update.
+
+	specl: remove underscore substitution in example descriptions.
+	* lib/specl/runner.lua (run_examples): Remove underscore
+	substitutions, once and for all!
+
+2015-01-01  Gary V. Vaughan  <gary@gnu.org>
+
+	configury: Add ansicolors to travis_extra_rocks.
+	* bootstrap.conf (travis_extra_rocks): New setting.  Install
+	ansicolors rock on travis for color in specl output.
+	* .travis.yml: Regenerate.
+
+	maint: update version output copyright year.
+	* lib/specl/version.lua.in (optspec): Bump copyright year to 2015.
+
+	maint: update copyrights.
+	* bootstrap.conf, configure.ac, lib/specl/badargs.lua,
+	lib/specl/color.lua, lib/specl/compat.lua,
+	lib/specl/formatter/progress.lua,
+	lib/specl/formatter/report.lua, lib/specl/inprocess.lua,
+	lib/specl/loader.lua, lib/specl/main.lua,
+	lib/specl/matchers.lua, lib/specl/runner.lua,
+	lib/specl/shell.lua, lib/specl/util.lua,
+	lib/specl/version.lua.in, local.mk, specl.in, specs/specs.mk:
+	Add 2015 to copyright statement.
+
 2014-12-31  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 14.0.0
 	* NEWS.md: Record release date.

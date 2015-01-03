@@ -1,7 +1,7 @@
 -- Specification testing framework.
 -- Written by Gary V. Vaughan, 2013
 --
--- Copyright (c) 2013-2014 Gary V. Vaughan
+-- Copyright (c) 2013-2015 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -248,10 +248,10 @@ function run_examples (state, examples, descriptions, env)
 	local examples = {}
 	for i, example in ipairs (definition) do
 	  k, v = next (example)
-	  examples[i] = { [k:gsub ("_", " ")] = { example = v, line = line or "unknown" } }
+	  examples[i] = { [k] = { example = v, line = line or "unknown" } }
 	end
 
-        table.insert (descriptions, (description:gsub ("_", " ")))
+        table.insert (descriptions, (description))
         if run_examples (state, examples, descriptions, fenv) == false then
           keepgoing = false
         end

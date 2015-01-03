@@ -1,7 +1,7 @@
 -- Bad argument diagnosis helpers.
 -- Written by Gary V. Vaughan, 2014
 --
--- Copyright (c) 2014 Gary V. Vaughan
+-- Copyright (c) 2014-2015 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify it
 -- under the terms of the GNU General Public License as published by the Free
@@ -215,6 +215,11 @@ end
 -- @usage
 --   expect (fn ()).to_error (badargs.format (fname, 1, "function"))
 local function format (fname, i, want, field, got)
+  if want == nil and field ~= nil then
+    local s = "bad argument #%d to '%s' (invalid field name '%s')"
+    return s:format (i, fname, field)
+  end
+
   if got == nil then field, got = nil, field end -- field is optional
   if want == nil then i, want = i - 1, i end     -- numbers only for narg error
 
@@ -401,7 +406,10 @@ local function diagnose (fn, decl)
     if not nilok (argtype) and i <= typemin and (not fin or i < typemin) then
       examples {
         ["it diagnoses missing argument #" .. tostring (i)] = function ()
-          expect (fn (unpack (arglist))).to_raise (format (fname, i, argtype))
+          expect (fn (unpack (arglist))).to_raise.any_of {
+	    format ("?", i, argtype),	-- recent LuaJIT
+	    format (fname, i, argtype),	-- PUC-Rio Lua
+          }
         end
       }
     end
@@ -410,18 +418,22 @@ local function diagnose (fn, decl)
       poisonarglist (arglist, i, argtype)
       examples {
 	[diagnose_badarg_description (i, argtype)] = function ()
-          expect (fn (unpack (arglist))).
-	    to_raise (format (fname, i, argtype, showarg (type (arglist[i]))))
+          expect (fn (unpack (arglist))).to_raise.any_of {
+	    format ("?", i, argtype, showarg (type (arglist[i]))),
+	    format (fname, i, argtype, showarg (type (arglist[i]))),
+          }
 	end
       }
       local containertype = poisoncontainerarglist (arglist, i, argtype)
       if containertype ~= nil then
+	local s = "bad argument #%d to '%s' (%s expected, got %s at index 2"
         examples {
 	  ["it diagnoses argument #" .. tostring (i) .. " type not " .. containertype] =
 	    function ()
-	      expect (fn (unpack (arglist))).to_raise (string.format (
-	        "bad argument #%d to '%s' (%s expected, got %s at index 2",
-	        i, fname, containertype, type (arglist[i][2])))
+	      expect (fn (unpack (arglist))).to_raise.any_of {
+	        s:format (i, "?", containertype, type (arglist[i][2])),
+	        s:format (i, fname, containertype, type (arglist[i][2])),
+	      }
 	    end
 	}
       end
@@ -436,7 +448,10 @@ local function diagnose (fn, decl)
     arglist[max + 1] = false
     examples {
       ["it diagnoses more than maximum of " .. max .. " arguments"] = function ()
-        expect (fn (unpack (arglist))).to_raise (format (fname, max + 1))
+        expect (fn (unpack (arglist))).to_raise.any_of {
+	  format (fname, max + 1),
+	  format ("?", max + 1),
+        }
       end
     }
   end

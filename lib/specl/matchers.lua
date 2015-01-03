@@ -1,7 +1,7 @@
 -- Specification matchers.
 -- Written by Gary V. Vaughan, 2013
 --
--- Copyright (c) 2013-2014 Gary V. Vaughan
+-- Copyright (c) 2013-2015 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -317,7 +317,7 @@ matchers.raise = Matcher {
   function (self, actual, expect, ok)
     if expect ~= nil then
       if not ok then -- "not ok" means an error occurred
-        ok = not actual:match (".*" .. escape_pattern (expect) .. ".*")
+        ok = not actual:match (escape_pattern (expect))
       end
     end
     return not ok
@@ -342,6 +342,41 @@ matchers.raise = Matcher {
 
   format_alternatives = function (self, adaptor, alternatives)
     return " an error containing " .. adaptor .. ":" ..
+           reformat (alternatives, adaptor)
+  end,
+}
+
+
+-- Matches if a matching error is raised inside `expect`.
+matchers.raise_matching = Matcher {
+  function (self, actual, expect, ok)
+    if expect ~= nil then
+      if not ok then -- "not ok" means an error occurred
+        ok = not actual:match (expect)
+      end
+    end
+    return not ok
+  end,
+
+  -- force a new-line, let the display engine take care of indenting.
+  format_actual = function (self, actual, _, ok)
+    if ok then
+      return " no error"
+    else
+      return ":" .. reformat (actual)
+    end
+  end,
+
+  format_expect = function (self, expect)
+    if expect ~= nil then
+      return " an error matching:" .. reformat (expect)
+    else
+      return " an error"
+    end
+  end,
+
+  format_alternatives = function (self, adaptor, alternatives)
+    return " an error matching " .. adaptor .. ":" ..
            reformat (alternatives, adaptor)
   end,
 }
