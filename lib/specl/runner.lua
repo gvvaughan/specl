@@ -74,7 +74,7 @@ local core = {
 local function initenv (state, env)
   -- Don't let _G (or _ENV) assignments leak into outer tables.
   rawset (env, "_G", env)
-  if env._ENV then rawset (env, "_ENV", env) end
+  if rawget (env, "_ENV") then rawset (env, "_ENV", env) end
 
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
