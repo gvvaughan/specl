@@ -235,6 +235,25 @@ local function format (fname, i, want, field, got)
 end
 
 
+--- Return a formatted bad result string.
+-- @string fname base-name of the orroring function
+-- @int i result number
+-- @string want expected result type
+-- @string[opt="no value"] got actual result type
+-- @usage
+--   expect (fn ()).to_error (badargs.result (fname, 1, "int"))
+local function result (fname, i, want, got)
+  if want == nil then i, want =  i - 1, i end -- numbers only for narg error
+
+  if got == nil and type (want) == "number" then
+    local s = "bad result #%d from '%s' (no more than %d result%s expected, got %d)"
+    return s:format (i + 1, fname, i, i == 1 and "" or "s", want)
+  end
+  return string.format ("bad result #%d from '%s' (%s expected, got %s)",
+                        i, fname, showarg (want), got or "no value")
+end
+
+
 --- Return `true` if *typelist* contains "nil".
 -- @tparam list typelist a normalized list of type names
 -- @treturn boolean non-`true` if *typelist* does not contain "nil"
@@ -466,6 +485,7 @@ end
 
 --- @export
 return {
-  format   = format,
   diagnose = diagnose,
+  format   = format,
+  result   = result,
 }

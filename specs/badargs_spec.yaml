@@ -2,6 +2,7 @@ before: |
   badargs = require "specl.badargs"
 
   re_badargmsg = "^bad argument #%d+ to '[%w_][%w_%d]*' (.*)$"
+  re_badresultmsg = "^bad result #%d+ from '[%w_][%w_%d]*' (.*)$"
 
 specify badargs:
 - describe format:
@@ -75,6 +76,60 @@ specify badargs:
     - it reports failed function:
         expect (f ("fnord", 42, "number", "gnar", "string")).
           to_contain "'fnord'"
+
+
+- describe result:
+  - before:
+      f = badargs.result
+
+  - context with one too many results:
+    - it returns a bad result message:
+        expect (f ("fnord", 42)).to_match (re_badresultmsg)
+    - it reports result count failure:
+        expect (f ("fnord", 42)).
+          to_contain "(no more than 41 results expected, got 42)"
+        expect (f ("fnord", 2)).
+          to_contain "(no more than 1 result expected, got 2)"
+    - it reports failed result: |
+        expect (f ("fnord", 42)).to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42)).to_contain "'fnord'"
+
+  - context with way too many results:
+    - it returns a bad result message:
+        expect (f ("fnord", 0, 42)).to_match (re_badresultmsg)
+    - it reports result count failure:
+        expect (f ("fnord", 0, 42)).
+          to_contain "(no more than 0 results expected, got 42)"
+        expect (f ("fnord", 1, 42)).
+          to_contain "(no more than 1 result expected, got 42)"
+    - it reports failed result: |
+        expect (f ("fnord", 1, 42)).to_contain " #2 "
+    - it reports failed function:
+        expect (f ("fnord", 1, 42)).to_contain "'fnord'"
+
+  - context with missing result:
+    - it returns a bad result message:
+        expect (f ("fnord", 42, "number")).to_match (re_badresultmsg)
+    - it reports type mismatch:
+        expect (f ("fnord", 42, "number")).
+          to_contain "(number expected, got no value)"
+    - it reports failed result: |
+        expect (f ("fnord", 42, "number")).to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42, "number")).to_contain "'fnord'"
+
+  - context with result type check:
+    - it returns a bad result message:
+        expect (f ("fnord", 42, "number", "string")).
+          to_match (re_badresultmsg)
+    - it reports table field type mismatch:
+        expect (f ("fnord", 42, "number",  "string")).
+          to_contain "(number expected, got string)"
+    - it reports failed result: |
+        expect (f ("fnord", 42, "number", "string")).to_contain " #42 "
+    - it reports failed function:
+        expect (f ("fnord", 42, "number", "string")).to_contain "'fnord'"
 
 
 - describe diagnose:

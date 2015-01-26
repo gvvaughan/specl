@@ -2,6 +2,11 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - New `badargs.result` for formatting function result checking failure
+    messages.
+
 
 ## Noteworthy changes in release 14.1.0 (2015-01-03) [stable]
 
