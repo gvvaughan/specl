@@ -18,6 +18,12 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+--[[--
+  Functions for running a Lua program in the Specl Lua interpreter.
+
+  @module specl.inprocess
+]]
+
 
 local compat = require "specl.compat"
 local shell  = require "specl.shell"
@@ -226,7 +232,11 @@ local function env_init (env, stdin)
 end
 
 
--- Run a Lua program in-process
+--- Run a Lua program in-process
+-- @func fn program-like function to act on
+-- @tparam table arg command-line arguments for *fn*
+-- @string stdin standard input content for *fn*
+-- @treturn Process result of executing *fn*
 local function capture (fn, arg, stdin)
   arg = arg or {}
 
@@ -258,7 +268,11 @@ local function capture (fn, arg, stdin)
 end
 
 
--- Run a Lua program in-process
+--- Run a Lua program in-process.
+-- @tparam Main main callable object with an inprocess field
+-- @tparam table arg command-line arguments for *main*
+-- @string stdin standard input content for *main*
+-- @treturn Process result of executing *main*
 local function call (main, arg, stdin)
   type_check ("call", {main}, {"Main"})
   arg = arg or {}
@@ -332,6 +346,12 @@ local function call (main, arg, stdin)
 end
 
 
+--[[ ================= ]]--
+--[[ Public Interface. ]]--
+--[[ ================= ]]--
+
+
+--- @export
 return {
   call    = call,
   capture = capture,

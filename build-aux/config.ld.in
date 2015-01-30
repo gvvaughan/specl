@@ -1,0 +1,25 @@
+-- -*- lua -*-
+title = "@PACKAGE_STRING@ Reference"
+project = "@PACKAGE_STRING@"
+description = "Behaviour Driven Development for Lua"
+
+tparam_alias "string"
+tparam_alias "int"
+tparam_alias "bool"
+
+dir = "."
+file = {
+  -- Modules
+  "../lib/specl/badargs.lua",
+  "../lib/specl/inprocess.lua",
+  "../lib/specl/matchers.lua",
+  "../lib/specl/shell.lua",
+}
+
+new_type ("object", "Objects", false, "Fields")
+new_type ("matcher", "Matchers", false, "Parameters")
+
+backtick_references = false
+format = "markdown"
+merge = true
+sort = true

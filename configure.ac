@@ -30,15 +30,18 @@ AM_INIT_AUTOMAKE([-Wall])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Check for programs
-AC_PATH_PROG([HELP2MAN], [help2man], [false])
-AC_PATH_PROG([SPECL], [specl], [false])
-AC_PATH_PROG([LUAM], [luam], [false])
-AX_PROG_LUA([5.1], [5.4])
 AC_PROG_EGREP
 AC_PROG_SED
+AC_PATH_PROG([HELP2MAN], [help2man], [false])
+AX_PROG_LUA([5.1], [5.4])
+AC_PATH_PROG([SPECL], [specl], [false])
+AC_PATH_PROG([LUAM], [luam], [false])
+
+AC_PATH_PROG([LDOC], [ldoc], [false])
+AM_CONDITIONAL([HAVE_LDOC], [test false != "$LDOC"])
 
 dnl Generate output files
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile build-aux/config.ld])
 AC_CONFIG_FILES([specl], [chmod 555 specl])
 AC_CONFIG_FILES([lib/specl/version.lua], [chmod 444 lib/specl/version.lua])
 AC_OUTPUT

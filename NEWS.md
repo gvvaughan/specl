@@ -15,6 +15,9 @@
     expect {1 + 1}.to_equal {2}
     ```
 
+  - Preliminary LDocs for Specl APIs useful for writing Matchers,
+    expectations and spec_helper.lua.
+
 
 ## Noteworthy changes in release 14.1.0 (2015-01-03) [stable]
 

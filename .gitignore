@@ -16,6 +16,8 @@
 /config.log
 /config.status
 /configure
+/doc
+!/doc/specl.md
 /specl
 /specl-*.rockspec
 !specl-git-*.rockspec
@@ -24,6 +26,7 @@
 GNUmakefile
 Makefile.am
 build-aux/config.guess
+build-aux/config.ld
 build-aux/config.sub
 build-aux/depcomp
 build-aux/do-release-commit-and-tag

@@ -18,7 +18,11 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
--- Additional commands useful for writing command-line specs.
+--[[--
+ Additional commands useful for writing command-line specs.
+
+ @module specl.shell
+]]
 
 local std  = require "specl.std"
 local util = require "specl.util"
@@ -34,8 +38,9 @@ local function shell_quote (s)
   return "'" .. tostring (s):gsub ("'", "'\\''") .. "'"
 end
 
--- Massage a command description into a string suitable for executing
--- by the shell.
+--- Description of a shell command.
+-- @object Command
+-- @tparam string|table params shell command to act on
 local Command = Object {
   _type = "Command",
 
@@ -80,14 +85,20 @@ local Command = Object {
 }
 
 
--- Description of a completed process.
+--- A completed process.
+-- @object Process
+-- @int status exit status of a command
+-- @string output standard output from a command
+-- @string errout standard error from a command
 local Process = Object {
   _type = "Process",
   _init = {"status", "output", "errout"},
 }
 
 
--- Run a command in a subprocess
+--- Run a command in a subprocess
+-- @tparam string|table|Command o a shell command to run in a subprocess
+-- @treturn Process result of executing *o*
 local function spawn (o)
   type_check ("spawn", {o}, {{"string", "table", "Command"}})
   if object.type (o) ~= "Command" then o = Command (o) end
@@ -196,7 +207,9 @@ do
   }
 
 
-  -- Matches if the exit status of a process is <expect>.
+  --- Matches if the exit status of a Process is *status*.
+  -- @matcher exit
+  -- @int status expected exit status
   matchers.exit = ProcessMatcher {
     function (self, actual, expect)
       return (actual.status == expect)
@@ -215,7 +228,8 @@ do
   }
 
 
-  -- Matches if the exit status of a process is 0.
+  --- Matches if the exit status of a Process is 0.
+  -- @matcher succeed
   matchers.succeed = ProcessMatcher {
     function (self, actual)
       return (actual.status == 0)
@@ -229,7 +243,9 @@ do
   }
 
 
-  -- Matches if the output of a process contains <expect>.
+  --- Matches if the output of a Process contains *out*.
+  -- @matcher contain_output
+  -- @string out substring to match against Process output
   matchers.contain_output = ProcessMatcher {
     function (self, actual, expect)
       return (actual.output or ""):match (escape_pattern (expect)) ~= nil
@@ -239,7 +255,9 @@ do
   }
 
 
-  -- Matches if the process exits normally with output containing <expect>
+  --- Matches if the process exits normally with output containing *out*
+  -- @matcher succeed_while_containing
+  -- @string out substring to match against Process output
   matchers.succeed_while_containing = ProcessMatcher {
     function (self, actual, expect)
       return (actual.status == 0) and
@@ -251,7 +269,9 @@ do
   }
 
 
-  -- Matches if the output of a process is exactly <expect>.
+  --- Matches if the output of a Process is exactly *stdout*.
+  --@matcher output
+  --@string stdout entire expected Process output
   matchers.output = ProcessMatcher {
     function (self, actual, expect)
       return actual.output == expect
@@ -261,7 +281,9 @@ do
   }
 
 
-  -- Matches if the process exits normally with output <expect>
+  --- Matches if the Process exits normally with output containing *out*.
+  -- @matcher succeed_with
+  -- @string out substring to match against Process output
   matchers.succeed_with = ProcessMatcher {
     function (self, actual, expect)
       return (actual.status == 0) and (actual.output == expect)
@@ -271,7 +293,9 @@ do
   }
 
 
-  -- Matches if the output of a process matches <pattern>.
+  --- Matches if the output of a Process matches *pattern*.
+  -- @matcher match_output
+  -- @string pattern match this against Process output
   matchers.match_output = ProcessMatcher {
     function (self, actual, pattern)
       return (actual.output or ""):match (pattern) ~= nil
@@ -281,7 +305,9 @@ do
   }
 
 
-  -- Matches if the process exits normally with output matching <expect>
+  --- Matches if the Process exits normally with output matching *pattern*.
+  -- @matcher succed_while_matching
+  -- @string pattern match this against Process output
   matchers.succeed_while_matching = ProcessMatcher {
     function (self, actual, pattern)
       return (actual.status == 0) and
@@ -293,7 +319,8 @@ do
   }
 
 
-  -- Matches if the exit status of a process is <expect>.
+  --- Matches if the exit status of a Process is non-zero.
+  -- @matcher fail
   matchers.fail = ProcessMatcher {
     function (self, actual)
       return actual.status ~= 0
@@ -307,7 +334,9 @@ do
   }
 
 
-  -- Matches if the error output of a process contains <expect>.
+  --- Matches if the error output of a Process contains *err*.
+  -- @matcher contain_error
+  -- @string err substring to match against Process error output
   matchers.contain_error = ProcessMatcher {
     function (self, actual, expect)
       return (actual.errout or ""):match (escape_pattern (expect)) ~= nil
@@ -317,7 +346,9 @@ do
   }
 
 
-  -- Matches if the process exits normally with output containing <expect>
+  --- Matches if the Process exits normally containing error output *err*.
+  -- @matcher fail_while_containing
+  -- @string err substring to match against Process error output
   matchers.fail_while_containing = ProcessMatcher {
     function (self, actual, expect)
       return (actual.status ~= 0) and
@@ -329,7 +360,9 @@ do
   }
 
 
-  -- Matches if the error output of a process is exactly <expect>.
+  --- Matches if the error output of a Process is exactly *stderr*.
+  -- @matcher output_error
+  --@string stderr entire expected Process error output
   matchers.output_error = ProcessMatcher {
     function (self, actual, expect)
       return actual.errout == expect
@@ -339,7 +372,9 @@ do
   }
 
 
-  -- Matches if the process exits abnormally with error output <expect>
+  --- Matches if the Process exits abnormally containing error output *err*.
+  -- @matcher fail_with
+  -- @string err substring to match against Process error output
   matchers.fail_with = ProcessMatcher {
     function (self, actual, expect)
       return (actual.status ~= 0) and (actual.errout == expect)
@@ -350,7 +385,9 @@ do
   }
 
 
-  -- Matches if the error output of a process matches <pattern>.
+  --- Matches if the error output of a Process matches *pattern*.
+  -- @matcher match_error
+  -- @string pattern match this against Process error output
   matchers.match_error = ProcessMatcher {
     function (self, actual, pattern)
       return (actual.errout or ""):match (pattern) ~= nil
@@ -360,7 +397,9 @@ do
   }
 
 
-  -- Matches if the process exits normally with output matching <expect>
+  --- Matches if the Process exits normally with output matching *pattern*.
+  -- @matcher fail_while_matching
+  -- @string pattern match this against Process error output
   matchers.fail_while_matching = ProcessMatcher {
     function (self, actual, pattern)
       return (actual.status ~= 0) and
@@ -379,6 +418,7 @@ end
 --[[ ================= ]]--
 
 
+--- @export
 return {
   Command = Command,
   Process = Process,

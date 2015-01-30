@@ -41,7 +41,15 @@ update_copyright_env = \
 ## Declarations. ##
 ## ------------- ##
 
+classesdir		= $(docdir)/classes
+modulesdir		= $(docdir)/modules
+
+dist_doc_DATA		=
+dist_classes_DATA	=
+dist_modules_DATA	=
+
 include specs/specs.mk
+
 
 ## ------ ##
 ## Build. ##
@@ -91,6 +99,36 @@ $(srcdir)/doc/specl.1: $(srcdir)/specl
 
 ## Use a builtin rockspec build with root at $(srcdir)/lib.
 mkrockspecs_args = --module-dir $(srcdir)/lib
+
+
+## -------------- ##
+## Documentation. ##
+## -------------- ##
+
+dist_doc_DATA +=					\
+	$(srcdir)/doc/index.html			\
+	$(srcdir)/doc/ldoc.css				\
+	$(NOTHING_ELSE)
+
+dist_modules_DATA +=					\
+	$(srcdir)/doc/modules/specl.badargs.html	\
+	$(srcdir)/doc/modules/specl.inprocess.html	\
+	$(srcdir)/doc/modules/specl.matchers.html	\
+	$(srcdir)/doc/modules/specl.shell.html		\
+	$(NOTHING_ELSE)
+
+allhtml = $(dist_doc_DATA) $(dist_modules_DATA) $(dist_classes_DATA)
+
+$(allhtml): $(dist_specl_DATA)
+	test -d $(builddir)/doc || mkdir $(builddir)/doc
+if HAVE_LDOC
+	$(LDOC) -c build-aux/config.ld -d $(abs_srcdir)/doc .
+else
+	$(MKDIR_P) doc
+	touch doc/index.html doc/ldoc.css
+endif
+
+doc: $(allhtml)
 
 
 ## ------------- ##

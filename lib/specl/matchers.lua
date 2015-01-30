@@ -18,6 +18,13 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+--[[--
+ Built in matchers for `expect`.
+
+ @module specl.matchers
+]]
+
+
 local color = require "specl.color"
 local std   = require "specl.std"
 local util  = require "specl.util"
@@ -51,7 +58,10 @@ local function totable (obj)
 end
 
 
--- Quote strings nicely, and coerce non-strings into strings.
+--- Quote strings nicely, and coerce non-strings into strings.
+-- @function stringify
+-- @param x item to act on
+-- @treturn string string representation of *x*
 local function q (obj)
   if type (obj) == "string" then
     return ("%q"):format (obj)
@@ -60,7 +70,11 @@ local function q (obj)
 end
 
 
--- Call util.concat with an infix appropriate to ADAPTOR.
+--- Format *alternatives* with an *adaptor* appropriate infix.
+-- @function concat
+-- @tparam table alternatives table of expectations
+-- @string adaptor one of "all of", "any of" or "a permutation of"
+-- @bool quoted whether to put quote marks around string values
 local function concat (alternatives, adaptor, quoted)
   local infix
   if adaptor == "a permutation of" then
@@ -91,8 +105,12 @@ local function alternatives_msg (object, adaptor, alternatives, actual, expect, 
 end
 
 
--- The `Matcher` object assembles a self type checking function
--- for assignment to the matchers table.
+--- Assembles a self type checking entry for the matchers table.
+-- @object Matcher
+-- @func matchp predicate function to determine whether a match occurred
+-- @func format_expect format the expected result for display
+-- @func format_actual format the actual result for display
+-- @func format_alternatives format adaptor alternatives for display
 local Matcher = Object {
   _type = "Matcher",
 
@@ -163,10 +181,12 @@ local Matcher = Object {
 --[[ ========= ]]--
 
 
+--- Master table of all active @{Matcher} objects.
 -- Only allow Matcher objects to be assigned to a slot in this table.
 -- The actual entries are stored in a subtable to ensure that __newindex
 -- always fires, the type of new assignments is always checked, and the
 -- name field is always set.
+-- @table matchers
 local matchers = setmetatable ({content = {}}, {
   __index = function (self, name) return rawget (self.content, name) end,
 
@@ -185,10 +205,15 @@ local escape = {
 }
 
 
--- Reformat text into "
+--- Reformat multi-line output text for output.
+--
+-- For example: "
 -- | %{match}first line of <text>%{reset}
 -- | %{match}next line of <text>%{reset}
 -- " etc.
+-- @string text string to act on
+-- @string[opt="| "] prefix output this at the start of every line
+-- @treturn string reformatted *text*
 local function _reformat (text, prefix)
   text = text or ""
   prefix = prefix or "| "
@@ -199,11 +224,18 @@ local function _reformat (text, prefix)
 end
 
 
--- Reformat a list of alternatives into "
+--- Reformat a list of alternatives for output.
+--
+-- For example: "
 -- | %{match}as many lines of <list>[1] as provided%{reset}
 -- or:
 -- | %{match}lines from <list>[2]%}reset}
 -- " etc.
+-- @function reformat
+-- @tparam table list of alternatives to act on
+-- @string adaptor one of "all of", "any of" or "a permutation of"
+-- @string[opt="| "] prefix output this at the start of every line
+-- @treturn string reformatted *text*
 local function reformat (list, adaptor, prefix)
   list, prefix = list or {""}, prefix or "| "
   if type (list) ~= "table" then
@@ -274,8 +306,9 @@ local function objcmp (o1, o2)
 end
 
 
--- Deep comparison, matches if <actual> and <expect> share the same
--- structure.
+--- Deep comparison, matches if *actual* and *expect* share the same structure.
+-- @matcher equal
+-- @param expect expected result
 matchers.equal = Matcher {
   function (self, actual, expect)
     return (objcmp (actual, expect) == true)
@@ -283,7 +316,9 @@ matchers.equal = Matcher {
 }
 
 
--- Identity, only match if <actual> and <expect> are the same object.
+--- Identity, only match if *actual* and *expect* are the same object.
+-- @matcher be
+-- @param expect expected result
 matchers.be = Matcher {
   function (self, actual, expect)
     return (actual == expect)
@@ -295,7 +330,9 @@ matchers.be = Matcher {
 }
 
 
--- Equal but not the same object.
+--- Equal but not the same object.
+-- @matcher copy
+-- @param expect expected result
 matchers.copy = Matcher {
   function (self, actual, expect)
     return (actual ~= expect) and (objcmp (actual, expect) == true)
@@ -312,7 +349,10 @@ matchers.copy = Matcher {
 }
 
 
--- Matches if any error is raised inside `expect`.
+--- Matches if any error is raised inside `expect`.
+-- @matcher raise
+-- @string errmsg substring of raised error message
+-- @usage expect (error "oh noes!").to_raise "oh no"
 matchers.raise = Matcher {
   function (self, actual, expect, ok)
     if expect ~= nil then
@@ -347,7 +387,9 @@ matchers.raise = Matcher {
 }
 
 
--- Matches if a matching error is raised inside `expect`.
+--- Matches if a matching error is raised inside `expect`.
+-- @matcher raise_matching
+-- @string pattern error message must match this pattern
 matchers.raise_matching = Matcher {
   function (self, actual, expect, ok)
     if expect ~= nil then
@@ -386,7 +428,9 @@ matchers.raise_matching = Matcher {
 matchers.error = matchers.raise
 
 
--- Matches if <actual> matches <pattern>.
+--- Matches if *actual* matches *pattern*.
+-- @matcher match
+-- @string pattern result must match this pattern
 matchers.match = Matcher {
   function (self, actual, pattern)
     return (actual:match (pattern) ~= nil)
@@ -405,7 +449,9 @@ matchers.match = Matcher {
 }
 
 
--- Matches if <actual> contains <expect>.
+--- Matches if *actual* contains *expect*.
+-- @matcher contain
+-- @param content element to search for in string or table.
 matchers.contain = Matcher {
   function (self, actual, expect)
     if type (actual) == "string" and type (expect) == "string" then
@@ -505,25 +551,34 @@ matchers.contain = Matcher {
 --[[ ============= ]]--
 
 
--- Called at the start of each example block.
+--- Called at the start of each example block.
+-- @tparam table state state to be reinitialised
 local function init (state)
   state.expectations = {}
   state.ispending = nil
 end
 
 
--- Return status since last init.
+--- Return status since last init.
+-- @tparam table state state shared with formatters
+-- @treturn table count of completed and pending expectations
 local function status (state)
   return { expectations = state.expectations, ispending = state.ispending }
 end
 
 
--- Wrap <actual> in metatable that dynamically looks up an appropriate
--- matcher from the table above for comparison with the following
--- parameter. Matcher names containing '_not_' invert their results
--- before returning.
+-- Wrap *actual* in metatable for matcher lookups.
+-- Dynamically look up an appropriate matcher from @{Matcher} for comparison
+-- with the following parameter. Matcher names containing '_not_' invert
+-- their results before returning.
 --
--- For example:                  expect ({}).not_to_be {}
+-- Note this function called from the expansion of the `expect` loader
+-- macro, which injects a pcall for capturing errors.
+-- @tparam table state filled by formatters as expectations are run
+-- @bool ok whether an error occurred
+-- @param actual result of running expectation
+-- @treturn table dynamic matcher lookup table for this result
+-- @usage expect ({}).not_to_be {}
 local function expect (state, ok, actual)
   return setmetatable ({}, {
     __index = function (_, verb)
@@ -596,6 +651,10 @@ local function expect (state, ok, actual)
 end
 
 
+--- Mark an example as pending.
+-- @function pending
+-- @tparam table state state shared with formatters
+-- @string[opt="not yet implemented"] s reason for pending example
 local function pending (state, s)
   state.stats.pend = state.stats.pend + 1
   state.ispending  = s or "not yet implemented"

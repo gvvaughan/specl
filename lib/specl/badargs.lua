@@ -151,7 +151,7 @@ end
 --- Compact permutation list into a list of valid types at each argument.
 -- Eliminate bracked types by combining all valid types at each position
 -- for all permutations of *typelist*.
--- @tparam list typelist a normalized list of type names
+-- @tparam list types a normalized list of type names
 -- @treturn list valid types for each positional parameter
 local function compact (types)
   local p = permutations (types)
