@@ -8,6 +8,17 @@ after:
 
 
 specify loader:
+- describe expect:
+  - it accepts a parenthesized expression:
+      expect (1 + 1).to_be (2)
+  - it accepts a single table argument:
+      expect {1 + 1}.to_equal {2}
+  - it accepts a single string argument:
+      expect '1 + 1'.to_be "1 + 1"
+      expect "doesn't".to_be "doesn't"
+      expect [["quote"]].to_be [["quote"]]
+      expect [==["quote"]==].to_be [["quote"]]
+
 - describe require:
   - context without spec_helper:
     - it works independently: |

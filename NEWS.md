@@ -7,6 +7,14 @@
   - New `badargs.result` for formatting function result checking failure
     messages.
 
+  - The `expect` macro now behaves like a standard Lua function, and will
+    accept bare tables or strings (i.e. without surrounding parentheses)
+    as a single argument:
+
+    ```lua
+    expect {1 + 1}.to_equal {2}
+    ```
+
 
 ## Noteworthy changes in release 14.1.0 (2015-01-03) [stable]
 

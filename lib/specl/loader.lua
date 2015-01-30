@@ -40,13 +40,21 @@ local null       = { type = "LYAML null" }
 
 -- Capture errors thrown by expectations.
 macro.define ("expect", function (get)
-  local out
-  if get:peek (1) == "(" then
-    get:expecting "("
-    local expr = get:upto ")"
-    out = " (pcall (function () return " .. tostring (expr) .. " end))"
+  local expr
+  local tk, v = get:peek (1)
+  if v == "(" then
+    get:next ()
+    expr = tostring (get:upto ")")
+  elseif v == "{" then
+    get:expecting "{"
+    expr = "{" .. tostring (get:upto "}") .. "}"
+  elseif tk == "string" then
+    tk, expr = get:next ()
   end
-  return out, true -- pass through 'expect' token
+  if expr == nil then -- pass through 'expect' token
+    return nil, true
+  end
+  return " (pcall (function () return " .. expr .. " end))", true
 end)
 
 
