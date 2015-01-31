@@ -3,7 +3,7 @@
 -- First handle debug_init and _DEBUG, being careful not to affect
 -- DEBUG disposition of subsequent example loaders for std.debug_init!
 local _DEBUG = require "std.debug_init"._DEBUG
-_DEBUG.argcheck = false
+_DEBUG.argcheck = true
 
 
 -- Handle to the stdlib modules.

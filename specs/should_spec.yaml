@@ -787,10 +787,11 @@ describe should matcher:
       preamble = [[before: |
         local matchers = (require "specl.matchers").matchers
         local util     = require "specl.util"
+        local argcheck = require "specl.std".debug.argcheck
 
         matchers.equal["the_size_of?"] = function (self, actual, expected, ...)
-          util.type_check ("expect", {actual}, {"table"})
-          util.type_check ("the_same_size_as", {expected}, {"table"})
+          argcheck ("expect", 1, "table", actual)
+          argcheck (self.name .. ".the_size_of", 1, "table", expected)
           return (#actual == #expected),
             "expecting a table the same size as" ..
             self.format_expect (expected, actual, ...) .. "but got" ..

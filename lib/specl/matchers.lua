@@ -35,7 +35,7 @@ local chomp, escape_pattern, prettytostring =
   std.string.chomp, std.string.escape_pattern, std.string.prettytostring
 local clone, empty, merge, size =
   std.table.clone, std.table.empty, std.table.merge, std.table.size
-local type_check = util.type_check
+local argcheck = std.debug.argcheck
 
 local Object = object {}
 
@@ -120,7 +120,7 @@ local Matcher = Object {
 
   -- Respond to `to_`s and `not_to_`s.
   match = function (self, actual, expect, ...)
-    type_check (self.name, {actual}, {self.actual_type})
+    argcheck (self.name, 1, self.actual_type, actual)
 
     -- Pass all parameters to both formatters!
     local m = "expecting" .. self:format_expect (expect, actual, ...) ..
@@ -132,8 +132,8 @@ local Matcher = Object {
   -- Adaptors:
 
   ["all_of?"] = function (self, actual, alternatives, ...)
-    type_check (self.name, {actual}, {self.actual_type})
-    type_check (self.name .. ".all_of", {alternatives}, {"#table"})
+    argcheck ("expect", 1, self.actual_type, actual)
+    argcheck (self.name .. ".all_of", 1, "#table", alternatives)
 
     local success
     for _, expect in ipairs (alternatives) do
@@ -146,8 +146,8 @@ local Matcher = Object {
   end,
 
   ["any_of?"] = function (self, actual, alternatives, ...)
-    type_check (self.name, {actual}, {self.actual_type})
-    type_check (self.name .. ".any_of", {alternatives}, {"#table"})
+    argcheck ("expect", 1, self.actual_type, actual)
+    argcheck (self.name .. ".any_of", 1, "#table", alternatives)
 
     local success
     for _, expect in ipairs (alternatives) do
@@ -160,7 +160,7 @@ local Matcher = Object {
   end,
 
   -- Defaults:
-  actual_type   = "any",
+  actual_type   = "?any",
 
   matchp        = function (self, actual, expect) return actual == expect end,
 
@@ -191,7 +191,7 @@ local matchers = setmetatable ({content = {}}, {
   __index = function (self, name) return rawget (self.content, name) end,
 
   __newindex = function (self, name, matcher)
-    type_check ("matchers." .. name, {matcher}, {"Matcher"})
+    argcheck ("matchers." .. name, 2, "Matcher", matcher)
     rawset (self.content, name, matcher)
     rawset (matcher, "name", name)
   end,
@@ -480,8 +480,8 @@ matchers.contain = Matcher {
 
   -- Additional adaptor to match unordered tables (and strings!).
   ["a_permutation_of?"] = function (self, actual, expected, ...)
-    type_check (self.name, {actual}, {self.actual_type})
-    type_check (self.name .. ".a_permutation_of", {expected}, {{"string", "table"}})
+    argcheck ("expect", 1, self.actual_type, actual)
+    argcheck (self.name .. ".a_permutation_of", 1, "string|table", expected)
 
     -- calculate failure output before coercing strings into tables
     local msg = "expecting" ..
@@ -513,7 +513,7 @@ matchers.contain = Matcher {
     return false, msg
   end,
 
-  actual_type   = {"string", "table", "object"},
+  actual_type   = "string|table|object",
 
   format_actual = function (self, actual)
     if type (actual) == "string" then

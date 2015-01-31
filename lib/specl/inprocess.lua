@@ -34,7 +34,7 @@ local setfenv, unpack, xpcall = compat.setfenv, compat.unpack, compat.xpcall
 local Process = shell.Process
 local case, object = std.functional.case, std.object
 local clone, merge = std.table.clone, std.table.merge
-local nop, type_check = util.nop, util.type_check
+local nop = util.nop
 
 
 local Object = object {}
@@ -274,7 +274,6 @@ end
 -- @string stdin standard input content for *main*
 -- @treturn Process result of executing *main*
 local function call (main, arg, stdin)
-  type_check ("call", {main}, {"Main"})
   arg = arg or {}
 
   -- Execution environment.
@@ -350,9 +349,12 @@ end
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
 
+local function X (decl, fn)
+  return std.debug.argscheck ("specl.inprocess." .. decl, fn)
+end
 
 --- @export
 return {
-  call    = call,
-  capture = capture,
+  call    = X ("call (Main, ?table, ?string)", call),
+  capture = X ("capture (function, ?table, ?string)", capture),
 }

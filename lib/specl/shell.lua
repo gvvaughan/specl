@@ -28,7 +28,7 @@ local std  = require "specl.std"
 local util = require "specl.util"
 
 local object, escape_pattern = std.object, std.string.escape_pattern
-local type_check = util.type_check
+local argcheck = std.debug.argcheck
 
 
 local Object = object {}
@@ -45,8 +45,7 @@ local Command = Object {
   _type = "Command",
 
   _init = function (self, params)
-    type_check ("Command",
-      {self, params}, {{"Command", "table"}, {"string", "table"}})
+    argcheck ("Command", 1, "string|table", params)
 
     local kind = object.type (params)
     if kind == "string" then params = {params} end
@@ -100,7 +99,6 @@ local Process = Object {
 -- @tparam string|table|Command o a shell command to run in a subprocess
 -- @treturn Process result of executing *o*
 local function spawn (o)
-  type_check ("spawn", {o}, {{"string", "table", "Command"}})
   if object.type (o) ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.
@@ -417,11 +415,14 @@ end
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
 
+local function X (decl, fn)
+  return std.debug.argscheck ("specl.shell." .. decl, fn)
+end
 
 --- @export
 return {
   Command = Command,
   Process = Process,
 
-  spawn   = spawn,
+  spawn   = X ("spawn (string|table|Command)", spawn),
 }

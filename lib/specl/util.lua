@@ -129,69 +129,6 @@ local function xtype (x)
 end
 
 
--- Write a function call type error similar to how Lua core does it.
-local function type_error (name, i, arglist, typelist)
-  local actual = "no value"
-  if arglist[i] then actual = object.type (arglist[i]) end
-
-  local expected = typelist[i]
-  if object.type (expected) ~= "table" then expected = {expected} end
-  expected = concat (expected, " or "):gsub ("#table", "non-empty table")
-
-  error ("bad argument #" .. tostring (i) .. " to '" .. name ..
-         "' (" .. expected .. " expected, got " .. actual .. ")\n" ..
-	 "received: '" .. tostring (arglist[i]) .. "'", 3)
-end
-
-
--- Check that every parameter in <arglist> matches one of the types
--- from the corresponding slot in <typelist>. Raise a parameter type
--- error if there are any mismatches.
--- There are a few additional strings you can use in <typelist> to
--- match special types in <arglist>:
---
---   #table    accept any non-empty table
---   object    accept any std.Object derived type
---   any       accept any type
-local function type_check (name, arglist, typelist)
-  for i, v in ipairs (typelist) do
-    if v ~= "any" then
-      if object.type (v) ~= "table" then v = {v} end
-
-      if i > #arglist then
-        type_error (name, i, arglist, typelist)
-      end
-      local a = object.type (arglist[i])
-
-      -- check that argument at `i` has one of the types at typelist[i].
-      local ok = false
-      for _, check in ipairs (v) do
-        if check == "#table" then
-          if a == "table" and #arglist[i] > 0 then
-            ok = true
-            break
-          end
-
-        elseif check == "object" then
-          if type (arglist[i]) == "table" and object.type (arglist[i]) ~= "table" then
-            ok = true
-            break
-          end
-
-        elseif a == check then
-          ok = true
-          break
-        end
-      end
-
-      if not ok then
-        type_error (name, i, arglist, typelist)
-      end
-    end
-  end
-end
-
-
 -- Return an appropriate indent for last element of DESCRIPTIONS.
 local function indent (descriptions)
   return string.rep ("  ", #descriptions - 1)
@@ -240,7 +177,6 @@ local M = {
   strip1st       = strip1st,
   timesince      = timesince,
   type           = xtype,
-  type_check     = type_check,
 }
 
 return M
