@@ -24,9 +24,9 @@ local matchers = require "specl.matchers"
 local std      = require "specl.std"
 local util     = require "specl.util"
 
-local loadstring, setfenv = compat.loadstring, compat.setfenv
-local slurp, split, merge =
-  std.io.slurp, std.string.split, std.table.merge
+local loadstring = compat.loadstring
+local setfenv, slurp, split, merge =
+  std.debug.setfenv, std.io.slurp, std.string.split, std.table.merge
 local examplename = util.examplename
 
 -- Protect against examples misusing or resetting keywords.

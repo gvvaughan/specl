@@ -59,51 +59,6 @@ local function intercept_loaders (t)
 end
 
 
--- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs.
-local _setfenv = debug.setfenv
-
-
-local function setfenv (f, t)
-  -- Unwrap functable:
-  if type (f) == "table" then
-    f = f.call or (getmetatable (f) or {}).__call
-  end
-
-  if _setfenv then
-    return _setfenv (f, t)
-
-  else
-    -- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-    local name
-    local up = 0
-    repeat
-      up = up + 1
-      name = debug.getupvalue (f, up)
-    until name == '_ENV' or name == nil
-    if name then
-      debug.upvaluejoin (f, up, function () return name end, 1)
-      debug.setupvalue (f, up, t)
-    end
-    return f
-  end
-end
-
-
-local getfenv = getfenv or function (fn)
-  fn = fn or 1
-  if type (fn) == "number" then
-    fn = debug.getinfo (fn + 1, "f").func
-  end
-  local name, env
-  local up = 0
-  repeat
-    up = up + 1
-    name, env = debug.getupvalue (fn, up)
-  until name == '_ENV' or name == nil
-  return env
-end
-
-
 local loadstring = loadstring or function (chunk, chunkname)
   return load (chunk, chunkname)
 end
@@ -131,9 +86,7 @@ end
 --[[ ----------------- ]]--
 
 return {
-  getfenv           = getfenv,
   intercept_loaders = intercept_loaders,
   loadstring        = loadstring,
-  setfenv           = setfenv,
   xpcall            = xpcall,
 }
