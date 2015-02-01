@@ -28,156 +28,19 @@ local std    = require "specl.std"
 
 local split  = std.string.split
 local invert, unpack = std.table.invert, std.table.unpack
-local getfenv, setfenv = std.debug.getfenv, std.debug.setfenv
+local getfenv, parsetypes, setfenv, typesplit =
+  std.debug.getfenv, std.debug.parsetypes, std.debug.setfenv, std.debug.typesplit
 
 
 -- Protect against examples misusing or resetting keywords.
 local ipairs, pairs, type = ipairs, pairs, type
 
 
---- Return the last element of a list-like table.
--- @tparam list l a list-like table
--- @return the last element of *l*
-local function last (l)
-  return l[#l]
-end
-
-
---- Efficiently return a shallow copy of a table.
--- @tparam table t a table
--- @treturn table a new table with a shallow copy of elements from *t*
-local function copy (t)
-  local r = {}
-  for k, v in pairs (t) do r[k] = v end
-  return r
-end
-
-
---- Return a normalized list of types.
--- Initial "?' in any list element is removed, but causes a "nil" item
--- to be added to the normalized list; "func" is expanded to "function",
--- "bool" to "booleand" and then an ordered list of resulting unique type
--- names returned.
--- @tparam list typelist a list of type names
--- @treturn table an ordered list of unique type names
-local function normalize (typelist)
-  local i, r, add_nil = 1, {}, false
-  for _, v in ipairs (typelist) do
-    if v:match "^%?(.+)" then
-      add_nil = true
-      v = v:sub (2)
-    end
-    v = ({ func = "function", bool = "boolean" })[v] or v
-    if not r[v] then
-      r[v] = i
-      i = i + 1
-    end
-  end
-  if add_nil then
-    r["nil"] = r["nil"] or i
-  end
-  return invert (r)
-end
-
-
---- Merge and normalize any number of type list and type strings.
--- @tparam string|table ... either `?bool|:plain` or `{"bool", ":plain", "nil"}`
--- @treturn table an ordered list of unique type names from all
---   arguments
-local function merge (...)
-  local i, t = 1, {}
-  for _, v in ipairs {...} do
-    if type (v) == "table" then v = table.concat (v, "|") end
-    v:gsub ("([^|]+)", function (m) t[i] = m; i = i + 1 end)
-  end
-  return normalize (t)
-end
-
-
---- Return a list of valid argument type permutations from a typelist.
--- Elements in square brackets denote optional parameters, which can be
--- omitted from the calling argument list, causing the following
--- parameters to be bound as if `nil` had been passed to the bracketed
--- parameter. Consequently, there can be several valid argument type
--- lists for such a function; all of which are returned by this
--- function.
--- @tparam list typelist a normalized list of type names
--- @treturn list all valid permutations of *typelist*
-local function permutations (typelist)
-  local p, sentinel = {{}}, {"optional arg"}
-  for i, v in ipairs (typelist) do
-    -- Remove sentinels before appending 'v' to each list.
-    for _, v in ipairs (p) do
-      if v[#v] == sentinel then table.remove (v) end
-    end
-
-    local opt = v:match "%[(.+)%]"
-    if opt == nil then
-      -- Append non-optional type-spec to each permutation.
-      for b = 1, #p do table.insert (p[b], v) end
-    else
-      -- Duplicate all existing permutations, and add optional type-spec
-      -- to the unduplicated permutations.
-      local o = #p
-      for b = 1, o do
-        p[b + o] = copy (p[b])
-	table.insert (p[b], opt)
-      end
-
-      -- Leave a marker for optional argument in final position.
-      for _, v in ipairs (p) do
-        table.insert (v, sentinel)
-      end
-    end
-  end
-
-  -- Replace sentinels with "nil".
-  for i, v in ipairs (p) do
-    if v[#v] == sentinel then
-      table.remove (v)
-      if #v > 0 then
-        v[#v] = v[#v] .. "|nil"
-      else
-        v[1] = "nil"
-      end
-    end
-  end
-
-  return p
-end
-
-
---- Compact permutation list into a list of valid types at each argument.
--- Eliminate bracked types by combining all valid types at each position
--- for all permutations of *typelist*.
--- @tparam list types a normalized list of type names
--- @treturn list valid types for each positional parameter
-local function compact (types)
-  local p = permutations (types)
-  local i, r = 1, {}
-
-  local keepgoing = true
-  while keepgoing do
-    local u = {}
-    for _, t in ipairs (p) do
-      u[#u + 1] = t[i]
-    end
-    keepgoing = #u > 0
-    if keepgoing then
-      r[i] = merge (unpack (u))
-    end
-    i = i + 1
-  end
-
-  return r
-end
-
-
 --- Format typestrings and typelists suitably for display to the user.
--- @tparam string|table ... either `?bool|:plain` or `{"bool", ":plain", "nil"}`
+-- @tparam string|table types either `?bool|:plain` or `{"bool", ":plain", "nil"}`
 -- @treturn string a comma (and or) separated list of any types given
-local function showarg (...)
-  local argtypes = merge (...)
+local function showarg (types)
+  local argtypes = typesplit (types)
 
   local t = {}
   for i, argtype in ipairs (argtypes) do
@@ -253,21 +116,21 @@ local function result (fname, i, want, got)
 end
 
 
---- Return `true` if *typelist* contains "nil".
--- @tparam list typelist a normalized list of type names
--- @treturn boolean non-`true` if *typelist* does not contain "nil"
-local function nilok (typelist)
-  for _, v in ipairs (typelist) do
+--- Return `true` if *t* contains "nil".
+-- @tparam table t a table of type names
+-- @treturn boolean non-`true` if *t* does not contain "nil"
+local function nilok (t)
+  for _, v in ipairs (t) do
     if v == "nil" then return true end
   end
 end
 
 
---- Return `true` if *typelist* contains "any".
--- @tparam list typelist a normalized list of type names
--- @treturn boolean non-`true` if *typelist* does not contain "any"
-local function anyok (typelist)
-  for _, v in ipairs (typelist) do
+--- Return `true` if *t* contains "any".
+-- @tparam table t a table of type names
+-- @treturn boolean non-`true` if *t* does not contain "any"
+local function anyok (t)
+  for _, v in ipairs (t) do
     if v == "any" then return true end
   end
 end
@@ -279,7 +142,7 @@ end
 -- @tparam string|table argtype either `?bool|:plain` or `{"bool", ":plain", "nil"}`
 local function extendarglist (arglist, i, argtype)
   -- extend with the first valid argument type
-  argtype = merge (argtype)[1]
+  argtype = typesplit (argtype)[1]
 
   local container, thing = (argtype or ""):match "(%S+) of (%S+)"
   if container ~= nil then argtype = container end
@@ -329,7 +192,7 @@ end
 -- @tparam string|table argtype either `?bool|:plain` or `{"bool", ":plain", "nil"}`
 local function poisonarglist (arglist, i, argtype)
   local argtypes = {}
-  for i, v in ipairs (merge (argtype)) do argtypes[v] = i end
+  for i, v in ipairs (typesplit (argtype)) do argtypes[v] = i end
 
   if argtypes.boolean == nil then
     arglist[i] = false
@@ -359,7 +222,7 @@ end
 -- @tparam string|table argtype either `?bool|:plain` or `{"bool", ":plain", "nil"}`
 local function poisoncontainerarglist (arglist, i, argtype)
   local container, thing
-  for i, v in ipairs (merge (argtype)) do
+  for i, v in ipairs (typesplit (argtype)) do
     container, thing = v:match "(%S+) of (%S+)"
     if container ~= nil then break end
   end
@@ -395,24 +258,19 @@ end
 local function diagnose (fn, decl)
   -- Parse "fname (argtype, argtype, argtype...)".
   local fname = (decl:match "^%s*([%w_][%.%d%w_]*)") or "fn"
-  local types = decl:match "%s*%(%s*(.-)%s*%)" or decl
-  if types == "" then
-    types = {}
-  elseif types then
-    types = split (types, ",%s*")
+  local typelist = decl:match "%s*%(%s*(.-)%s*%)" or decl
+  if typelist == "" then
+    typelist = {}
+  elseif typelist then
+    typelist = split (typelist, "%s*,%s*")
   end
 
-  local max, fin = #types, (last (types) or ""):match "^(.+)%*$"
-  if fin then
-    types[max] = fin
-    if fin ~= "any" then types[max + 1] = fin end
-    max = math.huge
-  end
-
-  local typemin, type_specs = #types, compact (types)
-  for _, v in pairs (types) do
+  local typemin, specs = #typelist, parsetypes (typelist)
+  for _, v in pairs (typelist) do
     if v:match "%[.*%]" then typemin = typemin - 1 end
   end
+
+  local fin = specs[#specs]
 
   -- Ensure the following functions are executed in the environment that
   -- this function is inside.
@@ -420,7 +278,7 @@ local function diagnose (fn, decl)
   setfenv (expect, getfenv ())
 
   local arglist = {}
-  for i, argtype in ipairs (type_specs) do
+  for i, argtype in ipairs (specs) do
     if not nilok (argtype) and i <= typemin and (not fin or i < typemin) then
       examples {
         ["it diagnoses missing argument #" .. tostring (i)] = function ()
@@ -459,10 +317,11 @@ local function diagnose (fn, decl)
     extendarglist (arglist, i, argtype)
   end
 
-  if max ~= math.huge then
+  if specs.dots == nil then
     -- Check diagnosis of too many arguments when the final parameter
-    -- does not end with a '*'.
-    extendarglist (arglist, max, last (type_specs))
+    -- does not end with a '...'.
+    local max = #specs
+    extendarglist (arglist, max, specs[#specs])
     arglist[max + 1] = false
     examples {
       ["it diagnoses more than maximum of " .. max .. " arguments"] = function ()
