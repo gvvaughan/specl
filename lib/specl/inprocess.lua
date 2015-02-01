@@ -30,10 +30,10 @@ local shell  = require "specl.shell"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
-local setfenv, unpack, xpcall = compat.setfenv, compat.unpack, compat.xpcall
+local setfenv, xpcall = compat.setfenv, compat.xpcall
 local Process = shell.Process
 local case, object = std.functional.case, std.object
-local clone, merge = std.table.clone, std.table.merge
+local clone, merge, unpack = std.table.clone, std.table.merge, std.table.unpack
 local nop = util.nop
 
 

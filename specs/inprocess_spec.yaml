@@ -55,7 +55,7 @@ specify inprocess:
       capture = inprocess.capture
 
   - it propagates results:
-      t = capture (function (...) return unpack {...} end, {"one", 2})
+      t = capture (function (...) return require "specl.std".table.unpack {...} end, {"one", 2})
       expect ({t[1], t[2]}).to_equal {"one", 2}
   - it propagates arguments:
       expect (capture (function (...) print (...) end, {"one", 2})).

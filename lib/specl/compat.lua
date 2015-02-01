@@ -19,6 +19,9 @@
 -- MA 02111-1301, USA.
 
 
+local std = require "specl.std"
+
+
 -- Lua 5.3 has renamed package.loaders to package.searchers, so set a
 -- metatable to make sure assignments and references go to the right
 -- one.
@@ -106,15 +109,10 @@ local loadstring = loadstring or function (chunk, chunkname)
 end
 
 
--- Lua 5.3 has table.unpack but not _G.unpack;
--- Lua 5.2 has both table.unpack and _G.unpack;
--- Lua 5.1 has _G.unpack but not table.unpack!
-local unpack = table.unpack or unpack
-
-
 do
   local have_xpcall_args
   local function catch (arg) have_xpcall_args = arg end
+  local unpack = table.unpack or unpack
   xpcall (catch, function () end, true)
 
   if have_xpcall_args ~= true then
@@ -137,6 +135,5 @@ return {
   intercept_loaders = intercept_loaders,
   loadstring        = loadstring,
   setfenv           = setfenv,
-  unpack            = unpack,
   xpcall            = xpcall,
 }

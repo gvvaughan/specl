@@ -28,8 +28,8 @@ local std    = require "specl.std"
 local compat = require "specl.compat"
 
 local split  = std.string.split
-local invert = std.table.invert
-local getfenv, setfenv, unpack = compat.getfenv, compat.setfenv, compat.unpack
+local invert, unpack = std.table.invert, std.table.unpack
+local getfenv, setfenv = compat.getfenv, compat.setfenv
 
 
 -- Protect against examples misusing or resetting keywords.
