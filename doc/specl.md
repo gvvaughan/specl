@@ -405,6 +405,16 @@ metamethods as above:
 And for completeness, there is also a greater than comparison adaptor
 for the `be` matcher.
 
+#### 2.1.5. be.between
+
+This matches when the expected value is greater than or equal to the
+first argument **and** less than or equal to the second.  As with the
+other `be` matchers, `__lte` and `__lt` metamethods are respected.
+
+{% highlight lua %}
+    expect (3).to_be.between (1, 5)
+{% endhighlight %}
+
 ### 2.2. equal
 
 We can't reliably compare tables, or std.object derived objects with the

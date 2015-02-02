@@ -42,8 +42,8 @@ local getmetamethod, object, pairs, tostring =
   std.getmetamethod, std.object, std.pairs, std.tostring
 local chomp, escape_pattern, prettytostring =
   std.string.chomp, std.string.escape_pattern, std.string.prettytostring
-local clone, empty, merge, size =
-  std.table.clone, std.table.empty, std.table.merge, std.table.size
+local clone, empty, merge, size, unpack =
+  std.table.clone, std.table.empty, std.table.merge, std.table.size, std.table.unpack
 local argcheck = std.debug.argcheck
 
 local Object = object {}
@@ -86,12 +86,10 @@ end
 -- @bool quoted whether to put quote marks around string values
 local function concat (alternatives, adaptor, quoted)
   local infix
-  if adaptor == "a permutation of" then
-    infix = " and "
-  elseif adaptor == "all of" then
-    infix = " and "
-  elseif adaptor == "any of" then
+  if adaptor == "any of" then
     infix = " or "
+  else
+    infix = " and "
   end
 
   return util.concat (alternatives, infix, quoted)
@@ -349,13 +347,32 @@ matchers.be = Matcher {
     return (actual == expect)
   end,
 
+  --- `be` specific adaptor for range constraint.
+  -- @adaptor be.between
+  -- @param lower inclusive lower-bound for the range
+  -- @param upper inclusive upper-bound for the range
+  -- @usage
+  --   expect (#s).to_be.between (8, 20)
+  ["between?"] = function (self, actual, expected)
+    local ok, r = pcall (function ()
+      local lower, upper = unpack (expected)
+      return actual >= lower and actual <= upper
+    end)
+    local succeed = ok and r or false
+
+    local msg = "expecting a " .. type (expected[1]) ..
+                self:format_alternatives ("between", expected, actual) ..
+                "but got" .. self:format_actual (actual, expect)
+    return succeed, msg
+  end,
+
   --- `be` specific adaptor for less than comparison.
   -- @adaptor be.lt
   -- @param expected a primitive or object that the expect argument must
   --   always be less than
   -- @usage
   --   expect (5).to_be.lt (42)
-  ["lt?"] = function (self, actual, expect, ...)
+  ["lt?"] = function (self, actual, expect)
      local ok, r = pcall (function () return actual < expect end)
      return ok and r or false, comparative_msg (self, "<", actual, expect)
   end,
@@ -366,7 +383,7 @@ matchers.be = Matcher {
   --   always be less than or equal to
   -- @usage
   --   expect "abc".to_be.lte "abc"
-  ["lte?"] = function (self, actual, expect, ...)
+  ["lte?"] = function (self, actual, expect)
      local ok, r = pcall (function () return actual <= expect end)
      return ok and r or false, comparative_msg (self, "<=", actual, expect)
   end,
@@ -380,7 +397,7 @@ matchers.be = Matcher {
   --     return setmetatable (t, {__lt = function (a,b) return #a<#b end})
   --   end
   --   expect (X {"a", "b"}).to_be.gte (X {"b", "a"})
-  ["gte?"] = function (self, actual, expect, ...)
+  ["gte?"] = function (self, actual, expect)
      local ok, r = pcall (function () return actual >= expect end)
      return ok and r or false, comparative_msg (self, ">=", actual, expect)
   end,
@@ -389,7 +406,7 @@ matchers.be = Matcher {
   -- @adaptor be.gt
   -- @param expected a primitive or object that the expect argument must
   --   always be greater than
-  ["gt?"] = function (self, actual, expect, ...)
+  ["gt?"] = function (self, actual, expect)
      local ok, r = pcall (function () return actual > expect end)
      return ok and r or false, comparative_msg (self, ">", actual, expect)
   end,
@@ -554,14 +571,14 @@ matchers.contain = Matcher {
   -- @usage
   --   expect {[math.sin] = true, [math.cos] = true, [math.tan] = true}.
   --     to_contain.a_permutation_of {math.sin, math.cos, math.tan}
-  ["a_permutation_of?"] = function (self, actual, expected, ...)
+  ["a_permutation_of?"] = function (self, actual, expected)
     argcheck ("expect", 1, self.actual_type, actual)
     argcheck (self.name .. ".a_permutation_of", 1, "string|table", expected)
 
     -- calculate failure output before coercing strings into tables
     local msg = "expecting" ..
-                self:format_alternatives ("a permutation of", expected, actual, ...) ..
-                "but got" .. self:format_actual (actual, expect, ...)
+                self:format_alternatives ("a permutation of", expected, actual) ..
+                "but got" .. self:format_actual (actual, expect)
 
     if object.type (actual) ~= "table" then actual = totable (actual) end
     if object.type (expected) ~= "table" then expected = totable (expected) end
@@ -710,8 +727,11 @@ local function expect (state, ok, actual)
           --       | expect (foo).to_be.any_of {bar, baz, quux}
 	  adaptor = matcher[adaptor_name .. "?"]
           if adaptor then
-	    return function (alternatives)
-              score (adaptor (matcher, actual, alternatives, ok))
+	    return function (expected, ...)
+	      if select ("#", ...) > 0 then
+		expected = {expected, ...}
+	      end
+              score (adaptor (matcher, actual, expected, ok))
 	    end
 
           -- (iii) otherwise throw an error for unknown adaptors:

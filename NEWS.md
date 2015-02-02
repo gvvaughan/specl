@@ -19,6 +19,12 @@
     that will use the Lua `__lt` and `__lte` metamethods to compare
     complex objects when available. See LDocs for more details.
 
+  - New `be.between` matcher, also `__lt` and `__lte` aware:
+
+    ```lua
+    expect (#s).to_be.between (8, 20)
+    ```
+
   - Preliminary LDocs for Specl APIs useful for writing Matchers,
     expectations and spec_helper.lua.
 
