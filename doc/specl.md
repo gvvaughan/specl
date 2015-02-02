@@ -364,10 +364,51 @@ one from the source, so this expectation fails:
 While the tables look the same, and have the same contents, they are
 still separate and distinct objects.
 
+#### 2.1.1. be.lt
+
+This compares the result of `expect` with the matcher argument, using
+the [Lua] `__lte` and `__lt` metamethod rules when necessary, to
+determine whether the result is less than the argument.
+
+{% highlight lua %}
+    expect (5).to_be.lt (42)
+{% endhighlight %}
+
+See [Matcher Adaptors][#matcher-adaptors] for more details about how
+this adaptor works.  Note that unlike the general adaptors described in
+that section, the adaptors in this section are specific to the `be`
+matcher.
+
+#### 2.1.2. be.lte
+
+And similarly for less than or equal to comparison, also using the [Lua]
+`__lte` and `__lt` metamethods if necessary.
+
+{% highlight lua %}
+    expect "abc".to_be.lte "abc"
+{% endhighlight %}
+
+#### 2.1.3. be.gte
+
+And again for greater than or equal to comparison, with [Lua]
+metamethods as above:
+
+{% highlight lua %}
+    function X (t)
+      return setmetatable (t, { __lt = function (a, b) return #a < #b end })
+    end
+    expect (X {"a", "b"}).to_be.gte (X {"b", "a"})
+{% endhighlight %}
+
+#### 2.1.4. be.gt
+
+And for completeness, there is also a greater than comparison adaptor
+for the `be` matcher.
+
 ### 2.2. equal
 
-To get around that problem when comparing tables, or std.object derived
-objects, use the `equal` matcher, which does a recursive element by
+We can't reliably compare tables, or std.object derived objects with the
+`be` matcher. The `equal` matcher, however, does a recursive element by
 element comparison of the contents of the expectation arguments. The
 following expectations all pass:
 
@@ -431,6 +472,35 @@ If `expect` passes anything other than a string, table or `std.object`
 derivative to this matcher, [Specl] aborts with an error; use
 `tostring` or similar if you need to.
 
+#### 2.4.1. contain.a_permutation_of
+
+While [Specl] makes every effort to maintain ordering of elements in
+the tables (and objects) it uses, there are times when you really want
+to check the contents of an inherently unordered expectation - say,
+that `pairs` returns all the elements of a set containing functions
+which can't be guaranteed to have the same sort order on every run.
+
+{% highlight lua %}
+    expect {[math.sin]=true, [math.cos]=true, [math.tan]=true}.
+      to_contain.a_permutation_of {math.sin, math.cos, math.tan}
+{% endhighlight %}
+
+In this example, sorting expected elements before comparing them is
+dangerous, because we can't know what order the addresses of the functions
+it contains will have been assigned by [Lua], but using `a_permutation_of`
+here guarantees `expect` was passed all of the elements listed irrespective
+of order.
+
+Prior to the introduction of `a_permutation_of`, `all_of` was the nearest
+equivalent functionality - but `all_of` will not complain if `expect`
+was given more elements than those it is supposed `to_contain` at the time
+of comparison.
+
+See [Matcher Adaptors][#matcher-adaptors] for more details about how
+adaptors are used.  Note that unlike the general adaptors described in
+that section, the `a_permutation_of` adaptor is specific to the
+`contain` matcher.
+
 ### 2.5. match
 
 When a simple substring search is not appropriate, `match` will compare
@@ -491,7 +561,9 @@ In addition to using matchers for straight one-to-one comparisons
 between the result of an `expect` and the argument provided to the
 matcher, [Specl] has some shortcuts that can intercept the arguments
 and adapt the comparison sequence.  These shortcuts are called
-_adaptors_.
+_adaptors_.  Some adaptors are available only to specific matchers,
+but the ones described here can be employed with all of the standard
+matchers.
 
 #### 2.9.1. Matching alternatives with any_of
 
@@ -544,31 +616,6 @@ supplied elements, it is far better to use:
 {% highlight lua %}
     expect ({non_boolean_result}).not_to_contain.any_of {true, false}
 {% endhighlight %}
-
-#### 2.9.3. Unordered matching with a_permutation_of
-
-While [Specl] makes every effort to maintain ordering of elements in
-the tables (and objects) it uses, there are times when you really want
-to check the contents of an inherently unordered expectation - say,
-that `pairs` returns all the elements of a set containing functions
-which can't be guaranteed to have the same sort order on every run.
-
-{% highlight lua %}
-    fn_set, elements = {math.sin=true, math.cos=true, math.tan=true}, {}
-    for fn in pairs (fn_set) do elements[#elements + 1] = fn end
-    expect (elements).to_contain.permutation_of (fn_set)
-{% endhighlight %}
-
-In this example, sorting `elements` before comparing them is dangerous,
-because we can't know what order the addresses of the functions it
-contains will have been assigned by [Lua], but using `permutation_of`
-here guarantees that `elements` contains the same elements as `fn_set`
-irrespective of order.
-
-Prior to the introduction of `a_permutation_of`, `all_of` was the nearest
-equivalent functionality - but `all_of` will not complain if `elements`
-has even more elements than what it is supposed `to_contain` at the time
-of comparison.
 
 ### 2.10. Custom Matchers
 

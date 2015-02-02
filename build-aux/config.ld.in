@@ -18,6 +18,7 @@ file = {
 
 new_type ("object", "Objects", false, "Fields")
 new_type ("matcher", "Matchers", false, "Parameters")
+new_type ("adaptor", "Adaptors", false, "Parameters")
 
 backtick_references = false
 format = "markdown"

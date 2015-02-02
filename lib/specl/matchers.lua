@@ -21,6 +21,15 @@
 --[[--
  Built in matchers for `expect`.
 
+ This module implements the standard set of matchers that can be used
+ with the result of `expect`.  There are also some general and matcher
+ specific adaptors implemented here.  They are all available to use in
+ your spec-files without having to require this module.
+
+ If you implement custom matchers for your spec-files, the API is
+ available from this module -- the same API used to implement the
+ standard Specl matchers.
+
  @module specl.matchers
 ]]
 
@@ -89,6 +98,12 @@ local function concat (alternatives, adaptor, quoted)
 end
 
 
+local function comparative_msg (object, adaptor, actual, expect)
+  return "expecting a " .. type (expect) .. " " .. adaptor .. " " ..
+         q(expect) .. ", but got" .. object:format_actual (actual, expect)
+end
+
+
 local function alternatives_msg (object, adaptor, alternatives, actual, expect, ...)
   local m
 
@@ -129,8 +144,13 @@ local Matcher = Object {
   end,
 
 
-  -- Adaptors:
+  -- General Adaptors:
 
+  --- Matches if expectation matches all of the alternatives.
+  -- @adaptor all_of
+  -- @tparam list alternatives a list of match comparisons
+  -- @usage
+  --   expect (_G).to_contain.all_of {"io", "math", "os", "string", "table"}
   ["all_of?"] = function (self, actual, alternatives, ...)
     argcheck ("expect", 1, self.actual_type, actual)
     argcheck (self.name .. ".all_of", 1, "#table", alternatives)
@@ -145,6 +165,11 @@ local Matcher = Object {
                                       actual, expect, ...)
   end,
 
+  --- Matches if expectation matches any of the alternatives.
+  -- @adaptor any_of
+  -- @tparam list alternatives a list of match comparisons
+  -- @usage
+  --   expect (ctermid ()).to_match.any_of {"/.*tty%d+", "/.*pts%d+"}
   ["any_of?"] = function (self, actual, alternatives, ...)
     argcheck ("expect", 1, self.actual_type, actual)
     argcheck (self.name .. ".any_of", 1, "#table", alternatives)
@@ -324,6 +349,51 @@ matchers.be = Matcher {
     return (actual == expect)
   end,
 
+  --- `be` specific adaptor for less than comparison.
+  -- @adaptor be.lt
+  -- @param expected a primitive or object that the expect argument must
+  --   always be less than
+  -- @usage
+  --   expect (5).to_be.lt (42)
+  ["lt?"] = function (self, actual, expect, ...)
+     local ok, r = pcall (function () return actual < expect end)
+     return ok and r or false, comparative_msg (self, "<", actual, expect)
+  end,
+
+  --- `be` specific adaptor for less than or equal to comparison.
+  -- @adaptor be.lte
+  -- @param expected a primitive or object that the expect argument must
+  --   always be less than or equal to
+  -- @usage
+  --   expect "abc".to_be.lte "abc"
+  ["lte?"] = function (self, actual, expect, ...)
+     local ok, r = pcall (function () return actual <= expect end)
+     return ok and r or false, comparative_msg (self, "<=", actual, expect)
+  end,
+
+  --- `be` specific adaptor for greater than or equal to comparison.
+  -- @adaptor be.gte
+  -- @param expected a primitive or object that the expect argument must
+  --   always be greater than or equal to
+  -- @usage
+  --   function X (t)
+  --     return setmetatable (t, {__lt = function (a,b) return #a<#b end})
+  --   end
+  --   expect (X {"a", "b"}).to_be.gte (X {"b", "a"})
+  ["gte?"] = function (self, actual, expect, ...)
+     local ok, r = pcall (function () return actual >= expect end)
+     return ok and r or false, comparative_msg (self, ">=", actual, expect)
+  end,
+
+  --- `be` specific adaptor for greater than comparison.
+  -- @adaptor be.gt
+  -- @param expected a primitive or object that the expect argument must
+  --   always be greater than
+  ["gt?"] = function (self, actual, expect, ...)
+     local ok, r = pcall (function () return actual > expect end)
+     return ok and r or false, comparative_msg (self, ">", actual, expect)
+  end,
+
   format_expect = function (self, expect)
     return " exactly " .. q(expect) .. ", "
   end,
@@ -478,7 +548,12 @@ matchers.contain = Matcher {
     return false
   end,
 
-  -- Additional adaptor to match unordered tables (and strings!).
+  --- `contain` specific adaptor to match unordered tables (and strings!).
+  -- @adaptor contain.a_permutation_of
+  -- @tparam string|table expected result in any order
+  -- @usage
+  --   expect {[math.sin] = true, [math.cos] = true, [math.tan] = true}.
+  --     to_contain.a_permutation_of {math.sin, math.cos, math.tan}
   ["a_permutation_of?"] = function (self, actual, expected, ...)
     argcheck ("expect", 1, self.actual_type, actual)
     argcheck (self.name .. ".a_permutation_of", 1, "string|table", expected)

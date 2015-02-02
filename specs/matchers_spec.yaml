@@ -89,6 +89,148 @@ describe matcher:
         expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
+- describe be.gt:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).to_be.gt 'one'"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a string > "one", but got 1'
+
+  - context with 'to_be.gt':
+    - it succeeds when greater:
+        expect (1).to_be.gt (0)
+    - it fails when equal:
+        yaml = preamble .. "(1).to_be.gt (1)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when lesser:
+        yaml = preamble .. "(1).to_be.gt (2)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'not_to_be.gt':
+    - it fails when greater:
+        yaml = preamble .. "(1).not_to_be.gt (0)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when equal:
+        expect (1).not_to_be.gt (1)
+    - it succeeds when lesser:
+        expect (1).not_to_be.gt (2)
+
+  - context with 'to_not_be.gt':
+    - it fails when greater:
+        yaml = preamble .. "(1).to_not_be.gt (0)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when equal:
+        expect (1).to_not_be.gt (1)
+    - it succeeds when lesser:
+        expect (1).to_not_be.gt (2)
+
+
+- describe be.gte:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).to_be.gte 'one'"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a string >= "one", but got 1'
+
+  - context with 'to_be.gte':
+    - it succeeds when greater:
+        expect (1).to_be.gte (0)
+    - it succeeds when equal:
+        expect (1).to_be.gte (1)
+    - it fails when lesser:
+        yaml = preamble .. "(1).to_be.gte (2)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'not_to_be.gte':
+    - it fails when greater:
+        yaml = preamble .. "(1).not_to_be.gte (0)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when equal:
+        yaml = preamble .. "(1).not_to_be.gte (1)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        expect (1).not_to_be.gte (2)
+
+  - context with 'to_not_be.gte':
+    - it fails when greater:
+        yaml = preamble .. "(1).to_not_be.gte (0)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when equal:
+        yaml = preamble .. "(1).to_not_be.gte (1)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        expect (1).to_not_be.gte (2)
+
+
+- describe be.lte:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).to_be.lte 'one'"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a string <= "one", but got 1'
+
+  - context with 'to_be.lte':
+    - it fails when greater:
+        yaml = preamble .. "(1).to_be.lte (0)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when equal:
+        expect (1).to_be.lte (1)
+    - it succeeds when lesser:
+        expect (1).to_be.lte (2)
+
+  - context with 'not_to_be.lte':
+    - it fails when greater:
+        expect (1).not_to_be.lte (0)
+    - it fails when equal:
+        yaml = preamble .. "(1).not_to_be.lte (1)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        yaml = preamble .. "(1).not_to_be.lte (2)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'to_not_be.lte':
+    - it fails when greater:
+        expect (1).to_not_be.lte (0)
+    - it fails when equal:
+        yaml = preamble .. "(1).to_not_be.lte (1)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        yaml = preamble .. "(1).to_not_be.lte (2)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+
+- describe be.lt:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).to_be.lt 'one'"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a string < "one", but got 1'
+
+  - context with 'to_be.lt':
+    - it fails when greater:
+        yaml = preamble .. "(1).to_be.lt (0)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when equal:
+        yaml = preamble .. "(1).to_be.lt (1)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        expect (1).to_be.lt (2)
+
+  - context with 'not_to_be.lt':
+    - it fails when greater:
+        expect (1).not_to_be.lt (0)
+    - it succeeds when equal:
+        expect (1).not_to_be.lt (1)
+    - it succeeds when lesser:
+        yaml = preamble .. "(1).not_to_be.lt (2)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'to_not_be.lt':
+    - it fails when greater:
+        expect (1).to_not_be.lt (0)
+    - it fails when equal:
+        expect (1).to_not_be.lt (1)
+    - it succeeds when lesser:
+        yaml = preamble .. "(1).to_not_be.lt (2)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+
 - describe equal:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('str').to_equal {'table'}"
@@ -788,6 +930,11 @@ describe matcher:
       - it falis if any listed element is a table key:
           yaml = preamble .. "_not_contain.any_of {'static', 'statue', 'status'}"
           expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - it compares permutations:
+      expect {[math.sin] = true, [math.cos] = true, [math.tan] = true}.
+        to_contain.a_permutation_of {math.sin, math.cos, math.tan}
+
 
 - describe match:
   - it diagnoses non-string arguments:

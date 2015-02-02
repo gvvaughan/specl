@@ -15,6 +15,10 @@
     expect {1 + 1}.to_equal {2}
     ```
 
+  - New `be.gt`, `be.gte`, `be.lt` and `be.lte` comparison matchers,
+    that will use the Lua `__lt` and `__lte` metamethods to compare
+    complex objects when available. See LDocs for more details.
+
   - Preliminary LDocs for Specl APIs useful for writing Matchers,
     expectations and spec_helper.lua.
 
