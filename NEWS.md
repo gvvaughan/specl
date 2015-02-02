@@ -18,6 +18,17 @@
   - Preliminary LDocs for Specl APIs useful for writing Matchers,
     expectations and spec_helper.lua.
 
+## Incompatible Changes:
+
+  - `badargs.diagnose` now requires arguments in the same order as
+    `std.debug.argscheck`.
+
+  - The declaration string format for `badargs.diagnose` is now a subset
+    of the format used by `std.debug.argscheck`.  Particularly, note
+    the use of square brackets for omittable arguments, and ellipsis for
+    type of additional arguments rather than `*`.  See LDocs for more
+    details.
+
 
 ## Noteworthy changes in release 14.1.0 (2015-01-03) [stable]
 

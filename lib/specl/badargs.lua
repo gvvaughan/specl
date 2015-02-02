@@ -253,9 +253,43 @@ end
 
 
 --- Generate examples to ensure a function satisfies its type signature.
+-- The *decl* string is a subset of the format used by`std.debug.argscheck`,
+-- the function name expected from argument error messages followed by a
+-- comma-delimited list of types in parentheses:
+--
+--     diagnose ("string.format (string, ?any...)", string.format)
+--
+-- A leading question mark denotes that a nil argument is acceptable in
+-- that position, and the trailing `...` denotes that any number of
+-- additional arguments that match this type may follow.  If an argument
+-- can be omitted entirely, as opposed to passing a `nil`, then surround
+-- it with brackets:
+--
+--     diagnose ("table.insert (table, [int], ?any)", table.insert)
+--
+-- Finally, if an argument may be one of several types, list all options
+-- with `|` (pipe) between them:
+--
+--     diagnose ("string.gsub (string, string, string|func, [int])",
+--               string.gsub)
+--
+-- Type names can be the name of a primitive Lua type, a stdlib object
+-- name (stored in the `_type` field of the metatable, usually beginning
+-- with an upper-case letter), or one of the special types below:
+--
+--     #table    accept any non-empty table
+--     any       accept any non-nil argument type
+--     file      accept an open file object
+--     function  accept a function, or object with a __call metamethod
+--     int       accept an integer valued number
+--     list      accept a table where all keys are in a contiguous 1-base range
+--     #list     accept any non-empty list
+--     object    accept any std.Object derived type
+--     :foo      accept only the exact string ":foo", for any :-prefix string
+--
+-- @tparam string decl argument type declaration
 -- @func fn the function being specified
--- @tparam diagnose_decl decl argument type declaration
-local function diagnose (fn, decl)
+local function diagnose (decl, fn)
   -- Parse "fname (argtype, argtype, argtype...)".
   local fname = (decl:match "^%s*([%w_][%.%d%w_]*)") or "fn"
   local typelist = decl:match "%s*%(%s*(.-)%s*%)" or decl
