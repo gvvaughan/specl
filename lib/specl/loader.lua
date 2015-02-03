@@ -46,7 +46,7 @@ macro.define ("expect", function (get)
     get:next ()
     expr = tostring (get:upto ")")
   elseif v == "{" then
-    get:expecting "{"
+    get:next ()
     expr = "{" .. tostring (get:upto "}") .. "}"
   elseif tk == "string" then
     tk, expr = get:next ()
