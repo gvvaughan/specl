@@ -378,6 +378,29 @@ matchers.be = Matcher {
     return succeed, msg
   end,
 
+  --- `be` specific adaptor for greater than comparison.
+  -- @adaptor be.gt
+  -- @param expected a primitive or object that the expect argument must
+  --   always be greater than
+  ["gt?"] = function (self, actual, expect)
+     local ok, r = pcall (function () return actual > expect end)
+     return ok and r or false, comparative_msg (self, ">", actual, expect)
+  end,
+
+  --- `be` specific adaptor for greater than or equal to comparison.
+  -- @adaptor be.gte
+  -- @param expected a primitive or object that the expect argument must
+  --   always be greater than or equal to
+  -- @usage
+  --   function X (t)
+  --     return setmetatable (t, {__lt = function (a,b) return #a<#b end})
+  --   end
+  --   expect (X {"a", "b"}).to_be.gte (X {"b", "a"})
+  ["gte?"] = function (self, actual, expect)
+     local ok, r = pcall (function () return actual >= expect end)
+     return ok and r or false, comparative_msg (self, ">=", actual, expect)
+  end,
+
   --- `be` specific adaptor for less than comparison.
   -- @adaptor be.lt
   -- @param expected a primitive or object that the expect argument must
@@ -398,29 +421,6 @@ matchers.be = Matcher {
   ["lte?"] = function (self, actual, expect)
      local ok, r = pcall (function () return actual <= expect end)
      return ok and r or false, comparative_msg (self, "<=", actual, expect)
-  end,
-
-  --- `be` specific adaptor for greater than or equal to comparison.
-  -- @adaptor be.gte
-  -- @param expected a primitive or object that the expect argument must
-  --   always be greater than or equal to
-  -- @usage
-  --   function X (t)
-  --     return setmetatable (t, {__lt = function (a,b) return #a<#b end})
-  --   end
-  --   expect (X {"a", "b"}).to_be.gte (X {"b", "a"})
-  ["gte?"] = function (self, actual, expect)
-     local ok, r = pcall (function () return actual >= expect end)
-     return ok and r or false, comparative_msg (self, ">=", actual, expect)
-  end,
-
-  --- `be` specific adaptor for greater than comparison.
-  -- @adaptor be.gt
-  -- @param expected a primitive or object that the expect argument must
-  --   always be greater than
-  ["gt?"] = function (self, actual, expect)
-     local ok, r = pcall (function () return actual > expect end)
-     return ok and r or false, comparative_msg (self, ">", actual, expect)
   end,
 
   format_expect = function (self, expect)
