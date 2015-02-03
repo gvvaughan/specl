@@ -690,6 +690,26 @@ local function status (formatter)
 end
 
 
+--- Return an appropriate matcher function, and whether it is inverted.
+-- @string verb full argument to expect, e.g. "not_to_contain"
+-- @treturn function registered matcher for *verb*
+-- @treturn bool whether to invert the results from the matcher function
+local function getmatcher (verb)
+  local inverse, matcher_root = false
+  if verb:match ("^should_not_") then
+    inverse, matcher_root = true, verb:sub (12)
+  elseif verb:match ("^to_not_") or verb:match ("^not_to_") then
+    inverse, matcher_root = true, verb:sub (8)
+  elseif verb:match ("^should_") then
+    matcher_root = verb:sub (8)
+  else
+    matcher_root = verb:sub (4)
+  end
+  return matchers[matcher_root], inverse
+end
+
+
+
 -- Wrap *actual* in metatable for matcher lookups.
 -- Dynamically look up an appropriate matcher from @{Matcher} for comparison
 -- with the following parameter. Matcher names containing '_not_' invert
@@ -705,18 +725,7 @@ end
 local function expect (formatter, ok, actual)
   return setmetatable ({}, {
     __index = function (_, verb)
-      local inverse = false
-      if verb:match ("^should_not_") then
-        inverse, matcher_root = true, verb:sub (12)
-      elseif verb:match ("^to_not_") or verb:match ("^not_to_") then
-        inverse, matcher_root = true, verb:sub (8)
-      elseif verb:match ("^should_") then
-        matcher_root = verb:sub (8)
-      else
-        matcher_root = verb:sub (4)
-      end
-
-      local matcher = matchers[matcher_root]
+      local matcher, inverse = getmatcher (verb)
 
       local function score (success, message)
         local pending
