@@ -690,6 +690,39 @@ local function status (formatter)
 end
 
 
+--- Save results from an expectation into formatter state.
+-- @tparam table formatter state shared with formatters
+-- @bool inverse whether this is the result from a "not" match
+-- @bool success whether this expectation succeeded
+-- @string message failure message for this expectation
+local function score (formatter, inverse, success, message)
+  local pending
+
+  if inverse then
+    success = not success
+    message = message and ("not " .. message)
+  end
+
+  local expectations, ispending, stats =
+        formatter.expectations, formatter.ispending, formatter.stats
+
+  if ispending ~= nil then
+    -- stats.pend is updated by pending ()
+    -- +1 per pending example, not per expectation in pending examples
+    pending = ispending
+  elseif success ~= true then
+    stats.fail = stats.fail + 1
+  else
+    stats.pass = stats.pass + 1
+  end
+  table.insert (expectations, {
+    message = message,
+    status  = success,
+    pending = pending,
+  })
+end
+
+
 --- Return an appropriate matcher function, and whether it is inverted.
 -- @string verb full argument to expect, e.g. "not_to_contain"
 -- @treturn function registered matcher for *verb*
@@ -727,39 +760,12 @@ local function expect (formatter, ok, actual)
     __index = function (_, verb)
       local matcher, inverse = getmatcher (verb)
 
-      local function score (success, message)
-        local pending
-
-        if inverse then
-          success = not success
-          message = message and ("not " .. message)
-        end
-
-	local expectations, ispending, stats =
-	  formatter.expectations, formatter.ispending, formatter.stats
-
-        if ispending ~= nil then
-          -- stats.pend is updated by pending ()
-          -- +1 per pending example, not per expectation in pending examples
-          pending = ispending
-        elseif success ~= true then
-          stats.fail = stats.fail + 1
-        else
-          stats.pass = stats.pass + 1
-        end
-        table.insert (expectations, {
-          message = message,
-          status  = success,
-          pending = pending,
-        })
-      end
-
       -- Returns a functable...
       return setmetatable ({}, {
         --     (i) ...with a `__call` metamethod to respond to:
         --         | expect (foo).to_be (bar)
         __call = function (_, expected)
-          score (matcher:match (actual, expected, ok))
+          score (formatter, inverse, matcher:match (actual, expected, ok))
         end,
 
         __index = function (_, adaptor_name)
@@ -771,7 +777,7 @@ local function expect (formatter, ok, actual)
 	      if select ("#", ...) > 0 then
 		expected = {expected, ...}
 	      end
-              score (adaptor (matcher, actual, expected, ok))
+              score (formatter, inverse, adaptor (matcher, actual, expected, ok))
 	    end
 
           -- (iii) otherwise throw an error for unknown adaptors:
