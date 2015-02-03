@@ -675,18 +675,18 @@ matchers.contain = Matcher {
 
 
 --- Called at the start of each example block.
--- @tparam table state state to be reinitialised
-local function init (state)
-  state.expectations = {}
-  state.ispending = nil
+-- @tparam table formatter state to be reinitialised
+local function init (formatter)
+  formatter.expectations = {}
+  formatter.ispending = nil
 end
 
 
 --- Return status since last init.
--- @tparam table state state shared with formatters
+-- @tparam table formatter state shared with formatters
 -- @treturn table count of completed and pending expectations
-local function status (state)
-  return { expectations = state.expectations, ispending = state.ispending }
+local function status (formatter)
+  return { expectations = formatter.expectations, ispending = formatter.ispending }
 end
 
 
@@ -697,12 +697,12 @@ end
 --
 -- Note this function called from the expansion of the `expect` loader
 -- macro, which injects a pcall for capturing errors.
--- @tparam table state filled by formatters as expectations are run
+-- @tparam table formatter filled by formatters as expectations are run
 -- @bool ok whether an error occurred
 -- @param actual result of running expectation
 -- @treturn table dynamic matcher lookup table for this result
 -- @usage expect ({}).not_to_be {}
-local function expect (state, ok, actual)
+local function expect (formatter, ok, actual)
   return setmetatable ({}, {
     __index = function (_, verb)
       local inverse = false
@@ -727,7 +727,7 @@ local function expect (state, ok, actual)
         end
 
 	local expectations, ispending, stats =
-	  state.expectations, state.ispending, state.stats
+	  formatter.expectations, formatter.ispending, formatter.stats
 
         if ispending ~= nil then
           -- stats.pend is updated by pending ()
@@ -779,11 +779,11 @@ end
 
 --- Mark an example as pending.
 -- @function pending
--- @tparam table state state shared with formatters
+-- @tparam table formatter state shared with formatters
 -- @string[opt="not yet implemented"] s reason for pending example
-local function pending (state, s)
-  state.stats.pend = state.stats.pend + 1
-  state.ispending  = s or "not yet implemented"
+local function pending (formatter, s)
+  formatter.stats.pend = formatter.stats.pend + 1
+  formatter.ispending  = s or "not yet implemented"
 end
 
 
