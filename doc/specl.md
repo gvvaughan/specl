@@ -415,6 +415,15 @@ other `be` matchers, `__lte` and `__lt` metamethods are respected.
     expect (3).to_be.between (1, 5)
 {% endhighlight %}
 
+By default the range is inclusive, so the expectation succeeds if the
+result is equal to either of the given boundaries.  You can make this
+explicit by adding the `.inclusive` decorator, or specify an exclusive
+range with the `.exclusive` decorator:
+
+{% highlight lua %}
+    expect (2).to_be.between (1, 3).exclusive
+{% endhighlight %}
+
 ### 2.2. equal
 
 We can't reliably compare tables, or std.object derived objects with the

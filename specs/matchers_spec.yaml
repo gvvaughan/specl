@@ -93,7 +93,7 @@ describe matcher:
   - it displays expected and actual output for failures:
       yaml = preamble .. "(1).to_be.between ('one', 'two')"
       expect (run_spec (yaml)).
-        to_contain_output 'expecting a string between "one" and "two", but got 1'
+        to_contain_output 'expecting a string between "one" and "two" inclusive, but got 1'
 
   - context with __lt metamethod:
     - before: |
@@ -146,17 +146,293 @@ describe matcher:
 
   - context with 'to_not_be.between':
     - it succeeds when greater:
-        expect (42).not_to_be.between (1, 5)
+        expect (42).to_not_be.between (1, 5)
     - it fails when equal:
-        yaml = preamble .. "(5).not_to_be.between (1, 5)"
+        yaml = preamble .. "(5).to_not_be.between (1, 5)"
         expect (run_spec (yaml)).to_contain_output (fail_1)
-        yaml = preamble .. "(1).not_to_be.between (1, 5)"
+        yaml = preamble .. "(1).to_not_be.between (1, 5)"
         expect (run_spec (yaml)).to_contain_output (fail_1)
     - it fails when inside:
-        yaml = preamble .. "(2).not_to_be.between (1, 5)"
+        yaml = preamble .. "(2).to_not_be.between (1, 5)"
         expect (run_spec (yaml)).to_contain_output (fail_1)
     - it succeeds when lesser:
-        expect (0).not_to_be.between (1, 5)
+        expect (0).to_not_be.between (1, 5)
+
+
+- describe be.between_exclusive:
+  - context with infix:
+    - it displays expected and actual output for failures:
+        yaml = preamble .. "(1).to_be.between_exclusive ('one', 'two')"
+        expect (run_spec (yaml)).
+          to_contain_output 'expecting a string between "one" and "two" exclusive, but got 1'
+
+    - context with __lt metamethod:
+      - before: |
+          preamble = "it fails: |\n" ..
+            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  function X (x) return setmetatable (x, mt) end\n" ..
+            "  expect "
+
+      - it fails when greater:
+          yaml = preamble .. "(X{1,2,3,4,5}).to_be.between_exclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when equal:
+          yaml = preamble .. "(X{'a'}).to_be.between_exclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. " (X{'a','b','c'}).to_be.between_exclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when inside:
+          yaml = preamble .. " (X{true, false}).to_be.between_exclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+      - it fails when lesser:
+          yaml = preamble .. "(X{}).to_be.between_exclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'to_be.between_exclusive':
+      - it fails when greater:
+          yaml = preamble .. "(42).to_be.between_exclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when equal:
+          yaml = preamble .. "(5).to_be.between_exclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. "(1).to_be.between_exclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when inside::
+          expect (2).to_be.between_exclusive (1, 5)
+      - it fails when lesser:
+          yaml = preamble .. "(0).to_be.between_exclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'not_to_be.between_exclusive':
+      - it succeeds when greater:
+          expect (42).not_to_be.between_exclusive (1, 5)
+      - it succeeds when equal:
+          expect (5).not_to_be.between_exclusive (1, 5)
+          expect (1).not_to_be.between_exclusive (1, 5)
+      - it fails when inside:
+          yaml = preamble .. "(2).not_to_be.between_exclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).not_to_be.between_exclusive (1, 5)
+
+    - context with 'to_not_be.between_exclusive':
+      - it succeeds when greater:
+          expect (42).to_not_be.between_exclusive (1, 5)
+      - it succeeds when equal:
+          expect (5).to_not_be.between_exclusive (1, 5)
+          expect (1).to_not_be.between_exclusive (1, 5)
+      - it fails when inside:
+          yaml = preamble .. "(2).to_not_be.between_exclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).to_not_be.between_exclusive (1, 5)
+
+  - context with decorator:
+    - it displays expected and actual output for failures:
+        yaml = preamble .. "(1).to_be.between ('one', 'two').exclusive"
+        expect (run_spec (yaml)).
+          to_contain_output 'expecting a string between "one" and "two" exclusive, but got 1'
+
+    - context with __lt metamethod:
+      - before: |
+          preamble = "it fails: |\n" ..
+            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  function X (x) return setmetatable (x, mt) end\n" ..
+            "  expect "
+
+      - it fails when greater:
+          yaml = preamble .. "(X{1,2,3,4,5}).to_be.between (X{1}, X{1,2,3}).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when equal:
+          yaml = preamble .. "(X{'a'}).to_be.between (X{1}, X{1,2,3}).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. " (X{'a','b','c'}).to_be.between (X{1}, X{1,2,3}).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when inside:
+          yaml = preamble .. " (X{true, false}).to_be.between (X{1}, X{1,2,3}).exclusive"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+      - it fails when lesser:
+          yaml = preamble .. "(X{}).to_be.between (X{1}, X{1,2,3}).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'to_be.between ().exclusive':
+      - it fails when greater:
+          yaml = preamble .. "(42).to_be.between (1, 5).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when equal:
+          yaml = preamble .. "(5).to_be.between (1, 5).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. "(1).to_be.between (1, 5).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when inside::
+          expect (2).to_be.between (1, 5).exclusive
+      - it fails when lesser:
+          yaml = preamble .. "(0).to_be.between (1, 5).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'not_to_be.between ().exclusive':
+      - it succeeds when greater:
+          expect (42).not_to_be.between (1, 5).exclusive
+      - it succeeds when equal:
+          expect (5).not_to_be.between (1, 5).exclusive
+          expect (1).not_to_be.between (1, 5).exclusive
+      - it fails when inside:
+          yaml = preamble .. "(2).not_to_be.between (1, 5).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).not_to_be.between (1, 5).exclusive
+
+    - context with 'to_not_be.between ().exclusive':
+      - it succeeds when greater:
+          expect (42).to_not_be.between (1, 5).exclusive
+      - it succeeds when equal:
+          expect (5).to_not_be.between (1, 5).exclusive
+          expect (1).to_not_be.between (1, 5).exclusive
+      - it fails when inside:
+          yaml = preamble .. "(2).to_not_be.between (1, 5).exclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).to_not_be.between (1, 5).exclusive
+
+
+- describe be.between_inclusive:
+  - context with infix:
+    - it displays expected and actual output for failures:
+        yaml = preamble .. "(1).to_be.between_inclusive ('one', 'two')"
+        expect (run_spec (yaml)).
+          to_contain_output 'expecting a string between "one" and "two" inclusive, but got 1'
+
+    - context with __lt metamethod:
+      - before: |
+          preamble = "it fails: |\n" ..
+            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  function X (x) return setmetatable (x, mt) end\n" ..
+            "  expect "
+
+      - it fails when greater:
+          yaml = preamble .. "(X{1,2,3,4,5}).to_be.between_inclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when equal:
+          yaml = preamble .. "(X{'a'}).to_be.between_inclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+          yaml = preamble .. " (X{'a','b','c'}).to_be.between_inclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+      - it succeeds when inside:
+          yaml = preamble .. " (X{true, false}).to_be.between_inclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+      - it fails when lesser:
+          yaml = preamble .. "(X{}).to_be.between_inclusive (X{1}, X{1,2,3})"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'to_be.between_inclusive':
+      - it fails when greater:
+          yaml = preamble .. "(42).to_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when equal:
+          expect (5).to_be.between_inclusive (1, 5)
+          expect (1).to_be.between_inclusive (1, 5)
+      - it succeeds when inside::
+          expect (2).to_be.between_inclusive (1, 5)
+      - it fails when lesser:
+          yaml = preamble .. "(0).to_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'not_to_be.between_inclusive':
+      - it succeeds when greater:
+          expect (42).not_to_be.between_inclusive (1, 5)
+      - it fails when equal:
+          yaml = preamble .. "(5).not_to_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. "(1).not_to_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when inside:
+          yaml = preamble .. "(2).not_to_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).not_to_be.between_inclusive (1, 5)
+
+    - context with 'to_not_be.between_inclusive':
+      - it succeeds when greater:
+          expect (42).to_not_be.between_inclusive (1, 5)
+      - it fails when equal:
+          yaml = preamble .. "(5).to_not_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. "(1).to_not_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when inside:
+          yaml = preamble .. "(2).to_not_be.between_inclusive (1, 5)"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).to_not_be.between_inclusive (1, 5)
+
+  - context with decorator:
+    - it displays expected and actual output for failures:
+        yaml = preamble .. "(1).to_be.between ('one', 'two').inclusive"
+        expect (run_spec (yaml)).
+          to_contain_output 'expecting a string between "one" and "two" inclusive, but got 1'
+
+    - context with __lt metamethod:
+      - before: |
+          preamble = "it fails: |\n" ..
+            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  function X (x) return setmetatable (x, mt) end\n" ..
+            "  expect "
+
+      - it fails when greater:
+          yaml = preamble .. "(X{1,2,3,4,5}).to_be.between (X{1}, X{1,2,3}).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when equal:
+          yaml = preamble .. "(X{'a'}).to_be.between (X{1}, X{1,2,3}).inclusive"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+          yaml = preamble .. " (X{'a','b','c'}).to_be.between (X{1}, X{1,2,3}).inclusive"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+      - it succeeds when inside:
+          yaml = preamble .. " (X{true, false}).to_be.between (X{1}, X{1,2,3}).inclusive"
+          expect (run_spec (yaml)).to_contain_output (pass_all)
+      - it fails when lesser:
+          yaml = preamble .. "(X{}).to_be.between (X{1}, X{1,2,3}).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'to_be.between ().inclusive':
+      - it fails when greater:
+          yaml = preamble .. "(42).to_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when equal:
+          expect (5).to_be.between (1, 5).inclusive
+          expect (1).to_be.between (1, 5).inclusive
+      - it succeeds when inside::
+          expect (2).to_be.between (1, 5).inclusive
+      - it fails when lesser:
+          yaml = preamble .. "(0).to_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+
+    - context with 'not_to_be.between ().inclusive':
+      - it succeeds when greater:
+          expect (42).not_to_be.between (1, 5).inclusive
+      - it fails when equal:
+          yaml = preamble .. "(5).not_to_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. "(1).not_to_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when inside:
+          yaml = preamble .. "(2).not_to_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).not_to_be.between (1, 5).inclusive
+
+    - context with 'to_not_be.between ().inclusive':
+      - it succeeds when greater:
+          expect (42).to_not_be.between (1, 5).inclusive
+      - it fails when equal:
+          yaml = preamble .. "(5).to_not_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+          yaml = preamble .. "(1).to_not_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it fails when inside:
+          yaml = preamble .. "(2).to_not_be.between (1, 5).inclusive"
+          expect (run_spec (yaml)).to_contain_output (fail_1)
+      - it succeeds when lesser:
+          expect (0).to_not_be.between (1, 5).inclusive
 
 
 - describe be.gt:

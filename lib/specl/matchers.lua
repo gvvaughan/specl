@@ -329,15 +329,18 @@ local function objcmp (o1, o2)
 end
 
 
---- Deep comparison, matches if *actual* and *expect* share the same structure.
--- @matcher equal
--- @param expect expected result
-matchers.equal = Matcher {
-  function (self, actual, expect)
-    return (objcmp (actual, expect) == true)
-  end,
-}
+local function between_inclusive (self, actual, expected)
+  local ok, r = pcall (function ()
+    local lower, upper = unpack (expected)
+    return actual >= lower and actual <= upper
+  end)
+  local succeed = ok and r or false
 
+  local msg = "expecting a " .. type (expected[1]) ..
+              self:format_alternatives ("between_inclusive", expected, actual) ..
+              "but got" .. self:format_actual (actual, expect)
+  return succeed, msg
+end
 
 --- Identity, only match if *actual* and *expect* are the same object.
 -- @matcher be
@@ -348,20 +351,29 @@ matchers.be = Matcher {
   end,
 
   --- `be` specific adaptor for range constraint.
+  --
+  -- The default is to do an inclusive check, which can be made
+  -- explicit by appending the `.inclusive` decorator to the adaptor,
+  -- or changed to an exclusive range with the `.exclusive` decorator.
   -- @adaptor be.between
-  -- @param lower inclusive lower-bound for the range
-  -- @param upper inclusive upper-bound for the range
+  -- @param lower lower-bound for the range
+  -- @param upper upper-bound for the range
   -- @usage
-  --   expect (#s).to_be.between (8, 20)
-  ["between?"] = function (self, actual, expected)
+  --   expect (#s).to_be.between (8, 20).inclusive
+  --   expect (2).to_be.between (1, 3).exclusive
+  ["between?"] = between_inclusive,
+
+  ["between_inclusive?"] = between_inclusive,
+
+  ["between_exclusive?"] = function (self, actual, expected)
     local ok, r = pcall (function ()
       local lower, upper = unpack (expected)
-      return actual >= lower and actual <= upper
+      return actual > lower and actual < upper
     end)
     local succeed = ok and r or false
 
     local msg = "expecting a " .. type (expected[1]) ..
-                self:format_alternatives ("between", expected, actual) ..
+                self:format_alternatives ("between_exclusive", expected, actual) ..
                 "but got" .. self:format_actual (actual, expect)
     return succeed, msg
   end,
@@ -413,6 +425,25 @@ matchers.be = Matcher {
 
   format_expect = function (self, expect)
     return " exactly " .. q(expect) .. ", "
+  end,
+
+  format_alternatives = function (self, adaptor, alternatives)
+    local decorator = adaptor:match "^between_(%w+)$" or ""
+    if decorator ~= "" then
+      adaptor, decorator = "between", " " .. decorator
+    end
+    return " " .. adaptor .. " " ..
+           concat (alternatives, adaptor, ":quoted") .. decorator .. ", "
+  end,
+}
+
+
+--- Deep comparison, matches if *actual* and *expect* share the same structure.
+-- @matcher equal
+-- @param expect expected result
+matchers.equal = Matcher {
+  function (self, actual, expect)
+    return (objcmp (actual, expect) == true)
   end,
 }
 

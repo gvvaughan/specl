@@ -25,6 +25,13 @@
     expect (#s).to_be.between (8, 20)
     ```
 
+  - New decorators for `be.between` to specify inclusive or exclusive
+    ranges:
+
+    ```lua
+    expect (2).to_be.between (1, 3).exclusive
+    ```
+
   - Preliminary LDocs for Specl APIs useful for writing Matchers,
     expectations and spec_helper.lua.
 

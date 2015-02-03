@@ -58,6 +58,31 @@ macro.define ("expect", function (get)
 end)
 
 
+-- Transform between decorators.
+macro.define ("between", function (get)
+  local expr
+  local tk, v = get:peek (1)
+  if v == "(" then
+    get:next ()
+    expr = "(" .. tostring (get:upto ")") .. ")"
+  elseif v == "{" then
+    get:next ()
+    expr = "{" .. tostring (get:upto "}") .. "}"
+  elseif tk == "string" then
+    tk, expr = get:next ()
+  end
+  if expr == nil then -- pass through 'between' token
+    return nil, true
+  end
+  tk, v = get:peek (1)
+  if v ~= "." then return " " .. expr, true end
+  get:next () -- consume '.'
+  tk, v = get:next ()
+  if tk ~= "iden" then return " " .. expr .. ".", true end
+  return "between_" .. v .. " " .. expr
+end)
+
+
 -- A list of directories we've loaded yaml spec-files from.  Any other
 -- files required from these directories are macro-expanded during
 -- loading.
