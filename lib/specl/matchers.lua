@@ -762,28 +762,22 @@ local function expect (formatter, ok, actual)
 
       -- Returns a functable...
       return setmetatable ({}, {
-        --     (i) ...with a `__call` metamethod to respond to:
-        --         | expect (foo).to_be (bar)
+        -- `expect (actual).to_be (expected)`
         __call = function (_, expected)
           score (formatter, inverse, matcher:match (actual, expected, ok))
         end,
 
-        __index = function (_, adaptor_name)
-          --  (ii) ...or else dynamic adapator lookup in the matcher object:
-          --       | expect (foo).to_be.any_of {bar, baz, quux}
-	  adaptor = matcher[adaptor_name .. "?"]
-          if adaptor then
+	-- `expect (actual).to_be.adaptor (expected)`
+        __index = function (_, adaptor)
+	  local fn = matcher[adaptor .. "?"]
+          if fn then
 	    return function (expected, ...)
-	      if select ("#", ...) > 0 then
-		expected = {expected, ...}
-	      end
-              score (formatter, inverse, adaptor (matcher, actual, expected, ok))
+	      if select ("#", ...) > 0 then expected = {expected, ...} end
+              score (formatter, inverse, fn (matcher, actual, expected, ok))
 	    end
 
-          -- (iii) otherwise throw an error for unknown adaptors:
           else
-            error ("unknown '" .. adaptor_name .. "' adaptor with '" ..
-                   verb .. "'")
+            error ("unknown '" .. adaptor .. "' adaptor with '" .. verb .. "'")
           end
         end,
       })
