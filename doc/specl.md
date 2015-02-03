@@ -424,6 +424,21 @@ range with the `.exclusive` decorator:
     expect (2).to_be.between (1, 3).exclusive
 {% endhighlight %}
 
+#### 2.1.6. be.within
+
+Sometimes it is more accurate to specify that a result should be close
+to a given value, and doing the mental arithmetic to specify both ends
+of the range is not as clear.  In that case, you can use this adaptor
+with the associated `of` decorator, like this:
+
+{% highlight lua %}
+    expect (10).to_be.within (2.5).of (12)
+{% endhighlight %}
+
+Of course, it understands `__lt` and `__lte` metamethods when comparing
+arguments, but will likely also need `__add` and `__sub` metamethods to
+calculate the upper and lower bounds from the arguments.
+
 ### 2.2. equal
 
 We can't reliably compare tables, or std.object derived objects with the

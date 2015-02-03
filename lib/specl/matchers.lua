@@ -423,6 +423,39 @@ matchers.be = Matcher {
      return ok and r or false, comparative_msg (self, "<=", actual, expected)
   end,
 
+  --- `be` specific adaptor for comparison within delta of expected.
+  --
+  -- Because of the way Lua chains calls, using `be.within` without the
+  -- associated `of` decorator simply returns the table with the `of`
+  -- function, and does not run the expectation or pass the result to
+  -- the selected formatter.
+  -- @adaptor be.within
+  -- @param delta a maximum difference from expected result
+  -- @param expected a primitive or object that the expect argument must
+  --   be within *delta* range of
+  -- @usage
+  --   start = os.time ()
+  --   expect (os.time ()).to_be.within (1).of (start)
+  ["within?"] = function (self, actual, delta, _, vtable)
+    return setmetatable (self, {
+      __index = {
+        of = function (expected)
+          local ok, r = pcall (function ()
+	    local lower, upper = expected - delta, expected + delta
+	    return actual >= lower and actual <= upper
+	  end)
+
+	  local succeed = ok and r or false
+	  local msg = "expecting a " .. type (expected) .. " within " ..
+	              q(delta) .. " of " .. q(expected) .. ", " ..
+		      "but got" .. self:format_actual (actual, {lower, upper})
+
+          vtable.score (succeed, msg)
+        end,
+      },
+    })
+  end,
+
   format_expect = function (self, expected)
     return " exactly " .. q(expected) .. ", "
   end,
@@ -755,27 +788,43 @@ end
 -- @param actual result of running expectation
 -- @treturn table dynamic matcher lookup table for this result
 -- @usage expect ({}).not_to_be {}
-local function expect (formatter, ok, actual)
+local function expect (formatter, ok, actual, ...)
+  if select ("#", ...) > 0 then actual = {actual, ...} end
+
   return setmetatable ({}, {
     __index = function (_, verb)
       local matcher, inverse = getmatcher (verb)
 
+      local vtable = {
+         score = function (success, msg)
+           return score (formatter, inverse, success, msg)
+         end,
+      }
+
       -- Returns a functable...
       return setmetatable ({}, {
         -- `expect (actual).to_be (expected)`
-        __call = function (_, expected)
-          score (formatter, inverse, matcher:match (actual, expected, ok))
+        __call = function (self, expected, ...)
+	  if select ("#", ...) > 0 then expected = {expected, ...} end
+	  local success, msg = matcher:match (actual, expected, ok)
+	  if type (success) == "boolean" then
+             vtable.score (success, msg)
+	  end
+	  return success
         end,
 
 	-- `expect (actual).to_be.adaptor (expected)`
-        __index = function (_, adaptor)
+        __index = function (self, adaptor)
 	  local fn = matcher[adaptor .. "?"]
           if fn then
 	    return function (expected, ...)
 	      if select ("#", ...) > 0 then expected = {expected, ...} end
-              score (formatter, inverse, fn (matcher, actual, expected, ok))
+              local success, msg = fn (matcher, actual, expected, ok, vtable)
+	      if type (success) == "boolean" then
+                vtable.score (success, msg)
+	      end
+	      return success
 	    end
-
           else
             error ("unknown '" .. adaptor .. "' adaptor with '" .. verb .. "'")
           end

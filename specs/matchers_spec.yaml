@@ -577,6 +577,89 @@ describe matcher:
         expect (run_spec (yaml)).to_contain_output (fail_1)
 
 
+- describe be.within:
+  - it displays expected and actual output for failures:
+      yaml = preamble .. "(1).to_be.within 'one'.of 'two'"
+      expect (run_spec (yaml)).
+        to_contain_output 'expecting a string within "one" of "two", but got 1'
+
+  - context with __lt metamethod:
+    - before: |
+        preamble = "it fails: |\n" ..
+          "  mt = {\n" ..
+          "    __lt = function (a,b) return #a<#b end,\n" ..
+          "    __add = function (a, b)\n" ..
+          "              local r = {}\n" ..
+          "              for _, v in ipairs (a) do r[#r + 1] = v end\n" ..
+          "              for _, v in ipairs (b) do r[#r + 1] = v end\n" ..
+          "              return r\n" ..
+          "            end,\n" ..
+          "    __sub = function (a, b)\n" ..
+          "              local r = {}\n" ..
+          "              for i = 1, #a - #b do r[i] = a[i] end\n" ..
+          "              return r\n" ..
+          "            end,\n" ..
+          "  }\n" .. 
+          "  function X (x) return setmetatable (x, mt) end\n" ..
+          "  expect "
+
+    - it fails when greater:
+        yaml = preamble .. "(X{1,2,3,4,5}).to_be.within (X{1}).of (X{1,2,3})"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when equal:
+        yaml = preamble .. "(X{'a','b'}).to_be.within (X{1}).of (X{1,2,3})"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+        yaml = preamble .. " (X{'a','b','c','d'}).to_be.within (X{1}).of (X{1,2,3})"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it succeeds when inside:
+        yaml = preamble .. " (X{true, false, 0}).to_be.within (X{1}).of (X{1,2,3})"
+        expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it fails when lesser:
+        yaml = preamble .. "(X{}).to_be.within (X{1}).of (X{1,2,3})"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'to_be.within':
+    - it fails when greater:
+        yaml = preamble .. "(42).to_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when equal:
+        expect (5).to_be.within (2).of (3)
+        expect (1).to_be.within (2).of (3)
+    - it succeeds when inside::
+        expect (2).to_be.within (2).of (3)
+    - it fails when lesser:
+        yaml = preamble .. "(0).to_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+
+  - context with 'not_to_be.within':
+    - it succeeds when greater:
+        expect (42).not_to_be.within (2).of (3)
+    - it fails when equal:
+        yaml = preamble .. "(5).not_to_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+        yaml = preamble .. "(1).not_to_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when inside:
+        yaml = preamble .. "(2).not_to_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        expect (0).not_to_be.within (2).of (3)
+
+  - context with 'to_not_be.within':
+    - it succeeds when greater:
+        expect (42).to_not_be.within (2).of (3)
+    - it fails when equal:
+        yaml = preamble .. "(5).to_not_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+        yaml = preamble .. "(1).to_not_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it fails when inside:
+        yaml = preamble .. "(2).to_not_be.within (2).of (3)"
+        expect (run_spec (yaml)).to_contain_output (fail_1)
+    - it succeeds when lesser:
+        expect (0).to_not_be.within (2).of (3)
+
+
 - describe equal:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('str').to_equal {'table'}"

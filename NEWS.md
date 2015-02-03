@@ -32,6 +32,13 @@
     expect (2).to_be.between (1, 3).exclusive
     ```
 
+  - New `be.within` matcher adaptor and associated `of` decorator for alternate
+    spelling of `be.between`:
+
+    ```lua
+    expect (10).to_be.within (2.5).of (12)
+    ```
+
   - Preliminary LDocs for Specl APIs useful for writing Matchers,
     expectations and spec_helper.lua.
 
