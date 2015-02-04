@@ -12,8 +12,8 @@ describe matcher:
 - it diagnoses zero alternatives with any_of:
     expect (expect (1).to_be.any_of {}).to_raise "non-empty table expected"
 - it diagnoses unsupported matcher adaptors:
-    expect (expect (1).not_to_be.the_thing_that ()).
-      to_raise "unknown 'the_thing_that' adaptor with 'not_to_be'"
+    expect (expect (1).should_not_be.the_thing_that ()).
+      to_raise "unknown 'the_thing_that' adaptor with 'should_not_be'"
 
 - describe be:
   - it displays expected and actual output for failures:
