@@ -23,6 +23,7 @@ local macro = require "macro"
 local yaml  = require "yaml"
 
 local compat = require "specl.compat"
+local expect = require "specl.expect"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
@@ -36,51 +37,6 @@ local nop = util.nop
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
 local null       = { type = "LYAML null" }
-
-
--- Capture errors thrown by expectations.
-macro.define ("expect", function (get)
-  local expr
-  local tk, v = get:peek (1)
-  if v == "(" then
-    get:next ()
-    expr = tostring (get:upto ")")
-  elseif v == "{" then
-    get:next ()
-    expr = "{" .. tostring (get:upto "}") .. "}"
-  elseif tk == "string" then
-    tk, expr = get:next ()
-  end
-  if expr == nil then -- pass through 'expect' token
-    return nil, true
-  end
-  return " (pcall (function () return " .. expr .. " end))", true
-end)
-
-
--- Transform between decorators.
-macro.define ("between", function (get)
-  local expr
-  local tk, v = get:peek (1)
-  if v == "(" then
-    get:next ()
-    expr = "(" .. tostring (get:upto ")") .. ")"
-  elseif v == "{" then
-    get:next ()
-    expr = "{" .. tostring (get:upto "}") .. "}"
-  elseif tk == "string" then
-    tk, expr = get:next ()
-  end
-  if expr == nil then -- pass through 'between' token
-    return nil, true
-  end
-  tk, v = get:peek (1)
-  if v ~= "." then return " " .. expr, true end
-  get:next () -- consume '.'
-  tk, v = get:next ()
-  if tk ~= "iden" then return " " .. expr .. ".", true end
-  return "between_" .. v .. " " .. expr
-end)
 
 
 -- A list of directories we've loaded yaml spec-files from.  Any other

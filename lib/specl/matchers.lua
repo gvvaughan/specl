@@ -701,61 +701,6 @@ matchers.contain = Matcher {
 }
 
 
-
---[[ ============= ]]--
---[[ Expectations. ]]--
---[[ ============= ]]--
-
-
---- Called at the start of each example block.
--- @tparam table formatter state to be reinitialised
-local function init (formatter)
-  formatter.expectations = {}
-  formatter.ispending = nil
-end
-
-
---- Return status since last init.
--- @tparam table formatter state shared with formatters
--- @treturn table count of completed and pending expectations
-local function status (formatter)
-  return { expectations = formatter.expectations, ispending = formatter.ispending }
-end
-
-
---- Save results from an expectation into formatter state.
--- @tparam table formatter state shared with formatters
--- @bool inverse whether this is the result from a "not" match
--- @bool success whether this expectation succeeded
--- @string message failure message for this expectation
-local function score (formatter, inverse, success, message)
-  local pending
-
-  if inverse then
-    success = not success
-    message = message and ("not " .. message)
-  end
-
-  local expectations, ispending, stats =
-        formatter.expectations, formatter.ispending, formatter.stats
-
-  if ispending ~= nil then
-    -- stats.pend is updated by pending ()
-    -- +1 per pending example, not per expectation in pending examples
-    pending = ispending
-  elseif success ~= true then
-    stats.fail = stats.fail + 1
-  else
-    stats.pass = stats.pass + 1
-  end
-  table.insert (expectations, {
-    message = message,
-    status  = success,
-    pending = pending,
-  })
-end
-
-
 --- Return an appropriate matcher function, and whether it is inverted.
 -- @string verb full argument to `expect`, e.g. "not_to_contain"
 -- @treturn function registered matcher for *verb*
@@ -776,75 +721,6 @@ end
 
 
 
--- Wrap *actual* in metatable for matcher lookups.
--- Dynamically look up an appropriate matcher from @{Matcher} for comparison
--- with the following parameter. Matcher names containing '_not_' invert
--- their results before returning.
---
--- Note this function called from the expansion of the `expect` loader
--- macro, which injects a pcall for capturing errors.
--- @tparam table formatter filled by formatters as expectations are run
--- @bool ok whether an error occurred
--- @param actual result of running expectation
--- @treturn table dynamic matcher lookup table for this result
--- @usage expect ({}).not_to_be {}
-local function expect (formatter, ok, actual, ...)
-  if select ("#", ...) > 0 then actual = {actual, ...} end
-
-  return setmetatable ({}, {
-    __index = function (_, verb)
-      local matcher, inverse = getmatcher (verb)
-
-      local vtable = {
-         score = function (success, msg)
-           return score (formatter, inverse, success, msg)
-         end,
-      }
-
-      -- Returns a functable...
-      return setmetatable ({}, {
-        -- `expect (actual).to_be (expected)`
-        __call = function (self, expected, ...)
-	  if select ("#", ...) > 0 then expected = {expected, ...} end
-	  local success, msg = matcher:match (actual, expected, ok)
-	  if type (success) == "boolean" then
-             vtable.score (success, msg)
-	  end
-	  return success
-        end,
-
-	-- `expect (actual).to_be.adaptor (expected)`
-        __index = function (self, adaptor)
-	  local fn = matcher[adaptor .. "?"]
-          if fn then
-	    return function (expected, ...)
-	      if select ("#", ...) > 0 then expected = {expected, ...} end
-              local success, msg = fn (matcher, actual, expected, ok, vtable)
-	      if type (success) == "boolean" then
-                vtable.score (success, msg)
-	      end
-	      return success
-	    end
-          else
-            error ("unknown '" .. adaptor .. "' adaptor with '" .. verb .. "'")
-          end
-        end,
-      })
-    end
-  })
-end
-
-
---- Mark an example as pending.
--- @function pending
--- @tparam table formatter state shared with formatters
--- @string[opt="not yet implemented"] s reason for pending example
-local function pending (formatter, s)
-  formatter.stats.pend = formatter.stats.pend + 1
-  formatter.ispending  = s or "not yet implemented"
-end
-
-
 --[[ ----------------- ]]--
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
@@ -855,12 +731,9 @@ return merge (M, {
   Matcher   = Matcher,
 
   -- API:
-  concat    = concat,
-  expect    = expect,
-  reformat  = reformat,
-  init      = init,
-  matchers  = matchers,
-  pending   = pending,
-  status    = status,
-  stringify = q,
+  concat     = concat,
+  getmatcher = getmatcher,
+  reformat   = reformat,
+  matchers   = matchers,
+  stringify  = q,
 })

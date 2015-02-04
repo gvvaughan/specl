@@ -20,7 +20,7 @@
 
 
 local compat   = require "specl.compat"
-local matchers = require "specl.matchers"
+local expect   = require "specl.expect"
 local std      = require "specl.std"
 local util     = require "specl.util"
 
@@ -183,7 +183,7 @@ function run_example (state, definition, descriptions, fenv)
   end
 
   if inclusive then
-    matchers.init (state)
+    expect.init (state)
 
     -- Propagate nested environments to functions that might be called
     -- from inside the example.
@@ -195,7 +195,7 @@ function run_example (state, definition, descriptions, fenv)
     local status = merge ({
       filename = state.spec.filename,
       line     = definition.line,
-    }, matchers.status (state))
+    }, expect.status (state))
     state:accumulator (formatter.expectations (status, descriptions, state.opts))
 
     if state.opts.fail_fast then
@@ -223,12 +223,12 @@ function run_examples (state, examples, descriptions, env)
     local line = definition.line
 
     fenv.expect = function (...)
-      return matchers.expect (state, ...)
+      return expect.expect (state, ...)
     end
     setfenv (fenv.expect, fenv)
 
     fenv.pending = function (...)
-      return matchers.pending (state, ...)
+      return expect.pending (state, ...)
     end
     setfenv (fenv.pending, fenv)
 
@@ -262,7 +262,7 @@ function run_examples (state, examples, descriptions, env)
       -- Make sure we don't leak status into the calling or following
       -- example, since this `examples` invocation is from inside
       -- `run_examples`.
-      matchers.init (state)
+      expect.init (state)
     end
     setfenv (fenv.examples, fenv)
 
