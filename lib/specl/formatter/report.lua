@@ -20,10 +20,12 @@
 
 
 local color = require "specl.color"
+local std   = require "specl.std"
 local util  = require "specl.util"
 
 local examplename, indent, nop, strip1st, timesince =
   util.examplename, util.indent, util.nop, util.strip1st, util.timesince
+local empty = std.table.empty
 
 
 -- Color printing.
@@ -63,64 +65,86 @@ local function show_contexts (descriptions, opts)
 end
 
 
+local function format_failing_expectation (status, i, exp, verbose)
+  if verbose then
+    return "  " ..
+      color.strong .. status.filename .. ":" .. status.line .. ":"  ..
+      i .. ": " .. color.reset .. color.fail .. "FAILED expectation " ..
+      i .. color.reset .. ":\n" .. exp.message
+  end
+
+  return "  " ..
+    color.fail .. "FAILED expectation " .. i .. color.reset .. ": " ..
+    exp.message
+end
+
+
+local function format_pending_expectation (status, i, exp, verbose)
+  local pend = "  "
+  if verbose then
+    pend = pend ..
+      color.strong .. status.filename .. ":" .. status.line .. ":" ..
+      i .. ": " .. color.reset
+  end
+  pend = pend ..
+    color.pend .. "PENDING expectation " ..  i .. color.reset .. ": " ..
+    color.warn .. exp.pending .. color.reset
+
+  if exp.status == true then
+    pend = "\n" .. pend .. color.warn .. " passed unexpectedly!" ..
+      color.reset .. "\n  " .. color.strong ..
+      "You can safely remove the 'pending ()' call from this example." ..
+      color.reset
+  else
+    pend = "\n" .. pend
+  end
+
+  return pend
+end
+
+
+local function format_pending_example (message)
+  return " (" .. color.pend .. "PENDING example" .. color.reset ..
+    ": " .. message .. ")"
+end
+
+
 -- Diagnose any failed expectations in situ, and return failure messages
 -- for display at the end.
-local function expectations (status, descriptions, opts)
+local function format_example (status, descriptions, opts)
   local spaces  = indent (descriptions)
   local reports = { fail = "", pend = "" }
   local counts  = { fail = 0, pend = 0, unexpected = 0 }
 
-  local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
-
   -- Only show context lines for unfiltered examples.
   show_contexts (descriptions, opts)
 
-  if next (status.expectations) then
+  if empty (status.expectations) then
+    if status.ispending then
+      local pend = format_pending_example (status.ispending)
+      princ (opts.color, spaces ..  tabulate (descriptions) ..  pend)
+      reports.pend = reports.pend .. pend
+    end
+  else
     local details = ""
 
     -- If we have expectations, display the result of each.
-    for i, expectation in ipairs (status.expectations) do
-      if expectation.pending ~= nil then
-        local pend = "  "
-	if opts.verbose then
-	  pend = pend .. fileline .. i .. ": " .. color.reset
-        end
-        pend = pend .. color.pend ..
-              "PENDING expectation " ..  i .. color.reset .. ": " ..
-              color.warn .. expectation.pending .. color.reset
-
-        if expectation.status == true then
+    for i, exp in ipairs (status.expectations) do
+      if exp.pending ~= nil then
+	local pend = format_pending_expectation (status, i, exp, opts.verbose)
+        if exp.status == true then
           counts.unexpected = counts.unexpected + 1
-
-          if prefix ~= color.fail then prefix = color.warn end
-
-          pend = pend .. color.warn .. " passed unexpectedly!" .. color.reset
-          reports.pend = reports.pend .. "\n" .. pend .. "\n" ..
-              "  " .. color.strong ..
-              "You can safely remove the 'pending ()' call from this example." ..
-              color.reset
-        else
-          counts.pend = counts.pend + 1
-          reports.pend = reports.pend .. "\n" .. pend
-        end
-
-        if opts.verbose then
-          details = details .. "\n" .. spaces .. pend
-        end
-
-      elseif expectation.status == false then
-        counts.fail = counts.fail + 1
-
-        local fail
-	if opts.verbose then
-	  fail = "  " .. fileline .. i.. ": " .. color.reset .. color.fail ..
-		 "FAILED expectation " .. i .. color.reset .. ":\n" ..
-	         expectation.message
 	else
-          fail = "  " .. color.fail .. "FAILED expectation " .. i ..
-	         color.reset .. ": " .. expectation.message
-	end
+          counts.pend = counts.pend + 1
+        end
+	reports.pend = reports.pend .. pend
+        if opts.verbose then
+          details = details .. pend:gsub ("^\n", "%0  ")
+        end
 
+      elseif exp.status == false then
+        counts.fail = counts.fail + 1
+        local fail = format_failing_expectation (status, i, exp, opts.verbose)
         reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
         if opts.verbose then
           details = details .. "\n" .. spaces .. fail:gsub ("\n", "%0  " .. spaces)
@@ -148,14 +172,6 @@ local function expectations (status, descriptions, opts)
     end
 
     princ (opts.color, spaces .. tabulate (descriptions) ..details)
-
-  elseif status.ispending then
-    -- Otherwise, display only pending examples.
-    local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
-                 ": " .. status.ispending .. ")"
-    reports.pend = reports.pend .. pend
-
-    princ (opts.color, spaces ..  tabulate (descriptions) ..  pend)
   end
 
   -- Add description titles.
@@ -217,7 +233,7 @@ end
 local M = {
   header       = nop,
   spec         = nop,
-  expectations = expectations,
+  expectations = format_example,
   footer       = footer,
 }
 

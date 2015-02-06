@@ -20,8 +20,10 @@
 
 
 local color = require "specl.color"
+local std   = require "specl.std"
 local util  = require "specl.util"
 
+local empty = std.table.empty
 local examplename, nop, timesince =
   util.examplename, util.nop, util.timesince
 
@@ -39,65 +41,78 @@ local function princ (want_color, ...)
 end
 
 
--- Print '.' for passed, or 'F' for failed expectation.
--- Update '>' position.
-local function expectations (status, descriptions, opts)
-  reports = { fail = "", pend = "" }
+local function format_failing_expectation (status, i, exp, verbose)
+  local fail = "  "
+  if verbose then
+    fail = fail ..
+      color.strong .. status.filename .. ":" .. status.line .. ":" ..
+      i .. ": " .. color.reset .. color.fail .. "FAILED expectation " ..
+      i .. color.reset .. ":\n" .. exp.message
+  else
+    fail = fail ..
+      color.fail .. "FAILED expectation " .. i .. color.reset .. ": " ..
+      exp.message
+  end
 
-  local fileline = color.strong .. status.filename .. ":" .. status.line .. ":"
+  return "\n" .. fail:gsub ("\n", "%0  ")
+end
 
-  if next (status.expectations) then
-    -- If we have expectations, display the result of each.
-    for i, expectation in ipairs (status.expectations) do
-      if expectation.pending ~= nil then
-        reports.pend = reports.pend .. "\n  "
-	if opts.verbose then
-	  reports.pend = reports.pend .. fileline .. i .. ": " .. color.reset
-	end
-        reports.pend = reports.pend ..
-	  color.pend .. "PENDING expectation " .. i .. color.reset .. ": "
 
-        reports.pend = reports.pend .. color.warn .. expectation.pending .. color.reset
+local function format_pending_expectation (status, i, exp, verbose)
+  local pend = "\n  "
+  if verbose then
+    pend = pend ..
+      color.strong .. status.filename .. ":" .. status.line .. ":" ..
+      i .. ": " .. color.reset
+  end
+  pend = pend ..
+    color.pend .. "PENDING expectation " .. i .. color.reset .. ": " ..
+    color.warn .. exp.pending .. color.reset
 
-        if expectation.status == true then
-          writc (opts.color, color.strong .. "?")
-          reports.pend = reports.pend ..
-              color.warn .. ", passed unexpectedly!" .. color.reset .. "\n" ..
-              "  " .. color.strong ..
-              "You can safely remove the 'pending ()' call from this example." ..
-              color.reset
-        else
-          writc (opts.color, color.pend .. "*")
-        end
+  if exp.status == true then
+    pend = pend ..
+      color.warn .. ", passed unexpectedly!" .. color.reset .. "\n" ..
+      "  " .. color.strong ..
+      "You can safely remove the 'pending ()' call from this example." ..
+      color.reset
+  end
 
-      elseif expectation.status == true then
-        writc (opts.color, color.good .. ".")
+  return pend
+end
 
-      else
+
+local function format_pending_example (message)
+  return " (" .. color.pend .. "PENDING example" .. color.reset ..
+    ": " .. message .. ")"
+end
+
+
+-- Print '.' for passed, 'F' for failed or '*' for pending expectations.
+-- Accumulate pending and failure reports for display in footer.
+local function display_progress (status, descriptions, opts)
+  local reports = { fail = "", pend = "" }
+
+  if empty (status.expectations) then
+    if status.ispending then
+      reports.pend = reports.pend .. format_pending_example (status.ispending)
+      writc (opts.color, color.pend .. "*")
+    end
+  else
+    for i, exp in ipairs (status.expectations) do
+      if exp.pending ~= nil then
+	reports.pend = reports.pend ..
+	  format_pending_expectation (status, i, exp, opts.verbose)
+        writc (opts.color,
+	  (exp.status == true) and (color.strong .. "?") or (color.pend .. "*"))
+      elseif exp.status == false then
+	reports.fail = reports.fail ..
+	  format_failing_expectation (status, i, exp, opts.verbose)
         writc (opts.color, color.bad .. "F")
-
-        local fail
-	if opts.verbose then
-	  fail = "  " .. fileline .. i.. ": " .. color.reset .. color.fail ..
-		 "FAILED expectation " .. i .. color.reset .. ":\n" ..
-	         expectation.message
-	else
-          fail = "  " .. color.fail .. "FAILED expectation " .. i ..
-	         color.reset .. ": " .. expectation.message
-	end
-
-        reports.fail = reports.fail .. "\n" .. fail:gsub ("\n", "%0  ")
+      else
+        writc (opts.color, color.good .. ".")
       end
     end
-
-  elseif status.ispending then
-    -- Otherwise, display only pending examples.
-    writc (opts.color, color.pend .. "*")
-    local pend = " (" .. color.pend .. "PENDING example" .. color.reset ..
-                 ": " .. status.ispending .. ")"
-    reports.pend = reports.pend .. pend
   end
-  io.stdout:flush ()
 
   -- Add description titles.
   local title = examplename (descriptions)
@@ -162,7 +177,7 @@ end
 local M = {
   header       = nop,
   spec         = nop,
-  expectations = expectations,
+  expectations = display_progress,
   footer       = footer,
 }
 
