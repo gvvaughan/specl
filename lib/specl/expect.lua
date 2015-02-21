@@ -128,10 +128,15 @@ end)
 
 
 --- Called at the start of each example block.
--- @tparam table state to be reinitialised
-local function init (state)
-  state.expectations = {}
-  state.ispending = nil
+-- @tparam table state reinitialise status table for next example
+-- @int line line number from the spec file definition
+local function init (state, line)
+  state.stats.status = {
+    expectations = {},
+    filename     = state.spec.filename,
+    ispending    = nil,  -- we care about this key's value!
+    line         = line,
+  }
 end
 
 
@@ -139,7 +144,7 @@ end
 -- @tparam table state shared with formatters
 -- @treturn table count of completed and pending expectations
 local function status (state)
-  return { expectations = state.expectations, ispending = state.ispending }
+  return state.stats.status
 end
 
 
@@ -156,8 +161,9 @@ local function score (state, inverse, success, message)
     message = message and ("not " .. message)
   end
 
-  local expectations, ispending, stats =
-        state.expectations, state.ispending, state.stats
+  local stats  = state.stats
+  local status = stats.status
+  local expectations, ispending = status.expectations, status.ispending
 
   if ispending ~= nil then
     -- stats.pend is updated by pending ()
@@ -240,8 +246,9 @@ end
 -- @tparam table state shared with formatters
 -- @string[opt="not yet implemented"] s reason for pending example
 local function pending (state, s)
-  state.stats.pend = state.stats.pend + 1
-  state.ispending  = s or "not yet implemented"
+  local stats = state.stats
+  stats.pend = stats.pend + 1
+  stats.status.ispending  = s or "not yet implemented"
 end
 
 

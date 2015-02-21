@@ -183,7 +183,7 @@ function run_example (state, definition, descriptions, fenv)
   end
 
   if inclusive then
-    expect.init (state)
+    expect.init (state, definition.line)
 
     -- Propagate nested environments to functions that might be called
     -- from inside the example.
@@ -192,10 +192,7 @@ function run_example (state, definition, descriptions, fenv)
     setfenv (definition.example, fenv)
     definition.example ()
 
-    local status = merge ({
-      filename = state.spec.filename,
-      line     = definition.line,
-    }, expect.status (state))
+    local status = expect.status (state)
     state:accumulator (formatter.expectations (status, descriptions, state.opts))
 
     if state.opts.fail_fast then
