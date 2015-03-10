@@ -13,7 +13,7 @@ dependencies = {
   "luamacro >= 2.0",
   "lua >= 5.1, < 5.4",
   "lyaml >= 5",
-  "stdlib >= 41.2",
+  "stdlib >= 41.2.0, < 42.0.0",
 }
 external_dependencies = nil
 build = {
