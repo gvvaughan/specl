@@ -1,4 +1,19 @@
 --- Load Lua stdlib into `specl.std` namespace.
+-- Written by Gary V. Vaughan, 2014
+--
+-- Copyright (c) 2014-2015 Gary V. Vaughan
+--
+-- Specl is free software distributed under the terms of the MIT license;
+-- it may be used for any purpose, including commercial purposes, at
+-- absolutely no cost without having to ask permission.
+--
+-- The only requirement is that if you do use Specl, then you should give
+-- credit by including the appropriate copyright notice somewhere in your
+-- product or its documentation.
+--
+-- You should have received a copy of the MIT license along with this
+-- program; see the file LICENSE.  If not, a copy can be downloaded from
+-- <http://www.opensource.org/licenses/mit-license.html>.
 
 -- First handle debug_init and _DEBUG, being careful not to affect
 -- DEBUG disposition of subsequent example loaders for std.debug_init!

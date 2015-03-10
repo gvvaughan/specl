@@ -1,3 +1,20 @@
+-- Specification helper functions.
+-- Written by Gary V. Vaughan, 2013
+--
+-- Copyright (c) 2013-2015 Gary V. Vaughan
+--
+-- Specl is free software distributed under the terms of the MIT license;
+-- it may be used for any purpose, including commercial purposes, at
+-- absolutely no cost without having to ask permission.
+--
+-- The only requirement is that if you do use Specl, then you should give
+-- credit by including the appropriate copyright notice somewhere in your
+-- product or its documentation.
+--
+-- You should have received a copy of the MIT license along with this
+-- program; see the file LICENSE.  If not, a copy can be downloaded from
+-- <http://www.opensource.org/licenses/mit-license.html>.
+
 local hell = require "specl.shell"
 local std  = require "specl.std"
 

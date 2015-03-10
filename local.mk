@@ -2,19 +2,18 @@
 # Written by Gary V. Vaughan, 2013
 #
 # Copyright (C) 2013-2015 Gary V. Vaughan
+
+# Specl is free software distributed under the terms of the MIT license;
+# it may be used for any purpose, including commercial purposes, at
+# absolutely no cost without having to ask permission.
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# The only requirement is that if you do use Specl, then you should give
+# credit by including the appropriate copyright notice somewhere in your
+# product or its documentation.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the MIT license along with this
+# program; see the file LICENSE.  If not, a copy can be downloaded from
+# <http://www.opensource.org/licenses/mit-license.html>.
 
 
 ## ------------ ##

@@ -3,20 +3,17 @@
 --
 -- Copyright (c) 2013-2015 Gary V. Vaughan
 --
--- This program is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3, or (at your option)
--- any later version.
+-- Specl is free software distributed under the terms of the MIT license;
+-- it may be used for any purpose, including commercial purposes, at
+-- absolutely no cost without having to ask permission.
 --
--- This program is distributed in the hope that it will be useful, but
--- WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
--- General Public License for more details.
+-- The only requirement is that if you do use Specl, then you should give
+-- credit by including the appropriate copyright notice somewhere in your
+-- product or its documentation.
 --
--- You should have received a copy of the GNU General Public License
--- along with this program; see the file COPYING.  If not, write to the
--- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
--- MA 02111-1301, USA.
+-- You should have received a copy of the MIT license along with this
+-- program; see the file LICENSE.  If not, a copy can be downloaded from
+-- <http://www.opensource.org/licenses/mit-license.html>.
 
 
 local macro = require "macro"

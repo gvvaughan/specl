@@ -3,18 +3,17 @@ dnl Written by Gary V. Vaughan, 2013
 dnl
 dnl Copyright (c) 2013-2015 Gary V. Vaughan
 dnl
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published
-dnl by the Free Software Foundation; either version 3, or (at your
-dnl option) any later version.
+dnl Specl is free software distributed under the terms of the MIT license;
+dnl it may be used for any purpose, including commercial purposes, at
+dnl absolutely no cost without having to ask permission.
 dnl
-dnl This program is distributed in the hope that it will be useful, but
-dnl WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-dnl General Public License for more details.
+dnl The only requirement is that if you do use Specl, then you should give
+dnl credit by including the appropriate copyright notice somewhere in your
+dnl product or its documentation.
 dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
+dnl You should have received a copy of the MIT license along with this
+dnl program; see the file LICENSE.  If not, a copy can be downloaded from
+dnl <http://www.opensource.org/licenses/mit-license.html>.
 
 AC_PREREQ([2.68])
 
@@ -26,7 +25,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AS_BOX([Configuring AC_PACKAGE_TARNAME AC_PACKAGE_VERSION])
 echo
 
-AM_INIT_AUTOMAKE([-Wall])
+AM_INIT_AUTOMAKE([-Wall foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Check for programs

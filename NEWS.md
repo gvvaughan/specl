@@ -2,6 +2,11 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Licensing
+
+  - Specl is now released under the terms of the MIT license, the same
+    license that Lua uses.  See `LICENSE` for details.
+
 ### New features
 
   - New `badargs.result` for formatting function result checking failure
