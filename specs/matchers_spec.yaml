@@ -586,21 +586,22 @@ describe matcher:
   - context with __lt metamethod:
     - before: |
         preamble = "it fails: |\n" ..
+          "  local mt\n" ..
+          "  function X (x) return setmetatable (x, mt) end\n" ..
           "  mt = {\n" ..
           "    __lt = function (a,b) return #a<#b end,\n" ..
           "    __add = function (a, b)\n" ..
-          "              local r = {}\n" ..
+          "              local r = X{}\n" ..
           "              for _, v in ipairs (a) do r[#r + 1] = v end\n" ..
           "              for _, v in ipairs (b) do r[#r + 1] = v end\n" ..
           "              return r\n" ..
           "            end,\n" ..
           "    __sub = function (a, b)\n" ..
-          "              local r = {}\n" ..
+          "              local r = X{}\n" ..
           "              for i = 1, #a - #b do r[i] = a[i] end\n" ..
           "              return r\n" ..
           "            end,\n" ..
           "  }\n" .. 
-          "  function X (x) return setmetatable (x, mt) end\n" ..
           "  expect "
 
     - it fails when greater:
