@@ -37,10 +37,12 @@ local util  = require "specl.util"
 
 local getmetamethod, object, pairs, tostring =
   std.getmetamethod, std.object, std.pairs, std.tostring
-local chomp, escape_pattern, prettytostring =
-  std.string.chomp, std.string.escape_pattern, std.string.prettytostring
+local chomp, escape_pattern, pickle, prettytostring =
+  std.string.chomp, std.string.escape_pattern, std.string.pickle,
+  std.string.prettytostring
 local clone, empty, merge, size, unpack =
-  std.table.clone, std.table.empty, std.table.merge, std.table.size, std.table.unpack
+  std.table.clone, std.table.empty, std.table.merge, std.table.size,
+  std.table.unpack
 local argcheck = std.debug.argcheck
 
 local Object = object {}
@@ -54,7 +56,9 @@ local function totable (obj)
   if type (obj) == "table" or getmetamethod (obj, "__pairs") then
     -- Fetch all key:value pairs where possible...
     r = {}
-    for k, v in pairs (obj) do r[k] = v end
+    for k, v in pairs (obj) do
+      if type (k) == "table" then k = pickle (k) end
+      r[k] = v end
   elseif type (obj) == "string" then
     -- ...or explode a raw string into a table of characters.
     r, i = {}, 1
@@ -295,8 +299,7 @@ local function objcmp (o1, o2)
   if type1 ~= type2 then return false end
 
   -- compare std.Objects according to table contents
-  if type1 ~= "table" then o1 = totable (o1) end
-  if type2 ~= "table" then o2 = totable (o2) end
+  o1, o2 = totable (o1), totable (o2)
 
   local subcomps = {}  -- keys requiring a recursive comparison
   for k, v in pairs (o1) do

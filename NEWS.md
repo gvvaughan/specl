@@ -59,6 +59,18 @@
     details.
 
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+### Bug fixes:
+
+  - `equal` matcher compares mutable table keys correctly, so things
+    like this now work:
+
+    ```lua
+    expect ({[{k="mutable"}]=true}).to_equal ({[{k="mutable"}]=true})
+    ```
+
+
 ## Noteworthy changes in release 14.1.0 (2015-01-03) [stable]
 
 ### New features

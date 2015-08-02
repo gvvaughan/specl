@@ -681,6 +681,10 @@ describe matcher:
     - it makes a deep comparison of table elements:
         yaml = preamble .. deep .. ".to_equal " .. deep
         expect (run_spec (yaml)).to_contain_output (pass_all)
+    - it makes a deep comparison of table keys:
+        deepkey = '({[{"key", 42}] = {"foo"}})'
+        yaml = preamble .. deepkey .. ".to_equal " .. deepkey
+        expect (run_spec (yaml)).to_contain_output (pass_all)
     - it succeeds when object equals all of the alternatives:
         yaml = preamble .. deep ..
                ".to_equal.all_of {" .. deep .. ", " .. deep .. "}"
