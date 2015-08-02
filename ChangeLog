@@ -1,3 +1,30 @@
+2015-08-02  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.1.1
+	* NEWS.md: Record release date.
+
+	configury: distribute specl test harness.
+	* local.mk (EXTRA_DIST): Add specl.
+
+	matchers: match mutable table keys correctly.
+	* specs/matchers_spec.yaml (equal): New example of deep comparison
+	with table keys as well as values.
+	* lib/specl/matchers.lua (totable): Pickle mutable keys before
+	comparison so that they compare as equal when matching.
+	* NEWS.md (Bug fixes): Update.
+
+	configury: bump release version to 14.1.1.
+	* configure.ac (AC_INIT): Bump release version to 14.1.1.
+	* .travis.yml: Regenerate.
+
+	configury: travis needs to install LDoc.
+	* bootstrap.conf (travis_extra_rocks): Add ldco.
+	* .travis.yml: Regenerate.
+
+	slingshot: sync with upstream, for lua 5.3.1 support.
+	* slingshot: Sync with upstream.
+	* .travis.yml: Regenerate.
+
 2015-01-03  Gary V. Vaughan  <gary@gnu.org>
 
 	Release version 14.1.0
