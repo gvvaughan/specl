@@ -99,6 +99,7 @@ mkrockspecs_args = --module-dir $(srcdir)/lib
 
 EXTRA_DIST +=						\
 	doc/specl.1					\
+	specl						\
 	$(NOTHING_ELSE)
 
 
