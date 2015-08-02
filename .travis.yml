@@ -96,7 +96,7 @@ before_install:
 
 install:
   # Use Lua 5.3 compatible rocks, where available.
-  - 'for rock in ansicolors""; do
+  - 'for rock in ansicolors ldoc""; do
        if test -z "$rock"; then break; fi;
        if luarocks list | grep "^$rock$" >/dev/null; then continue; fi;
        sudo luarocks install --server=http://rocks.moonscript.org/manifests/gvvaughan $rock;
