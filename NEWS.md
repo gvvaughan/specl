@@ -1,5 +1,8 @@
 # Specl NEWS - User visible changes.
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+
 ## Noteworthy changes in release 14.1.1 (2015-08-02) [stable]
 
 ### Bug fixes:
