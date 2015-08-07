@@ -59,6 +59,14 @@
     details.
 
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+### Bug fixes:
+
+  - `equal` matcher really does compare mutable keys correctly,
+    which works on LuaJIT and Lua 5.3 too.
+
+
 ## Noteworthy changes in release 14.1.1 (2015-08-02) [stable]
 
 ### Bug fixes:
