@@ -24,6 +24,7 @@ local util  = require "specl.util"
 
 local getmetamethod, object, pairs, tostring =
   std.getmetamethod, std.object, std.pairs, std.tostring
+local eqv = std.operator.eqv
 local chomp, escape_pattern, pickle, prettytostring =
   std.string.chomp, std.string.escape_pattern, std.string.pickle,
   std.string.prettytostring
@@ -229,58 +230,11 @@ local function reformat (list, adaptor, prefix)
 end
 
 
--- Recursively compare <o1> and <o2> for equivalence.
-local function objcmp (o1, o2)
-  -- If they are the same object (number, interned string, table etc),
-  -- or they shara a metatable with an __eq metamethod that says they
-  -- equal, then they *are* the same... no need for more checking.
-  if o1 == o2 then return true end
-
-  -- Non-table types at this point must differ.
-  if type (o1) ~= "table" or type (o2) ~= "table" then return false end
-
-  -- cache extended types
-  local type1, type2 = object.type (o1), object.type (o2)
-
-  -- different types are unequal
-  if type1 ~= type2 then return false end
-
-  -- compare std.Objects according to table contents
-  o1, o2 = totable (o1), totable (o2)
-
-  local subcomps = {}  -- keys requiring a recursive comparison
-  for k, v in pairs (o1) do
-    if o2[k] == nil then return false end
-    if v ~= o2[k] then
-      if type (v) ~= "table" then return false end
-      -- only require recursive comparisons for mismatched values
-      table.insert (subcomps, k)
-    end
-  end
-  -- any keys in o2, not already compared above denote a mismatch!
-  for k in pairs (o2) do
-    if o1[k] == nil then return false end
-  end
-  if #subcomps == 0 then return true end
-  if #subcomps > 1 then
-    -- multiple table-valued keys remain, so we have to recurse
-    for _, k in ipairs (subcomps) do
-      assert (o1[k] ~= nil and o2[k] ~= nil)
-      if not objcmp (o1[k], o2[k]) then return false end
-    end
-    return true
-  end
-  -- use a tail call for arbitrary depth single-key subcomparison
-  local _, k = next (subcomps)
-  return objcmp (o1[k], o2[k])
-end
-
-
 -- Deep comparison, matches if <actual> and <expect> share the same
 -- structure.
 matchers.equal = Matcher {
   function (self, actual, expect)
-    return (objcmp (actual, expect) == true)
+    return eqv (actual, expect)
   end,
 }
 
@@ -300,7 +254,7 @@ matchers.be = Matcher {
 -- Equal but not the same object.
 matchers.copy = Matcher {
   function (self, actual, expect)
-    return (actual ~= expect) and (objcmp (actual, expect) == true)
+    return (actual ~= expect) and eqv (actual, expect)
   end,
 
   format_expect = function (self, expect)
@@ -423,7 +377,7 @@ matchers.contain = Matcher {
     if type (actual) == "table" then
       -- Do deep comparison against keys and values of the table.
       for k, v in pairs (actual) do
-        if objcmp (k, expect) or objcmp (v, expect) then
+        if eqv (k, expect) or eqv (v, expect) then
           return true
         end
       end
@@ -457,7 +411,7 @@ matchers.contain = Matcher {
       unseen = clone (actual)
       for _, search in pairs (expected) do
         for k, v in pairs (unseen) do
-          if objcmp (v, search) then
+          if eqv (v, search) then
             unseen[k] = nil
             break -- only remove one occurrence per search value!
           end
