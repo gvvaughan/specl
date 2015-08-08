@@ -59,7 +59,7 @@
     details.
 
 
-## Noteworthy changes in release ?.? (????-??-??) [?]
+## Noteworthy changes in release 14.1.2 (2015-08-08) [stable]
 
 ### Bug fixes:
 
