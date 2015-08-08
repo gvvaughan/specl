@@ -1,4 +1,28 @@
+2015-08-08  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.1.2
+	* NEWS.md: Record release date.
+
+	configury: bump release version to 14.1.2.
+	* configure.ac (AC_INIT): Bump release version to 14.1.2.
+	* .travis.yml: Regenerate.
+
+	override eqv, tostring and type from stdlib.
+	* lib/specl/std.lua (object.type, string.tostring): Inject
+	backwards compatible implementations over imports from
+	unreleased stdlib.
+	(operator.eqv): Inject forwards compatible implementation over
+	imports from released stdlib.
+	* lib/spec/matchers.lua (objcmp): Replace calls to this...
+	(std.operator.eqv): ...with calls to this.
+	* NEWS.md (Bug fixes): Update.
+
 2015-08-02  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 14.1.1
 	* NEWS.md: Record release date.
