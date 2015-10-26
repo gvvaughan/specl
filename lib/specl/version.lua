@@ -22,9 +22,9 @@ return {
   PACKAGE           = "specl",
   PACKAGE_NAME      = "Specl",
   PACKAGE_BUGREPORT = "http://github.com/gvvaughan/specl/issues",
-  VERSION           = "14.1.2",
+  VERSION           = "14.1.3",
   optspec           = [[
-specl (Specl) 14.1.2
+specl (Specl) 14.1.3
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2015, Gary V. Vaughan

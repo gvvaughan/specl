@@ -365,7 +365,7 @@ check-in-release-branch:
 	$(AM_V_at)remove_re=$(grep-clean-files);			\
 	    $(GIT) rm -f `$(GIT) ls-files |$(EGREP) -v "$$remove_re"`
 	$(AM_V_at)ln -s . '$(my_distdir)'
-	$(AM_V_at)$(TAR) zxf '$(release-tarball)'
+	$(AM_V_at)$(TAR) zxhf '$(release-tarball)'
 	$(AM_V_at)rm -f '$(my_distdir)' '$(release-tarball)'
 	$(AM_V_at)$(GIT) add .
 	$(AM_V_at)$(GIT) commit -s -a -m 'Release v$(VERSION).'

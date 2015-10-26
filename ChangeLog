@@ -1,4 +1,27 @@
+2015-10-26  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.1.3
+	* NEWS.md: Record release date.
+
+	slingshot: sync with upstream.
+	* slingshot: Sync with upstream for release rules fix.
+
+	configury: bump release version to 14.1.3.
+	* configure.ac (AC_INIT): Bump release version to 14.1.3.
+	* .travis.yml: Regenerate.
+
+	util: fix stack overflow when tables are their own metatable.
+	* lib/specl/util.lua (deepcopy): Note when a table is its own
+	metatable, and instead of copying the metatable, simply set the
+	metatable of the copy to itself before returning.
+	* NEWS.md (Bug fixes): Update.
+
 2015-08-08  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 14.1.2
 	* NEWS.md: Record release date.
