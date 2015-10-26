@@ -59,6 +59,15 @@
     details.
 
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+### Bug fixes:
+
+  - internal `deepcopy` no longer overflows the stack when copying
+    tables that are their own metatable across nested Specl
+    environments.
+
+
 ## Noteworthy changes in release 14.1.2 (2015-08-08) [stable]
 
 ### Bug fixes:

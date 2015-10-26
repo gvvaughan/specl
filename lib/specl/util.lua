@@ -80,12 +80,21 @@ local function deepcopy (t)
 
   local function tablecopy (orig)
     local mt = getmetatable (orig)
-    local copy = mt and setmetatable ({}, copied[mt] or tablecopy (mt)) or {}
+    local copy
+    -- be careful of tables set to be their own metatable!
+    if mt ~= orig then
+      copy = mt and setmetatable ({}, copied[mt] or tablecopy (mt)) or {}
+    else
+      copy = {}
+    end
     copied[orig] = copy
     for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
       if type (k) == "table" then k = copied[k] or tablecopy (k) end
       if type (v) == "table" then v = copied[v] or tablecopy (v) end
       rawset (copy, k, v)
+    end
+    if mt == orig then
+      setmetatable (copy, copy)
     end
     return copy
   end
