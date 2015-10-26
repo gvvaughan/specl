@@ -113,8 +113,8 @@ install:
   # Build from rockspec, forcing uninstall of older luarocks installed
   # above when testing the git rockspec, both for enforcing backwards
   # compatibility by default, and for ease of maintenance.
-  - if test -f 'specl-14.1.2-1.rockspec'; then
-      sudo luarocks make 'specl-14.1.2-1.rockspec' LUA="$LUA";
+  - if test -f 'specl-14.1.3-1.rockspec'; then
+      sudo luarocks make 'specl-14.1.3-1.rockspec' LUA="$LUA";
     else
       sudo luarocks make --force 'specl-git-1.rockspec' LUA="$LUA";
     fi
