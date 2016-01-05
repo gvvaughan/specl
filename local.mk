@@ -1,7 +1,7 @@
 # Local Make rules.
 # Written by Gary V. Vaughan, 2013
 #
-# Copyright (C) 2013-2015 Gary V. Vaughan
+# Copyright (c) 2013-2016 Gary V. Vaughan
 
 # Specl is free software distributed under the terms of the MIT license;
 # it may be used for any purpose, including commercial purposes, at

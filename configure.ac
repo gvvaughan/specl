@@ -1,7 +1,7 @@
 dnl configure.ac
 dnl Written by Gary V. Vaughan, 2013
 dnl
-dnl Copyright (c) 2013-2015 Gary V. Vaughan
+dnl Copyright (c) 2013-2016 Gary V. Vaughan
 dnl
 dnl Specl is free software distributed under the terms of the MIT license;
 dnl it may be used for any purpose, including commercial purposes, at
