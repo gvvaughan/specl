@@ -13,6 +13,7 @@ dependencies = {
   "luamacro >= 2.0",
   "lua >= 5.1, < 5.4",
   "lyaml >= 5",
+  "optparse",
   "stdlib >= 41",
 }
 external_dependencies = nil
