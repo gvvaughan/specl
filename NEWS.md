@@ -59,6 +59,14 @@
     details.
 
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+### New features:
+
+  - compatibility with recent split between lua-stdlib and
+    optparse.
+
+
 ## Noteworthy changes in release 14.1.3 (2015-10-26) [stable]
 
 ### Bug fixes:

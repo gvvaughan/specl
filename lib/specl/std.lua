@@ -34,6 +34,13 @@ local set = M.operator.set
 local tostring = _G.tostring
 local type = _G.type
 
+-- Use std.optparse if available, otherwise standalone optparse module.
+local ok
+ok, M.optparse = pcall (require, "std.optparse")
+if not ok then
+  M.optparse = require "optparse"
+end
+
 
 -- Cache submodule handles into local `std` above.
 reduce (set, M,
@@ -45,7 +52,6 @@ reduce (set, M,
     "list",
     "math",
     "object",
-    "optparse",
     "package",
     "set",
     "strbuf",
@@ -148,8 +154,8 @@ M.tostring = M.string.tostring
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
 
--- Don't prevent examples from loading a different stdlib.
+-- Don't prevent examples from loading a different stdlib (or optparse!).
 map (function (e) package.loaded[e] = nil end,
-     filter (lambda '|k| k:match "^std%." or k == "std"', package.loaded))
+     filter (lambda '|k| k:match "^std%." or k == "std" or k == "optparse"', package.loaded))
 
 return M
