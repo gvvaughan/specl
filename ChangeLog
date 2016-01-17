@@ -1,4 +1,33 @@
+2016-01-17  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.1.4
+	* NEWS.md: Record release date.
+
+	maint: update for optparse/stdlib split.
+	* specl/main.lua (optparse): Use standalone module.
+	* build-aux/sanity-cfg.mk: Remove unused file.
+	* configure.ac (AC_INIT): Bump version to 14.1.4.
+	* rockspec.conf (dependencies): Add optparse.
+	* lib/specl/std.lua (M): Remove std.optparse.
+	* slingshot: Sync with upstream.
+	* bootstrap, .travis.yml: Regenerate.
+	* NEWS.md (New features): Update.
+
+	maint: bump copyright years.
+	* bootstrap.conf, configure.ac, lib/specl/badargs.lua,
+	lib/specl/color.lua, lib/specl/compat.lua,
+	lib/specl/formatter/progress.lua, lib/specl/formatter/report.lua,
+	lib/specl/inprocess.lua, lib/specl/loader.lua, lib/specl/main.lua,
+	lib/specl/matchers.lua, lib/specl/runner.lua, lib/specl/shell.lua,
+	lib/specl/util.lua, lib/specl/version.lua.in, local.mk, specl.in,
+	specs/specs.mk: Bump copyright years to include 2016.
+
 2015-10-26  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 14.1.3
 	* NEWS.md: Record release date.

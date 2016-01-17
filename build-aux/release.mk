@@ -1,7 +1,7 @@
 # Slingshot release rules for GNU Make.
 
 # ======================================================================
-# Copyright (C) 2001-2015 Free Software Foundation, Inc.
+# Copyright (C) 2001-2016 Free Software Foundation, Inc.
 # Originally by Jim Meyering, Simon Josefsson, Eric Blake,
 #               Akim Demaille, Gary V. Vaughan, and others.
 # This version by Gary V. Vaughan, 2013.

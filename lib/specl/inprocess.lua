@@ -1,7 +1,7 @@
 -- In process Lua programs.
 -- Written by Gary V. Vaughan, 2014
 --
--- Copyright (c) 2014-2015 Gary V. Vaughan
+-- Copyright (c) 2014-2016 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
