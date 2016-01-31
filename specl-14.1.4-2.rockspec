@@ -1,5 +1,5 @@
 package = "specl"
-version = "14.1.4-1"
+version = "14.1.4-2"
 description = {
   detailed = "Develop and run BDD specs written in Lua for RSpec style workflow.",
   homepage = "http://gvvaughan.github.io/specl",
@@ -15,7 +15,7 @@ dependencies = {
   "lua >= 5.1, < 5.4",
   "lyaml >= 5",
   "optparse",
-  "stdlib >= 41",
+  "stdlib == 41.2.0",
 }
 external_dependencies = nil
 build = {
