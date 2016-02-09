@@ -73,7 +73,7 @@ local function compile (self, arg)
 
   table.insert (self.specs, {
     filename = arg,
-    examples = loader.load (arg, s, self.opts.unicode),
+    examples = loader.load (arg, s, self.opts),
     filters  = self.filters,
   })
 

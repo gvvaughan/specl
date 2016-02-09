@@ -59,6 +59,14 @@
     details.
 
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+### New features:
+
+  - generate a test coverage report with luacov when the new --coverage
+    option is given (assuming "luacov" is loadable).
+
+
 ## Noteworthy changes in release 14.1.4 (2016-01-17) [stable]
 
 ### New features:
