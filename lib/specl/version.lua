@@ -22,9 +22,9 @@ return {
   PACKAGE           = "specl",
   PACKAGE_NAME      = "Specl",
   PACKAGE_BUGREPORT = "http://github.com/gvvaughan/specl/issues",
-  VERSION           = "14.1.4",
+  VERSION           = "14.1.5",
   optspec           = [[
-specl (Specl) 14.1.4
+specl (Specl) 14.1.5
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2016, Gary V. Vaughan
@@ -49,6 +49,7 @@ Where '-' is given as a FILE, then read from standard input.
       --help             print this help, then exit
       --version          print version number, then exit
       --color=WHEN       request colorized formatter output [default=yes]
+      --coverage         generate coverage report, if luacov is installed
   -1, --fail-fast        exit immediately on first failed example
   -f, --formatter=FILE   use a specific formatter [default=progress]
       --unicode          allow unicode in spec files
