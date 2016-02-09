@@ -307,14 +307,14 @@ local parser_mt = {
 
 
 -- Parser object constructor.
-local function Parser (filename, s, unicode)
+local function Parser (filename, s, opts)
   local dir  = dirname (filename)
 
   -- Add this spec-file directory to the macro-expanded spec_path list.
   spec_path = normalize (catfile (dir, path_mark .. ".lua"), spec_path)
 
   local object = {
-    unicode  = unicode,
+    unicode  = opts.unicode,
     anchors  = {},
     input    = s,
     mark     = { line = 0, column = 0 },
@@ -337,15 +337,20 @@ local function Parser (filename, s, unicode)
       -- Autoload spec_helper from spec-file directory, if any.
       table.insert (package.loaders, 1, loader.expandmacros)
       pcall (require, "spec_helper")
-    ]], package.path, spec_path)
+
+      -- Generate coverage report if luacov is available.
+      if %s then
+         pcall (require, "luacov")
+      end
+    ]], package.path, spec_path, tostring (opts.coverage))
   }
   return setmetatable (object, parser_mt)
 end
 
 
-local function load (filename, s, unicode)
+local function load (filename, s, opts)
   local documents = {}
-  local parser    = Parser (filename, s, unicode)
+  local parser    = Parser (filename, s, opts)
 
   if parser:parse () ~= "STREAM_START" then
     return parser:error ("expecting STREAM_START event, but got " ..
