@@ -59,12 +59,22 @@
     details.
 
 
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+### New features:
+
+  - generate a working test coverage report with luacov when the
+    --coverage option is given (assuming "luacov" is loadable).
+
+  - runs specs in around half the time of previous releases.
+
+
 ## Noteworthy changes in release 14.1.5 (2016-02-09) [stable]
 
 ### New features:
 
-  - generate a test coverage report with luacov when the new --coverage
-    option is given (assuming "luacov" is loadable).
+  - new --coverage option tries to use "luacov" for coverage reports,
+    but actually it doesn't work.
 
 
 ## Noteworthy changes in release 14.1.4 (2016-01-17) [stable]

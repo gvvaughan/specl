@@ -34,8 +34,13 @@ local Object = object {}
 
 -- Make a shallow copy of the pristine global environment, so that the
 -- future state of the Specl environment is not exposed to spec files.
-local global = {}
-for k, v in pairs (_G) do global[k] = v end
+local global = { package = { loaded = {} } }
+global._G = global
+for k, v in pairs (package) do global.package[k] = global.package[k] or v end
+for k, v in pairs (_G) do global[k] = global[k] or v end
+for k, v in pairs (package.loaded) do
+  global.package.loaded[k] = global[k]
+end
 
 
 -- optparse opt handler for `-f, --formatter=FILE`.
@@ -157,6 +162,10 @@ local function execute (self)
   end
 
   self:process_args (parser)
+
+  if self.opts.coverage then
+    pcall (require, "luacov")
+  end
 
   os.exit (runner.run (self))
 end
