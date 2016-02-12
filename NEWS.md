@@ -59,7 +59,7 @@
     details.
 
 
-## Noteworthy changes in release ?.? (????-??-??) [?]
+## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
 
 ### New features:
 
