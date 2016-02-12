@@ -337,12 +337,7 @@ local function Parser (filename, s, opts)
       -- Autoload spec_helper from spec-file directory, if any.
       table.insert (package.loaders, 1, loader.expandmacros)
       pcall (require, "spec_helper")
-
-      -- Generate coverage report if luacov is available.
-      if %s then
-         pcall (require, "luacov")
-      end
-    ]], package.path, spec_path, tostring (opts.coverage))
+    ]], package.path, spec_path)
   }
   return setmetatable (object, parser_mt)
 end

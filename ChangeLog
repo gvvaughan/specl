@@ -1,4 +1,45 @@
+2016-02-12  Gary V. Vaughan  <gary@gnu.org>
+
+	Release version 14.1.6
+	* NEWS.md: Record release date.
+
+	rockspecs: require exactly stdlib-41.2.0.
+	* rockspec.conf (dependencies.stdlib): The next release of stdlib
+	will break this version of Specl horribly, requiring an update to
+	regain compatibility.
+	* specl-git-1.rockspec: Regenerate.
+
+	slingshot: sync with upstream for travis improvements.
+	* slingshot: Sync with upstream.
+	* .travis.yml: Regenerate.
+
+	maint: bump version to 14.1.6.
+	* configure.ac (AC_INIT): BUmp release version to 14.1.6.
+	* .travis.yml: Regenerate.
+
+	specl: proper luacov support, and a huge speedup.
+	* lib/specl/loader.lua (preamble): Remove misconceived luacov
+	initialisation from every environment.
+	* lib/specl/main/lua (execute): Just call it once at the top
+	level after argument parsing.
+	Most importantly of all, don't naively shallow copy the _G table
+	for the outermost global environment, because that leaks the real
+	environment from a few places (e.g. global._G will point to the
+	real global environment) including garbage collected objects that
+	affect luacov.  By making a careful clone that has references
+	to _G point back at their copies in `global` we also make the
+	environments that are copied repeatedly for execution of every
+	single spec-file execution scope, Specl tends to run to completion
+	in about half of the time it did previously.
+	* TODO.yaml: Remove LuaCov support item.
+	* NEWS.md (New features): Update.
+
 2016-02-09  Gary V. Vaughan  <gary@gnu.org>
+
+	maint: post-release administrivia.
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* ./local.mk (old_NEWS_hash): Auto-update.
 
 	Release version 14.1.5
 	* NEWS.md: Record release date.
