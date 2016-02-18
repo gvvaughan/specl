@@ -19,20 +19,45 @@
 -- MA 02111-1301, USA.
 
 
-local compat   = require "specl.compat"
-local matchers = require "specl.matchers"
-local std      = require "specl.std"
-local util     = require "specl.util"
+local _G		= _G
+local error		= error
+local ipairs		= ipairs
+local load		= load
+local loadfile		= loadfile
+local loadstring	= loadstring or load
+local next		= next
+local package		= package
+local pairs		= pairs
+local type		= type
+local rawset		= rawset
+local require		= require
+local setfenv		= setfenv or function () end
+local setmetatable	= setmetatable
+local tostring		= tostring
 
-local loadstring, setfenv = compat.loadstring, compat.setfenv
-local slurp, split, merge =
-  std.io.slurp, std.string.split, std.table.merge
-local examplename = util.examplename
+local table_insert	= table.insert
+local table_remove	= table.remove
 
--- Protect against examples misusing or resetting keywords.
-local error, ipairs, pairs, type, rawset, setmetatable =
-      error, ipairs, pairs, type, rawset, setmetatable
+local  matchers		= require "specl.matchers"
 
+local _	= {
+  compat		= require "specl.compat",
+  std			= require "specl.std",
+  util			= require "specl.util",
+}
+
+local _ENV		= {}
+setfenv (2, _ENV)
+
+local deepcopy		= _.util.deepcopy
+local examplename	= _.util.examplename
+local intercept_loaders	= _.compat.intercept_loaders
+local merge		= _.std.table.merge
+local setfenv		= _.compat.setfenv
+local slurp		= _.std.io.slurp
+local split		= _.std.string.split
+
+_ = nil
 
 
 --[[ ================= ]]--
@@ -58,16 +83,6 @@ local function accumulator (self, arg)
 end
 
 
--- Access to core functions that we override to run within nested
--- function environments.
-local core = {
-  load       = load,
-  loadfile   = loadfile,
-  loadstring = loadstring,
-  require    = require,
-}
-
-
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
@@ -78,7 +93,7 @@ local function initenv (state, env)
 
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
-      local fn = core[intercept] (...)
+      local fn = _G[intercept] (...)
       return function ()
         setfenv (fn, env)
         return fn ()
@@ -94,8 +109,8 @@ local function initenv (state, env)
   env.require = function (m)
     local errmsg, import, loaded, loadfn
 
-    compat.intercept_loaders (package)
-    compat.intercept_loaders (env.package)
+    intercept_loaders (package)
+    intercept_loaders (env.package)
 
     -- temporarily switch to the environment package context.
     local save = {
@@ -216,7 +231,7 @@ end
 function run_examples (state, examples, descriptions, env)
   local block = function (example, blockenv)
     local keepgoing = true
-    local fenv = util.deepcopy (blockenv)
+    local fenv = deepcopy (blockenv)
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
@@ -238,11 +253,11 @@ function run_examples (state, examples, descriptions, env)
       if type (definition) == "function" then
 	local example = { example = definition, line = line or "unknown" }
 
-        table.insert (descriptions, description)
+        table_insert (descriptions, description)
 	if run_example (state, example, descriptions, fenv) == false then
           keepgoing = false
 	end
-	table.remove (descriptions)
+	table_remove (descriptions)
 
       elseif type (definition) == "table" then
 	local examples = {}
@@ -251,11 +266,11 @@ function run_examples (state, examples, descriptions, env)
 	  examples[i] = { [k] = { example = v, line = line or "unknown" } }
 	end
 
-        table.insert (descriptions, (description))
+        table_insert (descriptions, (description))
         if run_examples (state, examples, descriptions, fenv) == false then
           keepgoing = false
         end
-	table.remove (descriptions)
+	table_remove (descriptions)
 
       end
 
@@ -275,11 +290,11 @@ function run_examples (state, examples, descriptions, env)
 
     if definition.example then
       -- An example, execute it.
-      table.insert (descriptions, description)
+      table_insert (descriptions, description)
       if run_example (state, definition, descriptions, fenv) == false then
 	keepgoing = false
       end
-      table.remove (descriptions)
+      table_remove (descriptions)
     else
       -- A nested context, revert back to run_contexts.
       if run_contexts (state, example, descriptions, fenv) == false then
@@ -310,10 +325,10 @@ end
 function run_contexts (state, contexts, descriptions, env)
   local formatter = state.opts.formatter
   for description, examples in pairs (contexts) do
-    table.insert (descriptions, description)
+    table_insert (descriptions, description)
     state:accumulator (formatter.spec (descriptions, state.opts))
     local status = run_examples (state, examples, descriptions, env)
-    table.remove (descriptions)
+    table_remove (descriptions)
 
     -- Return false immediately for a failed expectation if --fail-fast
     -- was given.
