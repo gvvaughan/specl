@@ -16,7 +16,6 @@
 -- from <https://mit-license.org>.
 
 
-local _G		= _G
 local error		= error
 local ipairs		= ipairs
 local load		= load
@@ -82,6 +81,13 @@ local function accumulator (self, arg)
 end
 
 
+local core = {
+  load		= load,
+  loadfile	= loadfile,
+  loadstring	= loadstring,
+}
+
+
 -- Intercept functions that normally execute in the global environment,
 -- and run them in the example block environment to capture side-effects
 -- correctly.
@@ -92,7 +98,7 @@ local function initenv (state, env)
 
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
-      local fn = _G[intercept] (...)
+      local fn = core[intercept] (...)
       return function ()
         setfenv (fn, env)
         return fn ()
