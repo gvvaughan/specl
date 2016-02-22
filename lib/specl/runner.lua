@@ -27,12 +27,12 @@ local loadstring	= loadstring or load
 local next		= next
 local package		= package
 local pairs		= pairs
-local type		= type
 local rawset		= rawset
 local require		= require
 local setfenv		= setfenv or function () end
 local setmetatable	= setmetatable
 local tostring		= tostring
+local type		= type
 
 local table_insert	= table.insert
 local table_remove	= table.remove
