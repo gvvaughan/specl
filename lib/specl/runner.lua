@@ -46,7 +46,7 @@ local _	= {
 }
 
 local _ENV		= {}
-setfenv (2, _ENV)
+setfenv (1, _ENV)
 
 local deepcopy		= _.util.deepcopy
 local examplename	= _.util.examplename
