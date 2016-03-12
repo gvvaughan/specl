@@ -59,6 +59,11 @@ local split		= _.std.string.split
 _ = nil
 
 
+-- Forward declarations
+local run_example, run_examples, run_contexts, run
+
+
+
 --[[ ================= ]]--
 --[[ Helper Functions. ]]--
 --[[ ================= ]]--
@@ -172,6 +177,14 @@ local function initenv (state, env)
       save.cpath, save.path, save.loaders
     return package.loaded[m]
   end
+
+  env.expect = function (...)
+    return matchers.expect (state, ...)
+  end
+
+  env.pending = function (...)
+    return matchers.pending (state, ...)
+  end
 end
 
 
@@ -179,9 +192,6 @@ end
 --[[ ============= ]]--
 --[[ Spec' Runner. ]]--
 --[[ ============= ]]--
-
-
-local run_example, run_examples, run_contexts, run
 
 
 -- Execute an example in a clean new sub-environment; as long as there
@@ -235,49 +245,41 @@ end
 
 -- Run each of EXAMPLES under ENV in order.
 function run_examples (state, examples, descriptions, env)
-  local block = function (example, blockenv)
+  local before = examples.before
+  local after = examples.after
+
+  for _, example in ipairs (examples) do
     local keepgoing = true
-    local fenv = deepcopy (blockenv)
+    local fenv = deepcopy (env)
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
     local line = definition.line
 
-    fenv.expect = function (...)
-      return matchers.expect (state, ...)
-    end
-    setfenv (fenv.expect, fenv)
-
-    fenv.pending = function (...)
-      return matchers.pending (state, ...)
-    end
-    setfenv (fenv.pending, fenv)
-
     fenv.examples = function (t)
       -- FIXME: robust argument type-checking!
       local description, definition = next (t)
       if type (definition) == "function" then
-	local example = { example = definition, line = line or "unknown" }
+        local example = { example = definition, line = line or "unknown" }
 
         table_insert (descriptions, description)
-	if run_example (state, example, descriptions, fenv) == false then
+        if run_example (state, example, descriptions, fenv) == false then
           keepgoing = false
-	end
-	table_remove (descriptions)
+        end
+        table_remove (descriptions)
 
       elseif type (definition) == "table" then
-	local examples = {}
-	for i, example in ipairs (definition) do
-	  k, v = next (example)
-	  examples[i] = { [k] = { example = v, line = line or "unknown" } }
-	end
+        local examples = {}
+        for i, example in ipairs (definition) do
+          k, v = next (example)
+          examples[i] = { [k] = { example = v, line = line or "unknown" } }
+        end
 
         table_insert (descriptions, (description))
         if run_examples (state, examples, descriptions, fenv) == false then
           keepgoing = false
         end
-	table_remove (descriptions)
-
+        table_remove (descriptions)
       end
 
       -- Make sure we don't leak status into the calling or following
@@ -285,13 +287,12 @@ function run_examples (state, examples, descriptions, env)
       -- `run_examples`.
       matchers.init (state)
     end
-    setfenv (fenv.examples, fenv)
 
     initenv (state, fenv)
 
-    if examples.before ~= nil then
-      setfenv (examples.before.example, fenv)
-      examples.before.example ()
+    if before ~= nil then
+      setfenv (before.example, fenv)
+      before.example ()
     end
 
     if definition.example then
@@ -308,21 +309,13 @@ function run_examples (state, examples, descriptions, env)
       end
     end
 
-    if examples.after ~= nil then
-      setfenv (examples.after.example, fenv)
-      examples.after.example ()
+    if after ~= nil then
+      setfenv (after.example, fenv)
+      after.example ()
     end
 
     -- Now after's have executed, return false for --fail-fast.
     if keepgoing == false then return false end
-  end
-
-  for _, example in ipairs (examples) do
-    setfenv (block, env)
-    if block (example, env) == false then
-      -- Return false immediately for --fail-fast.
-      return false
-    end
   end
 end
 
