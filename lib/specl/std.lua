@@ -67,6 +67,64 @@ local function keysort (a, b)
 end
 
 
+local function opairs (t)
+  local keys, i = {}, 0
+  for k in pairs (t) do keys[#keys + 1] = k end
+  table.sort (keys, keysort)
+
+  local _, _t = pairs (t)
+  return function (t)
+    i = i + 1
+    local k = keys[i]
+    if k ~= nil then
+      return k, t[k]
+    end
+  end, _t, nil
+end
+
+
+local function getmetamethod (x, n)
+  local m = (getmetatable (x) or {})[n]
+  if type (m) == "function" then return m end
+  if type ((getmetatable (m) or {}).__call) == "function" then return m end
+end
+
+
+local function str (x, roots)
+  roots = roots or {}
+
+  local function stop_roots (x)
+    return roots[x] or str (x, copy (roots))
+  end
+
+  if type (x) ~= "table" or getmetamethod (x, "__tostring") then
+    return tostring (x)
+
+  else
+    local buf = {"{"}				-- pre-buffer table open
+    roots[x] = tostring (x)			-- recursion protection
+
+    local kp, vp				-- previous key and value
+    for k, v in opairs (x) do
+      if kp ~= nil and k ~= nil then
+        -- semi-colon separator after sequence values, or else comma separator
+	buf[#buf + 1] = type (kp) == "number" and k ~= kp + 1 and "; " or ", "
+      end
+      if k == 1 or type (k) == "number" and k -1 == kp then
+	-- no key for sequence values
+	buf[#buf + 1] = stop_roots (v)
+      else
+	buf[#buf + 1] = stop_roots (k) .. "=" .. stop_roots (v)
+      end
+      kp, vp = k, v
+    end
+    buf[#buf + 1] = "}"				-- buffer << table close
+
+    return table.concat (buf)			-- stringify buffer
+  end
+end
+
+
 local function render (x, elem, roots)
   roots = roots or {}
 
@@ -126,10 +184,7 @@ M.operator = {
 }
 
 
-function M.string.tostring (x)
-  return render (x, tostring)
-end
-
+M.string.tostring = str
 
 M.tostring = M.string.tostring
 

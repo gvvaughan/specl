@@ -55,7 +55,7 @@ describe custom formatters:
         "function (t) return {[1] = table.concat (t, '>'), [2] = t[#t]} end",
         yaml = yaml,
       }
-      expect (spawn_specl (cmd)).to_contain_output "{1=dummy,2=dummy}"
+      expect (spawn_specl (cmd)).to_contain_output "{dummy, dummy}"
   - it will collect expectations return table keys:
       cmd = formatter { expectations =
         "function (_, t)\n" ..
@@ -64,4 +64,4 @@ describe custom formatters:
         yaml = yaml,
       }
       expect (spawn_specl (cmd)).
-        to_contain_output "{1=dummy>1;dummy>2;dummy>3;,2=123}"
+        to_contain_output "{dummy>1;dummy>2;dummy>3;, 123}"

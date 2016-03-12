@@ -93,7 +93,7 @@ describe matcher:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('str').to_equal {'table'}"
       expect (run_spec (yaml)).
-        to_contain_output 'expecting {1=table}, but got "str"'
+        to_contain_output 'expecting {table}, but got "str"'
   - it displays all expected and actual output for all_of failures:
       yaml = preamble .. "('str').to_equal.all_of {'table', 'number'}"
       expect (run_spec (yaml)).
@@ -216,7 +216,7 @@ describe matcher:
   - it displays expected and actual output for failures:
       yaml = preamble .. "('str').to_copy {'table'}"
       expect (run_spec (yaml)).
-        to_contain_output 'expecting a copy of {1=table}, but got "str"'
+        to_contain_output 'expecting a copy of {table}, but got "str"'
   - it displays all expected and actual output for all_of failures:
       yaml = preamble .. "('str').to_copy.all_of {'table', 'number'}"
       expect (run_spec (yaml)).
