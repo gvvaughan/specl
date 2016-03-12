@@ -19,7 +19,7 @@ dnl along with this program.  If not, see <http://www.gnu.org/licenses/>.
 AC_PREREQ([2.68])
 
 dnl Initialise autoconf and automake
-AC_INIT([Specl], [14.1.6], [http://github.com/gvvaughan/specl/issues])
+AC_INIT([Specl], [14.1.7], [http://github.com/gvvaughan/specl/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
