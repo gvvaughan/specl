@@ -25,8 +25,8 @@ local object, optparse = std.object, std.optparse
 local map = std.functional.map
 local slurp = std.io.slurp
 local clone, merge = std.table.clone, std.table.merge
-local files, gettimeofday, have_posix =
-  util.files, util.gettimeofday, util.have_posix
+local deepcopy, files, gettimeofday, have_posix =
+  util.deepcopy, util.files, util.gettimeofday, util.have_posix
 local optspec = version.optspec
 
 
@@ -34,13 +34,7 @@ local Object = object {}
 
 -- Make a shallow copy of the pristine global environment, so that the
 -- future state of the Specl environment is not exposed to spec files.
-local global = { package = { loaded = {} } }
-global._G = global
-for k, v in pairs (package) do global.package[k] = global.package[k] or v end
-for k, v in pairs (_G) do global[k] = global[k] or v end
-for k, v in pairs (package.loaded) do
-  global.package.loaded[k] = global[k]
-end
+local global = deepcopy (_G)
 
 
 -- optparse opt handler for `-f, --formatter=FILE`.
@@ -198,7 +192,7 @@ return Object {
     self.specs   = {}
 
     -- Outermost execution environment.
-    self.sandbox = merge (clone (global), env or {})
+    self.sandbox = merge (deepcopy (global), env or {})
 
     -- Expectation statistics.
     self.stats = {
