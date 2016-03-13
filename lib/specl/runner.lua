@@ -98,10 +98,6 @@ local core = {
 -- and run them in the example block environment to capture side-effects
 -- correctly.
 local function initenv (state, env)
-  -- Don't let _G (or _ENV) assignments leak into outer tables.
-  rawset (env, "_G", env)
-  if rawget (env, "_ENV") then rawset (env, "_ENV", env) end
-
   for _, intercept in pairs { "load", "loadfile", "loadstring" } do
     env[intercept] = function (...)
       local fn = core[intercept] (...)
