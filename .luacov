@@ -38,6 +38,7 @@ return {
     "lib/specl/main$",
     "lib/specl/matchers$",
     "lib/specl/runner$",
+    "lib/specl/sandbox$",
     "lib/specl/shell$",
     "lib/specl/std$",
     "lib/specl/util$",

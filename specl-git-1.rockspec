@@ -37,6 +37,7 @@ build = {
     ["specl.main"]		= "lib/specl/main.lua",
     ["specl.matchers"]		= "lib/specl/matchers.lua",
     ["specl.runner"]		= "lib/specl/runner.lua",
+    ["specl.sandbox"]		= "lib/specl/sandbox.lua",
     ["specl.shell"]		= "lib/specl/shell.lua",
     ["specl.std"]		= "lib/specl/std.lua",
     ["specl.util"]		= "lib/specl/util.lua",

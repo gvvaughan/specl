@@ -18,6 +18,7 @@ SOURCES =				\
 	$(luadir)/main.lua		\
 	$(luadir)/matchers.lua		\
 	$(luadir)/runner.lua		\
+	$(luadir)/sandbox.lua		\
 	$(luadir)/shell.lua		\
 	$(luadir)/std.lua		\
 	$(luadir)/util.lua		\
