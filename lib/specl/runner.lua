@@ -37,6 +37,7 @@ local table_remove	= table.remove
 
 local expect		= require "specl.expect"
 local matchers		= require "specl.matchers"
+local sandbox		= require "specl.sandbox"
 
 local _	= {
   compat		= require "specl.compat",
@@ -175,14 +176,6 @@ local function initenv (state, env)
     package.cpath, package.path, package.loaders =
       save.cpath, save.path, save.loaders
     return package.loaded[m]
-  end
-
-  env.expect = function (...)
-    return expect.expect (state, ...)
-  end
-
-  env.pending = function (...)
-    return expect.pending (state, ...)
   end
 end
 
@@ -339,6 +332,9 @@ function run (state)
   state.sidefx = {}
   state.accumulator = accumulator -- so we can pass self with ':'
   state.accumulated = nil
+
+  -- Outermost execution environment.
+  state.sandbox = sandbox (state)
 
   -- Run compiled specs, in order.
   state:accumulator (formatter.header (state.stats, state.opts))

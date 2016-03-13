@@ -18,13 +18,20 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-local std     = require "specl.std"
+local expect	= require "specl.expect"
+local std	= require "specl.std"
+local util	= require "specl.util"
 
-local clone = std.table.clone
+local clone, merge = std.table.clone, std.table.merge
+local deepcopy = util.deepcopy
 
 
--- Make a shallow copy of the pristine global environment, so that the
--- future state of the Specl environment is not exposed to spec files.
+
+--[[ ====================================== ]]--
+--[[ Set up the bare outermost environment. ]]--
+--[[ ====================================== ]]--
+
+
 local sandbox = {
   _VERSION	= _VERSION,
   arg		= clone (arg),
@@ -183,4 +190,41 @@ sandbox.package.loaded = {
 }
 
 
-return sandbox
+
+--[[ ========================================== ]]--
+--[[ Initialize a copy of the bare environment. ]]--
+--[[ ========================================== ]]--
+
+
+local matchers = require "specl.matchers"
+
+
+local function initenv (state)
+  local new = deepcopy (sandbox)
+
+  -- Add closures to sandbox.
+  state.env.expect = function (...)
+    return expect.expect (state, ...)
+  end
+
+  state.env.pending = function (...)
+    return expect.pending (state, ...)
+  end
+
+  return merge (new, state.env)
+end
+
+
+
+--[[ ================= ]]--
+--[[ Public Interface. ]]--
+--[[ ================= ]]--
+
+
+-- Would be nice to make this into a std.object.Object, but that would
+-- pollute the sandbox with a metatable and extra fields we don't want.
+return setmetatable (sandbox, {
+  __call = function (self, state)
+     return initenv (state)
+  end,
+})
