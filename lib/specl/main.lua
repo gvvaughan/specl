@@ -20,6 +20,7 @@
 
 local loader  = require "specl.loader"
 local runner  = require "specl.runner"
+local sandbox = require "specl.sandbox"
 local std     = require "specl.std"
 local util    = require "specl.util"
 local version = require "specl.version"
@@ -34,10 +35,6 @@ local optspec = version.optspec
 
 
 local Object = object {}
-
--- Make a shallow copy of the pristine global environment, so that the
--- future state of the Specl environment is not exposed to spec files.
-local global = deepcopy (_G)
 
 
 -- optparse opt handler for `-f, --formatter=FILE`.
@@ -195,7 +192,7 @@ return Object {
     self.specs   = {}
 
     -- Outermost execution environment.
-    self.sandbox = merge (deepcopy (global), env or {})
+    self.sandbox = merge (deepcopy (sandbox), env or {})
 
     -- Expectation statistics.
     self.stats = {
