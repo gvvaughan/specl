@@ -20,7 +20,6 @@
 
 local loader  = require "specl.loader"
 local runner  = require "specl.runner"
-local sandbox = require "specl.sandbox"
 local std     = require "specl.std"
 local util    = require "specl.util"
 local version = require "specl.version"
@@ -180,19 +179,17 @@ return Object {
   -- Allow test harness to hijack io and os functions so that it can be
   -- safely executed in-process.
   _init = function (self, arg, env)
-    self.arg     = arg
+    self.arg	= arg
+    self.env	= env or {}
 
     -- Option defaults.
-    self.opts    = {
-      color      = true,
-      formatter  = require "specl.formatter.progress",
+    self.opts	= {
+      color	= true,
+      formatter	= require "specl.formatter.progress",
     }
 
     -- Collect compiled specs here.
-    self.specs   = {}
-
-    -- Outermost execution environment.
-    self.sandbox = merge (deepcopy (sandbox), env or {})
+    self.specs	= {}
 
     -- Expectation statistics.
     self.stats = {
