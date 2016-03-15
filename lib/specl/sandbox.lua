@@ -16,12 +16,10 @@
 -- from <https://mit-license.org>.
 
 
-local compat	= require "specl.compat"
 local expect	= require "specl.expect"
 local std	= require "specl.std"
 local util	= require "specl.util"
 
-local intercept_loaders = compat.intercept_loaders
 local getfenv, setfenv = std.debug.getfenv, std.debug.setfenv
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy = util.deepcopy
@@ -254,9 +252,6 @@ local function inner_closures (env, state)
   -- examples that load it.
   env.require = function (m)
     local errmsg, import, loaded, loadfn
-
-    intercept_loaders (package)
-    intercept_loaders (env.package)
 
     -- temporarily switch to the environment package context.
     local save = {
