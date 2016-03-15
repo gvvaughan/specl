@@ -16,10 +16,12 @@
 -- from <https://mit-license.org>.
 
 
+local compat	= require "specl.compat"
 local expect	= require "specl.expect"
 local std	= require "specl.std"
 local util	= require "specl.util"
 
+local load = compat.load
 local getfenv, setfenv = std.debug.getfenv, std.debug.setfenv
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy = util.deepcopy
@@ -29,18 +31,6 @@ local deepcopy = util.deepcopy
 --[[ ====================================== ]]--
 --[[ Set up the bare outermost environment. ]]--
 --[[ ====================================== ]]--
-
-
-local load = load
-if not pcall (load, "_=1") then
-  local loadfunction = load
-  load = function (...)
-    if type (...) == "string" then
-      return loadstring (...)
-    end
-    return loadfunction (...)
-  end
-end
 
 
 local sandbox = {

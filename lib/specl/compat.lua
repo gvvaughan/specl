@@ -16,8 +16,16 @@
 -- from <https://mit-license.org>.
 
 
-local loadstring = loadstring or function (chunk, chunkname)
-  return load (chunk, chunkname)
+-- Lua 5.1 load implementation does not handle string argument.
+local load = load
+if not pcall (load, "_=1") then
+  local loadfunction = load
+  load = function (...)
+    if type (...) == "string" then
+      return loadstring (...)
+    end
+    return loadfunction (...)
+  end
 end
 
 
@@ -43,6 +51,6 @@ end
 --[[ ----------------- ]]--
 
 return {
-  loadstring        = loadstring,
-  xpcall            = xpcall,
+  load		= load,
+  xpcall	= xpcall,
 }
