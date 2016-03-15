@@ -44,6 +44,13 @@
     expect (10).to_be.within (2.5).of (12)
     ```
 
+  - `load` and `loadfile` in example code will honor the `env`
+    argument now, in any supported host Lua implementation.
+    `mode` is still unsupported, however.
+
+  - Much simplified example environment setup resulting in 30% speedup
+    with typical spec-files.
+
   - Preliminary LDocs for Specl APIs useful for writing Matchers,
     expectations and spec_helper.lua.
 
@@ -57,6 +64,9 @@
     the use of square brackets for omittable arguments, and ellipsis for
     type of additional arguments rather than `*`.  See LDocs for more
     details.
+
+  - `loadstring` is not supported in example code, use `load`
+    instead.
 
 
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]

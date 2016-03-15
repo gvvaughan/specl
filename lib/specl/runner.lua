@@ -18,14 +18,9 @@
 
 local error		= error
 local ipairs		= ipairs
-local load		= load
-local loadfile		= loadfile
-local loadstring	= loadstring or load
 local next		= next
 local package		= package
 local pairs		= pairs
-local rawget		= rawget
-local rawset		= rawset
 local require		= require
 local setfenv		= setfenv or function () end
 local setmetatable	= setmetatable
@@ -40,7 +35,6 @@ local matchers		= require "specl.matchers"
 local sandbox		= require "specl.sandbox"
 
 local _	= {
-  compat		= require "specl.compat",
   std			= require "specl.std",
   util			= require "specl.util",
 }
@@ -50,7 +44,6 @@ setfenv (1, _ENV)
 
 local deepcopy		= _.util.deepcopy
 local examplename	= _.util.examplename
-local intercept_loaders	= _.compat.intercept_loaders
 local merge		= _.std.table.merge
 local setfenv		= _.std.debug.setfenv
 local slurp		= _.std.io.slurp
@@ -85,96 +78,6 @@ local function accumulator (self, arg)
     end
   end
 end
-
-
-local core = {
-  load		= load,
-  loadfile	= loadfile,
-  loadstring	= loadstring,
-}
-
-
--- Intercept functions that normally execute in the global environment,
--- and run them in the example block environment to capture side-effects
--- correctly.
-local function initenv (state, env)
-  for _, intercept in pairs { "load", "loadfile", "loadstring" } do
-    env[intercept] = function (...)
-      local fn = core[intercept] (...)
-      return function ()
-        setfenv (fn, env)
-        return fn ()
-      end
-    end
-  end
-
-  -- For a not-yet-{pre,}loaded module, try to find it on the
-  -- environment `package.path` using the system loaders, and cache any
-  -- symbols that leak out (the side effects). Copy any leaked symbols
-  -- into the example block environment, for this and subsequent
-  -- examples that load it.
-  env.require = function (m)
-    local errmsg, import, loaded, loadfn
-
-    intercept_loaders (package)
-    intercept_loaders (env.package)
-
-    -- temporarily switch to the environment package context.
-    local save = {
-      cpath = package.cpath, path = package.path, loaders = package.loaders,
-    }
-    package.cpath, package.path, package.loaders =
-      env.package.cpath, env.package.path, env.package.loaders
-
-    -- We can have a spec_helper.lua in each spec directory, so don't
-    -- cache the side effects of a random one!
-    if m ~= "spec_helper" then
-      loaded, loadfn = package.loaded[m], package.preload[m]
-      import = state.sidefx[m]
-    end
-
-    if import == nil and loaded == nil then
-      -- No side effects cached; find a loader function.
-      if loadfn == nil then
-        errmsg = ""
-        for _, loader in ipairs (package.loaders) do
-	  loadfn = loader (m)
-	  if type (loadfn) == "function" then
-            break
-	  end
-	  errmsg = errmsg .. (loadfn and tostring (loadfn) or "")
-        end
-      end
-      if type (loadfn) ~= "function" then
-        package.path, package.cpath = save.path, save.cpath
-        return error (errmsg)
-      end
-
-      -- Capture side effects.
-      if loadfn ~= nil then
-        import = setmetatable ({}, {__index = env})
-        setfenv (loadfn, import)
-        loaded = loadfn ()
-      end
-    end
-
-    -- Import side effects into example block environment.
-    for name, value in pairs (import or {}) do
-      env[name] = value
-    end
-
-    -- A map of module name to global symbol side effects.
-    -- We keep track of these so that they can be injected into an
-    -- execution environment that requires a module.
-    state.sidefx[m] = import
-    package.loaded[m] = package.loaded[m] or loaded or nil
-
-    package.cpath, package.path, package.loaders =
-      save.cpath, save.path, save.loaders
-    return package.loaded[m]
-  end
-end
-
 
 
 --[[ ============= ]]--
@@ -235,7 +138,7 @@ function run_examples (state, examples, descriptions, env)
 
   for _, example in ipairs (examples) do
     local keepgoing = true
-    local fenv = deepcopy (env)
+    local fenv = sandbox.inner (state, env)
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
@@ -272,8 +175,6 @@ function run_examples (state, examples, descriptions, env)
       -- `run_examples`.
       expect.init (state)
     end
-
-    initenv (state, fenv)
 
     if before ~= nil then
       setfenv (before.example, fenv)
@@ -330,7 +231,7 @@ function run (state)
   state.accumulated = nil
 
   -- Outermost execution environment.
-  state.sandbox = sandbox (state)
+  state.sandbox = sandbox.new (state, state.env)
 
   -- Run compiled specs, in order.
   state:accumulator (formatter.header (state.stats, state.opts))
