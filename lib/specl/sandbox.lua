@@ -34,6 +34,18 @@ local deepcopy = util.deepcopy
 --[[ ====================================== ]]--
 
 
+local load = load
+if not pcall (load, "_=1") then
+  local loadfunction = load
+  load = function (...)
+    if type (...) == "string" then
+      return loadstring (...)
+    end
+    return loadfunction (...)
+  end
+end
+
+
 local sandbox = {
   _VERSION	= _VERSION,
   arg		= clone (arg),
@@ -87,7 +99,6 @@ local sandbox = {
   ipairs	= ipairs,
   load		= load,
   loadfile	= loadfile,
-  loadstring	= loadstring,
   math = {
     abs		= math.abs,
     acos	= math.acos,
