@@ -22,7 +22,7 @@ local compat	= require "specl.compat"
 local std	= require "specl.std"
 local util	= require "specl.util"
 
-local getfenv, setfenv = compat.getfenv, compat.setfenv
+local getfenv, load, setfenv = compat.getfenv, compat.load, compat.setfenv
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy = util.deepcopy
 
@@ -31,18 +31,6 @@ local deepcopy = util.deepcopy
 --[[ ====================================== ]]--
 --[[ Set up the bare outermost environment. ]]--
 --[[ ====================================== ]]--
-
-
-local load = load
-if not pcall (load, "_=1") then
-  local loadfunction = load
-  load = function (...)
-    if type (...) == "string" then
-      return loadstring (...)
-    end
-    return loadfunction (...)
-  end
-end
 
 
 local sandbox = {

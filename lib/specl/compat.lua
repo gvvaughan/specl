@@ -19,6 +19,20 @@
 -- MA 02111-1301, USA.
 
 
+
+-- Lua 5.1 load implementation does not handle string argument.
+local load = load
+if not pcall (load, "_=1") then
+  local loadfunction = load
+  load = function (...)
+    if type (...) == "string" then
+      return loadstring (...)
+    end
+    return loadfunction (...)
+  end
+end
+
+
 -- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs.
 local _setfenv = debug.setfenv
 
@@ -64,11 +78,6 @@ local getfenv = getfenv or function (fn)
 end
 
 
-local loadstring = loadstring or function (chunk, chunkname)
-  return load (chunk, chunkname)
-end
-
-
 -- Lua 5.3 has table.unpack but not _G.unpack;
 -- Lua 5.2 has both table.unpack and _G.unpack;
 -- Lua 5.1 has _G.unpack but not table.unpack!
@@ -96,9 +105,9 @@ end
 --[[ ----------------- ]]--
 
 return {
-  getfenv           = getfenv,
-  loadstring        = loadstring,
-  setfenv           = setfenv,
-  unpack            = unpack,
-  xpcall            = xpcall,
+  getfenv	= getfenv,
+  load		= load,
+  setfenv	= setfenv,
+  unpack	= unpack,
+  xpcall	= xpcall,
 }

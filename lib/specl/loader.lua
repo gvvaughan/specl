@@ -26,7 +26,7 @@ local compat = require "specl.compat"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
-local loadstring = compat.loadstring
+local load = compat.load
 local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
 local dirsep, normalize, pathsep, path_mark =
   std.package.dirsep, std.package.normalize, std.package.pathsep, std.package.path_mark
@@ -83,9 +83,9 @@ local function expandmacros (name)
       else
 
 	-- ...and macro substituted...
-        local loadfn, err = loadstring (content, name)
+        local loadfn, err = load (content, name)
         if type (loadfn) ~= "function" then
-         errbuf[#errbuf + 1] = "\tloadstring '" .. path .. "' failed: " .. err
+         errbuf[#errbuf + 1] = "\tload '" .. path .. "' failed: " .. err
         else
 
           -- ...and successfully loaded! Return it!
@@ -124,7 +124,7 @@ local parser_mt = {
         errmsg = string.format ("%s:%d: parse error near 'expect', while collecting arguments",
 	                        self.filename, self.mark.line)
       else
-        f, errmsg = loadstring (f)
+        f, errmsg = load (f)
       end
       if f == nil then
         local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
