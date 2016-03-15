@@ -18,9 +18,12 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+local compat	= require "specl.compat"
 local std	= require "specl.std"
 local util	= require "specl.util"
 
+local getfenv, intercept_loaders, setfenv =
+  compat.getfenv, compat.intercept_loaders, compat.setfenv
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy = util.deepcopy
 
@@ -63,6 +66,7 @@ local sandbox = {
   },
   dofile	= dofile,
   error		= error,
+  getfenv	= getfenv,
   getmetatable	= getmetatable,
   io = {
     close	= io.close,
@@ -144,6 +148,7 @@ local sandbox = {
   rawset	= rawset,
   require	= require,
   select	= select,
+  setfenv	= setfenv,
   setmetatable	= setmetatable,
   string = {
     byte	= string.byte,
@@ -198,19 +203,107 @@ sandbox.package.loaded = {
 local matchers = require "specl.matchers"
 
 
-local function initenv (state)
-  local new = deepcopy (sandbox)
-
+local function root_closures (root_env, state)
   -- Add closures to sandbox.
-  state.env.expect = function (...)
+  root_env.expect = function (...)
     return matchers.expect (state, ...)
   end
 
-  state.env.pending = function (...)
+  root_env.pending = function (...)
     return matchers.pending (state, ...)
   end
 
-  return merge (new, state.env)
+  return root_env
+end
+
+
+-- Intercept functions that normally execute in the global environment,
+-- and run them in the example block environment to capture side-effects
+-- correctly.
+local function inner_closures (env, state)
+  env.load = function (ld, source, _, fenv)
+    local fn = load (ld, source)
+    return function ()
+      setfenv (fn, fenv or env)
+      return fn ()
+    end
+  end
+
+  env.loadfile = function (filename, _, fenv)
+    local fn = loadfile (filename)
+    return function ()
+      setfenv (fn, fenv or env)
+      return fn ()
+    end
+  end
+
+  -- For a not-yet-{pre,}loaded module, try to find it on the
+  -- environment `package.path` using the system loaders, and cache any
+  -- symbols that leak out (the side effects). Copy any leaked symbols
+  -- into the example block environment, for this and subsequent
+  -- examples that load it.
+  env.require = function (m)
+    local errmsg, import, loaded, loadfn
+
+    intercept_loaders (package)
+    intercept_loaders (env.package)
+
+    -- temporarily switch to the environment package context.
+    local save = {
+      cpath = package.cpath, path = package.path, loaders = package.loaders,
+    }
+    package.cpath, package.path, package.loaders =
+      env.package.cpath, env.package.path, env.package.loaders
+
+    -- We can have a spec_helper.lua in each spec directory, so don't
+    -- cache the side effects of a random one!
+    if m ~= "spec_helper" then
+      loaded, loadfn = package.loaded[m], package.preload[m]
+      import = state.sidefx[m]
+    end
+
+    if import == nil and loaded == nil then
+      -- No side effects cached; find a loader function.
+      if loadfn == nil then
+        errmsg = ""
+        for _, loader in ipairs (package.loaders) do
+	  loadfn = loader (m)
+	  if type (loadfn) == "function" then
+            break
+	  end
+	  errmsg = errmsg .. (loadfn and tostring (loadfn) or "")
+        end
+      end
+      if type (loadfn) ~= "function" then
+        package.path, package.cpath = save.path, save.cpath
+        return error (errmsg)
+      end
+
+      -- Capture side effects.
+      if loadfn ~= nil then
+        import = setmetatable ({}, {__index = env})
+        setfenv (loadfn, import)
+        loaded = loadfn ()
+      end
+    end
+
+    -- Import side effects into example block environment.
+    for name, value in pairs (import or {}) do
+      env[name] = value
+    end
+
+    -- A map of module name to global symbol side effects.
+    -- We keep track of these so that they can be injected into an
+    -- execution environment that requires a module.
+    state.sidefx[m] = import
+    package.loaded[m] = package.loaded[m] or loaded or nil
+
+    package.cpath, package.path, package.loaders =
+      save.cpath, save.path, save.loaders
+    return package.loaded[m]
+  end
+
+  return env
 end
 
 
@@ -220,10 +313,13 @@ end
 --[[ ================= ]]--
 
 
--- Would be nice to make this into a std.object.Object, but that would
--- pollute the sandbox with a metatable and extra fields we don't want.
-return setmetatable (sandbox, {
-  __call = function (self, state)
-     return initenv (state)
+return {
+  inner = function (state, source_env)
+    return inner_closures (deepcopy (source_env), state)
   end,
-})
+
+  new = function (state, caller_env)
+    local root_env = root_closures (deepcopy (sandbox), state)
+    return merge (root_env, caller_env)
+  end,
+}

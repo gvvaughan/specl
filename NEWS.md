@@ -2,8 +2,19 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features:
 
-## Noteworthy changes in release 14.1.7 (2016-03-12) [stable]
+  - `load` and `loadfile` in example code will honor the `env`
+    argument now, in any supported host Lua implementation.
+    `mode` is still unsupported, however.
+
+  - Much simplified example environment setup resulting in 30% speedup
+    with typical spec-files.
+
+### Incompatible changes:
+
+  - `loadstring` is not supported in example code, use `load`
+    instead.
 
 
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
