@@ -19,43 +19,6 @@
 -- MA 02111-1301, USA.
 
 
--- Lua 5.3 has renamed package.loaders to package.searchers, so set a
--- metatable to make sure assignments and references go to the right
--- one.
-local package_mt = {
-  -- These methods only trigger when the referenced key is missing,
-  -- so when the client code references the wrong entry, the methods
-  -- trigger, and we retarget the key that is present.
-  __index = function (self, k)
-    if k == "loaders" then
-      return self.searchers
-    elseif k == "searchers" then
-      return self.loaders
-    end
-  end,
-
-  __newindex = function (self, k, v)
-    if k == "loaders" then
-      k = "searchers"
-    elseif k == "searchers" then
-      k = "loaders"
-    end
-    return rawset (self, k, v)
-  end,
-}
-
-local function intercept_loaders (t)
-  -- If it's already set, we're done.
-  if getmetatable (t) ~= package_mt then
-    -- Avoid infinite loops when neither key is present!
-    if t.searchers ~= nil or t.loaders ~= nil then
-      setmetatable (t, package_mt)
-    end
-  end
-  return t
-end
-
-
 -- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs.
 local _setfenv = debug.setfenv
 
@@ -134,7 +97,6 @@ end
 
 return {
   getfenv           = getfenv,
-  intercept_loaders = intercept_loaders,
   loadstring        = loadstring,
   setfenv           = setfenv,
   unpack            = unpack,

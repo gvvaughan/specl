@@ -325,9 +325,6 @@ local function Parser (filename, s, opts)
 
     -- Used to simplify requiring from the spec file directory.
     preamble = string.format ([[
-      local compat = require "specl.compat"
-      compat.intercept_loaders (package)
-
       package.path = "%s"
 
       -- Expand macros in spec_helper.

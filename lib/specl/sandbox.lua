@@ -22,8 +22,7 @@ local compat	= require "specl.compat"
 local std	= require "specl.std"
 local util	= require "specl.util"
 
-local getfenv, intercept_loaders, setfenv =
-  compat.getfenv, compat.intercept_loaders, compat.setfenv
+local getfenv, setfenv = compat.getfenv, compat.setfenv
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy = util.deepcopy
 
@@ -255,9 +254,6 @@ local function inner_closures (env, state)
   -- examples that load it.
   env.require = function (m)
     local errmsg, import, loaded, loadfn
-
-    intercept_loaders (package)
-    intercept_loaders (env.package)
 
     -- temporarily switch to the environment package context.
     local save = {
