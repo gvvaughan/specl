@@ -37,26 +37,30 @@ end
 local _setfenv = debug.setfenv
 
 
-local function setfenv (f, t)
+local function setfenv (fn, t)
   -- Unwrap functable:
-  if type (f) == "table" then
-    f = f.call or (getmetatable (f) or {}).__call
+  if type (fn) == "table" then
+    fn = fn.call or (getmetatable (fn) or {}).__call
   end
 
   if _setfenv then
-    return _setfenv (f, t)
+    return _setfenv (fn, t)
 
   else
+    if type (fn) == "number" then
+      fn = debug.getinfo (fn == 0 and 0 or fn + 1, "f").func
+    end
+
     -- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
     local name
     local up = 0
     repeat
       up = up + 1
-      name = debug.getupvalue (f, up)
+      name = debug.getupvalue (fn, up)
     until name == '_ENV' or name == nil
     if name then
-      debug.upvaluejoin (f, up, function () return name end, 1)
-      debug.setupvalue (f, up, t)
+      debug.upvaluejoin (fn, up, function () return name end, 1)
+      debug.setupvalue (fn, up, t)
     end
     return f
   end
@@ -65,7 +69,10 @@ end
 
 local getfenv = getfenv or function (fn)
   fn = fn or 1
-  if type (fn) == "number" then
+  -- Unwrap functable:
+  if type (fn) == "table" then
+    fn = fn.call or (getmetatable (fn) or {}).__call
+  elseif type (fn) == "number" then
     fn = debug.getinfo (fn + 1, "f").func
   end
   local name, env
