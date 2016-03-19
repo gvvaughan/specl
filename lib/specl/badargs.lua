@@ -24,16 +24,37 @@
 ]]
 
 
-local std    = require "specl.std"
-local compat = require "specl.compat"
+local _ = {
+  compat	= require "specl.compat",
+  std		= require "specl.std",
+}
 
-local split  = std.string.split
-local invert = std.table.invert
-local getfenv, setfenv, unpack = compat.getfenv, compat.setfenv, compat.unpack
+local _ENV = {
+  getfenv	= _.compat.getfenv,
+  ipairs	= ipairs,
+  pairs		= pairs,
+  setfenv	= setfenv or function () end,
+  setmetatable	= setmetatable,
+  type		= type,
 
+  STDERR	= io.stderr,
+  INF		= math.huge,
+  format	= string.format,
+  gsub		= string.gsub,
+  match		= string.match,
+  sub		= string.sub,
+  concat	= table.concat,
+  insert	= table.insert,
+  remove	= table.remove,
+  unpack	= table.unpack or unpack,
 
--- Protect against examples misusing or resetting keywords.
-local ipairs, pairs, type = ipairs, pairs, type
+  invert	= _.std.table.invert,
+  split		= _.std.string.split,
+}
+setfenv (1, _ENV)
+local setfenv = _.compat.setfenv
+_ = nil
+
 
 
 --- Return the last element of a list-like table.
@@ -64,9 +85,9 @@ end
 local function normalize (typelist)
   local i, r, add_nil = 1, {}, false
   for _, v in ipairs (typelist) do
-    if v:match "^%?(.+)" then
+    if match (v, "^%?(.+)") then
       add_nil = true
-      v = v:sub (2)
+      v = sub (v, 2)
     end
     v = ({ func = "function", bool = "boolean" })[v] or v
     if not r[v] then
@@ -88,8 +109,8 @@ end
 local function merge (...)
   local i, t = 1, {}
   for _, v in ipairs {...} do
-    if type (v) == "table" then v = table.concat (v, "|") end
-    v:gsub ("([^|]+)", function (m) t[i] = m; i = i + 1 end)
+    if type (v) == "table" then v = concat (v, "|") end
+    gsub (v, "([^|]+)", function (m) t[i] = m; i = i + 1 end)
   end
   return normalize (t)
 end
@@ -109,25 +130,25 @@ local function permutations (typelist)
   for i, v in ipairs (typelist) do
     -- Remove sentinels before appending 'v' to each list.
     for _, v in ipairs (p) do
-      if v[#v] == sentinel then table.remove (v) end
+      if v[#v] == sentinel then remove (v) end
     end
 
-    local opt = v:match "%[(.+)%]"
+    local opt = match (v, "%[(.+)%]")
     if opt == nil then
       -- Append non-optional type-spec to each permutation.
-      for b = 1, #p do table.insert (p[b], v) end
+      for b = 1, #p do insert (p[b], v) end
     else
       -- Duplicate all existing permutations, and add optional type-spec
       -- to the unduplicated permutations.
       local o = #p
       for b = 1, o do
         p[b + o] = copy (p[b])
-	table.insert (p[b], opt)
+	insert (p[b], opt)
       end
 
       -- Leave a marker for optional argument in final position.
       for _, v in ipairs (p) do
-        table.insert (v, sentinel)
+        insert (v, sentinel)
       end
     end
   end
@@ -135,7 +156,7 @@ local function permutations (typelist)
   -- Replace sentinels with "nil".
   for i, v in ipairs (p) do
     if v[#v] == sentinel then
-      table.remove (v)
+      remove (v)
       if #v > 0 then
         v[#v] = v[#v] .. "|nil"
       else
@@ -182,11 +203,11 @@ local function showarg (...)
 
   local t = {}
   for i, argtype in ipairs (argtypes) do
-    local container, things = argtype:match "(%S+) of (%S+)"
+    local container, things = match (argtype, "(%S+) of (%S+)")
     if container ~= nil then argtype = container end
 
-    if argtype:match "^#" then
-      t[i] = argtype:gsub ("#", "non-empty ")
+    if match (argtype, "^#") then
+      t[i] = gsub (argtype, "#", "non-empty ")
     elseif argtype == "nil" then
       t[i] = "nil"
     elseif argtype == "any" then
@@ -200,7 +221,7 @@ local function showarg (...)
     end
   end
 
-  local r = table.concat (t, ", "):gsub (", ([^,]+)$", " or %1")
+  local r = gsub (concat (t, ", "), ", ([^,]+)$", " or %1")
   if r == "nil" then r = "no value" end
   return r
 end
@@ -214,10 +235,10 @@ end
 -- @string[opt="no value"] got actual argument type
 -- @usage
 --   expect (fn ()).to_error (badargs.format (fname, 1, "function"))
-local function format (fname, i, want, field, got)
+local function badargs_format (fname, i, want, field, got)
   if want == nil and field ~= nil then
     local s = "bad argument #%d to '%s' (invalid field name '%s')"
-    return s:format (i, fname, field)
+    return format (s, i, fname, field)
   end
 
   if got == nil then field, got = nil, field end -- field is optional
@@ -225,13 +246,13 @@ local function format (fname, i, want, field, got)
 
   if got == nil and type (want) == "number" then
     local s = "bad argument #%d to '%s' (no more than %d argument%s expected, got %d)"
-    return s:format (i + 1, fname, i, i == 1 and "" or "s", want)
+    return format (s, i + 1, fname, i, i == 1 and "" or "s", want)
   elseif field ~= nil then
     local s = "bad argument #%d to '%s' (%s expected for field '%s', got %s)"
-    return s:format (i, fname, want, field, got or "no value")
+    return format (s, i, fname, want, field, got or "no value")
   end
-  return string.format ("bad argument #%d to '%s' (%s expected, got %s)",
-                        i, fname, showarg (want), got or "no value")
+  return format ("bad argument #%d to '%s' (%s expected, got %s)",
+                 i, fname, showarg (want), got or "no value")
 end
 
 
@@ -263,24 +284,24 @@ local function extendarglist (arglist, i, argtype)
   -- extend with the first valid argument type
   argtype = merge (argtype)[1]
 
-  local container, thing = (argtype or ""):match "(%S+) of (%S+)"
+  local container, thing = match (argtype or "", "(%S+) of (%S+)")
   if container ~= nil then argtype = container end
 
   if argtype == nil then
     arglist[i] = nil
-  elseif argtype:sub (1, 1) == ":" then
+  elseif sub (argtype, 1, 1) == ":" then
     arglist[i] = argtype
   elseif argtype == "any" then
     arglist[i] = ":any"
   elseif argtype == "boolean" then
     arglist[i] = true
   elseif argtype == "file" then
-    arglist[i] = io.stderr
+    arglist[i] = STDERR
   elseif argtype == "func" or argtype == "function" then
     arglist[i] = ipairs
   elseif argtype == "int" then
     arglist[i] = 42
-  elseif argtype:sub (1, 1) == "#" then
+  elseif sub (argtype, 1, 1) == "#" then
     arglist[i] = {}
   elseif argtype == "list" or argtype == "table" then
     arglist[i] = {}
@@ -290,16 +311,16 @@ local function extendarglist (arglist, i, argtype)
     arglist[i] = "foo"
   elseif argtype == "object" then
     arglist[i] = setmetatable ({}, {_type = "Fnord"})
-  elseif argtype:match "^_*[A-Z]" then
+  elseif match (argtype, "^_*[A-Z]") then
     -- Assume an object of type 'argtype' was expected.
     arglist[i] = setmetatable ({}, {_type = argtype})
   end
 
-  if (argtype or ""):sub (1, 1) == "#" then
+  if sub (argtype or "", 1, 1) == "#" then
     thing = thing or "Fnord"
     extendarglist (arglist[i], 1, thing)
     if arglist[i][1] == nil then
-      extendarglist (arglist[i], 1, thing:match "(%S+)s$")
+      extendarglist (arglist[i], 1, match (thing, "(%S+)s$"))
     end
   end
 end
@@ -328,7 +349,7 @@ local function poisonarglist (arglist, i, argtype)
   elseif argtypes["#list"] == nil then
     arglist[i] = {"element"}
   elseif argtypes.file == nil then
-    arglist[i] = io.stderr
+    arglist[i] = STDERR
   elseif argtypes.any == nil then
     arglist[i] = nil
   end
@@ -342,7 +363,7 @@ end
 local function poisoncontainerarglist (arglist, i, argtype)
   local container, thing
   for i, v in ipairs (merge (argtype)) do
-    container, thing = v:match "(%S+) of (%S+)"
+    container, thing = match (v, "(%S+) of (%S+)")
     if container ~= nil then break end
   end
 
@@ -351,11 +372,11 @@ local function poisoncontainerarglist (arglist, i, argtype)
   local poison = setmetatable ({}, { _type = container })
   extendarglist (poison, 1, thing)
   if poison[1] == nil then
-    extendarglist (poison, 1, thing:match "(%S+)s$")
+    extendarglist (poison, 1, match (thing, "(%S+)s$"))
   end
   poisonarglist (poison, 2, thing)
   if poison[2] == nil then
-    poisonarglist (poison, 2, thing:match "(%S+)s$")
+    poisonarglist (poison, 2, match (thing, "(%S+)s$"))
   end
   arglist[i] = poison
   return (container .. " of " .. thing)
@@ -376,24 +397,24 @@ end
 -- @tparam diagnose_decl decl argument type declaration
 local function diagnose (fn, decl)
   -- Parse "fname (argtype, argtype, argtype...)".
-  local fname = (decl:match "^%s*([%w_][%.%d%w_]*)") or "fn"
-  local types = decl:match "%s*%(%s*(.-)%s*%)" or decl
+  local fname = match (decl, "^%s*([%w_][%.%d%w_]*)") or "fn"
+  local types = match (decl, "%s*%(%s*(.-)%s*%)") or decl
   if types == "" then
     types = {}
   elseif types then
     types = split (types, ",%s*")
   end
 
-  local max, fin = #types, (last (types) or ""):match "^(.+)%*$"
+  local max, fin = #types, match (last (types) or "", "^(.+)%*$")
   if fin then
     types[max] = fin
     if fin ~= "any" then types[max + 1] = fin end
-    max = math.huge
+    max = INF
   end
 
   local typemin, type_specs = #types, compact (types)
   for _, v in pairs (types) do
-    if v:match "%[.*%]" then typemin = typemin - 1 end
+    if match (v, "%[.*%]") then typemin = typemin - 1 end
   end
 
   -- Ensure the following functions are executed in the environment that
@@ -407,8 +428,8 @@ local function diagnose (fn, decl)
       examples {
         ["it diagnoses missing argument #" .. tostring (i)] = function ()
           expect (fn (unpack (arglist))).to_raise.any_of {
-	    format ("?", i, argtype),	-- recent LuaJIT
-	    format (fname, i, argtype),	-- PUC-Rio Lua
+	    badargs_format ("?", i, argtype),	-- recent LuaJIT
+	    badargs_format (fname, i, argtype),	-- PUC-Rio Lua
           }
         end
       }
@@ -419,8 +440,8 @@ local function diagnose (fn, decl)
       examples {
 	[diagnose_badarg_description (i, argtype)] = function ()
           expect (fn (unpack (arglist))).to_raise.any_of {
-	    format ("?", i, argtype, showarg (type (arglist[i]))),
-	    format (fname, i, argtype, showarg (type (arglist[i]))),
+	    badargs_format ("?", i, argtype, showarg (type (arglist[i]))),
+	    badargs_format (fname, i, argtype, showarg (type (arglist[i]))),
           }
 	end
       }
@@ -431,8 +452,8 @@ local function diagnose (fn, decl)
 	  ["it diagnoses argument #" .. tostring (i) .. " type not " .. containertype] =
 	    function ()
 	      expect (fn (unpack (arglist))).to_raise.any_of {
-	        s:format (i, "?", containertype, type (arglist[i][2])),
-	        s:format (i, fname, containertype, type (arglist[i][2])),
+	        format (s, i, "?", containertype, type (arglist[i][2])),
+	        format (s, i, fname, containertype, type (arglist[i][2])),
 	      }
 	    end
 	}
@@ -441,7 +462,7 @@ local function diagnose (fn, decl)
     extendarglist (arglist, i, argtype)
   end
 
-  if max ~= math.huge then
+  if max ~= INF then
     -- Check diagnosis of too many arguments when the final parameter
     -- does not end with a '*'.
     extendarglist (arglist, max, last (type_specs))
@@ -449,8 +470,8 @@ local function diagnose (fn, decl)
     examples {
       ["it diagnoses more than maximum of " .. max .. " arguments"] = function ()
         expect (fn (unpack (arglist))).to_raise.any_of {
-	  format (fname, max + 1),
-	  format ("?", max + 1),
+	  badargs_format (fname, max + 1),
+	  badargs_format ("?", max + 1),
         }
       end
     }
@@ -466,6 +487,6 @@ end
 
 --- @export
 return {
-  format   = format,
+  format   = badargs_format,
   diagnose = diagnose,
 }
