@@ -40,6 +40,7 @@ local _ENV = {
   searchpath	= package.searchpath,
   gmatch	= string.gmatch,
   gsub		= string.gsub,
+  match		= string.match,
   concat	= table.concat,
 }
 setfenv (1, _ENV)
@@ -75,7 +76,7 @@ if not pcall (load, "_=1") then
 end
 
 
-local dirsep, pathsep, path_mark = gmatch (config, "^(%S+)\n(%S+)\n(%S+)\n")
+local dirsep, pathsep, path_mark = match (config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n")
 
 
 local searchpath = searchpath or function (name, path, sep, rep)
