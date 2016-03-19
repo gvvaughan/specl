@@ -20,12 +20,6 @@
 
 local compat	= require "specl.compat"
 local std	= require "specl.std"
-local util	= require "specl.util"
-
-local getfenv, load, setfenv = compat.getfenv, compat.load, compat.setfenv
-local clone, merge = std.table.clone, std.table.merge
-local deepcopy = util.deepcopy
-
 
 
 --[[ ====================================== ]]--
@@ -35,7 +29,7 @@ local deepcopy = util.deepcopy
 
 local sandbox = {
   _VERSION	= _VERSION,
-  arg		= clone (arg),
+  arg		= std.table.clone (arg),
   assert	= assert,
   collectgarbage = collectgarbage,
   coroutine = {
@@ -65,7 +59,7 @@ local sandbox = {
   },
   dofile	= dofile,
   error		= error,
-  getfenv	= getfenv,
+  getfenv	= compat.getfenv,
   getmetatable	= getmetatable,
   io = {
     close	= io.close,
@@ -84,7 +78,7 @@ local sandbox = {
     write	= io.write,
   },
   ipairs	= ipairs,
-  load		= load,
+  load		= compat.load,
   loadfile	= loadfile,
   math = {
     abs		= math.abs,
@@ -129,13 +123,11 @@ local sandbox = {
   package = {
     config	= package.config,
     cpath	= package.cpath,
-    loaders	= package.loaders or package.searchers,
     loadlib	= package.loadlib,
     path	= package.path,
     preload	= package.preload,
-    searchers	= package.loaders or package.searchers,
+    searchers	= package.searchers or package.loaders,
     searchpath	= package.searchpath,
-    seeall	= package.seeall,
   },
   pairs		= pairs,
   pcall		= pcall,
@@ -146,7 +138,7 @@ local sandbox = {
   rawset	= rawset,
   require	= require,
   select	= select,
-  setfenv	= setfenv,
+  setfenv	= compat.setfenv,
   setmetatable	= setmetatable,
   string = {
     byte	= string.byte,
@@ -198,7 +190,23 @@ sandbox.package.loaded = {
 --[[ ========================================== ]]--
 
 
-local matchers = require "specl.matchers"
+
+local _ENV = {
+  clone		= std.table.clone,
+  error		= error,
+  deepcopy	= require "specl.util".deepcopy,
+  ipairs	= ipairs,
+  load		= compat.load,
+  loadfile	= loadfile,
+  matchers	= require "specl.matchers",
+  merge		= std.table.merge,
+  package	= package,
+  setfenv	= setfenv or function () end,
+  tostring	= tostring,
+  type		= type,
+}
+setfenv (1, _ENV)
+local setfenv	= compat.setfenv
 
 
 local function root_closures (root_env, state)
@@ -247,10 +255,10 @@ local function inner_closures (env, state)
 
     -- temporarily switch to the environment package context.
     local save = {
-      cpath = package.cpath, path = package.path, loaders = package.loaders,
+      cpath = package.cpath, path = package.path, searchers = package.searchers,
     }
-    package.cpath, package.path, package.loaders =
-      env.package.cpath, env.package.path, env.package.loaders
+    package.cpath, package.path, package.searchers =
+      env.package.cpath, env.package.path, env.package.searchers
 
     -- We can have a spec_helper.lua in each spec directory, so don't
     -- cache the side effects of a random one!
@@ -262,7 +270,7 @@ local function inner_closures (env, state)
       -- No side effects cached; find a loader function.
       if loadfn == nil then
         errmsg = ""
-        for _, loader in ipairs (package.loaders) do
+        for _, loader in ipairs (package.searchers) do
 	  loadfn = loader (m)
 	  if type (loadfn) == "function" then
             break
@@ -284,8 +292,8 @@ local function inner_closures (env, state)
 
     package.loaded[m] = package.loaded[m] or loaded or nil
 
-    package.cpath, package.path, package.loaders =
-      save.cpath, save.path, save.loaders
+    package.cpath, package.path, package.searchers =
+      save.cpath, save.path, save.searchers
     return package.loaded[m]
   end
 
