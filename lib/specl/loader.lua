@@ -26,7 +26,7 @@ local compat = require "specl.compat"
 local std    = require "specl.std"
 local util   = require "specl.util"
 
-local load = compat.load
+local load, searchpath = compat.load, compat.searchpath
 local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
 local dirsep, normalize, pathsep, path_mark =
   std.package.dirsep, std.package.normalize, std.package.pathsep, std.package.path_mark
@@ -68,35 +68,20 @@ local function expandmacros (name)
     search_path = search_path .. pathsep .. package.path
   end
 
-  for m in search_path:gmatch ("([^" .. escape_pattern (pathsep) .. "]+)") do
-    local path = m:gsub (escape_pattern (path_mark), (name:gsub ("%.", dirsep)))
-    local fh, err = io.open (path, "r")
-    if fh == nil then
-      errbuf[#errbuf + 1] = "\topen file '" .. path .. "' failed: " .. err
-    else
+  local path, err = searchpath (name, search_path)
+  if path == nil then return nil, err end
 
-      -- Found and opened...
-      local source = slurp (fh)
-      local content, err = macro.substitute_tostring (source)
-      if content == nil and err ~= nil then
-        errbuf[#errbuf + 1] = "\tmacro expansion failed in '" .. path.. "': " .. err
-      else
-
-	-- ...and macro substituted...
-        local loadfn, err = load (content, name)
-        if type (loadfn) ~= "function" then
-         errbuf[#errbuf + 1] = "\tload '" .. path .. "' failed: " .. err
-        else
-
-          -- ...and successfully loaded! Return it!
-          return loadfn
-        end
-      end
-    end
+  local content, err = macro.substitute_tostring (slurp (path))
+  if content == nil then
+    return nil, "\tmacro expansion failed in '" .. path.. "': " .. err
   end
 
-  -- Paths exhausted, return the list of failed attempts.
-  return table.concat (errbuf, "\n")
+  local loadfn, err = load (content, name)
+  if type (loadfn) ~= "function" then
+    return nil, "\tload '" .. path .. "' failed: " .. err
+  end
+
+  return loadfn
 end
 
 

@@ -27,20 +27,20 @@ local _ENV = {
   select	= select,
   setfenv	= setfenv or function () end,
   type		= type,
+  unpack	= table.unpack or unpack,
   xpcall	= xpcall,
 
-  -- Lua 5.3 has table.unpack but not _G.unpack;
-  -- Lua 5.2 has both table.unpack and _G.unpack;
-  -- Lua 5.1 has _G.unpack but not table.unpack!
-  unpack	= table.unpack or unpack,
-
-  debug_getinfo		= debug.getinfo,
-  debug_getupvalue	= debug.getupvalue,
-
-  -- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs.
-  debug_setfenv		= debug.setfenv,
-  debug_setupvalue	= debug.setupvalue,
-  debug_upvaluejoin	= debug.upvaluejoin,
+  getinfo	= debug.getinfo,
+  getupvalue	= debug.getupvalue,
+  debug_setfenv	= debug.setfenv,
+  setupvalue	= debug.setupvalue,
+  upvaluejoin	= debug.upvaluejoin,
+  open		= io.open,
+  config	= package.config,
+  searchpath	= package.searchpath,
+  gmatch	= string.gmatch,
+  gsub		= string.gsub,
+  concat	= table.concat,
 }
 setfenv (1, _ENV)
 
@@ -51,13 +51,13 @@ local getfenv = getfenv or function (fn)
   if type (fn) == "table" then
     fn = fn.call or (getmetatable (fn) or {}).__call
   elseif type (fn) == "number" then
-    fn = debug_getinfo (fn + 1, "f").func
+    fn = getinfo (fn + 1, "f").func
   end
   local name, env
   local up = 0
   repeat
     up = up + 1
-    name, env = debug_getupvalue (fn, up)
+    name, env = getupvalue (fn, up)
   until name == '_ENV' or name == nil
   return env
 end
@@ -75,6 +75,26 @@ if not pcall (load, "_=1") then
 end
 
 
+local dirsep, pathsep, path_mark = gmatch (config, "^(%S+)\n(%S+)\n(%S+)\n")
+
+
+local searchpath = searchpath or function (name, path, sep, rep)
+  name = gsub (name, sep or '%.', rep or dirsep)
+
+  local errbuf = {}
+  for template in gmatch (path, "[^" .. pathsep .. "]+") do
+    local filename = gsub (template, path_mark, name)
+    local fh = open (filename, "r")
+    if fh then
+      fh:close ()
+      return filename
+    end
+    errbuf[#errbuf + 1] = "\tno file '" .. filename .. "'"
+  end
+  return nil, concat (errbuf, "\n")
+end
+
+
 local function setfenv (fn, t)
   -- Unwrap functable:
   if type (fn) == "table" then
@@ -86,7 +106,7 @@ local function setfenv (fn, t)
 
   else
     if type (fn) == "number" then
-      fn = debug_getinfo (fn == 0 and 0 or fn + 1, "f").func
+      fn = getinfo (fn == 0 and 0 or fn + 1, "f").func
     end
 
     -- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
@@ -94,17 +114,15 @@ local function setfenv (fn, t)
     local up = 0
     repeat
       up = up + 1
-      name = debug_getupvalue (fn, up)
+      name = getupvalue (fn, up)
     until name == '_ENV' or name == nil
     if name then
-      debug_upvaluejoin (fn, up, function () return name end, 1)
-      debug_setupvalue (fn, up, t)
+      upvaluejoin (fn, up, function () return name end, 1)
+      setupvalue (fn, up, t)
     end
     return f
   end
 end
-
-
 
 
 do
@@ -130,6 +148,7 @@ end
 return {
   getfenv	= getfenv,
   load		= load,
+  searchpath	= searchpath,
   setfenv	= setfenv,
   unpack	= unpack,
   xpcall	= xpcall,
