@@ -1,100 +1,100 @@
-describe environments:
-- before:
-    overridden_symbol = false
-    defined_outer_symbol = true
-    _G.global_scope = false
-
-- it cannot find undefined symbols:
-    expect (undefined_symbol).to_be (nil)
-- it can find a symbol in the current scope:
-    in_the_same_example = true
-    overridden_symbol = true
-    expect (in_the_same_example).to_be (true)
-- it cannot find a symbol from a sibling example:
-    expect (in_the_same_example).to_be (nil)
-- it gets a clean environment for each example:
-    expect (overridden_symbol).to_be (false)
-- it can find a symbol from the current before block:
-    expect (defined_outer_symbol).to_be (true)
-- it cannot find symbols defined in an inner scope:
-    expect (defined_inner_symbol).to_be (nil)
-
-- context do not leak references:
+specify sandbox:
+- describe environments:
   - before:
-      in_sibling_before = true
-      path = "./?.lua"
-  - it can change library table elements locally:
-      package.path = path
-      expect (package.path).to_be (path)
-  - it can change _G elements locally:
-      _G.os.exit = false
-      expect (_G.os.exit).to_be (false)
-  - it gets fresh library tables in each example:
-      expect (package.path).not_to_be (path)
-  - it gets a fresh _G table in each example:
-      expect (_G.os.exit).not_to_be (false)
+      overridden_symbol = false
+      defined_outer_symbol = true
+      _G.global_scope = false
 
-- context when looking up symbols from a nested context:
+  - it cannot find undefined symbols:
+      expect (undefined_symbol).to_be (nil)
+  - it can find a symbol in the current scope:
+      in_the_same_example = true
+      overridden_symbol = true
+      expect (in_the_same_example).to_be (true)
+  - it cannot find a symbol from a sibling example:
+      expect (in_the_same_example).to_be (nil)
+  - it gets a clean environment for each example:
+      expect (overridden_symbol).to_be (false)
+  - it can find a symbol from the current before block:
+      expect (defined_outer_symbol).to_be (true)
+  - it cannot find symbols defined in an inner scope:
+      expect (defined_inner_symbol).to_be (nil)
+
+  - context do not leak references:
     - before:
-        overridden_symbol = "overridden"
-        defined_inner_symbol = true
-        from_sibling_before = in_sibling_before or false
-    - it cannot find undefined symbols:
-        expect (undefined_outer_symbol).to_be (nil)
-    - it can find a symbol in global scope:
-        expect (_G.global_scope).to_be (false)
-    - it can find a symbol in an outer scope:
-        expect (defined_outer_symbol).to_be (true)
-    - it can find a symbol in the current scope:
-        in_the_nested_example = true
-        defined_inner_symbol = false
-        expect (defined_inner_symbol).to_be (false)
-    - it cannot find a symbol from a sibling example:
-        expect (in_the_nested_example).to_be (nil)
-    - it cannot see symbol changes from a sibling example:
-        expect (defined_inner_symbol).to_be (true)
-    - it cannot find a symbol from a parent example:
-        expect (in_the_same_example).to_be (nil)
-    - it cannot find a symbol from a sibling before:
-        expect (in_sibling_before).to_be (nil)
-        expect (from_sibling_before).to_be (false)
-    - it gets a clean environment for each example:
-        expect (overridden_symbol).to_be ("overridden")
-    - it can find a symbol from the current before block:
-        expect (defined_inner_symbol).to_be (true)
-    - it can find a symbol from the parent before block:
-        expect (defined_outer_symbol).to_be (true)
+        in_sibling_before = true
+        path = "./?.lua"
+    - it can change library table elements locally:
+        package.path = path
+        expect (package.path).to_be (path)
+    - it can change _G elements locally:
+        _G.os.exit = false
+        expect (_G.os.exit).to_be (false)
+    - it gets fresh library tables in each example:
+        expect (package.path).not_to_be (path)
+    - it gets a fresh _G table in each example:
+        expect (_G.os.exit).not_to_be (false)
 
-- context when looking up symbols from a nested before block:
-    - before:
-        defined_outer_symbol_reference = defined_outer_symbol
-        undefined_outer_symbol_reference = undefined_outer_symbol
+  - context when looking up symbols from a nested context:
+      - before:
+          overridden_symbol = "overridden"
+          defined_inner_symbol = true
+          from_sibling_before = in_sibling_before or false
+      - it cannot find undefined symbols:
+          expect (undefined_outer_symbol).to_be (nil)
+      - it can find a symbol in global scope:
+          expect (_G.global_scope).to_be (false)
+      - it can find a symbol in an outer scope:
+          expect (defined_outer_symbol).to_be (true)
+      - it can find a symbol in the current scope:
+          in_the_nested_example = true
+          defined_inner_symbol = false
+          expect (defined_inner_symbol).to_be (false)
+      - it cannot find a symbol from a sibling example:
+          expect (in_the_nested_example).to_be (nil)
+      - it cannot see symbol changes from a sibling example:
+          expect (defined_inner_symbol).to_be (true)
+      - it cannot find a symbol from a parent example:
+          expect (in_the_same_example).to_be (nil)
+      - it cannot find a symbol from a sibling before:
+          expect (in_sibling_before).to_be (nil)
+          expect (from_sibling_before).to_be (false)
+      - it gets a clean environment for each example:
+          expect (overridden_symbol).to_be ("overridden")
+      - it can find a symbol from the current before block:
+          expect (defined_inner_symbol).to_be (true)
+      - it can find a symbol from the parent before block:
+          expect (defined_outer_symbol).to_be (true)
 
-    - it can find a symbol in an outer scope:
-        expect (defined_outer_symbol_reference).to_be (true)
-    - it cannot find a symbol in a cousin example:
-        expect (in_the_nested_example).to_be (nil)
-    - it cannot find a symbol in a sibling context:
-        expect (defined_inner_symbol).to_be (nil)
+  - context when looking up symbols from a nested before block:
+      - before:
+          defined_outer_symbol_reference = defined_outer_symbol
+          undefined_outer_symbol_reference = undefined_outer_symbol
+      - it can find a symbol in an outer scope:
+          expect (defined_outer_symbol_reference).to_be (true)
+      - it cannot find a symbol in a cousin example:
+          expect (in_the_nested_example).to_be (nil)
+      - it cannot find a symbol in a sibling context:
+          expect (defined_inner_symbol).to_be (nil)
 
-- context when mutating a symbol value:
-    - before:
-        _G.inner_global = nil
-        mutated_outer_symbol = false
+  - context when mutating a symbol value:
+      - before:
+          _G.inner_global = nil
+          mutated_outer_symbol = false
 
-    - it can mutate a symbol in the current scope:
-        mutated_inner_symbol = false
-        mutated_inner_symbol = true
-        expect (mutated_inner_symbol).to_be (true)
-    - it can mutate a symbol in an outer scope:
-        mutated_outer_symbol = true
-        expect (mutated_outer_symbol).to_be (true)
-    - it can mutate a symbol in global scope:
-        _G.inner_global = true
-        expect (_G.inner_global).to_be (true)
-    - it can mutate a global symbol instantiated by before block:
-        _G.global_scope = true
-        expect (_G.global_scope).to_be (true)
+      - it can mutate a symbol in the current scope:
+          mutated_inner_symbol = false
+          mutated_inner_symbol = true
+          expect (mutated_inner_symbol).to_be (true)
+      - it can mutate a symbol in an outer scope:
+          mutated_outer_symbol = true
+          expect (mutated_outer_symbol).to_be (true)
+      - it can mutate a symbol in global scope:
+          _G.inner_global = true
+          expect (_G.inner_global).to_be (true)
+      - it can mutate a global symbol instantiated by before block:
+          _G.global_scope = true
+          expect (_G.global_scope).to_be (true)
 
 - describe require:
     - before: |
