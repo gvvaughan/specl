@@ -16,8 +16,20 @@
 -- from <https://mit-license.org>.
 
 
+local _ENV = {
+  load		= load,
+  loadstring	= loadstring,
+  pcall		= pcall,
+  setfenv	= function () end,
+  select	= select,
+  type		= type,
+  unpack	= table.unpack or unpack,
+  xpcall	= xpcall,
+}
+setfenv (1, _ENV)
+
+
 -- Lua 5.1 load implementation does not handle string argument.
-local load = load
 if not pcall (load, "_=1") then
   local loadfunction = load
   load = function (...)
@@ -32,14 +44,13 @@ end
 do
   local have_xpcall_args
   local function catch (arg) have_xpcall_args = arg end
-  local unpack = table.unpack or unpack
   xpcall (catch, function () end, true)
 
   if have_xpcall_args ~= true then
     local _xpcall = xpcall
     xpcall = function (fn, errh, ...)
       local args, n = {...}, select ("#", ...)
-      return _xpcall(function() return fn (unpack (args, 1, n)) end, errh)
+      return _xpcall (function() return fn (unpack (args, 1, n)) end, errh)
     end
   end
 end
