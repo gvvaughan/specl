@@ -232,7 +232,6 @@ end
 function run (state)
   local formatter = state.opts.formatter
 
-  state.sidefx = {}
   state.accumulator = accumulator -- so we can pass self with ':'
   state.accumulated = nil
 

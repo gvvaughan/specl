@@ -254,10 +254,9 @@ local function inner_closures (env, state)
     -- cache the side effects of a random one!
     if m ~= "spec_helper" then
       loaded, loadfn = package.loaded[m], package.preload[m]
-      import = state.sidefx[m]
     end
 
-    if import == nil and loaded == nil then
+    if loaded == nil then
       -- No side effects cached; find a loader function.
       if loadfn == nil then
         errmsg = ""
@@ -276,21 +275,11 @@ local function inner_closures (env, state)
 
       -- Capture side effects.
       if loadfn ~= nil then
-        import = setmetatable ({}, {__index = env})
-        setfenv (loadfn, import)
+        setfenv (loadfn, env)
         loaded = loadfn ()
       end
     end
 
-    -- Import side effects into example block environment.
-    for name, value in pairs (import or {}) do
-      env[name] = value
-    end
-
-    -- A map of module name to global symbol side effects.
-    -- We keep track of these so that they can be injected into an
-    -- execution environment that requires a module.
-    state.sidefx[m] = import
     package.loaded[m] = package.loaded[m] or loaded or nil
 
     package.cpath, package.path, package.loaders =
