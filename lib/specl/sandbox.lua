@@ -16,16 +16,10 @@
 -- from <https://mit-license.org>.
 
 
-local compat	= require "specl.compat"
-local expect	= require "specl.expect"
-local std	= require "specl.std"
-local util	= require "specl.util"
-
-local load = compat.load
-local getfenv, setfenv = std.debug.getfenv, std.debug.setfenv
-local clone, merge = std.table.clone, std.table.merge
-local deepcopy = util.deepcopy
-
+local _ = {
+  compat	= require "specl.compat",
+  std		= require "specl.std",
+}
 
 
 --[[ ====================================== ]]--
@@ -35,7 +29,7 @@ local deepcopy = util.deepcopy
 
 local sandbox = {
   _VERSION	= _VERSION,
-  arg		= clone (arg),
+  arg		= _.std.table.clone (arg),
   assert	= assert,
   collectgarbage = collectgarbage,
   coroutine = {
@@ -65,7 +59,7 @@ local sandbox = {
   },
   dofile	= dofile,
   error		= error,
-  getfenv	= getfenv,
+  getfenv	= _.std.debug.getfenv,
   getmetatable	= getmetatable,
   io = {
     close	= io.close,
@@ -84,7 +78,7 @@ local sandbox = {
     write	= io.write,
   },
   ipairs	= ipairs,
-  load		= load,
+  load		= _.compat.load,
   loadfile	= loadfile,
   math = {
     abs		= math.abs,
@@ -144,7 +138,7 @@ local sandbox = {
   rawset	= rawset,
   require	= require,
   select	= select,
-  setfenv	= setfenv,
+  setfenv	= _.std.debug.setfenv,
   setmetatable	= setmetatable,
   string = {
     byte	= string.byte,
@@ -196,17 +190,34 @@ sandbox.package.loaded = {
 --[[ ========================================== ]]--
 
 
-local matchers = require "specl.matchers"
+local _ENV = {
+  deepcopy	= require "specl.util".deepcopy,
+  error		= error,
+  expect	= require "specl.expect".expect,
+  ipairs	= ipairs,
+  load		= sandbox.load,
+  loadfile	= loadfile,
+  matchers	= require "specl.matchers",
+  merge		= _.std.table.merge,
+  package	= package,
+  pending	= require "specl.expect".pending,
+  setfenv	= function () end,
+  tostring	= tostring,
+  type		= type,
+}
+setfenv (1, _ENV)
+local setfenv	= sandbox.setfenv
+_ = nil
 
 
 local function root_closures (root_env, state)
   -- Add closures to sandbox.
   root_env.expect = function (...)
-    return expect.expect (state, ...)
+    return expect (state, ...)
   end
 
   root_env.pending = function (...)
-    return expect.pending (state, ...)
+    return pending (state, ...)
   end
 
   return root_env
