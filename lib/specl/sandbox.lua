@@ -127,7 +127,7 @@ local sandbox = {
     path	= package.path,
     preload	= package.preload,
     searchers	= package.searchers or package.loaders,
-    searchpath	= package.searchpath,
+    searchpath	= _.compat.searchpath,
   },
   pairs		= pairs,
   pcall		= pcall,

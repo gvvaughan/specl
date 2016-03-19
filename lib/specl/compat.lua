@@ -25,6 +25,14 @@ local _ENV = {
   type		= type,
   unpack	= table.unpack or unpack,
   xpcall	= xpcall,
+
+  open		= io.open,
+  config	= package.config,
+  searchpath	= package.searchpath,
+  gmatch	= string.gmatch,
+  gsub		= string.gsub,
+  match		= string.match,
+  concat	= table.concat,
 }
 setfenv (1, _ENV)
 
@@ -38,6 +46,26 @@ if not pcall (load, "_=1") then
     end
     return loadfunction (...)
   end
+end
+
+
+local dirsep, pathsep, path_mark = match (config, "^(%S+)\n(%S+)\n(%S+)\n")
+
+
+local searchpath = searchpath or function (name, path, sep, rep)
+  name = gsub (name, sep or '%.', rep or dirsep)
+
+  local errbuf = {}
+  for template in gmatch (path, "[^" .. pathsep .. "]+") do
+    local filename = gsub (template, path_mark, name)
+    local fh = open (filename, "r")
+    if fh then
+      fh:close ()
+      return filename
+    end
+    errbuf[#errbuf + 1] = "\tno file '" .. filename .. "'"
+  end
+  return nil, concat (errbuf, "\n")
 end
 
 
@@ -63,5 +91,6 @@ end
 
 return {
   load		= load,
+  searchpath	= searchpath,
   xpcall	= xpcall,
 }

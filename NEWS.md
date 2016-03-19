@@ -48,6 +48,9 @@
     argument now, in any supported host Lua implementation.
     `mode` is still unsupported, however.
 
+  - `package.searchpath` is available in examples, even on Lua 5.1
+    hosts.
+
   - Much simplified example environment setup resulting in 30% speedup
     with typical spec-files.
 
