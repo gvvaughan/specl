@@ -20,6 +20,24 @@
 
 
 
+local getfenv = getfenv or function (fn)
+  fn = fn or 1
+  -- Unwrap functable:
+  if type (fn) == "table" then
+    fn = fn.call or (getmetatable (fn) or {}).__call
+  elseif type (fn) == "number" then
+    fn = debug.getinfo (fn + 1, "f").func
+  end
+  local name, env
+  local up = 0
+  repeat
+    up = up + 1
+    name, env = debug.getupvalue (fn, up)
+  until name == '_ENV' or name == nil
+  return env
+end
+
+
 -- Lua 5.1 load implementation does not handle string argument.
 local load = load
 if not pcall (load, "_=1") then
@@ -64,24 +82,6 @@ local function setfenv (fn, t)
     end
     return f
   end
-end
-
-
-local getfenv = getfenv or function (fn)
-  fn = fn or 1
-  -- Unwrap functable:
-  if type (fn) == "table" then
-    fn = fn.call or (getmetatable (fn) or {}).__call
-  elseif type (fn) == "number" then
-    fn = debug.getinfo (fn + 1, "f").func
-  end
-  local name, env
-  local up = 0
-  repeat
-    up = up + 1
-    name, env = debug.getupvalue (fn, up)
-  until name == '_ENV' or name == nil
-  return env
 end
 
 
