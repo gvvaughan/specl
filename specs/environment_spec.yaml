@@ -96,7 +96,7 @@ describe environments:
         _G.global_scope = true
         expect (_G.global_scope).to_be (true)
 
-- context when requiring a module:
+- describe require:
     - before: |
         mutated_outer_symbol = false
 
@@ -128,10 +128,13 @@ describe environments:
         expect (type (require "os")).to_be "table"
         expect (type (require "io".open)).to_be "function"
 
-- context when executing a load function:
+- describe load:
     - before:
         mutated_outer_symbol = false
 
+    - it diagnoses unloadable argument:
+        _, err = load "x="
+        expect (err).to_contain "unexpected symbol"
     - it can mutate a symbol in the current scope:
         mutated_inner_symbol = false
         assert (load "mutated_inner_symbol = true")()
@@ -144,7 +147,7 @@ describe environments:
         assert (load "_G.global_scope = true")()
         expect (_G.global_scope).to_be (true)
 
-- context when executing a loadfile function:
+- describe loadfile:
     - before: |
         mutated_outer_symbol = false
 
@@ -154,11 +157,14 @@ describe environments:
 
           h:write (s)
           h:close ()
-          local r = loadfile (f)
+          local r, err = loadfile (f)
           os.remove (f)
-          return r
+          return r, err
         end
 
+    - it diagnoses unloadable argument:
+        _, err = doloadfile "x="
+        expect (err).to_contain "unexpected symbol"
     - it can mutate a symbol in the current scope:
         mutated_inner_symbol = false
         assert (doloadfile "mutated_inner_symbol = true")()

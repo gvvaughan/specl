@@ -68,6 +68,11 @@
   - `loadstring` is not supported in example code, use `load`
     instead.
 
+### Bug fixes:
+
+  - `load` and `loadfile` propagate error messages back to calling
+    examples.
+
 
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
 
