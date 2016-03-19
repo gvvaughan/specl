@@ -19,6 +19,31 @@
 -- MA 02111-1301, USA.
 
 
+local _ENV = {
+  getmetatable	= getmetatable,
+  load		= load,
+  loadstring	= loadstring,
+  pcall		= pcall,
+  select	= select,
+  setfenv	= setfenv or function () end,
+  type		= type,
+  xpcall	= xpcall,
+
+  -- Lua 5.3 has table.unpack but not _G.unpack;
+  -- Lua 5.2 has both table.unpack and _G.unpack;
+  -- Lua 5.1 has _G.unpack but not table.unpack!
+  unpack	= table.unpack or unpack,
+
+  debug_getinfo		= debug.getinfo,
+  debug_getupvalue	= debug.getupvalue,
+
+  -- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs.
+  debug_setfenv		= debug.setfenv,
+  debug_setupvalue	= debug.setupvalue,
+  debug_upvaluejoin	= debug.upvaluejoin,
+}
+setfenv (1, _ENV)
+
 
 local getfenv = getfenv or function (fn)
   fn = fn or 1
@@ -26,20 +51,19 @@ local getfenv = getfenv or function (fn)
   if type (fn) == "table" then
     fn = fn.call or (getmetatable (fn) or {}).__call
   elseif type (fn) == "number" then
-    fn = debug.getinfo (fn + 1, "f").func
+    fn = debug_getinfo (fn + 1, "f").func
   end
   local name, env
   local up = 0
   repeat
     up = up + 1
-    name, env = debug.getupvalue (fn, up)
+    name, env = debug_getupvalue (fn, up)
   until name == '_ENV' or name == nil
   return env
 end
 
 
 -- Lua 5.1 load implementation does not handle string argument.
-local load = load
 if not pcall (load, "_=1") then
   local loadfunction = load
   load = function (...)
@@ -51,22 +75,18 @@ if not pcall (load, "_=1") then
 end
 
 
--- Lua 5.1 requires 'debug.setfenv' to change environment of C funcs.
-local _setfenv = debug.setfenv
-
-
 local function setfenv (fn, t)
   -- Unwrap functable:
   if type (fn) == "table" then
     fn = fn.call or (getmetatable (fn) or {}).__call
   end
 
-  if _setfenv then
-    return _setfenv (fn, t)
+  if debug_setfenv then
+    return debug_setfenv (fn, t)
 
   else
     if type (fn) == "number" then
-      fn = debug.getinfo (fn == 0 and 0 or fn + 1, "f").func
+      fn = debug_getinfo (fn == 0 and 0 or fn + 1, "f").func
     end
 
     -- From http://lua-users.org/lists/lua-l/2010-06/msg00313.html
@@ -74,21 +94,17 @@ local function setfenv (fn, t)
     local up = 0
     repeat
       up = up + 1
-      name = debug.getupvalue (fn, up)
+      name = debug_getupvalue (fn, up)
     until name == '_ENV' or name == nil
     if name then
-      debug.upvaluejoin (fn, up, function () return name end, 1)
-      debug.setupvalue (fn, up, t)
+      debug_upvaluejoin (fn, up, function () return name end, 1)
+      debug_setupvalue (fn, up, t)
     end
     return f
   end
 end
 
 
--- Lua 5.3 has table.unpack but not _G.unpack;
--- Lua 5.2 has both table.unpack and _G.unpack;
--- Lua 5.1 has _G.unpack but not table.unpack!
-local unpack = table.unpack or unpack
 
 
 do
@@ -100,7 +116,7 @@ do
     local _xpcall = xpcall
     xpcall = function (fn, errh, ...)
       local args, n = {...}, select ("#", ...)
-      return _xpcall(function() return fn (unpack (args, 1, n)) end, errh)
+      return _xpcall (function() return fn (unpack (args, 1, n)) end, errh)
     end
   end
 end
