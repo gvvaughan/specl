@@ -18,6 +18,15 @@
 
 local have_color, ansicolors = pcall (require, "ansicolors")
 
+local _ENV = {
+  setfenv	= function () end,
+  setmetatable	= setmetatable,
+
+  gsub		= string.gsub,
+}
+setfenv (1, _ENV)
+
+
 local h1      = "%{bright blue}"
 local h2      = "%{blue}"
 local h3      = "%{cyan}"
@@ -63,7 +72,7 @@ local function color (want_color, s)
   if want_color and have_color then
     s = ansicolors (s)
   else
-    s = s:gsub ("%%{(.-)}", "")
+    s = gsub (s, "%%{(.-)}", "")
   end
   return s
 end
