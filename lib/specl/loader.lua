@@ -19,19 +19,52 @@
 -- MA 02111-1301, USA.
 
 
-local macro = require "macro"
-local yaml  = require "yaml"
+local _ = {
+  macro		= require "macro",
+  compat	= require "specl.compat",
+  std		= require "specl.std",
+}
 
-local compat = require "specl.compat"
-local std    = require "specl.std"
-local util   = require "specl.util"
+local load		= _.compat.load
+local pairs		= pairs
+local pcall		= pcall
+local searchpath	= _.compat.searchpath
+local setmetatable	= setmetatable
+local tonumber		= tonumber
+local tostring		= tostring
+local type		= type
 
-local load, searchpath = compat.load, compat.searchpath
-local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
-local dirsep, normalize, pathsep, path_mark =
-  std.package.dirsep, std.package.normalize, std.package.pathsep, std.package.path_mark
-local escape_pattern = std.string.escape_pattern
-local nop = util.nop
+local format		= string.format
+local gsub		= string.gsub
+local match		= string.match
+local sub		= string.sub
+local concat		= table.concat
+
+-- We need to use these symbols as is, so that inprocess can
+-- switch the implementation underneath us:
+local io		= io
+local os		= os
+local package = {
+  loaded		= package.loaded,
+  path			= package.path,
+}
+
+local catfile		= _.std.io.catfile
+local dirname		= _.std.io.dirname
+local slurp		= _.std.io.slurp
+local dirsep		= _.std.package.dirsep
+local normalize		= _.std.package.normalize
+local pathsep		= _.std.package.pathsep
+local path_mark		= _.std.package.path_mark
+local escape_pattern	= _.std.string.escape_pattern
+local nop		= require "specl.util".nop
+local yaml_parser	= require "yaml".parser
+
+local define		= _.macro.define
+local expand		= _.macro.substitute_tostring
+
+local _ENV = {}
+_ = nil
 
 
 local TAG_PREFIX = "tag:yaml.org,2002:"
@@ -39,7 +72,7 @@ local null       = { type = "LYAML null" }
 
 
 -- Capture errors thrown by expectations.
-macro.define ("expect", function (get)
+define ("expect", function (get)
   local out
   if get:peek (1) == "(" then
     get:expecting "("
@@ -71,7 +104,7 @@ local function expandmacros (name)
   local path, err = searchpath (name, search_path)
   if path == nil then return nil, err end
 
-  local content, err = macro.substitute_tostring (slurp (path))
+  local content, err = expand (slurp (path))
   if content == nil then
     return nil, "\tmacro expansion failed in '" .. path.. "': " .. err
   end
@@ -95,27 +128,27 @@ local parser_mt = {
 
     -- Raise a parse error.
     error = function (self, errmsg)
-      io.stderr:write (string.format ("%s:%d:%d: %s\n", self.filename,
-                                      self.mark.line, self.mark.column,
-				      errmsg))
+      io.stderr:write (format ("%s:%d:%d: %s\n", self.filename,
+                               self.mark.line, self.mark.column,
+                               errmsg))
       os.exit (1)
     end,
 
     -- Compile S into a callable function.
     compile = function (self, s)
-      local f, errmsg = macro.substitute_tostring (s)
+      local f, errmsg = expand (s)
       if f == nil then
         -- Replace the error message from macro; it's just internal gunk.
-        errmsg = string.format ("%s:%d: parse error near 'expect', while collecting arguments",
-	                        self.filename, self.mark.line)
+        errmsg = format ("%s:%d: parse error near 'expect', while collecting arguments",
+	                 self.filename, self.mark.line)
       else
         f, errmsg = load (f)
       end
       if f == nil then
-        local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+        local line, msg = match (errmsg, '%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
         if msg ~= nil then
           line = tonumber (line) + self.mark.line - 1
-          errmsg = string.format ("%s:%d: %s", self.filename, line, msg)
+          errmsg = format ("%s:%d: %s", self.filename, line, msg)
         end
       end
       if errmsg ~= nil then
@@ -131,15 +164,15 @@ local parser_mt = {
       -- based, which means refetching doesn't work in the presence of
       -- unicode characters :(
       if self.unicode then return value end
-      value = self.input:sub (event.start_mark.index, event.end_mark.index)
+      value = sub (self.input, event.start_mark.index, event.end_mark.index)
       if event.style == "DOUBLE_QUOTED" then
-        value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}
+        value = concat {match (value, [[^(%s*)"(.-)"%s*$]])}
       elseif event.style == "SINGLE_QUOTED" then
-        value = table.concat {value:match ([[^(%s*)'(.-)'%s*$]])}
+        value = concat {match (value, [[^(%s*)'(.-)'%s*$]])}
       elseif event.style == "LITERAL" then
-        value = table.concat {value:match ([[^(%s*)[|](.-)%s*$]])}
+        value = concat {match (value, [[^(%s*)[|](.-)%s*$]])}
       elseif event.style == "FOLDED" then
-        value = table.concat {value:match ([[^(%s*)>(.-)%s*$]])}
+        value = concat {match (value, [[^(%s*)>(.-)%s*$]])}
       end
       return value
     end,
@@ -156,7 +189,7 @@ local parser_mt = {
       local ok, event = pcall (self.next)
       if not ok then
         -- if ok is nil, then event is a parser error from libYAML.
-        self:error (event:gsub (" at document: .*$", ""))
+        self:error (gsub (event, " at document: .*$", ""))
       end
       self.event = event
       self.mark  = {
@@ -190,7 +223,7 @@ local parser_mt = {
           -- Be careful not to overwrite injected preamble.
           value = self:refetch (value, event)
           map.before = {
-	    example = table.concat {map.before and map.before.example or "", value},
+	    example = concat {map.before and map.before.example or "", value},
 	    line    = self.mark.line,
 	  }
         elseif value == "" then
@@ -303,13 +336,13 @@ local function Parser (filename, s, opts)
     anchors  = {},
     input    = s,
     mark     = { line = 0, column = 0 },
-    next     = yaml.parser (s),
+    next     = yaml_parser (s),
 
     -- strip leading './'
-    filename = filename:gsub (catfile ("^%.", ""), ""),
+    filename = gsub (filename, catfile ("^%.", ""), ""),
 
     -- Used to simplify requiring from the spec file directory.
-    preamble = string.format ([[
+    preamble = format ([[
       package.path = "%s"
 
       -- Expand macros in spec_helper.
@@ -325,7 +358,7 @@ local function Parser (filename, s, opts)
 end
 
 
-local function load (filename, s, opts)
+local function yaml_loader (filename, s, opts)
   local documents = {}
   local parser    = Parser (filename, s, opts)
 
@@ -370,10 +403,8 @@ for _, reload in pairs {"yaml", "lyaml"} do
 end
 
 
-local M = {
+return {
   expandmacros = expandmacros,
-  load         = load,
+  load         = yaml_loader,
   null         = null,
 }
-
-return M
