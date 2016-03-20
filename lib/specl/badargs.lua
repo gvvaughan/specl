@@ -29,30 +29,33 @@ local _ = {
   std		= require "specl.std",
 }
 
-local _ENV = {
-  getfenv	= _.compat.getfenv,
-  ipairs	= ipairs,
-  pairs		= pairs,
-  setfenv	= setfenv or function () end,
-  setmetatable	= setmetatable,
-  type		= type,
 
-  STDERR	= io.stderr,
-  INF		= math.huge,
-  format	= string.format,
-  gsub		= string.gsub,
-  match		= string.match,
-  sub		= string.sub,
-  concat	= table.concat,
-  insert	= table.insert,
-  remove	= table.remove,
-  unpack	= table.unpack or unpack,
+-- It would be nice to use an _ENV table here, but Lua 5.1 cannot set
+-- the module environment when loaded from a package.searcher function
+-- :(
 
-  invert	= _.std.table.invert,
-  split		= _.std.string.split,
-}
-setfenv (1, _ENV)
-local setfenv = _.compat.setfenv
+local getfenv		= _.compat.getfenv
+local ipairs		= ipairs
+local pairs		= pairs
+local setfenv		= _.compat.setfenv
+local setmetatable	= setmetatable
+local type		= type
+
+local STDERR		= io.stderr
+local INF		= math.huge
+local format		= string.format
+local gsub		= string.gsub
+local match		= string.match
+local sub		= string.sub
+local concat		= table.concat
+local insert		= table.insert
+local remove		= table.remove
+local unpack		= table.unpack or unpack
+
+local invert		= _.std.table.invert
+local split		= _.std.string.split
+
+local _ENV = {}
 _ = nil
 
 
