@@ -19,39 +19,42 @@
 -- MA 02111-1301, USA.
 
 
-local error		= error
-local ipairs		= ipairs
-local next		= next
-local package		= package
-local pairs		= pairs
-local require		= require
-local setfenv		= setfenv or function () end
-local setmetatable	= setmetatable
-local tostring		= tostring
-local type		= type
-
-local table_insert	= table.insert
-local table_remove	= table.remove
-
-local matchers		= require "specl.matchers"
-local sandbox		= require "specl.sandbox"
 
 local _	= {
-  compat		= require "specl.compat",
-  std			= require "specl.std",
-  util			= require "specl.util",
+  compat	= require "specl.compat",
+  matchers	= require "specl.matchers",
+  sandbox	= require "specl.sandbox",
+  std		= require "specl.std",
+  util		= require "specl.util",
 }
 
-local _ENV		= {}
+local _ENV = {
+  error			= error,
+  ipairs		= ipairs,
+  next			= next,
+  pairs			= pairs,
+  require		= require,
+  setmetatable		= setmetatable,
+  tostring		= tostring,
+  type			= type,
+
+  insert		= table.insert,
+  remove		= table.remove,
+
+  matchers_init		= _.matchers.init,
+  matchers_status	= _.matchers.status,
+  sandbox_inner		= _.sandbox.inner,
+  sandbox_new		= _.sandbox.new,
+  slurp			= _.std.io.slurp,
+  split			= _.std.string.split,
+  merge			= _.std.table.merge,
+  deepcopy		= _.util.deepcopy,
+  examplename		= _.util.examplename,
+
+  setfenv		= function () end,
+}
 setfenv (1, _ENV)
-
-local deepcopy		= _.util.deepcopy
-local examplename	= _.util.examplename
-local merge		= _.std.table.merge
-local setfenv		= _.compat.setfenv
-local slurp		= _.std.io.slurp
-local split		= _.std.string.split
-
+local setfenv = _.compat.setfenv
 _ = nil
 
 
@@ -108,7 +111,7 @@ function run_example (state, definition, descriptions, fenv)
   end
 
   if inclusive then
-    matchers.init (state)
+    matchers_init (state)
 
     -- Propagate nested environments to functions that might be called
     -- from inside the example.
@@ -120,7 +123,7 @@ function run_example (state, definition, descriptions, fenv)
     local status = merge ({
       filename = state.spec.filename,
       line     = definition.line,
-    }, matchers.status (state))
+    }, matchers_status (state))
     state:accumulator (formatter.expectations (status, descriptions, state.opts))
 
     if state.opts.fail_fast then
@@ -144,7 +147,7 @@ function run_examples (state, examples, descriptions, env)
 
   for _, example in ipairs (examples) do
     local keepgoing = true
-    local fenv = sandbox.inner (state, env)
+    local fenv = sandbox_inner (state, env)
 
     -- There is only one, otherwise we can't maintain example order.
     local description, definition = next (example)
@@ -156,11 +159,11 @@ function run_examples (state, examples, descriptions, env)
       if type (definition) == "function" then
         local example = { example = definition, line = line or "unknown" }
 
-        table_insert (descriptions, description)
+        insert (descriptions, description)
         if run_example (state, example, descriptions, fenv) == false then
           keepgoing = false
         end
-        table_remove (descriptions)
+        remove (descriptions)
 
       elseif type (definition) == "table" then
         local examples = {}
@@ -169,17 +172,17 @@ function run_examples (state, examples, descriptions, env)
           examples[i] = { [k] = { example = v, line = line or "unknown" } }
         end
 
-        table_insert (descriptions, (description))
+        insert (descriptions, (description))
         if run_examples (state, examples, descriptions, fenv) == false then
           keepgoing = false
         end
-        table_remove (descriptions)
+        remove (descriptions)
       end
 
       -- Make sure we don't leak status into the calling or following
       -- example, since this `examples` invocation is from inside
       -- `run_examples`.
-      matchers.init (state)
+      matchers_init (state)
     end
 
     if before ~= nil then
@@ -189,11 +192,11 @@ function run_examples (state, examples, descriptions, env)
 
     if definition.example then
       -- An example, execute it.
-      table_insert (descriptions, description)
+      insert (descriptions, description)
       if run_example (state, definition, descriptions, fenv) == false then
 	keepgoing = false
       end
-      table_remove (descriptions)
+      remove (descriptions)
     else
       -- A nested context, revert back to run_contexts.
       if run_contexts (state, example, descriptions, fenv) == false then
@@ -216,10 +219,10 @@ end
 function run_contexts (state, contexts, descriptions, env)
   local formatter = state.opts.formatter
   for description, examples in pairs (contexts) do
-    table_insert (descriptions, description)
+    insert (descriptions, description)
     state:accumulator (formatter.spec (descriptions, state.opts))
     local status = run_examples (state, examples, descriptions, env)
-    table_remove (descriptions)
+    remove (descriptions)
 
     -- Return false immediately for a failed expectation if --fail-fast
     -- was given.
@@ -236,7 +239,7 @@ function run (state)
   state.accumulated = nil
 
   -- Outermost execution environment.
-  state.sandbox = sandbox.new (state, state.env)
+  state.sandbox = sandbox_new (state, state.env)
 
   -- Run compiled specs, in order.
   state:accumulator (formatter.header (state.stats, state.opts))
