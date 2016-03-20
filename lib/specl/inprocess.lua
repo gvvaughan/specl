@@ -19,19 +19,50 @@
 -- MA 02111-1301, USA.
 
 
-local compat = require "specl.compat"
-local shell  = require "specl.shell"
-local std    = require "specl.std"
-local util   = require "specl.util"
+local _ = {
+  compat	= require "specl.compat",
+  sandbox	= require "specl.sandbox",
+  shell		= require "specl.shell",
+  std		= require "specl.std",
+  util		= require "specl.util",
+}
 
-local setfenv, unpack, xpcall = compat.setfenv, compat.unpack, compat.xpcall
-local Process = shell.Process
-local case, object = std.functional.case, std.object
-local clone, merge = std.table.clone, std.table.merge
-local nop, type_check = util.nop, util.type_check
+local error		= error
+local getmetatable	= getmetatable
+local ipairs		= ipairs
+local pairs		= pairs
+local select		= select
+local setfenv		= _.compat.setfenv
+local tonumber		= tonumber
+local tostring		= tostring
+local type		= type
+local xpcall		= _.compat.xpcall
+
+local traceback		= debug.traceback
+local input		= io.input
+local output		= io.output
+local iotype		= io.type
+local find		= string.find
+local gsub		= string.gsub
+local sub		= string.sub
+local concat		= table.concat
+local unpack		= table.unpack or unpack
+
+local Object		= _.std.object {}
+local Process		= _.shell.Process
+
+local sandbox		= _.sandbox.new
+local case		= _.std.functional.case
+local objtype		= _.std.object.type
+local clone		= _.std.table.clone
+local merge		= _.std.table.merge
+local nop		= _.util.nop
+local type_check	= _.util.type_check
+
+local _ENV = {}
+_ = nil
 
 
-local Object = object {}
 
 local StrFile = Object {
   _type = "StrFile",
@@ -42,7 +73,7 @@ local StrFile = Object {
 
   __tostring = function (self)
     -- If not set manually, default `name` to a unique hex address.
-    self.name = self.name or tostring ({}):gsub (".*x", "0x")
+    self.name = self.name or gsub (tostring {}, ".*x", "0x")
     return "strfile (" .. self.name .. "/" .. self.mode .. ")"
   end,
 
@@ -78,7 +109,7 @@ local StrFile = Object {
                 for i = 1, #fmts do
                   -- For this format, return an empty string when input is exhausted...
                   if fmts[i] == "*a" then
-                    r[i] = self.buffer:sub (self.pos)
+                    r[i] = sub (self.buffer, self.pos)
                     self.pos = #self.buffer + 1
 
                   -- ...otherwise return nil at end of file.
@@ -89,34 +120,34 @@ local StrFile = Object {
 		    local b = self.pos
                     r[i] = case (fmts[i], {
                       ["*n"] = function ()
-                                 local ok, e, cap = self.buffer:find ("^%s*0[xX](%x+)", b)
+                                 local ok, e, cap = find (self.buffer, "^%s*0[xX](%x+)", b)
                                  if ok then
                                    self.pos = e + 1
                                    return tonumber (cap, 16)
                                  end
-                                 local ok, e = self.buffer:find ("^%s*%d*%.?%d+[eE]%d+", b)
+                                 local ok, e = find (self.buffer, "^%s*%d*%.?%d+[eE]%d+", b)
                                  if ok then
                                    self.pos = e + 1
-                                   return tonumber (self.buffer:sub (b, e))
+                                   return tonumber (sub (self.buffer, b, e))
                                  end
-                                 local ok, e = self.buffer:find ("^%s*%d*%.?%d+", b)
+                                 local ok, e = find (self.buffer, "^%s*%d*%.?%d+", b)
                                  if ok then
                                    self.pos = e + 1
-                                   return tonumber (self.buffer:sub (b, e))
+                                   return tonumber (sub (self.buffer, b, e))
                                  end
                                  return nil
                                end,
 
                       ["*l"] = function ()
-                                 local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                                 local e = find (self.buffer, "\n", self.pos) or #self.buffer
                                  self.pos = e + 1
-                                 return self.buffer:sub (b, e):gsub ("\n$", "")
+                                 return gsub (sub (self.buffer, b, e), "\n$", "")
                                end,
 
                       ["*L"] = function ()
-                                 local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                                 local e = find (self.buffer, "\n", self.pos) or #self.buffer
                                  self.pos = e + 1
-                                 return self.buffer:sub (b, e)
+                                 return sub (self.buffer, b, e)
                                end,
 
                                function ()
@@ -124,7 +155,7 @@ local StrFile = Object {
                                    return error ("bad argument #1 to 'read' (invalid option)", 3)
                                  end
                                  self.pos = self.pos + fmts[i]
-                                 return self.buffer:sub (b, self.pos - 1)
+                                 return sub (self.buffer, b, self.pos - 1)
                                end,
                     })
 		  end
@@ -152,7 +183,7 @@ local StrFile = Object {
                 if self.mode ~= "w" then
                   return nil, "Bad virtual file descriptor", 9
                 end
-                self.buffer = (self.buffer or "") .. table.concat {...}
+                self.buffer = (self.buffer or "") .. concat {...}
                 self.pos = #self.buffer + 1
               end,
   },
@@ -183,31 +214,31 @@ local function env_init (env, stdin)
     stderr  = perr,
 
     input   = function (h)
-                if object.type (h) == "StrFile" then
+                if objtype (h) == "StrFile" then
                   pin = h
                 elseif h then
-                  pin = io.input (h)
+                  pin = input (h)
                 end
-                return pin or io.input ()
+                return pin or input ()
               end,
 
     output  = function (h)
 	        if h ~= nil then
-		  if io.type (pout) ~= "closed file" then pout:flush () end
-                  if object.type (h) == "StrFile" then
+		  if iotype (pout) ~= "closed file" then pout:flush () end
+                  if objtype (h) == "StrFile" then
                     pout = h
                   else
-                    pout = io.output (h)
+                    pout = output (h)
 		  end
                 end
-		return pout or io.output ()
+		return pout or output ()
               end,
 
     type    = function (h)
                 if (getmetatable (h) or {})._type == "StrFile" then
                   return "file" -- virtual stdio streams cannot be closed
                 end
-                return io.type (h)
+                return iotype (h)
               end,
 
     write   = function (...)
@@ -219,7 +250,7 @@ local function env_init (env, stdin)
   env.print = function (...)
                 local t = {...}
                 for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
-                env.io.output ():write (table.concat (t, "\t") .. "\n")
+                env.io.output ():write (concat (t, "\t") .. "\n")
               end
 
   return pout, perr
@@ -231,7 +262,7 @@ local function capture (fn, arg, stdin)
   arg = arg or {}
 
   -- Execution environment.
-  local env = setmetatable ({}, {__index = _G})
+  local env = sandbox ()
 
   -- Captured standard output and standard error.
   local pstat = 0
@@ -288,9 +319,9 @@ local function call (main, arg, stdin)
   local Main = main (arg, env)
 
   -- Append traceback to an error inside xpcall.
-  local function traceback (errobj)
+  local function stacktrace (errobj)
     if errobj ~= "env.os.exit" then
-      env.io.stderr:write (debug.traceback (errobj, 2))
+      env.io.stderr:write (traceback (errobj, 2))
     end
   end
 
@@ -319,7 +350,7 @@ local function call (main, arg, stdin)
   }
 
   inject (Main.inprocess, env)
-  local ok, err = xpcall (Main.execute, traceback, Main)
+  local ok, err = xpcall (Main.execute, stacktrace, Main)
   inject (Main.inprocess, restore)
 
   if ok then

@@ -313,7 +313,10 @@ return {
   end,
 
   new = function (state, caller_env)
-    local root_env = root_closures (deepcopy (sandbox), state)
-    return merge (root_env, caller_env)
+    local root_env = deepcopy (sandbox)
+    if state ~= nil then
+      root_env = merge (root_closures (root_env, state), caller_env)
+    end
+    return root_env
   end,
 }
