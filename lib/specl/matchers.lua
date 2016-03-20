@@ -18,21 +18,50 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-local color = require "specl.color"
-local std   = require "specl.std"
-local util  = require "specl.util"
+local _ = {
+  color = require "specl.color",
+  std   = require "specl.std",
+  util  = require "specl.util",
+}
 
-local getmetamethod, object, pairs, tostring =
-  std.getmetamethod, std.object, std.pairs, std.tostring
-local eqv = std.operator.eqv
-local chomp, escape_pattern, pickle, prettytostring =
-  std.string.chomp, std.string.escape_pattern, std.string.pickle,
-  std.string.prettytostring
-local clone, empty, merge, size =
-  std.table.clone, std.table.empty, std.table.merge, std.table.size
-local type_check = util.type_check
+local _ENV = {
+  error			= error,
+  ipairs		= _.std.ipairs,
+  pairs			= _.std.pairs,
+  rawget		= rawget,
+  rawset		= rawset,
+  setfenv		= function () end,
+  setmetatable		= setmetatable,
+  tostring		= _.std.tostring,
+  type			= type,
 
-local Object = object {}
+  format		= string.format,
+  gsub			= string.gsub,
+  sub			= string.sub,
+  insert		= table.insert,
+
+  Object		= _.std.object {},
+
+  color_reset		= _.color.reset,
+  color_match		= _.color.match,
+  getmetamethod		= _.std.getmetamethod,
+  objtype		= _.std.object.type,
+  eqv			= _.std.operator.eqv,
+  chomp			= _.std.string.chomp,
+  escape_pattern	= _.std.string.escape_pattern,
+  pickle		= _.std.string.pickle,
+  prettytostring	= _.std.string.prettytostring,
+  clone			= _.std.table.clone,
+  empty			= _.std.table.empty,
+  merge			= _.std.table.merge,
+  size			= _.std.table.size,
+  util_concat		= _.util.concat,
+  util_type		= _.util.type,
+  type_check		= _.util.type_check,
+}
+setfenv (1, _ENV)
+_ = nil
+
 
 local M = {}
 
@@ -49,7 +78,7 @@ local function totable (obj)
   elseif type (obj) == "string" then
     -- ...or explode a raw string into a table of characters.
     r, i = {}, 1
-    obj:gsub ("(.)", function (c) i, r[i] = i + 1, c end)
+    gsub (obj, "(.)", function (c) i, r[i] = i + 1, c end)
   end
   return r
 end
@@ -58,7 +87,7 @@ end
 -- Quote strings nicely, and coerce non-strings into strings.
 local function q (obj)
   if type (obj) == "string" then
-    return ("%q"):format (obj)
+    return format ("%q", obj)
   end
   return tostring (obj)
 end
@@ -75,7 +104,7 @@ local function concat (alternatives, adaptor, quoted)
     infix = " or "
   end
 
-  return util.concat (alternatives, infix, quoted)
+  return util_concat (alternatives, infix, quoted)
 end
 
 
@@ -184,8 +213,8 @@ local matchers = setmetatable ({content = {}}, {
 
 -- color sequences escaped for use as literal strings in Lua patterns.
 local escape = {
-  reset = escape_pattern (color.reset),
-  match = escape_pattern (color.match),
+  reset = escape_pattern (color_reset),
+  match = escape_pattern (color_match),
 }
 
 
@@ -196,10 +225,10 @@ local escape = {
 local function _reformat (text, prefix)
   text = text or ""
   prefix = prefix or "| "
-  return "\n" .. prefix .. color.match ..
+  return "\n" .. prefix .. color_match ..
          chomp (text):gsub ("\n",
            escape.reset .. "\n" .. prefix .. escape.match) ..
-         color.reset
+         color_reset
 end
 
 
@@ -370,7 +399,7 @@ matchers.contain = Matcher {
     end
 
     -- Coerce an object to a table.
-    if util.type (actual) == "object" then
+    if util_type (actual) == "object" then
       actual = totable (actual)
     end
 
@@ -398,8 +427,8 @@ matchers.contain = Matcher {
                 self:format_alternatives ("a permutation of", expected, actual, ...) ..
                 "but got" .. self:format_actual (actual, expect, ...)
 
-    if object.type (actual) ~= "table" then actual = totable (actual) end
-    if object.type (expected) ~= "table" then expected = totable (expected) end
+    if objtype (actual) ~= "table" then actual = totable (actual) end
+    if objtype (expected) ~= "table" then expected = totable (expected) end
 
     if size (actual) == size (expected) then
       -- first, check whether expected values are a permutation of actual keys
@@ -428,7 +457,7 @@ matchers.contain = Matcher {
   format_actual = function (self, actual)
     if type (actual) == "string" then
       return " " .. q (actual)
-    elseif util.type (actual) == "object" then
+    elseif util_type (actual) == "object" then
       return ":" .. reformat (prettytostring (totable (actual), "  "))
     else
       return ":" .. reformat (prettytostring (actual, "  "))
@@ -439,17 +468,17 @@ matchers.contain = Matcher {
     if type (expect) == "string" and type (actual) == "string" then
       return " string containing " .. q(expect) .. ", "
     else
-      return " " .. object.type (actual) .. " containing " .. q(expect) .. ", "
+      return " " .. objtype (actual) .. " containing " .. q(expect) .. ", "
     end
   end,
 
   format_alternatives = function (self, adaptor, alternatives, actual)
     if type (alternatives) == "string" then
-      alternatives = ("%q"):format (alternatives)
+      alternatives = format ("%q", alternatives)
     else
       alternatives = concat (alternatives, adaptor, ":quoted")
     end
-    return " " .. object.type (actual) .. " containing " ..
+    return " " .. objtype (actual) .. " containing " ..
            adaptor .. " " .. alternatives .. ", "
   end,
 }
@@ -516,7 +545,7 @@ local function expect (state, ok, actual)
         else
           stats.pass = stats.pass + 1
         end
-        table.insert (expectations, {
+        insert (expectations, {
           message = message,
           status  = success,
           pending = pending,
