@@ -1,6 +1,6 @@
 -- -*- lua -*-
-title = "@PACKAGE_STRING@ Reference"
-project = "@PACKAGE_STRING@"
+title = "Specl @PACKAGE_VERSION@ Reference"
+project = "Specl @PACKAGE_VERSION@"
 description = "Behaviour Driven Development for Lua"
 
 tparam_alias "string"

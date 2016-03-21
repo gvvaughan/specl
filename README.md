@@ -1,8 +1,8 @@
 SPECL
 =====
 
-[![License](http://img.shields.io/:license-mit-blue.svg)](http://mit-license.org)
-[![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png?branch=master)](http://travis-ci.org/gvvaughan/specl/builds)
+[![License](http://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
+[![travis-ci status](https://secure.travis-ci.org/gvvaughan/specl.png?branch=master)](https://travis-ci.org/gvvaughan/specl/builds)
 [![Stories in Ready](https://badge.waffle.io/gvvaughan/specl.png?label=ready&title=Ready)](https://waffle.io/gvvaughan/specl)
 
 [Specl][] is a testing tool for [Lua][], providing a
@@ -50,14 +50,14 @@ Documentation
 Specl includes [comprehensive documentation][github.io].
 
 
-[autoconf]:  http://gnu.org/s/autoconf
-[automake]:  http://gnu.org/s/automake
-[bdd]:       http://en.wikipedia.org/wiki/Behavior-driven_development
-[github.io]: http://gvvaughan.github.io/specl
-[install]:   http://raw.github.com/gvvaughan/specl/release/INSTALL
-[lua]:       http://www.lua.org
-[luarocks]:  http://www.luarocks.org
-[rspec]:     http://github.com/rspec/rspec
-[specl]:     http://github.com/gvvaughan/specl
-[L10]:       http://github.com/gvvaughan/specl/blob/master/rockspec.conf#L10
-[yaml]:      http//yaml.org
+[autoconf]:  https://gnu.org/s/autoconf
+[automake]:  https://gnu.org/s/automake
+[bdd]:       https://en.wikipedia.org/wiki/Behavior-driven_development
+[github.io]: https://gvvaughan.github.io/specl
+[install]:   https://raw.github.com/gvvaughan/specl/release/INSTALL
+[lua]:       https://www.lua.org
+[luarocks]:  https://www.luarocks.org
+[rspec]:     https://github.com/rspec/rspec
+[specl]:     https://github.com/gvvaughan/specl
+[L10]:       https://github.com/gvvaughan/specl/blob/master/rockspec.conf#L10
+[yaml]:      https//yaml.org

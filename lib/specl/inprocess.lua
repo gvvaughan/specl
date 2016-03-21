@@ -12,8 +12,8 @@
 -- product or its documentation.
 --
 -- You should have received a copy of the MIT license along with this
--- program; see the file LICENSE.  If not, a copy can be downloaded from
--- <http://www.opensource.org/licenses/mit-license.html>.
+-- program; see the file LICENSE.md.  If not, a copy can be downloaded
+-- from <https://mit-license.org>.
 
 --[[--
   Functions for running a Lua program in the Specl Lua interpreter.

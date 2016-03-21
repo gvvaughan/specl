@@ -1,5 +1,4 @@
-Specl Contributors
-==================
+# Specl Contributors
 
 This file lists contributors to Specl. If you think you should be in
 this list, please file an issue on github (run `specl --help` for
@@ -9,7 +8,7 @@ Many thanks to all users and those who have contributed bug fixes
 and suggestions.
 
 
- * Gary V. Vaughan <gary@gnu.org>:
+ * Gary V. Vaughan <gary@vaughan.pe>:
    Designed and implemented Specl.
  * François Perrad <francois.perrad@gadz.org>:
    Contributed specl/formatters/tap.lua.

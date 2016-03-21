@@ -1,5 +1,4 @@
 #! /bin/sh
-# @configure_input@
 
 # Environment setting wrapper for uninstalled specl.
 # Written by Gary V. Vaughan, 2013
@@ -15,8 +14,8 @@
 # product or its documentation.
 #
 # You should have received a copy of the MIT license along with this
-# program; see the file LICENSE.  If not, a copy can be downloaded from
-# <http://www.opensource.org/licenses/mit-license.html>.
+# program; see the file LICENSE.md.  If not, a copy can be downloaded
+# from <https://mit-license.org>.
 
 # Be Bourne compatible
 if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
@@ -31,7 +30,6 @@ else
 fi
 
 LUA_PATH="\
-@abs_top_builddir@/lib/?.lua;\
 @abs_top_srcdir@/lib/?.lua;\
 ${LUA_PATH+$LUA_PATH;}\
 ;"

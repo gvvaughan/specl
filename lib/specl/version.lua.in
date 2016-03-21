@@ -1,5 +1,4 @@
--- Configure constants.
--- @configure_input@
+-- Version details.
 -- Written by Gary V. Vaughan, 2014
 --
 -- Copyright (c) 2014-2016 Gary V. Vaughan
@@ -13,24 +12,24 @@
 -- product or its documentation.
 --
 -- You should have received a copy of the MIT license along with this
--- program; see the file LICENSE.  If not, a copy can be downloaded from
--- <http://www.opensource.org/licenses/mit-license.html>.
+-- program; see the file LICENSE.md.  If not, a copy can be downloaded
+-- from <https://mit-license.org>.
 
 
 return {
-  PACKAGE           = "@PACKAGE@",
-  PACKAGE_NAME      = "@PACKAGE_NAME@",
-  PACKAGE_BUGREPORT = "@PACKAGE_BUGREPORT@",
+  PACKAGE           = "specl",
+  PACKAGE_NAME      = "Specl",
+  PACKAGE_BUGREPORT = "https://github.com/gvvaughan/specl/issues",
   VERSION           = "@VERSION@",
   optspec           = [[
-specl (@PACKAGE_NAME@) @VERSION@
+specl (Specl) @VERSION@
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2016, Gary V. Vaughan
-@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
-You may redistribute copies of @PACKAGE_NAME@ under the terms of the GNU
-General Public License; either version 3, or any later version.
-For more information, see <http://www.gnu.org/licenses>.
+Specl comes with ABSOLUTELY NO WARRANTY.
+You may redistribute copies of Specl under the terms of the MIT license;
+it may be used for any purpose at absolutely no cost, without permission.
+See <https://mit-license.org> for details.
 
 Usage: specl [OPTION]... [FILE]...
 
@@ -82,5 +81,5 @@ any error messages caused by Lua code in FILE will usually report line-numbers
 incorrectly.  By default, errors report accurate line-numbers, and unicode
 characters are not supported.
 
-Report bugs to @PACKAGE_BUGREPORT@.]]
+Report bugs to https://github.com/gvvaughan/specl/issues.]]
 }
