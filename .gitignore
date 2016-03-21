@@ -13,4 +13,3 @@
 !specl-git-*.rockspec
 /specl-*.tar.gz
 /stamp-h1
-lib/specl/version.lua
