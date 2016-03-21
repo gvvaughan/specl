@@ -1,5 +1,10 @@
 language: python
 
+addons:          
+  apt:           
+    packages:    
+      - help2man 
+
 sudo: false
 
 env:
