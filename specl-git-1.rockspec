@@ -17,11 +17,28 @@ dependencies = {
 }
 external_dependencies = nil
 build = {
-  build_command = "./bootstrap && ./configure LUA='$(LUA)' LUA_INCLUDE='-I$(LUA_INCDIR)' --prefix='$(PREFIX)' --libdir='$(LIBDIR)' --datadir='$(LUADIR)' --datarootdir='$(PREFIX)' && make clean all",
-  copy_directories = {
-    "bin",
-    "doc",
+  type = "builtin",
+  install = {
+    bin = {
+      specl = "bin/specl",
+    }
   },
-  install_command = "make install luadir='$(LUADIR)' luaexecdir='$(LIBDIR)'",
-  type = "command",
+  modules = {
+    ["specl.badargs"]		= "lib/specl/badargs.lua",
+    ["specl.color"]		= "lib/specl/color.lua",
+    ["specl.compat"]		= "lib/specl/compat.lua",
+    ["specl.expect"]		= "lib/specl/expect.lua",
+    ["specl.formatter.progress"]= "lib/specl/formatter/progress.lua",
+    ["specl.formatter.report"]	= "lib/specl/formatter/report.lua",
+    ["specl.formatter.tap"]	= "lib/specl/formatter/tap.lua",
+    ["specl.inprocess"]		= "lib/specl/inprocess.lua",
+    ["specl.loader"]		= "lib/specl/loader.lua",
+    ["specl.main"]		= "lib/specl/main.lua",
+    ["specl.matchers"]		= "lib/specl/matchers.lua",
+    ["specl.runner"]		= "lib/specl/runner.lua",
+    ["specl.shell"]		= "lib/specl/shell.lua",
+    ["specl.std"]		= "lib/specl/std.lua",
+    ["specl.util"]		= "lib/specl/util.lua",
+    ["specl.version"]		= "lib/specl/version.lua",
+  }
 }
