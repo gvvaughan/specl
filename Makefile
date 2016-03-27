@@ -43,6 +43,7 @@ $(luadir)/version.lua: $(luadir)/version.lua.in
 	    rm -f '$@T';						\
 	else								\
 	    echo "$(SED) -e 's,@VERSION@,$(VERSION),' '$<' > '$@T'";	\
+	    rm -f '$@';							\
 	    mv -f '$@T' '$@';						\
 	    $(CHMOD) 444 '$@';						\
 	fi
@@ -55,6 +56,7 @@ doc/specl.1: $(SPECL)
 	  $(SPECL)
 
 $(SPECL): $(SPECL).in Makefile
+	rm -f '$@'
 	$(SED) -e "s,@abs_top_srcdir@,`pwd`," '$<' > '$@'
 	$(CHMOD) 555 '$@'
 
