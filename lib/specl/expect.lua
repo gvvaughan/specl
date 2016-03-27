@@ -16,12 +16,20 @@
 -- from <https://mit-license.org>.
 
 
-local macro    = require "macro"
-local matchers = require "specl.matchers"
-local std      = require "specl.std"
+local _ENV = {
+  error		= error,
+  select	= select,
+  setfenv	= function () end,
+  setmetatable	= setmetatable,
+  tostring	= tostring,
+  type		= type,
 
-local getmatcher = matchers.getmatcher
+  insert	= table.insert,
 
+  define	= require "macro".define,
+  getmatcher	= require "specl.matchers".getmatcher,
+}
+setfenv (1, _ENV)
 
 
 --[[ ============== ]]--
@@ -29,7 +37,7 @@ local getmatcher = matchers.getmatcher
 --[[ ============== ]]--
 
 
-macro.define ("expect", function (get)
+define ("expect", function (get)
   local expr
   local tk, v = get:peek (1)
   if v == "(" then
@@ -49,7 +57,7 @@ end)
 
 
 -- Transform between decorators.
-macro.define ("between", function (get)
+define ("between", function (get)
   local expr
   local tk, v = get:peek (1)
   if v == "(" then
@@ -126,7 +134,7 @@ local function score (state, inverse, success, message)
   else
     stats.pass = stats.pass + 1
   end
-  table.insert (expectations, {
+  insert (expectations, {
     message = message,
     status  = success,
     pending = pending,
@@ -211,7 +219,6 @@ end
 
 
 return {
-  expandmacros = expandmacros,
   expect       = expect,
   init         = init,
   pending      = pending,
