@@ -22,16 +22,35 @@
 ]]
 
 
-local std    = require "specl.std"
 
-local split  = std.string.split
-local invert, unpack = std.table.invert, std.table.unpack
-local getfenv, parsetypes, setfenv, typesplit =
-  std.getfenv, std.debug.parsetypes, std.setfenv, std.debug.typesplit
+-- NOTE: This might look like we're importing symbols from the host Lua
+-- global environment, but actually 'specl.badargs' is usually loaded
+-- into spec example code, which means these symbols come from the
+-- 'specl.sandbox' table.
 
+local _ = {
+  std	= require "specl.std",
+}
 
--- Protect against examples misusing or resetting keywords.
-local ipairs, pairs, type = ipairs, pairs, type
+local _ENV = {
+  getfenv	= _.std.getfenv,
+  ipairs	= ipairs,
+  pairs		= pairs,
+  setfenv	= function () end,
+  type		= type,
+
+  format	= string.format,
+  concat	= table.concat,
+
+  split		= _.std.string.split,
+  invert	= _.std.table.invert,
+  unpack	= _.std.table.unpack,
+  parsetypes	= _.std.debug.parsetypes,
+  typesplit	= _.std.debug.typesplit,
+}
+setfenv (1, _ENV)
+setfenv = _.std.setfenv
+_ = nil
 
 
 --- Format typestrings and typelists suitably for display to the user.
@@ -60,7 +79,7 @@ local function showarg (types)
     end
   end
 
-  local r = table.concat (t, ", "):gsub (", ([^,]+)$", " or %1")
+  local r = concat (t, ", "):gsub (", ([^,]+)$", " or %1")
   if r == "nil" then r = "no value" end
   return r
 end
@@ -74,7 +93,7 @@ end
 -- @string[opt="no value"] got actual argument type
 -- @usage
 --   expect (fn ()).to_error (badargs.format (fname, 1, "function"))
-local function format (fname, i, want, field, got)
+local function badargs_format (fname, i, want, field, got)
   if want == nil and field ~= nil then
     local s = "bad argument #%d to '%s' (invalid field name '%s')"
     return s:format (i, fname, field)
@@ -90,8 +109,8 @@ local function format (fname, i, want, field, got)
     local s = "bad argument #%d to '%s' (%s expected for field '%s', got %s)"
     return s:format (i, fname, want, field, got or "no value")
   end
-  return string.format ("bad argument #%d to '%s' (%s expected, got %s)",
-                        i, fname, showarg (want), got or "no value")
+  return format ("bad argument #%d to '%s' (%s expected, got %s)",
+                 i, fname, showarg (want), got or "no value")
 end
 
 
@@ -109,8 +128,8 @@ local function result (fname, i, want, got)
     local s = "bad result #%d from '%s' (no more than %d result%s expected, got %d)"
     return s:format (i + 1, fname, i, i == 1 and "" or "s", want)
   end
-  return string.format ("bad result #%d from '%s' (%s expected, got %s)",
-                        i, fname, showarg (want), got or "no value")
+  return format ("bad result #%d from '%s' (%s expected, got %s)",
+                 i, fname, showarg (want), got or "no value")
 end
 
 
@@ -315,8 +334,8 @@ local function diagnose (decl, fn)
       examples {
         ["it diagnoses missing argument #" .. tostring (i)] = function ()
           expect (fn (unpack (arglist))).to_raise.any_of {
-	    format ("?", i, argtype),	-- recent LuaJIT
-	    format (fname, i, argtype),	-- PUC-Rio Lua
+	    badargs_format ("?", i, argtype),	-- recent LuaJIT
+	    badargs_format (fname, i, argtype),	-- PUC-Rio Lua
           }
         end
       }
@@ -327,8 +346,8 @@ local function diagnose (decl, fn)
       examples {
 	[diagnose_badarg_description (i, argtype)] = function ()
           expect (fn (unpack (arglist))).to_raise.any_of {
-	    format ("?", i, argtype, showarg (type (arglist[i]))),
-	    format (fname, i, argtype, showarg (type (arglist[i]))),
+	    badargs_format ("?", i, argtype, showarg (type (arglist[i]))),
+	    badargs_format (fname, i, argtype, showarg (type (arglist[i]))),
           }
 	end
       }
@@ -358,8 +377,8 @@ local function diagnose (decl, fn)
     examples {
       ["it diagnoses more than maximum of " .. max .. " arguments"] = function ()
         expect (fn (unpack (arglist))).to_raise.any_of {
-	  format (fname, max + 1),
-	  format ("?", max + 1),
+	  badargs_format (fname, max + 1),
+	  badargs_format ("?", max + 1),
         }
       end
     }
@@ -376,6 +395,6 @@ end
 --- @export
 return {
   diagnose = diagnose,
-  format   = format,
+  format   = badargs_format,
   result   = result,
 }
