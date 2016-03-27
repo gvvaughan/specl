@@ -204,6 +204,55 @@ M.string.tostring = str
 M.tostring = M.string.tostring
 
 
+-- We rely on choosing correctly between [gs]etfenv and debug.[gs]etfenv
+-- in Lua 5.1 based on the object type; but released stdlib still tries
+-- to pass stack offsets to debug.[gs]etfenv, which doesn't work.
+
+if debug.getfenv then
+
+  M.getfenv = function (fn)
+    fn = fn or 1
+
+    local type_fn = type (fn)
+    if type_fn == "table" then
+      fn = (getmetatable (fn) or {}).__call or fn
+    elseif type_fn == "number" and fn > 0 then
+      fn = fn + 1
+    end
+
+    if type (fn) == "function" then
+      return debug.getfenv (fn)
+    end
+    return getfenv (fn), nil
+  end
+
+  M.setfenv = function (fn, env)
+    fn = fn or 1
+
+    local type_fn = type (fn)
+    if type_fn == "table" then
+      fn = (getmetatable (fn) or {}).__call or fn
+    elseif type_fn == "number" and fn > 0 then
+      fn = fn + 1
+    end
+
+    if type (fn) == "function" then
+      return debug.setfenv (fn, env)
+    end
+    return setfenv (fn, env), nil
+  end
+
+else
+
+  M.getfenv = M.debug.getfenv
+  M.setfenv = M.debug.setfenv
+
+end
+
+M.debug.getfenv = nil
+M.debug.setfenv = nil
+
+
 
 --[[ ================= ]]--
 --[[ Public Interface. ]]--

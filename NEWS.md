@@ -82,6 +82,10 @@
   - `load` and `loadfile` propagate error messages back to calling
     examples.
 
+  - The `getfenv` and `setfenv` functions available from examples will
+    no longer pass non-function objects to the host Lua implementation
+    `debug.getfenv` and `debug.setfenv` symbols.
+
 
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
 

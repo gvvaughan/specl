@@ -59,7 +59,7 @@ local sandbox = {
   },
   dofile	= dofile,
   error		= error,
-  getfenv	= _.std.debug.getfenv,
+  getfenv	= _.std.getfenv,
   getmetatable	= getmetatable,
   io = {
     close	= io.close,
@@ -138,7 +138,7 @@ local sandbox = {
   rawset	= rawset,
   require	= require,
   select	= select,
-  setfenv	= _.std.debug.setfenv,
+  setfenv	= _.std.setfenv,
   setmetatable	= setmetatable,
   string = {
     byte	= string.byte,

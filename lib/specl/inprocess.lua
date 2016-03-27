@@ -29,7 +29,7 @@ local util   = require "specl.util"
 
 local xpcall = compat.xpcall
 local Process = shell.Process
-local setfenv = std.debug.setfenv
+local setfenv = std.setfenv
 local case, object = std.functional.case, std.object
 local clone, merge, unpack = std.table.clone, std.table.merge, std.table.unpack
 local nop = util.nop

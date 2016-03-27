@@ -45,7 +45,7 @@ setfenv (1, _ENV)
 local deepcopy		= _.util.deepcopy
 local examplename	= _.util.examplename
 local merge		= _.std.table.merge
-local setfenv		= _.std.debug.setfenv
+local setfenv		= _.std.setfenv
 local slurp		= _.std.io.slurp
 local split		= _.std.string.split
 

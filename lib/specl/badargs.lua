@@ -27,7 +27,7 @@ local std    = require "specl.std"
 local split  = std.string.split
 local invert, unpack = std.table.invert, std.table.unpack
 local getfenv, parsetypes, setfenv, typesplit =
-  std.debug.getfenv, std.debug.parsetypes, std.debug.setfenv, std.debug.typesplit
+  std.getfenv, std.debug.parsetypes, std.setfenv, std.debug.typesplit
 
 
 -- Protect against examples misusing or resetting keywords.
