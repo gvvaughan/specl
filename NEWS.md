@@ -68,6 +68,12 @@
   - `loadstring` is not supported in example code, use `load`
     instead.
 
+  - `package.loaders` is not supported in example code, even where that
+    is the field used by the host Lua implementation; use
+    `package.searchers` instead.
+
+  - `package.seeall` is not supported in example code.
+
 ### Bug fixes:
 
   - `load` and `loadfile` propagate error messages back to calling

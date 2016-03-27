@@ -129,13 +129,11 @@ local sandbox = {
   package = {
     config	= package.config,
     cpath	= package.cpath,
-    loaders	= package.loaders or package.searchers,
     loadlib	= package.loadlib,
     path	= package.path,
     preload	= package.preload,
-    searchers	= package.loaders or package.searchers,
+    searchers	= package.searchers or package.loaders,
     searchpath	= package.searchpath,
-    seeall	= package.seeall,
   },
   pairs		= pairs,
   pcall		= pcall,
@@ -238,7 +236,7 @@ local function inner_closures (env, state)
   end
 
   -- For a not-yet-{pre,}loaded module, try to find it on the
-  -- environment `package.path` using the system loaders, and cache any
+  -- environment `package.path` using the system searchers, and cache any
   -- symbols that leak out (the side effects). Copy any leaked symbols
   -- into the example block environment, for this and subsequent
   -- examples that load it.
@@ -247,10 +245,10 @@ local function inner_closures (env, state)
 
     -- temporarily switch to the environment package context.
     local save = {
-      cpath = package.cpath, path = package.path, loaders = package.loaders,
+      cpath = package.cpath, path = package.path, searchers = package.searchers,
     }
-    package.cpath, package.path, package.loaders =
-      env.package.cpath, env.package.path, env.package.loaders
+    package.cpath, package.path, package.searchers =
+      env.package.cpath, env.package.path, env.package.searchers
 
     -- We can have a spec_helper.lua in each spec directory, so don't
     -- cache the side effects of a random one!
@@ -262,7 +260,7 @@ local function inner_closures (env, state)
       -- No side effects cached; find a loader function.
       if loadfn == nil then
         errmsg = ""
-        for _, loader in ipairs (package.loaders) do
+        for _, loader in ipairs (package.searchers) do
 	  loadfn = loader (m)
 	  if type (loadfn) == "function" then
             break
@@ -284,8 +282,8 @@ local function inner_closures (env, state)
 
     package.loaded[m] = package.loaded[m] or loaded or nil
 
-    package.cpath, package.path, package.loaders =
-      save.cpath, save.path, save.loaders
+    package.cpath, package.path, package.searchers =
+      save.cpath, save.path, save.searchers
     return package.loaded[m]
   end
 

@@ -318,7 +318,7 @@ local function Parser (filename, s, opts)
       local spec_path = "%s"
 
       -- Autoload spec_helper from spec-file directory, if any.
-      table.insert (package.loaders, 1, loader.expandmacros)
+      table.insert (package.searchers, 1, loader.expandmacros)
       pcall (require, "spec_helper")
     ]], package.path, spec_path)
   }
