@@ -10,7 +10,7 @@ source = {
   url = "git://github.com/gvvaughan/specl.git",
 }
 dependencies = {
-  "luamacro >= 2.0",
+  "luamacro >= 2.5.1",
   "lua >= 5.1, < 5.4",
   "lyaml >= 5",
   "optparse",
