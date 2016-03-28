@@ -22,10 +22,11 @@
 ]]
 
 
-local compat = require "specl.compat"
-local shell  = require "specl.shell"
-local std    = require "specl.std"
-local util   = require "specl.util"
+local compat	= require "specl.compat"
+local sandbox	= require "specl.sandbox"
+local shell	= require "specl.shell"
+local std	= require "specl.std"
+local util	= require "specl.util"
 
 local xpcall = compat.xpcall
 local Process = shell.Process
@@ -239,7 +240,7 @@ local function capture (fn, arg, stdin)
   arg = arg or {}
 
   -- Execution environment.
-  local env = setmetatable ({}, {__index = _G})
+  local env = sandbox.new ()
 
   -- Captured standard output and standard error.
   local pstat = 0

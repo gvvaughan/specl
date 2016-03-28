@@ -315,6 +315,6 @@ return {
 
   new = function (state, caller_env)
     local root_env = root_closures (deepcopy (sandbox), state)
-    return merge (root_env, caller_env)
+    return caller_env and merge (root_env, caller_env) or root_env
   end,
 }
