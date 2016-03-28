@@ -21,14 +21,40 @@
  @module specl.shell
 ]]
 
-local std  = require "specl.std"
-local util = require "specl.util"
 
-local object, escape_pattern = std.object, std.string.escape_pattern
-local argcheck = std.debug.argcheck
+local _ = {
+  matchers	= require "specl.matchers",
+  std		= require "specl.std",
+}
 
+local _ENV = {
+  getmetatable		= getmetatable,
+  pairs			= pairs,
+  setfenv		= function () end,
+  tonumber		= tonumber,
+  tostring		= tostring,
+  type			= type,
 
-local Object = object {}
+  -- Note: this module is loaded from examples, potentially inside a
+  -- `specl.inprocess` environment with `io` and `os` tables tweaked
+  -- to capture i/o before reaching the console, so it's not safe to
+  -- grab individual `io` or `os` table members here.
+  io			= io,
+  os			= os,
+
+  table_concat		= table.concat,
+  table_insert		= table.insert,
+
+  matchers		= _.matchers,
+  object		= _.std.object,
+  argcheck		= _.std.debug.argcheck,
+  argscheck		= _.std.debug.argscheck,
+  escape_pattern	= _.std.string.escape_pattern,
+
+  Object		= _.std.object {},
+}
+setfenv (1, _ENV)
+_ = nil
 
 
 local function shell_quote (s)
@@ -44,18 +70,17 @@ local Command = Object {
   _init = function (self, params)
     argcheck ("Command", 1, "string|table", params)
 
-    local kind = object.type (params)
-    if kind == "string" then params = {params} end
+    if type (params) ~= "table" then params = {params} end
 
-    local cmd = table.concat (params, " ")
+    local cmd = table_concat (params, " ")
     local env, stdin = params.env, params.stdin
 
     -- Flatten the command itself to a string.
     self.cmd = cmd
-    if object.type (cmd) == "table" then
+    if type (cmd) == "table" then
       -- Subshell is required to make sure redirections are captured,
       -- and environment is already set in time for embedded references.
-      self.cmd = table.concat (cmd, " ")
+      self.cmd = table_concat (cmd, " ")
     end
 
     -- Subshell is required to make sure redirections are captured,
@@ -65,10 +90,10 @@ local Command = Object {
     -- Use 'env' shell command to set environment variables.
     local t = {}
     for k, v in pairs (env or {}) do
-      table.insert (t, k .. "=" .. shell_quote (v))
+      table_insert (t, k .. "=" .. shell_quote (v))
     end
     if #t > 0 then
-      self.cmd = "env " .. table.concat (t, " ") .. " " .. self.cmd
+      self.cmd = "env " .. table_concat (t, " ") .. " " .. self.cmd
     end
 
     if stdin then
@@ -96,7 +121,7 @@ local Process = Object {
 -- @tparam string|table|Command o a shell command to run in a subprocess
 -- @treturn Process result of executing *o*
 local function spawn (o)
-  if object.type (o) ~= "Command" then o = Command (o) end
+  if (getmetatable (o) or {})._type ~= "Command" then o = Command (o) end
 
   -- Capture stdout and stderr to temporary files.
   local fout = os.tmpname ()
@@ -125,10 +150,11 @@ end
 -- Register some additional matchers for dealing with the results from
 -- a completed process in an expectation.
 do
-  local matchers = require "specl.matchers"
+  local Matcher		= matchers.Matcher
 
-  local concat, reformat, Matcher, matchers =
-        matchers.concat, matchers.reformat, matchers.Matcher, matchers.matchers
+  local concat		= matchers.concat
+  local reformat	= matchers.reformat
+  local matchers	= matchers.matchers
 
   -- Append reformatted output stream content, if it contains anything.
   local function nonempty_output (process)
@@ -413,7 +439,7 @@ end
 --[[ ================= ]]--
 
 local function X (decl, fn)
-  return std.debug.argscheck ("specl.shell." .. decl, fn)
+  return argscheck ("specl.shell." .. decl, fn)
 end
 
 --- @export
