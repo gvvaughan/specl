@@ -16,26 +16,149 @@
 -- from <https://mit-license.org>.
 
 
-local std = require "specl.std"
 local have_posix, posix = pcall (require, "posix")
 
-local ielems, map = std.ielems, std.functional.map
-local object = std.object
+-- Don't prevent examples from loading a different luaposix.
+for k in pairs (package.loaded) do
+  if k == "posix" or k == "posix_c" or k:match "^posix%." then
+    package.loaded[k] = nil
+  end
+end
 
 
--- A null operation function.
-local function nop () end
+local _ = {
+  std	= require "specl.std",
+}
+
+local _ENV = {
+  getmetatable	= getmetatable,
+  ipairs	= ipairs,
+  next		= next,
+  rawset	= rawset,
+  setfenv	= function () end,
+  setmetatable	= setmetatable,
+  tostring	= tostring,
+  type		= type,
+
+  now		= os.time,
+  format	= string.format,
+  gsub		= string.gsub,
+  rep		= string.rep,
+  concat	= table.concat,
+
+  catfile	= _.std.io.catfile,
+  str		= _.std.tostring,
+}
+setfenv (1, _ENV)
+_ = nil
 
 
-local files, timersub -- forward declarations
 
-if have_posix then
+local function deepcopy (orig, copied)
+  copied = copied or {}
 
-  files = function (root, t)
+  local mt = getmetatable (orig)
+  local copy
+  -- be careful of tables set to be their own metatable!
+  if mt ~= orig then
+    copy = mt and setmetatable ({}, copied[mt] or deepcopy (mt, copied)) or {}
+  else
+    copy = {}
+  end
+  copied[orig] = copy
+  for k, v in next, orig, nil do
+    if type (k) == "table" then k = copied[k] or deepcopy (k, copied) end
+    if type (v) == "table" then v = copied[v] or deepcopy (v, copied) end
+    rawset (copy, k, v)
+  end
+  if mt == orig then
+    setmetatable (copy, copy)
+  end
+  return copy
+end
+
+
+local function isstring (x)
+  return type (x) == "string" or (getmetatable (x) or {})._type == "string"
+end
+
+
+local function strip1st (s)
+  return (gsub (s, "^%s*%w+%s+", ""))
+end
+
+
+local M = {
+  -- Concatenate elements of table ALTERNATIVES much like `table.concat`
+  -- except the separator is always ", ".  If INFIX is provided, the
+  -- final separotor uses that instead of ", ".  If QUOTED is not nil or
+  -- false, then any elements of ALTERNATIVES with type "string" will be
+  -- quoted using `string.format ("%q")` before concatenation.
+  concat = function (alternatives, infix, quoted)
+    infix = infix or ", "
+
+    local buf = {}
+    if quoted ~= nil then
+      for i, v in ipairs (alternatives) do
+        buf[i] = isstring (v) and format ("%q", v) or str (v)
+      end
+    end
+    buf = concat (buf, ", ")
+
+    return infix and gsub (buf, ", ([^,]+)$", infix .. "%1") or buf
+  end,
+
+  -- Return a complete copy of T, along with copied metatables.
+  deepcopy = deepcopy,
+
+  -- Return elements of DESCRIPTIONS concatenated after removing the
+  -- first word of each item.
+  examplename = function (descriptions)
+    local buf = {}
+    for i, v in ipairs (descriptions) do
+      buf[i] = strip1st (v)
+    end
+    return concat (buf, " ")
+  end,
+
+  -- Return an appropriate indent for last element of DESCRIPTIONS.
+  indent = function (descriptions)
+    return rep ("  ", #descriptions - 1)
+  end,
+
+  nop = function () end,
+
+  -- Return S with the first word and following whitespace stripped,
+  -- where S contains some whitespace initially (i.e single words are
+  -- returned unchanged).
+  strip1st = strip1st,
+
+  -- Simplified object.type, that just returns "object" for non-primitive
+  -- types, or else the primitive type name.
+  type = function (x)
+    if type (x) == "table" and (getmetatable (x) or {})._type ~= "table" then
+      return "object"
+    end
+    return type (x)
+  end,
+}
+
+
+local timersub = false
+
+if not have_posix then
+
+  M.files = function (root, t)
+    return nil, "install luaposix to autoload spec files from '" .. tostring (root) .. "/'"
+  end
+
+else
+
+  M.files = function (root, t)
     t = t or {}
     for _, file in ipairs (posix.dir (root) or {}) do
       if file ~= "." and file ~= ".." then
-        local path = std.io.catfile (root, file)
+        local path = catfile (root, file)
         if posix.stat (path).type == "directory" then
           t = files (path, t)
         else
@@ -48,140 +171,27 @@ if have_posix then
 
   timersub = posix.sys and posix.sys.timersub or posix.timersub
 
-else
-
-  files = function (root, t)
-    return nil, "install luaposix to autoload spec files from '" .. tostring (root) .. "/'"
-  end
-
 end
 
 
 -- Use higher resolution timers from luaposix if available.
-local function gettimeofday ()
-  if not (have_posix and timersub) then
-    return os.time ()
-  end
-  return posix.gettimeofday ()
-end
+if timersub then
+  M.gettimeofday = posix.gettimeofday
 
-local function timesince (earlier)
-  if not (have_posix and timersub) then
-    return os.time () - earlier
-  end
-  local elapsed = timersub (posix.gettimeofday (), earlier)
-  return (elapsed.usec / 1000000) + elapsed.sec
-end
-
-
--- Return a complete copy of T, along with copied metatables.
-local function deepcopy (t)
-  local copied = {} -- references to tables already copied
-
-  local function tablecopy (orig)
-    local mt = getmetatable (orig)
-    local copy
-    -- be careful of tables set to be their own metatable!
-    if mt ~= orig then
-      copy = mt and setmetatable ({}, copied[mt] or tablecopy (mt)) or {}
-    else
-      copy = {}
-    end
-    copied[orig] = copy
-    for k, v in next, orig, nil do  -- don't trigger __pairs metamethod
-      if type (k) == "table" then k = copied[k] or tablecopy (k) end
-      if type (v) == "table" then v = copied[v] or tablecopy (v) end
-      rawset (copy, k, v)
-    end
-    if mt == orig then
-      setmetatable (copy, copy)
-    end
-    return copy
+  M.timesince = function (earlier)
+    local elapsed = timersub (M.gettimeofday (), earlier)
+    return (elapsed.usec / 1000000) + elapsed.sec
   end
 
-  return tablecopy (t)
-end
+else
 
+  M.gettimeofday = now
 
--- Concatenate elements of table ALTERNATIVES much like `table.concat`
--- except the separator is always ", ".  If INFIX is provided, the
--- final separotor uses that instead of ", ".  If QUOTED is not nil or
--- false, then any elements of ALTERNATIVES with type "string" will be
--- quoted using `string.format ("%q")` before concatenation.
-local function concat (alternatives, infix, quoted)
-  infix = infix or ", "
-
-  if quoted ~= nil then
-    alternatives = map (function (v)
-                          if object.type (v) ~= "string" then
-                            return std.tostring (v)
-                          else
-                            return ("%q"):format (v)
-                          end
-                        end, ielems, alternatives)
+  M.timesince = function (earlier)
+    return now () - earlier
   end
 
-  return table.concat (alternatives, ", "):gsub (", ([^,]+)$", infix .. "%1")
 end
 
-
--- Simplified object.type, that just returns "object" for non-primitive
--- types, or else the primitive type name.
-local function xtype (x)
-  if type (x) == "table" and object.type (x) ~= "table" then
-    return "object"
-  end
-  return type (x)
-end
-
-
--- Return an appropriate indent for last element of DESCRIPTIONS.
-local function indent (descriptions)
-  return string.rep ("  ", #descriptions - 1)
-end
-
-
--- Return S with the first word and following whitespace stripped,
--- where S contains some whitespace initially (i.e single words are
--- returned unchanged).
-local function strip1st (s)
-  return (s:gsub ("^%s*%w+%s+", ""))
-end
-
-
--- Return elements of DESCRIPTIONS concatenated after removing the
--- first word of each item.
-local function examplename (descriptions)
-  return table.concat (map (strip1st, ielems, descriptions), " ")
-end
-
-
-
---[[ ----------------- ]]--
---[[ Public Interface. ]]--
---[[ ----------------- ]]--
-
-
--- Don't prevent examples from loading a different luaposix.
-for k in pairs (package.loaded) do
-  if k == "posix" or k == "posix_c" or k:match "^posix%." then
-    package.loaded[k] = nil
-  end
-end
-
-
-local M = {
-  -- Functions
-  concat         = concat,
-  deepcopy       = deepcopy,
-  examplename    = examplename,
-  files          = files,
-  gettimeofday   = gettimeofday,
-  indent         = indent,
-  nop            = nop,
-  strip1st       = strip1st,
-  timesince      = timesince,
-  type           = xtype,
-}
 
 return M
