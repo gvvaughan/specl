@@ -25,8 +25,8 @@ local object, optparse = std.object, std.optparse
 local map = std.functional.map
 local slurp = std.io.slurp
 local clone, merge = std.table.clone, std.table.merge
-local deepcopy, files, gettimeofday, have_posix =
-  util.deepcopy, util.files, util.gettimeofday, util.have_posix
+local deepcopy, files, gettimeofday =
+  util.deepcopy, util.files, util.gettimeofday
 local optspec = version.optspec
 
 
@@ -80,11 +80,7 @@ end
 -- Process files and line filters specified on the command-line.
 local function process_args (self, parser)
   if #self.arg == 0 then
-    if have_posix then
-      return parser:opterr "could not find spec files in './specs/'"
-    else
-      return parser:opterr "install luaposix to autoload spec files from './specs/'"
-    end
+    return parser:opterr "could not find spec files in './specs/'"
   end
 
   for i, v in ipairs (self.arg) do

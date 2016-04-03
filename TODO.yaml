@@ -20,3 +20,4 @@ TODO:
       [[implied -> before: module = require "module"]]
 - report line numbers of pending and failed examples:
     it is quite likely libyaml will need patching to make this happen
+- add an lfs implementation of util.files if luaposix is not loadable

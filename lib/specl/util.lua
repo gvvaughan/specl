@@ -177,7 +177,6 @@ local M = {
   examplename    = examplename,
   files          = files,
   gettimeofday   = gettimeofday,
-  have_posix     = have_posix,
   indent         = indent,
   nop            = nop,
   strip1st       = strip1st,
