@@ -86,6 +86,9 @@
     no longer pass non-function objects to the host Lua implementation
     `debug.getfenv` and `debug.setfenv` symbols.
 
+  - First word of descriptions is stripped correctly in some corner
+    cases that were missed previously.
+
 
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
 

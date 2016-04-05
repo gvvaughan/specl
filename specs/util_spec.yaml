@@ -1,0 +1,46 @@
+before:
+  util = require "specl.util"
+
+specify util:
+- describe concat:
+
+- describe deepcopy:
+
+- describe examplename:
+
+- describe files:
+
+- describe gettimeofday:
+
+- describe indent:
+
+- describe nop:
+
+- describe strip1st:
+  - before:
+      fn = util.strip1st
+
+  - it removes the first non-whitespace sequence and following whitespace:
+      expect (fn "foo bar baz").to_be "bar baz"
+      expect (fn "foo \t \n\nbar baz").to_be "bar baz"
+      expect (fn "-\t+").to_be "+"
+  - it removes leading whitespace too:
+      expect (fn " foo bar baz").to_be "bar baz"
+      expect (fn "\n\t  \tfoo \t \n\nbar baz").to_be "bar baz"
+      expect (fn "\n- +").to_be "+"
+  - it returns the empty string for any single non-whitespace sequence:
+      expect (fn "a").to_be ""
+      expect (fn "b ").to_be ""
+      expect (fn " c ").to_be ""
+      expect (fn "\n   @#$!)#-$&\t").to_be ""
+  - it returns the empty string for any all-whitespace argument:
+      expect (fn "").to_be ""
+      expect (fn " ").to_be ""
+      expect (fn "  ").to_be ""
+      expect (fn "\r").to_be ""
+      expect (fn " \n\r\t").to_be ""
+
+- describe timesince:
+
+- describe type:
+

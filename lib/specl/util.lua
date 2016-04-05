@@ -84,7 +84,11 @@ end
 
 
 local function strip1st (s)
-  return (gsub (s, "^%s*%w+%s+", ""))
+  local r = gsub (s, "^.-%S%s+", "")
+  if r ~= s then return r end
+  -- gsub above didn't change anything, so there must be 0 or 1 words
+  -- in *s* (maybe with whitespace for 0 words), so strip everything!
+  return ""
 end
 
 
