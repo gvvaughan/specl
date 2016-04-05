@@ -99,12 +99,12 @@ local M = {
   -- false, then any elements of ALTERNATIVES with type "string" will be
   -- quoted using `string.format ("%q")` before concatenation.
   concat = function (alternatives, infix, quoted)
-    infix = infix or ", "
-
     local buf = {}
-    if quoted ~= nil then
-      for i, v in ipairs (alternatives) do
-        buf[i] = isstring (v) and format ("%q", v) or str (v)
+    for i, v in ipairs (alternatives) do
+      if quoted ~= nil and isstring (v) then
+        buf[i] = format ("%q", v)
+      else
+        buf[i] = str (v)
       end
     end
     buf = concat (buf, ", ")

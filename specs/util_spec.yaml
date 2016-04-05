@@ -3,6 +3,55 @@ before:
 
 specify util:
 - describe concat:
+  - before:
+      fn = util.concat
+
+  - it is like table.concat with ', ' separator by default:
+      for _, x in ipairs {{}, {'a'}, {'b', 'c'}, {'def', 'g', ''}} do
+        expect (fn (x)).to_be (table.concat (x, ", "))
+      end
+  - it stringifies elements automatically:
+      strconcat = function (t)
+        local r = {}
+        for i, v in ipairs (t) do r[i] = tostring (v) end
+        return table.concat (r, ", ")
+      end
+      for _, x in ipairs {{}, {1}, {2.0, false}, {'{}', ''}} do
+        expect (fn (x)).to_be (strconcat (x))
+      end
+  - it replaces the last separator with given infix:
+      infixconcat = function (t, infix)
+        local r = {}
+        for i, v in ipairs (t) do r[i] = tostring (v) end
+        return (string.gsub (table.concat (r, ", "), ", ([^,]+)$", infix .. "%1"))
+      end
+      for _, x in ipairs {{}, {1}, {1, 2}, {1, 2, 3}, {1, 2, 3, 4}} do
+        expect (fn (x, "|")).to_be (infixconcat (x, "|"))
+        expect (fn (x, " followed by ")).
+          to_be (infixconcat (x, " followed by "))
+      end
+  - it supports quoting of string elements:
+      quoteconcat = function (t)
+        local r = {}
+        for i, v in ipairs (t) do
+          r[i] = type (v) == "string" and string.format ("%q", v) or tostring (v)
+        end
+        return table.concat (r, ", ")
+      end
+      for _, x in ipairs {{}, {""}, {'"does"', "doesn't", '"', "'"}} do
+        expect (fn (x, nil, true)).to_be (quoteconcat (x))
+        expect (fn (x, nil, "")).to_be (quoteconcat (x))
+        expect (fn (x, nil, ":quoted")).to_be (quoteconcat (x))
+      end
+  - it handles nil-valued elements:
+      pending "adopting std.normalize.ipairs"
+      expect (fn {nil, 1, nil, nil, false}).to_be "nil, 1, nil, nil, false"
+  - it respects __len metamethod:
+      pending "adopting std.normalize.len and std.npairs"
+      local mt  = {__len = function (self) return self.n end}
+      Seq = function (...) return setmetatable (pack (...), mt) end
+      expect (fn (Seq (1, nil, false, nil, nil))).
+        to_be "1, nil, false, nil, nil"
 
 - describe deepcopy:
 
