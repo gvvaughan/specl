@@ -50,6 +50,11 @@ local _ENV = {
   type			= type,
   unpack		= _.std.table.unpack,
 
+  format		= string.format,
+  gsub			= string.gsub,
+  match			= string.match,
+  sub			= string.sub,
+
   getmetamethod		= _.std.getmetamethod,
 
   Object		= _.std.object {},
@@ -86,7 +91,7 @@ local function totable (obj)
   elseif type (obj) == "string" then
     -- ...or explode a raw string into a table of characters.
     r, i = {}, 1
-    obj:gsub ("(.)", function (c) i, r[i] = i + 1, c end)
+    gsub (obj, "(.)", function (c) i, r[i] = i + 1, c end)
   end
   return r
 end
@@ -98,7 +103,7 @@ end
 -- @treturn string string representation of *x*
 local function q (obj)
   if type (obj) == "string" then
-    return ("%q"):format (obj)
+    return format ("%q", obj)
   end
   return tostring (obj)
 end
@@ -266,8 +271,8 @@ local function _reformat (text, prefix)
   text = text or ""
   prefix = prefix or "| "
   return "\n" .. prefix .. color.match ..
-         chomp (text):gsub ("\n",
-           escape.reset .. "\n" .. prefix .. escape.match) ..
+         gsub (chomp (text), "\n",
+               escape.reset .. "\n" .. prefix .. escape.match) ..
          color.reset
 end
 
@@ -302,7 +307,7 @@ local function reformat (list, adaptor, prefix)
     s = s .. infix .. _reformat (expected, prefix) .. "\n"
   end
   -- strip the spurious <infix> from the start of the string.
-  return s:gsub ("^" .. escape_pattern (infix), "")
+  return gsub (s, "^" .. escape_pattern (infix), "")
 end
 
 
@@ -439,7 +444,7 @@ matchers.be = Matcher {
   end,
 
   format_alternatives = function (self, adaptor, alternatives)
-    local decorator = adaptor:match "^between_(%w+)$" or ""
+    local decorator = match (adaptor, "^between_(%w+)$") or ""
     if decorator ~= "" then
       adaptor, decorator = "between", " " .. decorator
     end
@@ -669,7 +674,7 @@ matchers.contain = Matcher {
 
   format_alternatives = function (self, adaptor, alternatives, actual)
     if type (alternatives) == "string" then
-      alternatives = ("%q"):format (alternatives)
+      alternatives = format ("%q", alternatives)
     else
       alternatives = concat (alternatives, adaptor, ":quoted")
     end
@@ -685,14 +690,14 @@ matchers.contain = Matcher {
 -- @treturn bool whether to invert the results from the matcher function
 local function getmatcher (verb)
   local inverse, matcher_root = false
-  if verb:match ("^should_not_") then
-    inverse, matcher_root = true, verb:sub (12)
-  elseif verb:match ("^to_not_") or verb:match ("^not_to_") then
-    inverse, matcher_root = true, verb:sub (8)
-  elseif verb:match ("^should_") then
-    matcher_root = verb:sub (8)
+  if match (verb, "^should_not_") then
+    inverse, matcher_root = true, sub (verb, 12)
+  elseif match (verb, "^to_not_") or match (verb, "^not_to_") then
+    inverse, matcher_root = true, sub (verb, 8)
+  elseif match (verb, "^should_") then
+    matcher_root = sub (verb, 8)
   else
-    matcher_root = verb:sub (4)
+    matcher_root = sub (verb, 4)
   end
   return matchers[matcher_root], inverse
 end
