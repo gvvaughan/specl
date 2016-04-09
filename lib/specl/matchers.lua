@@ -31,22 +31,45 @@
 ]]
 
 
-local color = require "specl.color"
-local std   = require "specl.std"
-local util  = require "specl.util"
+local _ = {
+  std	= require "specl.std",
+}
 
-local getmetamethod, object, pairs, tostring =
-  std.getmetamethod, std.object, std.pairs, std.tostring
-local eqv = std.operator.eqv
-local chomp, escape_pattern, pickle, prettytostring =
-  std.string.chomp, std.string.escape_pattern, std.string.pickle,
-  std.string.prettytostring
-local clone, empty, merge, size, unpack =
-  std.table.clone, std.table.empty, std.table.merge, std.table.size,
-  std.table.unpack
-local argcheck = std.debug.argcheck
+local _ENV = {
+  color			= require "specl.color",
+  util			= require "specl.util",
 
-local Object = object {}
+  ipairs		= ipairs,
+  pairs			= pairs,
+  pcall			= pcall,
+  rawget		= rawget,
+  rawset		= rawset,
+  setfenv		= function () end,
+  setmetatable		= setmetatable,
+  tostring		= _.std.tostring,
+  type			= type,
+  unpack		= _.std.table.unpack,
+
+  getmetamethod		= _.std.getmetamethod,
+
+  Object		= _.std.object {},
+
+  argcheck		= _.std.debug.argcheck,
+  objtype		= _.std.object.type,
+  eqv			= _.std.operator.eqv,
+  chomp			= _.std.string.chomp,
+  escape_pattern	= _.std.string.escape_pattern,
+  pickle		= _.std.string.pickle,
+  prettytostring	= _.std.string.prettytostring,
+  clone			= _.std.table.clone,
+  empty			= _.std.table.empty,
+  merge			= _.std.table.merge,
+  size			= _.std.table.size,
+
+}
+setfenv (1, _ENV)
+_ = nil
+
 
 local M = {}
 
@@ -599,8 +622,8 @@ matchers.contain = Matcher {
                 self:format_alternatives ("a permutation of", expected, actual) ..
                 "but got" .. self:format_actual (actual, expected)
 
-    if object.type (actual) ~= "table" then actual = totable (actual) end
-    if object.type (expected) ~= "table" then expected = totable (expected) end
+    if objtype (actual) ~= "table" then actual = totable (actual) end
+    if objtype (expected) ~= "table" then expected = totable (expected) end
 
     if size (actual) == size (expected) then
       -- first, check whether expected values are a permutation of actual keys
@@ -640,7 +663,7 @@ matchers.contain = Matcher {
     if type (expected) == "string" and type (actual) == "string" then
       return " string containing " .. q(expected) .. ", "
     else
-      return " " .. object.type (actual) .. " containing " .. q(expected) .. ", "
+      return " " .. objtype (actual) .. " containing " .. q(expected) .. ", "
     end
   end,
 
@@ -650,7 +673,7 @@ matchers.contain = Matcher {
     else
       alternatives = concat (alternatives, adaptor, ":quoted")
     end
-    return " " .. object.type (actual) .. " containing " ..
+    return " " .. objtype (actual) .. " containing " ..
            adaptor .. " " .. alternatives .. ", "
   end,
 }
