@@ -1,7 +1,7 @@
 -- `expect` expansion and execution.
 -- Written by Gary V. Vaughan, 2015
 --
--- Copyright (c) 2015-2016 Gary V. Vaughan
+-- Copyright (c) 2015-2017 Gary V. Vaughan
 --
 -- Specl is free software distributed under the terms of the MIT license;
 -- it may be used for any purpose, including commercial purposes, at
