@@ -2,7 +2,7 @@
 -- lib/specl/version.lua.  Generated from version.lua.in by configure.
 -- Written by Gary V. Vaughan, 2014
 --
--- Copyright (c) 2014-2016 Gary V. Vaughan
+-- Copyright (c) 2014-2017 Gary V. Vaughan
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ return {
 specl (Specl) 14.1.6
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
-Copyright (C) 2016, Gary V. Vaughan
+Copyright (C) 2017, Gary V. Vaughan
 Specl comes with ABSOLUTELY NO WARRANTY.
 You may redistribute copies of Specl under the terms of the GNU
 General Public License; either version 3, or any later version.
