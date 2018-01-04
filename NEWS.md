@@ -5,7 +5,7 @@
 ### Licensing
 
   - Specl is now released under the terms of the MIT license, the same
-    license that Lua uses.  See `LICENSE` for details.
+    license that Lua uses.  See `LICENSE.md` for details.
 
 ### New features
 

@@ -1,5 +1,9 @@
 #!/bin/sh
 SH=--[[						# -*- mode: lua; -*-
+
+# Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
+# Copyright (C) 2014-2018 Gary V. Vaughan
+
 # If LUA is not set, search PATH for something suitable.
 test -n "$LUA" || {
   # Check that the supplied binary is executable and returns a compatible

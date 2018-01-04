@@ -1,3 +1,6 @@
+# Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
+# Copyright (C) 2013-2018 Gary V. Vaughan
+
 CHMOD	= chmod
 HELP2MAN= help2man
 LDOC	= ldoc

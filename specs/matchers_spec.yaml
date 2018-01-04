@@ -1,3 +1,6 @@
+# Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
+# Copyright (C) 2014-2018 Gary V. Vaughan
+
 before: |
   preamble = "before: hell = require 'specl.shell'\nit fails: expect "
   fail_1   = "\n0 passed, 0 pending, and 1 failed"

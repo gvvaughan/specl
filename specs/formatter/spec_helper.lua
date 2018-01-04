@@ -1,3 +1,8 @@
+--[[
+ Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
+ Copyright (C) 2015-2018 Gary V. Vaughan
+]]
+
 local inprocess = require "specl.inprocess"
 local Main      = require "specl.main"
 
