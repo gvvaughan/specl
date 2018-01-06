@@ -3,13 +3,13 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
-local macro  = require "macro"
-local yaml   = require "yaml"
+local macro  = require 'macro'
+local yaml   = require 'yaml'
 
-local compat = require "specl.compat"
-local expect = require "specl.expect"
-local std    = require "specl.std"
-local util   = require "specl.util"
+local compat = require 'specl.compat'
+local expect = require 'specl.expect'
+local std    = require 'specl.std'
+local util   = require 'specl.util'
 
 local load, searchpath = compat.load, compat.searchpath
 local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
@@ -19,14 +19,14 @@ local escape_pattern = std.string.escape_pattern
 local nop = util.nop
 
 
-local TAG_PREFIX = "tag:yaml.org,2002:"
-local null       = { type = "LYAML null" }
+local TAG_PREFIX = 'tag:yaml.org,2002:'
+local null       = { type = 'LYAML null' }
 
 
 -- A list of directories we've loaded yaml spec-files from.   Any other
 -- files required from these directories are macro-expanded during
 -- loading.
-local spec_path  = ""
+local spec_path  = ''
 
 
 --- Search spec_path for module name.
@@ -37,7 +37,7 @@ local function expandmacros (name)
 
    -- Use spec_path by default, but also package.path for specl submodules.
    local search_path = spec_path
-   if name:match "^specl%." then
+   if name:match '^specl%.' then
       search_path = search_path .. pathsep .. package.path
    end
 
@@ -50,7 +50,7 @@ local function expandmacros (name)
    end
 
    local loadfn, err = load (content, name)
-   if type (loadfn) ~= "function" then
+   if type (loadfn) ~= 'function' then
       return nil, "\tload '" .. path .. "' failed: " .. err
    end
 
@@ -68,7 +68,7 @@ local parser_mt = {
 
       -- Raise a parse error.
       error = function (self, errmsg)
-         io.stderr:write (string.format ("%s:%d:%d: %s\n", self.filename,
+         io.stderr:write (string.format ('%s:%d:%d: %s\n', self.filename,
                                          self.mark.line, self.mark.column,
                                          errmsg))
          os.exit (1)
@@ -88,11 +88,11 @@ local parser_mt = {
             local line, msg = errmsg:match ('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
             if msg ~= nil then
                line = tonumber (line) + self.mark.line - 1
-               errmsg = string.format ("%s:%d: %s", self.filename, line, msg)
+               errmsg = string.format ('%s:%d: %s', self.filename, line, msg)
             end
          end
          if errmsg ~= nil then
-            io.stderr:write (errmsg .. "\n")
+            io.stderr:write (errmsg .. '\n')
             os.exit (1)
          end
          return f
@@ -105,13 +105,13 @@ local parser_mt = {
          -- unicode characters :(
          if self.unicode then return value end
          value = self.input:sub (event.start_mark.index, event.end_mark.index)
-         if event.style == "DOUBLE_QUOTED" then
+         if event.style == 'DOUBLE_QUOTED' then
             value = table.concat {value:match ([[^(%s*)"(.-)"%s*$]])}
-         elseif event.style == "SINGLE_QUOTED" then
+         elseif event.style == 'SINGLE_QUOTED' then
             value = table.concat {value:match ([[^(%s*)'(.-)'%s*$]])}
-         elseif event.style == "LITERAL" then
+         elseif event.style == 'LITERAL' then
             value = table.concat {value:match ([[^(%s*)[|](.-)%s*$]])}
-         elseif event.style == "FOLDED" then
+         elseif event.style == 'FOLDED' then
             value = table.concat {value:match ([[^(%s*)>(.-)%s*$]])}
          end
          return value
@@ -129,7 +129,7 @@ local parser_mt = {
          local ok, event = pcall (self.next)
          if not ok then
             -- if ok is nil, then event is a parser error from libYAML.
-            self:error (event:gsub (" at document: .*$", ""))
+            self:error (event:gsub (' at document: .*$', ''))
          end
          self.event = event
          self.mark = {
@@ -157,21 +157,21 @@ local parser_mt = {
             if key == nil then break end
             local value, event = self:load_node ()
             if value == nil then
-               return self:error ("unexpected " .. self:type () .. " event")
+               return self:error ('unexpected ' .. self:type () .. ' event')
             end
-            if key == "before" then
+            if key == 'before' then
                -- Be careful not to overwrite injected preamble.
                value = self:refetch (value, event)
                map.before = {
-                  example = table.concat {map.before and map.before.example or "", value},
+                  example = table.concat {map.before and map.before.example or '', value},
                   line    = self.mark.line,
                }
-            elseif value == "" then
+            elseif value == '' then
                map[key] = {
-                  example = self:compile ("pending ()"),
+                  example = self:compile ('pending ()'),
                   line    = self.mark.line,
                }
-            elseif type (value) == "string" then
+            elseif type (value) == 'string' then
                map[key] = {
                   example = self:compile (self:refetch (value, event)),
                   line    = self.mark.line,
@@ -181,7 +181,7 @@ local parser_mt = {
             end
          end
          -- Delayed compilation of before, having injecting preamble now.
-         if map.before and type (map.before.example) == "string" then
+         if map.before and type (map.before.example) == 'string' then
             map.before.example = self:compile (map.before.example)
          end
          return map
@@ -211,20 +211,20 @@ local parser_mt = {
          local value = self.event.value
          local tag   = self.event.tag
          if tag then
-            tag = tag:match ("^" .. TAG_PREFIX .. "(.*)$")
-            if tag == "str" then
+            tag = tag:match ('^' .. TAG_PREFIX .. '(.*)$')
+            if tag == 'str' then
                -- value is already a string
-            elseif tag == "int" or tag == "float" then
+            elseif tag == 'int' or tag == 'float' then
                value = tonumber (value)
-            elseif tag == "bool" then
-               value = (value == "true" or value == "yes")
+            elseif tag == 'bool' then
+               value = (value == 'true' or value == 'yes')
             end
-         elseif self.event.style == "PLAIN" then
-            if value == "~" then
+         elseif self.event.style == 'PLAIN' then
+            if value == '~' then
                value = null
-            elseif value == "true" or value == "yes" then
+            elseif value == 'true' or value == 'yes' then
                value = true
-            elseif value == "false" or value == "no" then
+            elseif value == 'false' or value == 'no' then
                value = false
             else
                local number = tonumber (value)
@@ -238,7 +238,7 @@ local parser_mt = {
       load_alias = function (self)
          local anchor = self.event.anchor
          if self.anchors[anchor] == nil then
-            return self:error ("invalid reference: " .. tostring (anchor))
+            return self:error ('invalid reference: ' .. tostring (anchor))
          end
          return self.anchors[anchor]
       end,
@@ -256,7 +256,7 @@ local parser_mt = {
 
          local event = self:parse ()
          if dispatch[event] == nil then
-            return self:error ("invalid event: " .. self:type ())
+            return self:error ('invalid event: ' .. self:type ())
          end
        return dispatch[event] (self)
       end,
@@ -269,7 +269,7 @@ local function Parser (filename, s, opts)
    local dir = dirname (filename)
 
    -- Add this spec-file directory to the macro-expanded spec_path list.
-   spec_path = normalize (catfile (dir, path_mark .. ".lua"), spec_path)
+   spec_path = normalize (catfile (dir, path_mark .. '.lua'), spec_path)
 
    local object = {
       unicode   = opts.unicode,
@@ -279,19 +279,19 @@ local function Parser (filename, s, opts)
       next      = yaml.parser (s),
 
       -- strip leading './'
-      filename = filename:gsub (catfile ("^%.", ""), ""),
+      filename = filename:gsub (catfile ('^%.', ''), ''),
 
       -- Used to simplify requiring from the spec file directory.
       preamble = string.format ([[
-         package.path = "%s"
+         package.path = '%s'
 
          -- Expand macros in spec_helper.
-         local loader      = require "specl.loader"
-         local spec_path = "%s"
+         local loader    = require 'specl.loader'
+         local spec_path = '%s'
 
          -- Autoload spec_helper from spec-file directory, if any.
          table.insert (package.searchers, 1, loader.expandmacros)
-         pcall (require, "spec_helper")
+         pcall (require, 'spec_helper')
       ]], package.path, spec_path)
    }
    return setmetatable (object, parser_mt)
@@ -302,19 +302,19 @@ local function load (filename, s, opts)
    local documents = {}
    local parser    = Parser (filename, s, opts)
 
-   if parser:parse () ~= "STREAM_START" then
-      return parser:error ("expecting STREAM_START event, but got " ..
+   if parser:parse () ~= 'STREAM_START' then
+      return parser:error ('expecting STREAM_START event, but got ' ..
                            parser:type ())
    end
 
-   while parser:parse () ~= "STREAM_END" do
+   while parser:parse () ~= 'STREAM_END' do
       local document = parser:load_node ()
       if document == nil then
-         return parser:error ("unexpected " .. parser:type () .. " event")
+         return parser:error ('unexpected ' .. parser:type () .. ' event')
       end
 
-      if parser:parse () ~= "DOCUMENT_END" then
-         return parser:error ("expecting DOCUMENT_END event, but got " ..
+      if parser:parse () ~= 'DOCUMENT_END' then
+         return parser:error ('expecting DOCUMENT_END event, but got ' ..
                               parser:type ())
       end
 
@@ -338,7 +338,7 @@ end
 --[[ ----------------- ]]--
 
 -- Don't prevent examples from loading a different luaposix.
-for _, reload in pairs {"yaml", "lyaml"} do
+for _, reload in pairs {'yaml', 'lyaml'} do
    package.loaded[reload] = nil
 end
 

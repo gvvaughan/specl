@@ -9,11 +9,11 @@
 ]]
 
 
-local compat  = require "specl.compat"
-local sandbox = require "specl.sandbox"
-local shell   = require "specl.shell"
-local std     = require "specl.std"
-local util    = require "specl.util"
+local compat  = require 'specl.compat'
+local sandbox = require 'specl.sandbox'
+local shell   = require 'specl.shell'
+local std     = require 'specl.std'
+local util    = require 'specl.util'
 
 local xpcall  = compat.xpcall
 local Process = shell.Process
@@ -26,22 +26,22 @@ local nop = util.nop
 local Object = object {}
 
 local StrFile = Object {
-   _type = "StrFile",
-   _init = {"mode", "buffer"},
+   _type = 'StrFile',
+   _init = {'mode', 'buffer'},
 
-   mode  = "r",
+   mode  = 'r',
    pos   = 1,
 
    __tostring = function (self)
       -- If not set manually, default `name` to a unique hex address.
-      self.name = self.name or tostring ({}):gsub (".*x", "0x")
-      return "strfile (" .. self.name .. "/" .. self.mode .. ")"
+      self.name = self.name or tostring ({}):gsub ('.*x', '0x')
+      return 'strfile (' .. self.name .. '/' .. self.mode .. ')'
    end,
 
    -- Equivalents to core file object methods.
    __index = {
       close   = function (self)
-                   return nil, "cannot close standard virtual file"
+                   return nil, 'cannot close standard virtual file'
                 end,
 
       flush   = nop,
@@ -56,20 +56,20 @@ local StrFile = Object {
       read    = function (self, ...)
                    -- Obeys the spec, though may not match core file:read
                    -- error precisely.
-                   if self.mode ~= "r" then
-                      return nil, "Bad virtual file descriptor", 9
+                   if self.mode ~= 'r' then
+                      return nil, 'Bad virtual file descriptor', 9
                    end
 
                    local r = {}
-                   if select ("#", ...) == 0 then
-                      fmts = {"*l"}
+                   if select ('#', ...) == 0 then
+                      fmts = {'*l'}
                    else
                       fmts = {...}
                    end
 
                    for i = 1, #fmts do
                       -- For this format, return an empty string when input is exhausted...
-                      if fmts[i] == "*a" then
+                      if fmts[i] == '*a' then
                          r[i] = self.buffer:sub (self.pos)
                          self.pos = #self.buffer + 1
 
@@ -80,18 +80,18 @@ local StrFile = Object {
                       else
                          local b = self.pos
                          r[i] = case (fmts[i], {
-                            ["*n"] = function ()
-                               local ok, e, cap = self.buffer:find ("^%s*0[xX](%x+)", b)
+                            ['*n'] = function ()
+                               local ok, e, cap = self.buffer:find ('^%s*0[xX](%x+)', b)
                                if ok then
                                   self.pos = e + 1
                                   return tonumber (cap, 16)
                                end
-                               local ok, e = self.buffer:find ("^%s*%d*%.?%d+[eE]%d+", b)
+                               local ok, e = self.buffer:find ('^%s*%d*%.?%d+[eE]%d+', b)
                                if ok then
                                   self.pos = e + 1
                                   return tonumber (self.buffer:sub (b, e))
                                end
-                               local ok, e = self.buffer:find ("^%s*%d*%.?%d+", b)
+                               local ok, e = self.buffer:find ('^%s*%d*%.?%d+', b)
                                if ok then
                                   self.pos = e + 1
                                   return tonumber (self.buffer:sub (b, e))
@@ -99,20 +99,20 @@ local StrFile = Object {
                                return nil
                             end,
 
-                            ["*l"] = function ()
-                               local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                            ['*l'] = function ()
+                               local e = self.buffer:find ('\n', self.pos) or #self.buffer
                                self.pos = e + 1
-                               return self.buffer:sub (b, e):gsub ("\n$", "")
+                               return self.buffer:sub (b, e):gsub ('\n$', '')
                             end,
 
-                            ["*L"] = function ()
-                               local e = self.buffer:find ("\n", self.pos) or #self.buffer
+                            ['*L'] = function ()
+                               local e = self.buffer:find ('\n', self.pos) or #self.buffer
                                self.pos = e + 1
                                return self.buffer:sub (b, e)
                             end,
 
                             function ()
-                               if type (fmts[i]) ~= "number" then
+                               if type (fmts[i]) ~= 'number' then
                                   return error ("bad argument #1 to 'read' (invalid option)", 3)
                                end
                                self.pos = self.pos + fmts[i]
@@ -122,16 +122,16 @@ local StrFile = Object {
                       end
                    end
 
-                   if select ("#", r) == 0 then return nil end
+                   if select ('#', r) == 0 then return nil end
                    return unpack (r)
                 end,
 
       seek    = function (self, whence, offset)
                    offset = offset or 0
-                   self.pos = case (whence or "cur", {
+                   self.pos = case (whence or 'cur', {
                       set     = function () return offset + 1 end,
                       cur     = function () return self.pos + offset end,
-                      ["end"] = function () return #self.buffer + offset + 1 end,
+                      ['end'] = function () return #self.buffer + offset + 1 end,
                    })
                    return self.pos - 1
                 end,
@@ -141,10 +141,10 @@ local StrFile = Object {
       write   = function (self, ...)
                    -- Obeys the spec, though may not match core file:read
                    -- error precisely.
-                   if self.mode ~= "w" then
-                      return nil, "Bad virtual file descriptor", 9
+                   if self.mode ~= 'w' then
+                      return nil, 'Bad virtual file descriptor', 9
                    end
-                   self.buffer = (self.buffer or "") .. table.concat {...}
+                   self.buffer = (self.buffer or '') .. table.concat {...}
                    self.pos = #self.buffer + 1
                 end,
    },
@@ -154,7 +154,7 @@ local StrFile = Object {
 local function inject (into, from)
    for k, v in pairs (from) do
       local tfrom, tinto = type (v), type (into[k])
-      if tfrom == "table" and (tinto == "table" or tinto == "nil") then
+      if tfrom == 'table' and (tinto == 'table' or tinto == 'nil') then
          into[k] = into[k] or {}
          inject (into[k], from[k])
       else
@@ -167,7 +167,7 @@ end
 
 local function env_init (env, stdin)
    -- Captured standard input, standard output and standard error.
-   local pin, pout, perr = StrFile {"r", stdin}, StrFile {"w"}, StrFile {"w"}
+   local pin, pout, perr = StrFile {'r', stdin}, StrFile {'w'}, StrFile {'w'}
 
    env.io = {
       stdin    = pin,
@@ -175,7 +175,7 @@ local function env_init (env, stdin)
       stderr   = perr,
 
       input    = function (h)
-                    if object.type (h) == "StrFile" then
+                    if object.type (h) == 'StrFile' then
                        pin = h
                     elseif h then
                        pin = io.input (h)
@@ -185,8 +185,8 @@ local function env_init (env, stdin)
 
       output   = function (h)
                     if h ~= nil then
-                       if io.type (pout) ~= "closed file" then pout:flush () end
-                       if object.type (h) == "StrFile" then
+                       if io.type (pout) ~= 'closed file' then pout:flush () end
+                       if object.type (h) == 'StrFile' then
                           pout = h
                        else
                           pout = io.output (h)
@@ -196,8 +196,8 @@ local function env_init (env, stdin)
                  end,
 
       type     = function (h)
-                    if (getmetatable (h) or {})._type == "StrFile" then
-                       return "file" -- virtual stdio streams cannot be closed
+                    if (getmetatable (h) or {})._type == 'StrFile' then
+                       return 'file' -- virtual stdio streams cannot be closed
                     end
                     return io.type (h)
                  end,
@@ -210,8 +210,8 @@ local function env_init (env, stdin)
    -- Capture print statements to process output.
    env.print = function (...)
                   local t = {...}
-                  for i = 1, select ("#", ...) do t[i] = tostring (t[i]) end
-                  env.io.output ():write (table.concat (t, "\t") .. "\n")
+                  for i = 1, select ('#', ...) do t[i] = tostring (t[i]) end
+                  env.io.output ():write (table.concat (t, '\t') .. '\n')
                end
 
    return pout, perr
@@ -237,12 +237,12 @@ local function capture (fn, arg, stdin)
       -- Capture exit status without quitting specl process itself.
       exit = function (code)
                 case (tostring (code), {
-                   ["false"] = function () pstat = 1 end,
-                   ["true"]  = function () pstat = 0 end,
+                   ['false'] = function () pstat = 1 end,
+                   ['true']  = function () pstat = 0 end,
                                function () pstat = code end,
                 })
                 -- Abort execution now that status is set.
-                error ("env.os.exit", 0)
+                error ('env.os.exit', 0)
              end,
    }
 
@@ -273,12 +273,12 @@ local function call (main, arg, stdin)
       -- Capture exit status without quitting specl process itself.
       exit = function (code)
                 case (tostring (code), {
-                   ["false"] = function () pstat = 1 end,
-                   ["true"]  = function () pstat = 0 end,
+                   ['false'] = function () pstat = 1 end,
+                   ['true']  = function () pstat = 0 end,
                                function () pstat = code end,
                 })
                 -- Abort execution now that status is set.
-                error ("env.os.exit", 0)
+                error ('env.os.exit', 0)
              end,
    }
 
@@ -288,15 +288,15 @@ local function call (main, arg, stdin)
 
    -- Append traceback to an error inside xpcall.
    local function traceback (errobj)
-      if errobj ~= "env.os.exit" then
+      if errobj ~= 'env.os.exit' then
          env.io.stderr:write (debug.traceback (errobj, 2))
       end
    end
 
    -- Diagnose malformed Main object.
-   if type (Main.inprocess) ~= "table" then
+   if type (Main.inprocess) ~= 'table' then
       error ("malformed 'inprocess' in Main object (table expected, found " ..
-             type (Main.inprocess) .. ")")
+             type (Main.inprocess) .. ')')
    end
 
    -- Set the environment for `execute`, for non-sandboxing apps, so they
@@ -323,7 +323,7 @@ local function call (main, arg, stdin)
 
    if ok then
       pstat = 0
-   elseif type (pstat) ~= "number" then
+   elseif type (pstat) ~= 'number' then
       pstat = 1
    end
 
@@ -336,11 +336,11 @@ end
 --[[ ================= ]]--
 
 local function X (decl, fn)
-   return std.debug.argscheck ("specl.inprocess." .. decl, fn)
+   return std.debug.argscheck ('specl.inprocess.' .. decl, fn)
 end
 
 --- @export
 return {
-   call    = X ("call (Main, ?table, ?string)", call),
-   capture = X ("capture (function, ?table, ?string)", capture),
+   call    = X ('call (Main, ?table, ?string)', call),
+   capture = X ('capture (function, ?table, ?string)', capture),
 }

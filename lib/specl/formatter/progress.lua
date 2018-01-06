@@ -3,9 +3,9 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
-local color = require "specl.color"
-local std   = require "specl.std"
-local util  = require "specl.util"
+local color = require 'specl.color'
+local std   = require 'specl.std'
+local util  = require 'specl.util'
 
 local empty = std.table.empty
 local examplename, nop, timesince =
@@ -26,37 +26,37 @@ end
 
 
 local function format_failing_expectation (status, i, exp, verbose)
-   local fail = "   "
+   local fail = '   '
    if verbose then
       fail = fail ..
-         color.strong .. status.filename .. ":" .. status.line .. ":" ..
-         i .. ": " .. color.reset .. color.fail .. "FAILED expectation " ..
-         i .. color.reset .. ":\n" .. exp.message
+         color.strong .. status.filename .. ':' .. status.line .. ':' ..
+         i .. ': ' .. color.reset .. color.fail .. 'FAILED expectation ' ..
+         i .. color.reset .. ':\n' .. exp.message
    else
       fail = fail ..
-         color.fail .. "FAILED expectation " .. i .. color.reset .. ": " ..
+         color.fail .. 'FAILED expectation ' .. i .. color.reset .. ': ' ..
          exp.message
    end
 
-   return "\n" .. fail:gsub ("\n", "%0   ")
+   return '\n' .. fail:gsub ('\n', '%0   ')
 end
 
 
 local function format_pending_expectation (status, i, exp, verbose)
-   local pend = "\n   "
+   local pend = '\n   '
    if verbose then
       pend = pend ..
-         color.strong .. status.filename .. ":" .. status.line .. ":" ..
-         i .. ": " .. color.reset
+         color.strong .. status.filename .. ':' .. status.line .. ':' ..
+         i .. ': ' .. color.reset
    end
    pend = pend ..
-      color.pend .. "PENDING expectation " .. i .. color.reset .. ": " ..
+      color.pend .. 'PENDING expectation ' .. i .. color.reset .. ': ' ..
       color.warn .. exp.pending .. color.reset
 
    if exp.status == true then
       pend = pend ..
-         color.warn .. ", passed unexpectedly!" .. color.reset .. "\n" ..
-         "   " .. color.strong ..
+         color.warn .. ', passed unexpectedly!' .. color.reset .. '\n' ..
+         '   ' .. color.strong ..
          "You can safely remove the 'pending ()' call from this example." ..
          color.reset
    end
@@ -66,20 +66,20 @@ end
 
 
 local function format_pending_example (message)
-   return " (" .. color.pend .. "PENDING example" .. color.reset ..
-      ": " .. message .. ")"
+   return ' (' .. color.pend .. 'PENDING example' .. color.reset ..
+      ': ' .. message .. ')'
 end
 
 
 -- Print '.' for passed, 'F' for failed or '*' for pending expectations.
 -- Accumulate pending and failure reports for display in footer.
 local function display_progress (status, descriptions, opts)
-   local reports = { fail = "", pend = "" }
+   local reports = { fail = '', pend = '' }
 
    if empty (status.expectations) then
       if status.ispending then
          reports.pend = reports.pend .. format_pending_example (status.ispending)
-         writc (opts.color, color.pend .. "*")
+         writc (opts.color, color.pend .. '*')
       end
    else
       for i, exp in ipairs (status.expectations) do
@@ -87,13 +87,13 @@ local function display_progress (status, descriptions, opts)
             reports.pend = reports.pend ..
                format_pending_expectation (status, i, exp, opts.verbose)
             writc (opts.color,
-               (exp.status == true) and (color.strong .. "?") or (color.pend .. "*"))
+               (exp.status == true) and (color.strong .. '?') or (color.pend .. '*'))
          elseif exp.status == false then
             reports.fail = reports.fail ..
                format_failing_expectation (status, i, exp, opts.verbose)
-            writc (opts.color, color.bad .. "F")
+            writc (opts.color, color.bad .. 'F')
          else
-            writc (opts.color, color.good .. ".")
+            writc (opts.color, color.good .. '.')
          end
       end
    end
@@ -101,11 +101,11 @@ local function display_progress (status, descriptions, opts)
    -- Add description titles.
    local title = examplename (descriptions)
    title = color.listpre .. color.subhead .. title .. color.listpost
-   if reports.pend ~= "" then
-      reports.pend = title .. reports.pend .. "\n"
+   if reports.pend ~= '' then
+      reports.pend = title .. reports.pend .. '\n'
    end
-   if reports.fail ~= "" then
-      reports.fail = title .. reports.fail .. "\n"
+   if reports.fail ~= '' then
+      reports.fail = title .. reports.fail .. '\n'
    end
 
    return reports
@@ -117,38 +117,38 @@ local function footer (stats, reports, opts)
    local total = stats.pass + stats.fail
 
    print ()
-   if reports and reports.pend ~= "" then
-      princ (opts.color, color.summary .. "Summary of pending expectations" ..
+   if reports and reports.pend ~= '' then
+      princ (opts.color, color.summary .. 'Summary of pending expectations' ..
              color.summarypost)
       princ (opts.color, reports.pend)
    end
-   if reports and reports.fail ~= "" then
-      princ (opts.color, color.summary .. "Summary of failed expectations" ..
+   if reports and reports.fail ~= '' then
+      princ (opts.color, color.summary .. 'Summary of failed expectations' ..
              color.summarypost)
       princ (opts.color, reports.fail)
    end
 
    local passcolor = (stats.pass > 0) and color.good or color.bad
-   local failcolor = (stats.fail > 0) and color.bad or ""
-   local pendcolor = (stats.pend > 0) and color.bad or ""
-   local prefix    = (total > 0) and (color.allpass .. "All") or (color.bad .. "No")
+   local failcolor = (stats.fail > 0) and color.bad or ''
+   local pendcolor = (stats.pend > 0) and color.bad or ''
+   local prefix    = (total > 0) and (color.allpass .. 'All') or (color.bad .. 'No')
 
    if stats.fail == 0 then
-      writc (opts.color, prefix .. " expectations met" .. color.reset)
+      writc (opts.color, prefix .. ' expectations met' .. color.reset)
 
       if stats.pend ~= 0 then
-         writc (opts.color, ", but " .. color.bad .. stats.pend ..
-                " still pending" .. color.reset .. ",")
+         writc (opts.color, ', but ' .. color.bad .. stats.pend ..
+                ' still pending' .. color.reset .. ',')
       end
    else
-      writc (opts.color, passcolor .. stats.pass .. " passed" ..
-             color.reset .. ", " .. pendcolor .. stats.pend .. " pending" ..
-             color.reset .. ", " .. "and " .. failcolor .. stats.fail ..
-             " failed" .. color.reset)
+      writc (opts.color, passcolor .. stats.pass .. ' passed' ..
+             color.reset .. ', ' .. pendcolor .. stats.pend .. ' pending' ..
+             color.reset .. ', ' .. 'and ' .. failcolor .. stats.fail ..
+             ' failed' .. color.reset)
    end
-   princ (opts.color, " in " .. color.clock ..
+   princ (opts.color, ' in ' .. color.clock ..
           tostring (timesince (stats.starttime)) ..
-          " seconds" .. color.reset .. ".")
+          ' seconds' .. color.reset .. '.')
 end
 
 

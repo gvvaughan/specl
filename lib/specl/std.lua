@@ -5,15 +5,15 @@
 
 -- First handle debug_init and _DEBUG, being careful not to affect
 -- DEBUG disposition of subsequent example loaders for std.debug_init!
-local _DEBUG = require "std.debug_init"._DEBUG
+local _DEBUG = require 'std.debug_init'._DEBUG
 _DEBUG.argcheck = true
 
 
 -- Handle to the stdlib modules.
-local M = require "std"
+local M = require 'std'
 
 -- Check minimum version requirement.
-M.require ("std", "41")
+M.require ('std', '41')
 
 
 local F = M.functional
@@ -24,28 +24,28 @@ local type = _G.type
 
 -- Use std.optparse if available, otherwise standalone optparse module.
 local ok
-ok, M.optparse = pcall (require, "std.optparse")
+ok, M.optparse = pcall (require, 'std.optparse')
 if not ok then
-   M.optparse = require "optparse"
+   M.optparse = require 'optparse'
 end
 
 
 -- Cache submodule handles into local `std` above.
 reduce (set, M,
-   map (lambda '_2, require ("std." .. _2)', {
-      "container",
-      "debug",
-      "functional",
-      "io",
-      "list",
-      "math",
-      "object",
-      "package",
-      "set",
-      "strbuf",
-      "string",
-      "table",
-      "tree",
+   map (lambda "_2, require ('std.' .. _2)", {
+      'container',
+      'debug',
+      'functional',
+      'io',
+      'list',
+      'math',
+      'object',
+      'package',
+      'set',
+      'strbuf',
+      'string',
+      'table',
+      'tree',
    })
 )
 
@@ -62,10 +62,10 @@ end
 
 
 local function keysort (a, b)
-   if type (a) == "number" then
-      return type (b) ~= "number" or a < b
+   if type (a) == 'number' then
+      return type (b) ~= 'number' or a < b
    else
-      return type (b) ~= "number" and tostring (a) < tostring (b)
+      return type (b) ~= 'number' and tostring (a) < tostring (b)
    end
 end
 
@@ -88,8 +88,8 @@ end
 
 local function getmetamethod (x, n)
    local m = (getmetatable (x) or {})[n]
-   if type (m) == "function" then return m end
-   if type ((getmetatable (m) or {}).__call) == "function" then return m end
+   if type (m) == 'function' then return m end
+   if type ((getmetatable (m) or {}).__call) == 'function' then return m end
 end
 
 
@@ -100,28 +100,28 @@ local function str (x, roots)
       return roots[x] or str (x, copy (roots))
    end
 
-   if type (x) ~= "table" or getmetamethod (x, "__tostring") then
+   if type (x) ~= 'table' or getmetamethod (x, '__tostring') then
       return tostring (x)
 
    else
-      local buf = {"{"}                        -- pre-buffer table open
+      local buf = {'{'}                        -- pre-buffer table open
       roots[x] = tostring (x)                  -- recursion protection
 
       local kp, vp                             -- previous key and value
       for k, v in opairs (x) do
          if kp ~= nil and k ~= nil then
             -- semi-colon separator after sequence values, or else comma separator
-            buf[#buf + 1] = type (kp) == "number" and k ~= kp + 1 and "; " or ", "
+            buf[#buf + 1] = type (kp) == 'number' and k ~= kp + 1 and '; ' or ', '
          end
-         if k == 1 or type (k) == "number" and k -1 == kp then
+         if k == 1 or type (k) == 'number' and k -1 == kp then
             -- no key for sequence values
             buf[#buf + 1] = stop_roots (v)
          else
-            buf[#buf + 1] = stop_roots (k) .. "=" .. stop_roots (v)
+            buf[#buf + 1] = stop_roots (k) .. '=' .. stop_roots (v)
          end
          kp, vp = k, v
       end
-      buf[#buf + 1] = "}"                      -- buffer << table close
+      buf[#buf + 1] = '}'                      -- buffer << table close
 
       return table.concat (buf)                -- stringify buffer
    end
@@ -135,12 +135,12 @@ local function render (x, elem, roots)
       return roots[x] or render (x, elem, copy (roots))
    end
 
-   if type (x) ~= "table" or
-      type ((getmetatable (x) or {}).__tostring) == "function"
+   if type (x) ~= 'table' or
+      type ((getmetatable (x) or {}).__tostring) == 'function'
    then
       return elem (x)
    else
-      local buf, keys = {"{"}, {}
+      local buf, keys = {'{'}, {}
       for k in pairs (x) do keys[#keys +1] = k end
       table.sort (keys, keysort)
 
@@ -148,11 +148,11 @@ local function render (x, elem, roots)
       local kp, vp
       for _, k in ipairs (keys) do
          local v = x[k]
-         if kp ~= nil then buf[#buf +1] = "," end
-         buf[#buf +1] = stop_roots (k) .. "=" .. stop_roots (v)
+         if kp ~= nil then buf[#buf +1] = ',' end
+         buf[#buf +1] = stop_roots (k) .. '=' .. stop_roots (v)
          kp, vp = k, v
       end
-      buf[#buf +1] = "}"
+      buf[#buf +1] = '}'
       return table.concat (buf)
    end
 end
@@ -170,8 +170,8 @@ end
 
 local function mnemonic (x)
    return render (x, function (x)
-      if type (x) == "string" then
-         return string.format ("%q", x)
+      if type (x) == 'string' then
+         return string.format ('%q', x)
       end
       return tostring (x)
    end)
@@ -181,7 +181,7 @@ end
 M.operator = {
    eqv = function (a, b)
       if a == b then return true end
-      if type (a) ~= "table" or type (b) ~= "table" then return false end
+      if type (a) ~= 'table' or type (b) ~= 'table' then return false end
       return mnemonic (a) == mnemonic (b)
    end,
 }
@@ -202,13 +202,13 @@ if debug.getfenv then
       fn = fn or 1
 
       local type_fn = type (fn)
-      if type_fn == "table" then
+      if type_fn == 'table' then
          fn = (getmetatable (fn) or {}).__call or fn
-      elseif type_fn == "number" and fn > 0 then
+      elseif type_fn == 'number' and fn > 0 then
          fn = fn + 1
       end
 
-      if type (fn) == "function" then
+      if type (fn) == 'function' then
          return debug.getfenv (fn)
       end
       return getfenv (fn), nil
@@ -218,13 +218,13 @@ if debug.getfenv then
       fn = fn or 1
 
       local type_fn = type (fn)
-      if type_fn == "table" then
+      if type_fn == 'table' then
          fn = (getmetatable (fn) or {}).__call or fn
-      elseif type_fn == "number" and fn > 0 then
+      elseif type_fn == 'number' and fn > 0 then
          fn = fn + 1
       end
 
-      if type (fn) == "function" then
+      if type (fn) == 'function' then
          return debug.setfenv (fn, env)
       end
       return setfenv (fn, env), nil
@@ -248,6 +248,6 @@ M.debug.setfenv = nil
 
 -- Don't prevent examples from loading a different stdlib (or optparse!).
 map (function (e) package.loaded[e] = nil end,
-   filter (lambda '|k| k:match "^std%." or k == "std" or k == "optparse"', package.loaded))
+   filter (lambda "|k| k:match '^std%.' or k == 'std' or k == 'optparse'", package.loaded))
 
 return M

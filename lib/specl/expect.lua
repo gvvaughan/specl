@@ -13,8 +13,8 @@ local _ENV = {
 
    insert       = table.insert,
 
-   define       = require "macro".define,
-   getmatcher   = require "specl.matchers".getmatcher,
+   define       = require 'macro'.define,
+   getmatcher   = require 'specl.matchers'.getmatcher,
 }
 setfenv (1, _ENV)
 
@@ -24,47 +24,47 @@ setfenv (1, _ENV)
 --[[ ============== ]]--
 
 
-define ("expect", function (get)
+define ('expect', function (get)
    local expr
    local tk, v = get:peek (1)
-   if v == "(" then
+   if v == '(' then
       get:next ()
-      expr = tostring (get:upto ")")
-   elseif v == "{" then
+      expr = tostring (get:upto ')')
+   elseif v == '{' then
       get:next ()
-      expr = "{" .. tostring (get:upto "}") .. "}"
-   elseif tk == "string" then
+      expr = '{' .. tostring (get:upto '}') .. '}'
+   elseif tk == 'string' then
       tk, expr = get:next ()
    end
    if expr == nil then -- pass through 'expect' token
       return nil, true
    end
-   return " (pcall (function () return " .. expr .. " end))", true
+   return ' (pcall (function () return ' .. expr .. ' end))', true
 end)
 
 
 -- Transform between decorators.
-define ("between", function (get)
+define ('between', function (get)
    local expr
    local tk, v = get:peek (1)
-   if v == "(" then
+   if v == '(' then
       get:next ()
-      expr = "(" .. tostring (get:upto ")") .. ")"
-   elseif v == "{" then
+      expr = '(' .. tostring (get:upto ')') .. ')'
+   elseif v == '{' then
       get:next ()
-      expr = "{" .. tostring (get:upto "}") .. "}"
-   elseif tk == "string" then
+      expr = '{' .. tostring (get:upto '}') .. '}'
+   elseif tk == 'string' then
       tk, expr = get:next ()
    end
    if expr == nil then -- pass through 'between' token
       return nil, true
    end
    tk, v = get:peek (1)
-   if v ~= "." then return " " .. expr, true end
+   if v ~= '.' then return ' ' .. expr, true end
    get:next () -- consume '.'
    tk, v = get:next ()
-   if tk ~= "iden" then return " " .. expr .. ".", true end
-   return "between_" .. v .. " " .. expr
+   if tk ~= 'iden' then return ' ' .. expr .. '.', true end
+   return 'between_' .. v .. ' ' .. expr
 end)
 
 
@@ -97,7 +97,7 @@ end
 
 --- Save results from an expectation into formatter state.
 -- @tparam table state shared with formatters
--- @bool inverse whether this is the result from a "not" match
+-- @bool inverse whether this is the result from a 'not' match
 -- @bool success whether this expectation succeeded
 -- @string message failure message for this expectation
 local function score (state, inverse, success, message)
@@ -105,7 +105,7 @@ local function score (state, inverse, success, message)
 
    if inverse then
       success = not success
-      message = message and ("not " .. message)
+      message = message and ('not ' .. message)
    end
 
    local stats  = state.stats
@@ -142,7 +142,7 @@ end
 -- @treturn table dynamic matcher lookup table for this result
 -- @usage expect ({}).not_to_be {}
 local function expect (state, ok, actual, ...)
-   if select ("#", ...) > 0 then actual = {actual, ...} end
+   if select ('#', ...) > 0 then actual = {actual, ...} end
 
    return setmetatable ({}, {
       __index = function (_, verb)
@@ -158,9 +158,9 @@ local function expect (state, ok, actual, ...)
          return setmetatable ({}, {
             -- `expect (actual).to_be (expected)`
             __call = function (self, expected, ...)
-               if select ("#", ...) > 0 then expected = {expected, ...} end
+               if select ('#', ...) > 0 then expected = {expected, ...} end
                local success, msg = matcher:match (actual, expected, ok)
-               if type (success) == "boolean" then
+               if type (success) == 'boolean' then
                    vtable.score (success, msg)
                end
                return success
@@ -168,12 +168,12 @@ local function expect (state, ok, actual, ...)
 
             -- `expect (actual).to_be.adaptor (expected)`
             __index = function (self, adaptor)
-               local fn = matcher[adaptor .. "?"]
+               local fn = matcher[adaptor .. '?']
                if fn then
                   return function (expected, ...)
-                     if select ("#", ...) > 0 then expected = {expected, ...} end
+                     if select ('#', ...) > 0 then expected = {expected, ...} end
                      local success, msg = fn (matcher, actual, expected, ok, vtable)
-                     if type (success) == "boolean" then
+                     if type (success) == 'boolean' then
                         vtable.score (success, msg)
                      end
                      return success
@@ -191,11 +191,11 @@ end
 --- Mark an example as pending.
 -- @function pending
 -- @tparam table state shared with formatters
--- @string[opt="not yet implemented"] s reason for pending example
+-- @string[opt='not yet implemented'] s reason for pending example
 local function pending (state, s)
    local stats = state.stats
    stats.pend = stats.pend + 1
-   stats.status.ispending   = s or "not yet implemented"
+   stats.status.ispending   = s or 'not yet implemented'
 end
 
 

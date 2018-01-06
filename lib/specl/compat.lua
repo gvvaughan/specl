@@ -25,10 +25,10 @@ setfenv (1, _ENV)
 
 
 -- Lua 5.1 load implementation does not handle string argument.
-if not pcall (load, "_=1") then
+if not pcall (load, '_=1') then
    local loadfunction = load
    load = function (...)
-      if type (...) == "string" then
+      if type (...) == 'string' then
          return loadstring (...)
       end
       return loadfunction (...)
@@ -36,23 +36,23 @@ if not pcall (load, "_=1") then
 end
 
 
-local dirsep, pathsep, path_mark = match (config, "^(%S+)\n(%S+)\n(%S+)\n")
+local dirsep, pathsep, path_mark = match (config, '^(%S+)\n(%S+)\n(%S+)\n')
 
 
 local searchpath = searchpath or function (name, path, sep, rep)
    name = gsub (name, sep or '%.', rep or dirsep)
 
    local errbuf = {}
-   for template in gmatch (path, "[^" .. pathsep .. "]+") do
+   for template in gmatch (path, '[^' .. pathsep .. ']+') do
       local filename = gsub (template, path_mark, name)
-      local fh = open (filename, "r")
+      local fh = open (filename, 'r')
       if fh then
          fh:close ()
          return filename
       end
       errbuf[#errbuf + 1] = "\tno file '" .. filename .. "'"
    end
-   return nil, concat (errbuf, "\n")
+   return nil, concat (errbuf, '\n')
 end
 
 
@@ -64,7 +64,7 @@ do
    if have_xpcall_args ~= true then
       local _xpcall = xpcall
       xpcall = function (fn, errh, ...)
-         local args, n = {...}, select ("#", ...)
+         local args, n = {...}, select ('#', ...)
          return _xpcall (function() return fn (unpack (args, 1, n)) end, errh)
       end
    end

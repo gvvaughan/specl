@@ -4,10 +4,10 @@
 ]]
 
 return {
-  PACKAGE           = "specl",
-  PACKAGE_NAME      = "Specl",
-  PACKAGE_BUGREPORT = "https://github.com/gvvaughan/specl/issues",
-  VERSION           = "15.0.0",
+  PACKAGE           = 'specl',
+  PACKAGE_NAME      = 'Specl',
+  PACKAGE_BUGREPORT = 'https://github.com/gvvaughan/specl/issues',
+  VERSION           = '15.0.0',
   optspec           = [[
 specl (Specl) 15.0.0
 Written by Gary V. Vaughan <gary@gnu.org>, 2013

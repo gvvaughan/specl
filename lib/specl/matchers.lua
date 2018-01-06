@@ -19,12 +19,12 @@
 
 
 local _ = {
-   std            = require "specl.std",
+   std            = require 'specl.std',
 }
 
 local _ENV = {
-   color          = require "specl.color",
-   util           = require "specl.util",
+   color          = require 'specl.color',
+   util           = require 'specl.util',
 
    ipairs         = ipairs,
    pairs          = pairs,
@@ -69,16 +69,16 @@ local M = {}
 -- Stdlib >= v41 objects do not support __totable metamethods.
 local function totable (obj)
    local r, i
-   if type (obj) == "table" or getmetamethod (obj, "__pairs") then
+   if type (obj) == 'table' or getmetamethod (obj, '__pairs') then
       -- Fetch all key:value pairs where possible...
       r = {}
       for k, v in pairs (obj) do
-         if type (k) == "table" then k = pickle (k) end
+         if type (k) == 'table' then k = pickle (k) end
          r[k] = v end
-   elseif type (obj) == "string" then
+   elseif type (obj) == 'string' then
       -- ...or explode a raw string into a table of characters.
       r, i = {}, 1
-      gsub (obj, "(.)", function (c) i, r[i] = i + 1, c end)
+      gsub (obj, '(.)', function (c) i, r[i] = i + 1, c end)
    end
    return r
 end
@@ -89,8 +89,8 @@ end
 -- @param x item to act on
 -- @treturn string string representation of *x*
 local function q (obj)
-   if type (obj) == "string" then
-      return format ("%q", obj)
+   if type (obj) == 'string' then
+      return format ('%q', obj)
    end
    return tostring (obj)
 end
@@ -99,14 +99,14 @@ end
 --- Format *alternatives* with an *adaptor* appropriate infix.
 -- @function concat
 -- @tparam table alternatives table of expectations
--- @string adaptor one of "all of", "any of" or "a permutation of"
+-- @string adaptor one of 'all of', 'any of' or 'a permutation of'
 -- @bool quoted whether to put quote marks around string values
 local function concat (alternatives, adaptor, quoted)
    local infix
-   if adaptor == "any of" then
-      infix = " or "
+   if adaptor == 'any of' then
+      infix = ' or '
    else
-      infix = " and "
+      infix = ' and '
    end
 
    return util.concat (alternatives, infix, quoted)
@@ -114,8 +114,8 @@ end
 
 
 local function comparative_msg (object, adaptor, actual, expected)
-   return "expecting a " .. type (expected) .. " " .. adaptor .. " " ..
-      q(expected) .. ", but got" .. object:format_actual (actual, expected)
+   return 'expecting a ' .. type (expected) .. ' ' .. adaptor .. ' ' ..
+      q(expected) .. ', but got' .. object:format_actual (actual, expected)
 end
 
 
@@ -123,12 +123,12 @@ local function alternatives_msg (object, adaptor, alternatives, actual, expected
    local m
 
    if #alternatives == 1 then
-      m = "expecting" .. object:format_expect (alternatives[1], actual, ...) ..
-          "but got" .. object:format_actual (actual, expected, ...)
+      m = 'expecting' .. object:format_expect (alternatives[1], actual, ...) ..
+          'but got' .. object:format_actual (actual, expected, ...)
    else
-      m = "expecting" ..
+      m = 'expecting' ..
           object:format_alternatives (adaptor, alternatives, actual, ...) ..
-          "but got" .. object:format_actual (actual, expected, ...)
+          'but got' .. object:format_actual (actual, expected, ...)
    end
 
    return m
@@ -142,19 +142,19 @@ end
 -- @func format_actual format the actual result for display
 -- @func format_alternatives format adaptor alternatives for display
 local Matcher = Object {
-   _type = "Matcher",
+   _type = 'Matcher',
 
-   _init      = {"matchp"},
-   _parmnames = {"matchp",   "format_expect", "format_actual", "format_alternatives"},
-   _parmtypes = {"function", "function",      "function",      "function"           },
+   _init      = {'matchp'},
+   _parmnames = {'matchp',   'format_expect', 'format_actual', 'format_alternatives'},
+   _parmtypes = {'function', 'function',      'function',      'function'           },
 
    -- Respond to `to_`s and `not_to_`s.
    match = function (self, actual, expected, ...)
       argcheck (self.name, 1, self.actual_type, actual)
 
       -- Pass all parameters to both formatters!
-      local m = "expecting" .. self:format_expect (expected, actual, ...) ..
-         "but got" .. self:format_actual (actual, expected, ...)
+      local m = 'expecting' .. self:format_expect (expected, actual, ...) ..
+         'but got' .. self:format_actual (actual, expected, ...)
       return self:matchp (actual, expected, ...), m
    end,
 
@@ -165,10 +165,10 @@ local Matcher = Object {
    -- @adaptor all_of
    -- @tparam list alternatives a list of match comparisons
    -- @usage
-   --    expect (_G).to_contain.all_of {"io", "math", "os", "string", "table"}
-   ["all_of?"] = function (self, actual, alternatives, ...)
-      argcheck ("expect", 1, self.actual_type, actual)
-      argcheck (self.name .. ".all_of", 1, "#table", alternatives)
+   --    expect (_G).to_contain.all_of {'io', 'math', 'os', 'string', 'table'}
+   ['all_of?'] = function (self, actual, alternatives, ...)
+      argcheck ('expect', 1, self.actual_type, actual)
+      argcheck (self.name .. '.all_of', 1, '#table', alternatives)
 
       local success
       for _, expected in ipairs (alternatives) do
@@ -176,7 +176,7 @@ local Matcher = Object {
          if not success then break end
       end
 
-      return success, alternatives_msg (self, "all of", alternatives,
+      return success, alternatives_msg (self, 'all of', alternatives,
                                         actual, expected, ...)
    end,
 
@@ -184,10 +184,10 @@ local Matcher = Object {
    -- @adaptor any_of
    -- @tparam list alternatives a list of match comparisons
    -- @usage
-   --    expect (ctermid ()).to_match.any_of {"/.*tty%d+", "/.*pts%d+"}
-   ["any_of?"] = function (self, actual, alternatives, ...)
-      argcheck ("expect", 1, self.actual_type, actual)
-      argcheck (self.name .. ".any_of", 1, "#table", alternatives)
+   --    expect (ctermid ()).to_match.any_of {'/.*tty%d+', '/.*pts%d+'}
+   ['any_of?'] = function (self, actual, alternatives, ...)
+      argcheck ('expect', 1, self.actual_type, actual)
+      argcheck (self.name .. '.any_of', 1, '#table', alternatives)
 
       local success
       for _, expected in ipairs (alternatives) do
@@ -195,22 +195,22 @@ local Matcher = Object {
          if success then break end
       end
 
-      return success, alternatives_msg (self, "any of", alternatives,
+      return success, alternatives_msg (self, 'any of', alternatives,
                                         actual, expected, ...)
    end,
 
    -- Defaults:
-   actual_type   = "?any",
+   actual_type   = '?any',
 
    matchp        = function (self, actual, expected) return actual == expected end,
 
-   format_actual = function (self, actual) return " " .. q(actual) end,
+   format_actual = function (self, actual) return ' ' .. q(actual) end,
 
-   format_expect = function (self, expected) return " " .. q(expected) .. ", " end,
+   format_expect = function (self, expected) return ' ' .. q(expected) .. ', ' end,
 
    format_alternatives = function (self, adaptor, alternatives)
-      return " " .. adaptor .. " " ..
-         concat (alternatives, adaptor, ":quoted") .. ", "
+      return ' ' .. adaptor .. ' ' ..
+         concat (alternatives, adaptor, ':quoted') .. ', '
    end,
 }
 
@@ -231,9 +231,9 @@ local matchers = setmetatable ({content = {}}, {
    __index = function (self, name) return rawget (self.content, name) end,
 
    __newindex = function (self, name, matcher)
-      argcheck ("matchers." .. name, 2, "Matcher", matcher)
+      argcheck ('matchers.' .. name, 2, 'Matcher', matcher)
       rawset (self.content, name, matcher)
-      rawset (matcher, "name", name)
+      rawset (matcher, 'name', name)
    end,
 })
 
@@ -247,54 +247,54 @@ local escape = {
 
 --- Reformat multi-line output text for output.
 --
--- For example: "
+-- For example: '
 -- | %{match}first line of <text>%{reset}
 -- | %{match}next line of <text>%{reset}
--- " etc.
+-- ' etc.
 -- @string text string to act on
--- @string[opt="| "] prefix output this at the start of every line
+-- @string[opt='| '] prefix output this at the start of every line
 -- @treturn string reformatted *text*
 local function _reformat (text, prefix)
-   text = text or ""
-   prefix = prefix or "| "
-   return "\n" .. prefix .. color.match ..
-      gsub (chomp (text), "\n",
-            escape.reset .. "\n" .. prefix .. escape.match) ..
+   text = text or ''
+   prefix = prefix or '| '
+   return '\n' .. prefix .. color.match ..
+      gsub (chomp (text), '\n',
+            escape.reset .. '\n' .. prefix .. escape.match) ..
       color.reset
 end
 
 
 --- Reformat a list of alternatives for output.
 --
--- For example: "
+-- For example: '
 -- | %{match}as many lines of <list>[1] as provided%{reset}
 -- or:
 -- | %{match}lines from <list>[2]%}reset}
--- " etc.
+-- ' etc.
 -- @function reformat
 -- @tparam table list of alternatives to act on
--- @string adaptor one of "all of", "any of" or "a permutation of"
--- @string[opt="| "] prefix output this at the start of every line
+-- @string adaptor one of 'all of', 'any of' or 'a permutation of'
+-- @string[opt='| '] prefix output this at the start of every line
 -- @treturn string reformatted *text*
 local function reformat (list, adaptor, prefix)
-   list, prefix = list or {""}, prefix or "| "
-   if type (list) ~= "table" then
+   list, prefix = list or {''}, prefix or '| '
+   if type (list) ~= 'table' then
       list = {list}
    end
 
-   local infix = "or:"
-   if adaptor == "all of" then
-      infix = "and:"
-   elseif adaptor == "any of" then
-      infix = "or:"
+   local infix = 'or:'
+   if adaptor == 'all of' then
+      infix = 'and:'
+   elseif adaptor == 'any of' then
+      infix = 'or:'
    end
 
-   local s = ""
+   local s = ''
    for _, expected in ipairs (list) do
-      s = s .. infix .. _reformat (expected, prefix) .. "\n"
+      s = s .. infix .. _reformat (expected, prefix) .. '\n'
    end
    -- strip the spurious <infix> from the start of the string.
-   return gsub (s, "^" .. escape_pattern (infix), "")
+   return gsub (s, '^' .. escape_pattern (infix), '')
 end
 
 
@@ -305,9 +305,9 @@ local function between_inclusive (self, actual, expected)
    end)
    local succeed = ok and r or false
 
-   local msg = "expecting a " .. type (expected[1]) ..
-      self:format_alternatives ("between_inclusive", expected, actual) ..
-      "but got" .. self:format_actual (actual, expected)
+   local msg = 'expecting a ' .. type (expected[1]) ..
+      self:format_alternatives ('between_inclusive', expected, actual) ..
+      'but got' .. self:format_actual (actual, expected)
    return succeed, msg
 end
 
@@ -331,20 +331,20 @@ matchers.be = Matcher {
    -- @usage
    --    expect (#s).to_be.between (8, 20).inclusive
    --    expect (2).to_be.between (1, 3).exclusive
-   ["between?"] = between_inclusive,
+   ['between?'] = between_inclusive,
 
-   ["between_inclusive?"] = between_inclusive,
+   ['between_inclusive?'] = between_inclusive,
 
-   ["between_exclusive?"] = function (self, actual, expected)
+   ['between_exclusive?'] = function (self, actual, expected)
       local ok, r = pcall (function ()
          local lower, upper = unpack (expected)
          return actual > lower and actual < upper
       end)
       local succeed = ok and r or false
 
-      local msg = "expecting a " .. type (expected[1]) ..
-         self:format_alternatives ("between_exclusive", expected, actual) ..
-         "but got" .. self:format_actual (actual, expected)
+      local msg = 'expecting a ' .. type (expected[1]) ..
+         self:format_alternatives ('between_exclusive', expected, actual) ..
+         'but got' .. self:format_actual (actual, expected)
       return succeed, msg
    end,
 
@@ -352,9 +352,9 @@ matchers.be = Matcher {
    -- @adaptor be.gt
    -- @param expected a primitive or object that the expect argument must
    --    always be greater than
-   ["gt?"] = function (self, actual, expected)
+   ['gt?'] = function (self, actual, expected)
        local ok, r = pcall (function () return actual > expected end)
-       return ok and r or false, comparative_msg (self, ">", actual, expected)
+       return ok and r or false, comparative_msg (self, '>', actual, expected)
    end,
 
    --- `be` specific adaptor for greater than or equal to comparison.
@@ -365,10 +365,10 @@ matchers.be = Matcher {
    --    function X (t)
    --       return setmetatable (t, {__lt = function (a,b) return #a<#b end})
    --    end
-   --    expect (X {"a", "b"}).to_be.gte (X {"b", "a"})
-   ["gte?"] = function (self, actual, expected)
+   --    expect (X {'a', 'b'}).to_be.gte (X {'b', 'a'})
+   ['gte?'] = function (self, actual, expected)
        local ok, r = pcall (function () return actual >= expected end)
-       return ok and r or false, comparative_msg (self, ">=", actual, expected)
+       return ok and r or false, comparative_msg (self, '>=', actual, expected)
    end,
 
    --- `be` specific adaptor for less than comparison.
@@ -377,9 +377,9 @@ matchers.be = Matcher {
    --    always be less than
    -- @usage
    --    expect (5).to_be.lt (42)
-   ["lt?"] = function (self, actual, expected)
+   ['lt?'] = function (self, actual, expected)
        local ok, r = pcall (function () return actual < expected end)
-       return ok and r or false, comparative_msg (self, "<", actual, expected)
+       return ok and r or false, comparative_msg (self, '<', actual, expected)
    end,
 
    --- `be` specific adaptor for less than or equal to comparison.
@@ -387,10 +387,10 @@ matchers.be = Matcher {
    -- @param expected a primitive or object that the expect argument must
    --    always be less than or equal to
    -- @usage
-   --    expect "abc".to_be.lte "abc"
-   ["lte?"] = function (self, actual, expected)
+   --    expect 'abc'.to_be.lte 'abc'
+   ['lte?'] = function (self, actual, expected)
        local ok, r = pcall (function () return actual <= expected end)
-       return ok and r or false, comparative_msg (self, "<=", actual, expected)
+       return ok and r or false, comparative_msg (self, '<=', actual, expected)
    end,
 
    --- `be` specific adaptor for comparison within delta of expected.
@@ -406,7 +406,7 @@ matchers.be = Matcher {
    -- @usage
    --    start = os.time ()
    --    expect (os.time ()).to_be.within (1).of (start)
-   ["within?"] = function (self, actual, delta, _, vtable)
+   ['within?'] = function (self, actual, delta, _, vtable)
       return setmetatable (self, {
          __index = {
             of = function (expected)
@@ -416,9 +416,9 @@ matchers.be = Matcher {
                end)
 
                local succeed = ok and r or false
-               local msg = "expecting a " .. type (expected) .. " within " ..
-                  q(delta) .. " of " .. q(expected) .. ", " ..
-                  "but got" .. self:format_actual (actual, {lower, upper})
+               local msg = 'expecting a ' .. type (expected) .. ' within ' ..
+                  q(delta) .. ' of ' .. q(expected) .. ', ' ..
+                  'but got' .. self:format_actual (actual, {lower, upper})
 
                vtable.score (succeed, msg)
             end,
@@ -427,16 +427,16 @@ matchers.be = Matcher {
    end,
 
    format_expect = function (self, expected)
-      return " exactly " .. q(expected) .. ", "
+      return ' exactly ' .. q(expected) .. ', '
    end,
 
    format_alternatives = function (self, adaptor, alternatives)
-      local decorator = match (adaptor, "^between_(%w+)$") or ""
-      if decorator ~= "" then
-         adaptor, decorator = "between", " " .. decorator
+      local decorator = match (adaptor, '^between_(%w+)$') or ''
+      if decorator ~= '' then
+         adaptor, decorator = 'between', ' ' .. decorator
       end
-      return " " .. adaptor .. " " ..
-         concat (alternatives, adaptor, ":quoted") .. decorator .. ", "
+      return ' ' .. adaptor .. ' ' ..
+         concat (alternatives, adaptor, ':quoted') .. decorator .. ', '
    end,
 }
 
@@ -460,12 +460,12 @@ matchers.copy = Matcher {
    end,
 
    format_expect = function (self, expected)
-      return " a copy of " .. q(expected) .. ", "
+      return ' a copy of ' .. q(expected) .. ', '
    end,
 
    format_alternatives = function (self, adaptor, alternatives)
-      return " a copy of " .. adaptor .. " " ..
-         concat (alternatives, adaptor, ":quoted") .. ", "
+      return ' a copy of ' .. adaptor .. ' ' ..
+         concat (alternatives, adaptor, ':quoted') .. ', '
    end,
 }
 
@@ -473,11 +473,11 @@ matchers.copy = Matcher {
 --- Matches if any error is raised inside `expect`.
 -- @matcher raise
 -- @string errmsg substring of raised error message
--- @usage expect (error "oh noes!").to_raise "oh no"
+-- @usage expect (error 'oh noes!').to_raise 'oh no'
 matchers.raise = Matcher {
    function (self, actual, expected, ok)
       if expected ~= nil then
-         if not ok then -- "not ok" means an error occurred
+         if not ok then -- 'not ok' means an error occurred
             ok = not actual:match (escape_pattern (expected))
          end
       end
@@ -487,22 +487,22 @@ matchers.raise = Matcher {
    -- force a new-line, let the display engine take care of indenting.
    format_actual = function (self, actual, _, ok)
       if ok then
-         return " no error"
+         return ' no error'
       else
-         return ":" .. reformat (actual)
+         return ':' .. reformat (actual)
       end
    end,
 
    format_expect = function (self, expected)
       if expected ~= nil then
-         return " an error containing:" .. reformat (expected)
+         return ' an error containing:' .. reformat (expected)
       else
-         return " an error"
+         return ' an error'
       end
    end,
 
    format_alternatives = function (self, adaptor, alternatives)
-      return " an error containing " .. adaptor .. ":" ..
+      return ' an error containing ' .. adaptor .. ':' ..
          reformat (alternatives, adaptor)
    end,
 }
@@ -514,7 +514,7 @@ matchers.raise = Matcher {
 matchers.raise_matching = Matcher {
    function (self, actual, expected, ok)
       if expected ~= nil then
-         if not ok then -- "not ok" means an error occurred
+         if not ok then -- 'not ok' means an error occurred
             ok = not actual:match (expected)
          end
       end
@@ -524,22 +524,22 @@ matchers.raise_matching = Matcher {
    -- force a new-line, let the display engine take care of indenting.
    format_actual = function (self, actual, _, ok)
       if ok then
-         return " no error"
+         return ' no error'
       else
-         return ":" .. reformat (actual)
+         return ':' .. reformat (actual)
       end
    end,
 
    format_expect = function (self, expected)
       if expected ~= nil then
-         return " an error matching:" .. reformat (expected)
+         return ' an error matching:' .. reformat (expected)
       else
-         return " an error"
+         return ' an error'
       end
    end,
 
    format_alternatives = function (self, adaptor, alternatives)
-      return " an error matching " .. adaptor .. ":" ..
+      return ' an error matching ' .. adaptor .. ':' ..
          reformat (alternatives, adaptor)
    end,
 }
@@ -557,15 +557,15 @@ matchers.match = Matcher {
       return (actual:match (pattern) ~= nil)
    end,
 
-   actual_type   = "string",
+   actual_type   = 'string',
 
    format_expect = function (self, pattern)
-      return " string matching " .. q(pattern) .. ", "
+      return ' string matching ' .. q(pattern) .. ', '
    end,
 
    format_alternatives = function (self, adaptor, alternatives)
-      return " string matching " .. adaptor .. " " ..
-         concat (alternatives, adaptor, ":quoted") .. ", "
+      return ' string matching ' .. adaptor .. ' ' ..
+         concat (alternatives, adaptor, ':quoted') .. ', '
    end,
 }
 
@@ -575,17 +575,17 @@ matchers.match = Matcher {
 -- @param content element to search for in string or table.
 matchers.contain = Matcher {
    function (self, actual, expected)
-      if type (actual) == "string" and type (expected) == "string" then
+      if type (actual) == 'string' and type (expected) == 'string' then
          -- Look for a substring if VALUE is a string.
          return (actual:match (escape_pattern (expected)) ~= nil)
       end
 
       -- Coerce an object to a table.
-      if util.type (actual) == "object" then
+      if util.type (actual) == 'object' then
          actual = totable (actual)
       end
 
-      if type (actual) == "table" then
+      if type (actual) == 'table' then
          -- Do deep comparison against keys and values of the table.
          for k, v in pairs (actual) do
             if eqv (k, expected) or eqv (v, expected) then
@@ -605,17 +605,17 @@ matchers.contain = Matcher {
    -- @usage
    --    expect {[math.sin] = true, [math.cos] = true, [math.tan] = true}.
    --       to_contain.a_permutation_of {math.sin, math.cos, math.tan}
-   ["a_permutation_of?"] = function (self, actual, expected)
-      argcheck ("expect", 1, self.actual_type, actual)
-      argcheck (self.name .. ".a_permutation_of", 1, "string|table", expected)
+   ['a_permutation_of?'] = function (self, actual, expected)
+      argcheck ('expect', 1, self.actual_type, actual)
+      argcheck (self.name .. '.a_permutation_of', 1, 'string|table', expected)
 
       -- calculate failure output before coercing strings into tables
-      local msg = "expecting" ..
-         self:format_alternatives ("a permutation of", expected, actual) ..
-         "but got" .. self:format_actual (actual, expected)
+      local msg = 'expecting' ..
+         self:format_alternatives ('a permutation of', expected, actual) ..
+         'but got' .. self:format_actual (actual, expected)
 
-      if objtype (actual) ~= "table" then actual = totable (actual) end
-      if objtype (expected) ~= "table" then expected = totable (expected) end
+      if objtype (actual) ~= 'table' then actual = totable (actual) end
+      if objtype (expected) ~= 'table' then expected = totable (expected) end
 
       if size (actual) == size (expected) then
          -- first, check whether expected values are a permutation of actual keys
@@ -639,49 +639,49 @@ matchers.contain = Matcher {
       return false, msg
    end,
 
-   actual_type   = "string|table|object",
+   actual_type   = 'string|table|object',
 
    format_actual = function (self, actual)
-      if type (actual) == "string" then
-         return " " .. q (actual)
-      elseif util.type (actual) == "object" then
-         return ":" .. reformat (prettytostring (totable (actual), "   "))
+      if type (actual) == 'string' then
+         return ' ' .. q (actual)
+      elseif util.type (actual) == 'object' then
+         return ':' .. reformat (prettytostring (totable (actual), '   '))
       else
-         return ":" .. reformat (prettytostring (actual, "   "))
+         return ':' .. reformat (prettytostring (actual, '   '))
       end
    end,
 
    format_expect = function (self, expected, actual)
-      if type (expected) == "string" and type (actual) == "string" then
-         return " string containing " .. q(expected) .. ", "
+      if type (expected) == 'string' and type (actual) == 'string' then
+         return ' string containing ' .. q(expected) .. ', '
       else
-         return " " .. objtype (actual) .. " containing " .. q(expected) .. ", "
+         return ' ' .. objtype (actual) .. ' containing ' .. q(expected) .. ', '
       end
    end,
 
    format_alternatives = function (self, adaptor, alternatives, actual)
-      if type (alternatives) == "string" then
-         alternatives = format ("%q", alternatives)
+      if type (alternatives) == 'string' then
+         alternatives = format ('%q', alternatives)
       else
-         alternatives = concat (alternatives, adaptor, ":quoted")
+         alternatives = concat (alternatives, adaptor, ':quoted')
       end
-      return " " .. objtype (actual) .. " containing " ..
-         adaptor .. " " .. alternatives .. ", "
+      return ' ' .. objtype (actual) .. ' containing ' ..
+         adaptor .. ' ' .. alternatives .. ', '
    end,
 }
 
 
 --- Return an appropriate matcher function, and whether it is inverted.
--- @string verb full argument to `expect`, e.g. "not_to_contain"
+-- @string verb full argument to `expect`, e.g. 'not_to_contain'
 -- @treturn function registered matcher for *verb*
 -- @treturn bool whether to invert the results from the matcher function
 local function getmatcher (verb)
    local inverse, matcher_root = false
-   if match (verb, "^should_not_") then
+   if match (verb, '^should_not_') then
       inverse, matcher_root = true, sub (verb, 12)
-   elseif match (verb, "^to_not_") or match (verb, "^not_to_") then
+   elseif match (verb, '^to_not_') or match (verb, '^not_to_') then
       inverse, matcher_root = true, sub (verb, 8)
-   elseif match (verb, "^should_") then
+   elseif match (verb, '^should_') then
       matcher_root = sub (verb, 8)
    else
       matcher_root = sub (verb, 4)

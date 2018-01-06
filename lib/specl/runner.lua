@@ -17,13 +17,13 @@ local type         = type
 local table_insert = table.insert
 local table_remove = table.remove
 
-local expect       = require "specl.expect"
-local matchers     = require "specl.matchers"
-local sandbox      = require "specl.sandbox"
+local expect       = require 'specl.expect'
+local matchers     = require 'specl.matchers'
+local sandbox      = require 'specl.sandbox'
 
 local _ = {
-   std             = require "specl.std",
-   util            = require "specl.util",
+   std             = require 'specl.std',
+   util            = require 'specl.util',
 }
 
 local _ENV = {}
@@ -55,13 +55,13 @@ local run_example, run_examples, run_contexts, run
 -- Used to collect output from formatter calls, to be saved for footer.
 local function accumulator (self, arg)
    if arg ~= nil then
-      if type (arg) == "table" then
+      if type (arg) == 'table' then
          self.accumulated = self.accumulated or {}
          for k, v in pairs (arg) do
-            self.accumulated[k] = (self.accumulated[k] or "") .. tostring(v)
+            self.accumulated[k] = (self.accumulated[k] or '') .. tostring(v)
          end
       else
-         self.accumulated = (self.accumulated or "") .. arg
+         self.accumulated = (self.accumulated or '') .. arg
       end
    end
 end
@@ -96,7 +96,7 @@ function run_example (state, definition, descriptions, fenv)
 
       -- Propagate nested environments to functions that might be called
       -- from inside the example.
-      local badargs   = require "specl.badargs"
+      local badargs   = require 'specl.badargs'
       setfenv (badargs.diagnose, fenv)
       setfenv (definition.example, fenv)
       definition.example ()
@@ -134,8 +134,8 @@ function run_examples (state, examples, descriptions, env)
       fenv.examples = function (t)
          -- FIXME: robust argument type-checking!
          local description, definition = next (t)
-         if type (definition) == "function" then
-            local example = { example = definition, line = line or "unknown" }
+         if type (definition) == 'function' then
+            local example = { example = definition, line = line or 'unknown' }
 
             table_insert (descriptions, description)
             if run_example (state, example, descriptions, fenv) == false then
@@ -143,11 +143,11 @@ function run_examples (state, examples, descriptions, env)
             end
             table_remove (descriptions)
 
-         elseif type (definition) == "table" then
+         elseif type (definition) == 'table' then
             local examples = {}
             for i, example in ipairs (definition) do
                k, v = next (example)
-               examples[i] = { [k] = { example = v, line = line or "unknown" } }
+               examples[i] = { [k] = { example = v, line = line or 'unknown' } }
             end
 
             table_insert (descriptions, (description))

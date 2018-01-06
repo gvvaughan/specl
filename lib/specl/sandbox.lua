@@ -4,8 +4,8 @@
 ]]
 
 local _ = {
-   compat = require "specl.compat",
-   std    = require "specl.std",
+   compat = require 'specl.compat',
+   std    = require 'specl.std',
 }
 
 
@@ -178,16 +178,16 @@ sandbox.package.loaded = {
 
 
 local _ENV = {
-   deepcopy   = require "specl.util".deepcopy,
+   deepcopy   = require 'specl.util'.deepcopy,
    error      = error,
-   expect     = require "specl.expect".expect,
+   expect     = require 'specl.expect'.expect,
    ipairs     = ipairs,
    load       = sandbox.load,
    loadfile   = loadfile,
-   matchers   = require "specl.matchers",
+   matchers   = require 'specl.matchers',
    merge      = _.std.table.merge,
    package    = package,
-   pending    = require "specl.expect".pending,
+   pending    = require 'specl.expect'.pending,
    setfenv    = function () end,
    tostring   = tostring,
    type       = type,
@@ -250,23 +250,23 @@ local function inner_closures (env, state)
 
       -- We can have a spec_helper.lua in each spec directory, so don't
       -- cache the side effects of a random one!
-      if m ~= "spec_helper" then
+      if m ~= 'spec_helper' then
          loaded, loadfn = package.loaded[m], package.preload[m]
       end
 
       if loaded == nil then
          -- No side effects cached; find a loader function.
          if loadfn == nil then
-            errmsg = ""
+            errmsg = ''
             for _, loader in ipairs (package.searchers) do
                loadfn = loader (m)
-               if type (loadfn) == "function" then
+               if type (loadfn) == 'function' then
                   break
                end
-               errmsg = errmsg .. (loadfn and tostring (loadfn) or "")
+               errmsg = errmsg .. (loadfn and tostring (loadfn) or '')
             end
          end
-         if type (loadfn) ~= "function" then
+         if type (loadfn) ~= 'function' then
             package.path, package.cpath = save.path, save.cpath
             return error (errmsg)
          end

@@ -63,6 +63,9 @@ points when proposing changes:
 1. 3-character indentation using SPACES in Lua sources: It makes rogue
    TABs easier to see, and lines up nicely with 'fi' and 'end' keywords.
 
+2. Simple strings are easiest to type using single-quote delimiters,
+   saving double-quotes for where a string contains apostrophes.
+
 
 [bdd]:       https://en.wikipedia.org/wiki/Behavior-driven_development
 [github]:    https://github.com/gvvaughan/specl

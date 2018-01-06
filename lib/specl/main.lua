@@ -3,11 +3,11 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
-local loader  = require "specl.loader"
-local runner  = require "specl.runner"
-local std     = require "specl.std"
-local util    = require "specl.util"
-local version = require "specl.version"
+local loader  = require 'specl.loader'
+local runner  = require 'specl.runner'
+local std     = require 'specl.std'
+local util    = require 'specl.util'
+local version = require 'specl.version'
 
 local object, optparse = std.object, std.optparse
 local map = std.functional.map
@@ -25,7 +25,7 @@ local Object = object {}
 local function formatter_opthandler (parser, opt, optarg)
    local ok, formatter = pcall (require, optarg)
    if not ok then
-      ok, formatter = pcall (require, "specl.formatter." ..optarg)
+      ok, formatter = pcall (require, 'specl.formatter.' ..optarg)
    end
    if not ok then
       parser:opterr ("could not load '" .. optarg .. "' formatter.\n" .. formatter)
@@ -36,7 +36,7 @@ end
 
 -- Return `filename` if it has a specfile-like filename, else nil.
 local function specfilter (_, filename)
-   return filename:match "_spec%.yaml$" and filename or nil
+   return filename:match '_spec%.yaml$' and filename or nil
 end
 
 
@@ -45,7 +45,7 @@ end
 local function compile (self, arg)
    local s, errmsg = slurp ()
    if errmsg ~= nil then
-      io.stderr:write (errmsg .. "\n")
+      io.stderr:write (errmsg .. '\n')
       os.exit (1)
    end
 
@@ -73,12 +73,12 @@ local function process_args (self, parser)
 
    for i, v in ipairs (self.arg) do
       -- Process line filters.
-      local filename, line = nil, v:match "^%+(%d+)$"   -- +NN
+      local filename, line = nil, v:match '^%+(%d+)$'   -- +NN
       if line == nil then
-         filename, line = v:match "^(.*):(%d+):%d+"       -- file:NN:MM
+         filename, line = v:match '^(.*):(%d+):%d+'     -- file:NN:MM
       end
       if line == nil then
-         filename, line = v:match "^(.*):(%d+)$"            -- file:NN
+         filename, line = v:match '^(.*):(%d+)$'        -- file:NN
       end
 
       -- Fallback to simple `filename`.
@@ -93,13 +93,13 @@ local function process_args (self, parser)
       end
 
       -- Process filename.
-      if filename == "-" then
+      if filename == '-' then
          io.input (io.stdin)
          self:compile (filename)
 
       elseif filename ~= nil then
          h = io.open (filename)
-         if h == nil and v:match "^-" then
+         if h == nil and v:match '^-' then
             return parser:opterr ("unrecognised option '" .. v .. "'")
          end
          io.input (h)
@@ -114,20 +114,20 @@ local function execute (self)
    -- Parse command line options.
    local parser = optparse (optspec)
 
-   parser:on ("color", parser.required, parser.boolean)
-   parser:on ({"f", "format", "formatter"},
+   parser:on ('color', parser.required, parser.boolean)
+   parser:on ({'f', 'format', 'formatter'},
               parser.required, formatter_opthandler)
 
    self.arg, self.opts = parser:parse (self.arg, self.opts)
 
    -- When opt.example is non-nil, it must be a table.
-   if self.opts.example and type (self.opts.example) ~= "table" then
+   if self.opts.example and type (self.opts.example) ~= 'table' then
       self.opts.example = { self.opts.example }
    end
 
    -- Process all specfiles when none are given explicitly.
    if #self.arg == 0 then
-      local specs, errmsg = files "./specs"
+      local specs, errmsg = files './specs'
       if specs == nil then
          parser:opterr (errmsg)
       else
@@ -138,7 +138,7 @@ local function execute (self)
    self:process_args (parser)
 
    if self.opts.coverage then
-      pcall (require, "luacov")
+      pcall (require, 'luacov')
    end
 
    os.exit (runner.run (self))
@@ -146,7 +146,7 @@ end
 
 
 return Object {
-   _type     = "Main",
+   _type     = 'Main',
 
    inprocess = _G,
 
@@ -166,7 +166,7 @@ return Object {
       -- Option defaults.
       self.opts    = {
          color     = true,
-         formatter = require "specl.formatter.progress",
+         formatter = require 'specl.formatter.progress',
       }
 
       -- Collect compiled specs here.

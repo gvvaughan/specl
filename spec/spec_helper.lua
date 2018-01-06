@@ -3,17 +3,17 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
-local hell = require "specl.shell"
-local std   = require "specl.std"
+local hell = require 'specl.shell'
+local std   = require 'specl.std'
 
 unpack = std.table.unpack
 
-local top_srcdir = os.getenv "top_srcdir" or "."
-local top_builddir = os.getenv "top_builddir" or "."
+local top_srcdir = os.getenv 'top_srcdir' or '.'
+local top_builddir = os.getenv 'top_builddir' or '.'
 
 package.path = std.package.normalize (
-                  top_builddir .. "/lib/?.lua",
-                  top_srcdir .. "/lib/?.lua",
+                  top_builddir .. '/lib/?.lua',
+                  top_srcdir .. '/lib/?.lua',
                   package.path
                )
 
@@ -24,28 +24,28 @@ local Object = object {}
 math.randomseed (os.time ())
 
 function spawn_specl (params)
-   local SPECL = os.getenv ("SPECL") or "bin/specl"
+   local SPECL = os.getenv ('SPECL') or 'bin/specl'
 
    -- If params is a string, it is the input text for the subprocess.
-   if type (params) == "string" then
+   if type (params) == 'string' then
       return hell.spawn {
-         SPECL, "--color=no", "-";
+         SPECL, '--color=no', '-';
          stdin = params,
          env = { LUA_PATH=package.path },
       }
    end
 
    -- If params is a table, fill in the gaps in parameters it names.
-   if type (params) == "table" then
+   if type (params) == 'table' then
       -- The command is made from the array part of params table.
-      local cmd = table.concat (params, " ")
+      local cmd = table.concat (params, ' ')
 
       -- But is just options to specl if it begins with a '-'.
-      if cmd:sub (1, 1) == "-" then
-         cmd = SPECL .. " --color=no " .. cmd
+      if cmd:sub (1, 1) == '-' then
+         cmd = SPECL .. ' --color=no ' .. cmd
       end
 
-      if params.stdin then cmd = cmd .. " -" end
+      if params.stdin then cmd = cmd .. ' -' end
 
       -- Must pass our package.path through to inferior Specl process.
       local env = params.env or {}
@@ -54,31 +54,31 @@ function spawn_specl (params)
       return hell.spawn {cmd; env = env, stdin = params.stdin}
    end
 
-   error ("specl_spawn was expecting a string or table, but got a "..type (params))
+   error ('specl_spawn was expecting a string or table, but got a '..type (params))
 end
 
 
-local inprocess = require "specl.inprocess"
-local Main      = require "specl.main"
+local inprocess = require 'specl.inprocess'
+local Main      = require 'specl.main'
 
 function run_spec (params)
    -- If params is a string, it is the input text for the subprocess.
-   if type (params) == "string" then
-      return inprocess.call (Main, {"--color=no", "-"}, params)
+   if type (params) == 'string' then
+      return inprocess.call (Main, {'--color=no', '-'}, params)
    end
 
    -- If params is a table, fill in the gaps in parameters it names.
-   if type (params) == "table" then
+   if type (params) == 'table' then
       -- The command is made from the array part of params table.
-      local argt = {"--color=no"}
+      local argt = {'--color=no'}
       for _, e in ipairs (params) do argt[#argt + 1] = e end
 
-      if params.stdin then argt[#argt + 1] = "-" end
+      if params.stdin then argt[#argt + 1] = '-' end
 
       return inprocess.call (Main, argt, params.stdin)
    end
 
-   error ("run_spec was expecting a string or table, but got a "..type (params))
+   error ('run_spec was expecting a string or table, but got a '..type (params))
 end
 
 
@@ -88,13 +88,13 @@ end
 --[[ ================ ]]--
 
 
-TMPDIR = os.getenv "TMPDIR" or os.getenv "TMP" or "/tmp"
+TMPDIR = os.getenv 'TMPDIR' or os.getenv 'TMP' or '/tmp'
 
 
 local function append (path, ...)
-   local n = select ("#", ...)
+   local n = select ('#', ...)
    if n > 0 then
-      local fh = io.open (path, "a")
+      local fh = io.open (path, 'a')
       std.io.writelines (fh, ...)
       fh:close ()
    end
@@ -108,12 +108,12 @@ end
 --    h = Tmpfile (content) -- save *content* to generated filename
 --    h = Tmpfile (name, line, line, line) -- write *line*s to *name*
 Tmpfile = Object {
-   _type = "Tmpfile",
+   _type = 'Tmpfile',
 
    path = nil,
 
    _init = function (self, path, ...)
-      if select ("#", ...) == 0 then
+      if select ('#', ...) == 0 then
          self.path = os.tmpname ()
          append (self.path, path, ...)
       else
@@ -124,11 +124,11 @@ Tmpfile = Object {
    end,
 
    dirname = function (self)
-      return self.path:gsub ("/[^/]*$", "", 1)
+      return self.path:gsub ('/[^/]*$', '', 1)
    end,
 
    basename = function (self)
-      return self.path:gsub (".*/", "")
+      return self.path:gsub ('.*/', '')
    end,
 
    append = function (self, ...)
@@ -142,15 +142,15 @@ Tmpfile = Object {
 
 
 Tmpdir = Object {
-   _type = "Tmpdir",
+   _type = 'Tmpdir',
 
-   tmpdir = std.io.catfile (TMPDIR, "specl_" .. math.random (65536)),
+   tmpdir = std.io.catfile (TMPDIR, 'specl_' .. math.random (65536)),
 
    path = nil,
 
    _init = function (self, dirname)
       self.path = dirname or self.tmpdir
-      os.execute ("mkdir " .. self.path)
+      os.execute ('mkdir ' .. self.path)
       return self
    end,
 
@@ -175,7 +175,7 @@ Tmpdir = Object {
 
 
 do
-   local matchers = require "specl.matchers"
+   local matchers = require 'specl.matchers'
 
    local Matcher, matchers, q =
             matchers.Matcher, matchers.matchers, matchers.stringify
@@ -187,11 +187,11 @@ do
       end,
 
       format_expect = function (self, expect)
-         return " a " .. expect .. ", "
+         return ' a ' .. expect .. ', '
       end,
 
       format_actual = function (self, actual)
-         return " a " .. object.type (actual)
+         return ' a ' .. object.type (actual)
       end,
    }
 end

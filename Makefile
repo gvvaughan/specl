@@ -67,7 +67,7 @@ doc: doc/config.ld $(SOURCES)
 	$(LDOC) -c doc/config.ld .
 
 doc/config.ld: doc/config.ld.in
-	$(SED) -e "s,@PACKAGE_VERSION@,$(VERSION)," '$<' > '$@'
+	$(SED) -e 's,@PACKAGE_VERSION@,$(VERSION),' '$<' > '$@'
 
 
 CHECK_ENV = LUA=$(LUA)
