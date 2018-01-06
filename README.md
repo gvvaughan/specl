@@ -43,9 +43,32 @@ Documentation
 Specl includes [comprehensive documentation][github.io].
 
 
+Bug reports and code contributions
+----------------------------------
+
+Please make bug reports and suggestions [GitHub Issues][issues].
+Pull requests are especially appreciated.
+
+But first, please check that your issue has not already been reported by
+someone else, and that it is not already fixed by [master][github] in
+preparation for the next release (see Installation section above for how
+to temporarily install master with [LuaRocks][]).
+
+There is no strict coding style, but please bear in mind the following
+points when proposing changes:
+
+0. Follow existing code. There are a lot of useful patterns and avoided
+   traps there.
+
+1. 3-character indentation using SPACES in Lua sources: It makes rogue
+   TABs easier to see, and lines up nicely with 'fi' and 'end' keywords.
+
+
 [bdd]:       https://en.wikipedia.org/wiki/Behavior-driven_development
+[github]:    https://github.com/gvvaughan/specl
 [github.io]: https://gvvaughan.github.io/specl
 [install]:   https://raw.github.com/gvvaughan/specl/release/INSTALL
+[issues]:    https://github.com/gvvaughan/specl/issues
 [lua]:       https://www.lua.org
 [luajit]:    https://luajit.org
 [luarocks]:  https://www.luarocks.org
