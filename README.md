@@ -6,8 +6,9 @@ SPECL
 [![codecov.io](https://codecov.io/github/gvvaughan/specl/coverage.svg?branch=master)](https://codecov.io/github/gvvaughan/specl?branch=master)
 [![Stories in Ready](https://badge.waffle.io/gvvaughan/specl.png?label=ready&title=Ready)](https://waffle.io/gvvaughan/specl)
 
-[Specl][] is a testing tool for [Lua][], providing a
-[Behaviour Driven Development][BDD] framework in the vein of [RSpec][].
+[Specl][] is a testing tool for [Lua][] 5.1 (including [LuaJit][]), 5.2
+and 5.3, providing a [Behaviour Driven Development][BDD] framework in the
+vein of [RSpec][].
 
  * a rich command line program (the `specl` command)
  * textual descriptions of examples and groups (spec files use [YAML][])
@@ -32,18 +33,9 @@ To install current git master from [GitHub][specl] (for testing):
     luarocks install \
       https://raw.githubusercontent.com/gvvaughan/specl/master/specl-git-1.rockspec
 
-To install without [LuaRocks][], clone the sources from the
-[repository][specl], and then run the following commands:
+The dependencies are listed in the dependencies entry of the 
+[rockspec][depends].
 
-    cd specl
-    ./bootstrap
-    ./configure --prefix=INSTALLATION-ROOT-DIRECTORY
-    make all check install
-
-The dependencies are listed in the dependencies entry of the file
-[rockspec.conf][L10]. You will also need [Autoconf][] and [Automake][].
-
-See [INSTALL][] for instructions for `configure`.
 
 Documentation
 -------------
@@ -51,14 +43,12 @@ Documentation
 Specl includes [comprehensive documentation][github.io].
 
 
-[autoconf]:  https://gnu.org/s/autoconf
-[automake]:  https://gnu.org/s/automake
 [bdd]:       https://en.wikipedia.org/wiki/Behavior-driven_development
 [github.io]: https://gvvaughan.github.io/specl
 [install]:   https://raw.github.com/gvvaughan/specl/release/INSTALL
 [lua]:       https://www.lua.org
+[luajit]:    https://luajit.org
 [luarocks]:  https://www.luarocks.org
 [rspec]:     https://github.com/rspec/rspec
 [specl]:     https://github.com/gvvaughan/specl
-[L10]:       https://github.com/gvvaughan/specl/blob/master/rockspec.conf#L10
-[yaml]:      https//yaml.org
+[depends]:   https://github.com/gvvaughan/specl/blob/master/specl-git-1.rockspec#L28
