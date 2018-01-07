@@ -7,7 +7,7 @@ local have_posix, posix = pcall(require, 'posix')
 
 -- Don't prevent examples from loading a different luaposix.
 for k in pairs(package.loaded) do
-   if k == 'posix' or k == 'posix_c' or k:match '^posix%.' then
+   if k == 'posix' or k == 'posix_c' or string.match(k, '^posix%.') then
       package.loaded[k] = nil
    end
 end

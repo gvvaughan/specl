@@ -503,7 +503,7 @@ matchers.raise = Matcher{
       if expected ~= nil then
          if not ok then
             -- 'not ok' means an error occurred
-            ok = not actual:match(escape_pattern(expected))
+            ok = not match(actual, escape_pattern(expected))
          end
       end
       return not ok
@@ -541,7 +541,7 @@ matchers.raise_matching = Matcher{
       if expected ~= nil then
          if not ok then
             -- 'not ok' means an error occurred
-            ok = not actual:match(expected)
+            ok = not match(actual, expected)
          end
       end
       return not ok
@@ -580,7 +580,7 @@ matchers.error = matchers.raise
 -- @string pattern result must match this pattern
 matchers.match = Matcher{
    function(self, actual, pattern)
-      return(actual:match(pattern) ~= nil)
+      return(match(actual, pattern) ~= nil)
    end,
 
    actual_type = 'string',
@@ -603,7 +603,7 @@ matchers.contain = Matcher{
    function(self, actual, expected)
       if type(actual) == 'string' and type(expected) == 'string' then
          -- Look for a substring if VALUE is a string.
-         return(actual:match(escape_pattern(expected)) ~= nil)
+         return(match(actual, escape_pattern(expected)) ~= nil)
       end
 
       -- Coerce an object to a table.

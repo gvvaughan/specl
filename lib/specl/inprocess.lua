@@ -8,6 +8,9 @@
  @module specl.inprocess
 ]]
 
+local find = string.find
+local gsub = string.gsub
+local sub = string.sub
 
 local compat = require 'specl.compat'
 local sandbox = require 'specl.sandbox'
@@ -34,7 +37,7 @@ local StrFile = Object{
 
    __tostring = function(self)
       -- If not set manually, default `name` to a unique hex address.
-      self.name = self.name or tostring({}):gsub('.*x', '0x')
+      self.name = self.name or gsub(tostring{}, '.*x', '0x')
       return 'strfile (' .. self.name .. '/' .. self.mode .. ')'
    end,
 
@@ -70,7 +73,7 @@ local StrFile = Object{
          for i = 1, #fmts do
             -- For this format, return an empty string when input is exhausted...
             if fmts[i] == '*a' then
-               r[i] = self.buffer:sub(self.pos)
+               r[i] = sub(self.buffer, self.pos)
                self.pos = #self.buffer + 1
 
             -- ...otherwise return nil at end of file.
@@ -81,34 +84,34 @@ local StrFile = Object{
                local b = self.pos
                r[i] = case(fmts[i], {
                   ['*n'] = function()
-                     local ok, e, cap = self.buffer:find('^%s*0[xX](%x+)', b)
+                     local ok, e, cap = find(self.buffer, '^%s*0[xX](%x+)', b)
                      if ok then
                         self.pos = e + 1
                         return tonumber(cap, 16)
                      end
-                     local ok, e = self.buffer:find('^%s*%d*%.?%d+[eE]%d+', b)
+                     local ok, e = find(self.buffer, '^%s*%d*%.?%d+[eE]%d+', b)
                      if ok then
                         self.pos = e + 1
-                        return tonumber(self.buffer:sub(b, e))
+                        return tonumber(sub(self.buffer, b, e))
                      end
-                     local ok, e = self.buffer:find('^%s*%d*%.?%d+', b)
+                     local ok, e = find(self.buffer, '^%s*%d*%.?%d+', b)
                      if ok then
                         self.pos = e + 1
-                        return tonumber(self.buffer:sub(b, e))
+                        return tonumber(sub(self.buffer, b, e))
                      end
                      return nil
                   end,
 
                   ['*l'] = function()
-                     local e = self.buffer:find('\n', self.pos) or #self.buffer
+                     local e = find(self.buffer, '\n', self.pos) or #self.buffer
                      self.pos = e + 1
-                     return self.buffer:sub(b, e):gsub('\n$', '')
+                     return gsub(sub(self.buffer, b, e), '\n$', '')
                   end,
 
                   ['*L'] = function()
-                     local e = self.buffer:find('\n', self.pos) or #self.buffer
+                     local e = find(self.buffer, '\n', self.pos) or #self.buffer
                      self.pos = e + 1
-                     return self.buffer:sub(b, e)
+                     return sub(self.buffer, b, e)
                   end,
 
                   function()
@@ -116,7 +119,7 @@ local StrFile = Object{
                         return error("bad argument #1 to 'read'(invalid option)", 3)
                      end
                      self.pos = self.pos + fmts[i]
-                     return self.buffer:sub(b, self.pos - 1)
+                     return sub(self.buffer, b, self.pos - 1)
                   end,
                })
             end

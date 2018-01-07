@@ -3,6 +3,8 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
+local gsub = string.gsub
+
 local color = require 'specl.color'
 local std = require 'specl.std'
 local util = require 'specl.util'
@@ -21,7 +23,7 @@ end
 local function tabulate(descriptions)
    local t = {}
    local s = descriptions[#descriptions]
-   local key = s:gsub('%s*(.-)%s+.*$', '%1')
+   local key = gsub(s, '%s*(.-)%s+.*$', '%1')
 
    if color[key] then
       table.insert(t, color[key])
@@ -123,15 +125,15 @@ local function format_example(status, descriptions, opts)
             end
             reports.pend = reports.pend .. pend
             if opts.verbose then
-               details = details .. pend:gsub('^\n', '%0   ')
+               details = details .. gsub(pend, '^\n', '%0   ')
             end
 
          elseif exp.status == false then
             counts.fail = counts.fail + 1
             local fail = format_failing_expectation(status, i, exp, opts.verbose)
-            reports.fail = reports.fail .. '\n' .. fail:gsub('\n', '%0   ')
+            reports.fail = reports.fail .. '\n' .. gsub(fail, '\n', '%0   ')
             if opts.verbose then
-               details = details .. '\n' .. spaces .. fail:gsub('\n', '%0   ' .. spaces)
+               details = details .. '\n' .. spaces .. gsub(fail, '\n', '%0   ' .. spaces)
             end
          end
       end

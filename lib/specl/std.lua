@@ -264,6 +264,6 @@ M.debug.setfenv = nil
 
 -- Don't prevent examples from loading a different stdlib(or optparse!).
 map(function(e) package.loaded[e] = nil end,
-   filter(lambda "|k| k:match '^std%.' or k == 'std' or k == 'optparse'", package.loaded))
+   filter(lambda "|k| string.match(k, '^std%.') or k == 'std' or k == 'optparse'", package.loaded))
 
 return M

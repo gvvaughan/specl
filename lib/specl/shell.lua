@@ -16,6 +16,8 @@ local _ = {
 
 local _ENV = {
    getmetatable = getmetatable,
+   gsub = string.gsub,
+   match = string.match,
    pairs = pairs,
    setfenv = function() end,
    tonumber = tonumber,
@@ -45,7 +47,7 @@ _ = nil
 
 
 local function shell_quote(s)
-   return "'" .. tostring(s):gsub("'", "'\\''") .. "'"
+   return "'" .. gsub(tostring(s), "'", "'\\''") .. "'"
 end
 
 --- Description of a shell command.
@@ -86,7 +88,7 @@ local Command = Object {
       end
 
       if stdin then
-         self.cmd = "printf '%s\\n' " .. shell_quote(stdin):gsub('\n', "' '") ..
+         self.cmd = "printf '%s\\n' " .. gsub(shell_quote(stdin), '\n', "' '") ..
             '|' .. self.cmd
       end
 
@@ -260,7 +262,7 @@ do
    -- @string out substring to match against Process output
    matchers.contain_output = ProcessMatcher {
       function(self, actual, expect)
-         return(actual.output or ''):match(escape_pattern(expect)) ~= nil
+         return match(actual.output or '', escape_pattern(expect)) ~= nil
       end,
 
       expecting = ' output containing:', but_got_output,
@@ -272,8 +274,8 @@ do
    -- @string out substring to match against Process output
    matchers.succeed_while_containing = ProcessMatcher {
       function(self, actual, expect)
-         return(actual.status == 0) and
-            ((actual.output or ''):match(escape_pattern(expect)) ~= nil)
+         return (actual.status == 0) and
+            (match(actual.output or '', escape_pattern(expect)) ~= nil)
       end,
 
       expecting = ' exit status 0, with output containing:',
@@ -310,7 +312,7 @@ do
    -- @string pattern match this against Process output
    matchers.match_output = ProcessMatcher {
       function(self, actual, pattern)
-         return(actual.output or ''):match(pattern) ~= nil
+         return match(actual.output or '', pattern) ~= nil
       end,
 
       expecting = ' output matching:', but_got_output,
@@ -322,8 +324,8 @@ do
    -- @string pattern match this against Process output
    matchers.succeed_while_matching = ProcessMatcher {
       function(self, actual, pattern)
-         return(actual.status == 0) and
-            ((actual.output or ''):match(pattern) ~= nil)
+         return (actual.status == 0) and
+            (match(actual.output or '', pattern) ~= nil)
       end,
 
       expecting = ' exit status 0, with output matching:',
@@ -351,7 +353,7 @@ do
    -- @string err substring to match against Process error output
    matchers.contain_error = ProcessMatcher {
       function(self, actual, expect)
-         return(actual.errout or ''):match(escape_pattern(expect)) ~= nil
+         return match(actual.errout or '', escape_pattern(expect)) ~= nil
       end,
 
       expecting = ' error output containing:', but_got_errout,
@@ -363,8 +365,8 @@ do
    -- @string err substring to match against Process error output
    matchers.fail_while_containing = ProcessMatcher {
       function(self, actual, expect)
-         return(actual.status ~= 0) and
-            ((actual.errout or ''):match(escape_pattern(expect)) ~= nil)
+         return (actual.status ~= 0) and
+            (match(actual.errout or '', escape_pattern(expect)) ~= nil)
       end,
 
       expecting = ' non-zero exit status, with error output containing:',
@@ -402,7 +404,7 @@ do
    -- @string pattern match this against Process error output
    matchers.match_error = ProcessMatcher {
       function(self, actual, pattern)
-         return(actual.errout or ''):match(pattern) ~= nil
+         return match(actual.errout or '', pattern) ~= nil
       end,
 
       expecting = ' error output matching:', but_got_errout,
@@ -414,8 +416,8 @@ do
    -- @string pattern match this against Process error output
    matchers.fail_while_matching = ProcessMatcher {
       function(self, actual, pattern)
-         return(actual.status ~= 0) and
-            ((actual.errout or ''):match(pattern) ~= nil)
+         return (actual.status ~= 0) and
+            (match(actual.errout or '', pattern) ~= nil)
       end,
 
       expecting = ' non-zero exit status, with error output matching:',

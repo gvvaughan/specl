@@ -3,6 +3,8 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
+local gsub = string.gsub
+
 local color = require 'specl.color'
 local std = require 'specl.std'
 local util = require 'specl.util'
@@ -38,7 +40,7 @@ local function format_failing_expectation(status, i, exp, verbose)
          exp.message
    end
 
-   return '\n' .. fail:gsub('\n', '%0   ')
+   return '\n' .. gsub(fail, '\n', '%0   ')
 end
 
 

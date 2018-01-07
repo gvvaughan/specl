@@ -3,6 +3,9 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
+local gsub = string.gsub
+local sub = string.sub
+
 local hell = require 'specl.shell'
 local std = require 'specl.std'
 
@@ -41,7 +44,7 @@ function spawn_specl(params)
       local cmd = table.concat(params, ' ')
 
       -- But is just options to specl if it begins with a '-'.
-      if cmd:sub(1, 1) == '-' then
+      if sub(cmd, 1, 1) == '-' then
          cmd = SPECL .. ' --color=no ' .. cmd
       end
 
@@ -130,11 +133,11 @@ Tmpfile = Object{
    end,
 
    dirname = function(self)
-      return self.path:gsub('/[^/]*$', '', 1)
+      return gsub(self.path, '/[^/]*$', '', 1)
    end,
 
    basename = function(self)
-      return self.path:gsub('.*/', '')
+      return gsub(self.path, '.*/', '')
    end,
 
    append = function(self, ...)

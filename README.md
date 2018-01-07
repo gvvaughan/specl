@@ -72,6 +72,9 @@ points when proposing changes:
 4. Use vertical space to separate out compound statements to help the
    coverage reports discover untested lines.
 
+5. Prefer explicit string function calls over object methods, to mitigate
+   issues with monkey-patching in caller environments.
+
 [bdd]:       https://en.wikipedia.org/wiki/Behavior-driven_development
 [github]:    https://github.com/gvvaughan/specl
 [github.io]: https://gvvaughan.github.io/specl

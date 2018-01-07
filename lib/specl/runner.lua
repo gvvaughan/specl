@@ -14,8 +14,10 @@ local setmetatable = setmetatable
 local tostring = tostring
 local type = type
 
-local table_insert = table.insert
-local table_remove = table.remove
+local match = string.match
+
+local insert = table.insert
+local remove = table.remove
 
 local expect = require 'specl.expect'
 local matchers = require 'specl.matchers'
@@ -84,7 +86,7 @@ function run_example(state, definition, descriptions, fenv)
    if not inclusive then
       local title = examplename(descriptions)
       for _, pattern in ipairs(filters.inclusive or {}) do
-         if title:match(pattern) then
+         if match(title, pattern) then
             inclusive = true
             break
          end
@@ -137,11 +139,11 @@ function run_examples(state, examples, descriptions, env)
          if type(definition) == 'function' then
             local example = { example = definition, line = line or 'unknown' }
 
-            table_insert(descriptions, description)
+            insert(descriptions, description)
             if run_example(state, example, descriptions, fenv) == false then
                keepgoing = false
             end
-            table_remove(descriptions)
+            remove(descriptions)
 
          elseif type(definition) == 'table' then
             local examples = {}
@@ -150,11 +152,11 @@ function run_examples(state, examples, descriptions, env)
                examples[i] = { [k] = { example = v, line = line or 'unknown' } }
             end
 
-            table_insert(descriptions,(description))
+            insert(descriptions,(description))
             if run_examples(state, examples, descriptions, fenv) == false then
                keepgoing = false
             end
-            table_remove(descriptions)
+            remove(descriptions)
          end
 
          -- Make sure we don't leak status into the calling or following
@@ -170,11 +172,11 @@ function run_examples(state, examples, descriptions, env)
 
       if definition.example then
          -- An example, execute it.
-         table_insert(descriptions, description)
+         insert(descriptions, description)
          if run_example(state, definition, descriptions, fenv) == false then
             keepgoing = false
          end
-         table_remove(descriptions)
+         remove(descriptions)
       else
          -- A nested context, revert back to run_contexts.
          if run_contexts(state, example, descriptions, fenv) == false then
@@ -199,10 +201,10 @@ end
 function run_contexts(state, contexts, descriptions, env)
    local formatter = state.opts.formatter
    for description, examples in pairs(contexts) do
-      table_insert(descriptions, description)
+      insert(descriptions, description)
       state:accumulator(formatter.spec(descriptions, state.opts))
       local status = run_examples(state, examples, descriptions, env)
-      table_remove(descriptions)
+      remove(descriptions)
 
       -- Return false immediately for a failed expectation if --fail-fast
       -- was given.

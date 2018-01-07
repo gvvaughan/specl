@@ -5,6 +5,8 @@
 
 -- Test Anything Protocol style formatter.
 
+local gsub = string.gsub
+
 local util = require 'specl.util'
 
 local examplename, nop = util.examplename, util.nop
@@ -29,11 +31,11 @@ local function expectations(status, descriptions)
             print '# PENDING expectation: Not Implemented Yet'
          end
          if fail then
-            print('# ' .. expectation.message:gsub('\n', '\n# '))
+            print('# ' .. gsub(expectation.message, '\n', '\n# '))
          end
       end
    elseif status.ispending then
-      print('#    ' .. tostring(curr_test):gsub('.', '-') .. ' ' ..
+      print('#    ' .. gsub(tostring(curr_test), '.', '-') .. ' ' ..
              title .. '\n#      PENDING example: Not Implemented Yet')
    end
 end

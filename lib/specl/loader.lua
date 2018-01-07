@@ -3,6 +3,11 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
+local format = string.format
+local gsub = string.gsub
+local match = string.match
+local sub = string.sub
+
 local macro = require 'macro'
 local yaml = require 'yaml'
 
@@ -37,7 +42,7 @@ local function expandmacros(name)
 
    -- Use spec_path by default, but also package.path for specl submodules.
    local search_path = spec_path
-   if name:match '^specl%.' then
+   if match(name, '^specl%.') then
       search_path = search_path .. pathsep .. package.path
    end
 
@@ -70,9 +75,8 @@ local parser_mt = {
 
       -- Raise a parse error.
       error = function(self, errmsg)
-         io.stderr:write(string.format('%s:%d:%d: %s\n', self.filename,
-                                       self.mark.line, self.mark.column,
-                                       errmsg))
+         io.stderr:write(format('%s:%d:%d: %s\n', self.filename,
+                         self.mark.line, self.mark.column, errmsg))
          os.exit(1)
       end,
 
@@ -81,16 +85,16 @@ local parser_mt = {
          local f, errmsg = macro.substitute_tostring(s)
          if f == nil then
             -- Replace the error message from macro; it's just internal gunk.
-            errmsg = string.format("%s:%d: parse error near 'expect', while collecting arguments",
-                                    self.filename, self.mark.line)
+            errmsg = format("%s:%d: parse error near 'expect', while collecting arguments",
+                            self.filename, self.mark.line)
          else
             f, errmsg = load(f)
          end
          if f == nil then
-            local line, msg = errmsg:match('%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
+            local line, msg = match(errmsg, '%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
             if msg ~= nil then
                line = tonumber(line) + self.mark.line - 1
-               errmsg = string.format('%s:%d: %s', self.filename, line, msg)
+               errmsg = format('%s:%d: %s', self.filename, line, msg)
             end
          end
          if errmsg ~= nil then
@@ -108,15 +112,15 @@ local parser_mt = {
          if self.unicode then
             return value
          end
-         value = self.input:sub(event.start_mark.index, event.end_mark.index)
+         value = sub(self.input, event.start_mark.index, event.end_mark.index)
          if event.style == 'DOUBLE_QUOTED' then
-            value = table.concat {value:match([[^(%s*)"(.-)"%s*$]])}
+            value = table.concat {match(value, [[^(%s*)"(.-)"%s*$]])}
          elseif event.style == 'SINGLE_QUOTED' then
-            value = table.concat {value:match([[^(%s*)'(.-)'%s*$]])}
+            value = table.concat {match(value, [[^(%s*)'(.-)'%s*$]])}
          elseif event.style == 'LITERAL' then
-            value = table.concat {value:match([[^(%s*)[|](.-)%s*$]])}
+            value = table.concat {match(value, [[^(%s*)[|](.-)%s*$]])}
          elseif event.style == 'FOLDED' then
-            value = table.concat {value:match([[^(%s*)>(.-)%s*$]])}
+            value = table.concat {match(value, [[^(%s*)>(.-)%s*$]])}
          end
          return value
       end,
@@ -133,7 +137,7 @@ local parser_mt = {
          local ok, event = pcall(self.next)
          if not ok then
             -- if ok is nil, then event is a parser error from libYAML.
-            self:error(event:gsub(' at document: .*$', ''))
+            self:error(gsub(event, ' at document: .*$', ''))
          end
          self.event = event
          self.mark = {
@@ -217,7 +221,7 @@ local parser_mt = {
          local value = self.event.value
          local tag = self.event.tag
          if tag then
-            tag = tag:match('^' .. TAG_PREFIX .. '(.*)$')
+            tag = match(tag, '^' .. TAG_PREFIX .. '(.*)$')
             if tag == 'str' then
                -- value is already a string
             elseif tag == 'int' or tag == 'float' then
@@ -287,10 +291,10 @@ local function Parser(filename, s, opts)
       next = yaml.parser(s),
 
       -- strip leading './'
-      filename = filename:gsub(catfile('^%.', ''), ''),
+      filename = gsub(filename, catfile('^%.', ''), ''),
 
       -- Used to simplify requiring from the spec file directory.
-      preamble = string.format([[
+      preamble = format([[
          package.path = '%s'
 
          -- Expand macros in spec_helper.

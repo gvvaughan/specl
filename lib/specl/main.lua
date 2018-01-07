@@ -3,6 +3,8 @@
  Copyright (C) 2013-2018 Gary V. Vaughan
 ]]
 
+local match = string.match
+
 local loader = require 'specl.loader'
 local runner = require 'specl.runner'
 local std = require 'specl.std'
@@ -36,7 +38,7 @@ end
 
 -- Return `filename` if it has a specfile-like filename, else nil.
 local function specfilter(_, filename)
-   return filename:match '_spec%.yaml$' and filename or nil
+   return match(filename, '_spec%.yaml$') and filename or nil
 end
 
 
@@ -73,12 +75,12 @@ local function process_args(self, parser)
 
    for i, v in ipairs(self.arg) do
       -- Process line filters.
-      local filename, line = nil, v:match '^%+(%d+)$'   -- +NN
+      local filename, line = nil, match (v, '^%+(%d+)$')   -- +NN
       if line == nil then
-         filename, line = v:match '^(.*):(%d+):%d+'     -- file:NN:MM
+         filename, line = match (v, '^(.*):(%d+):%d+')     -- file:NN:MM
       end
       if line == nil then
-         filename, line = v:match '^(.*):(%d+)$'        -- file:NN
+         filename, line = match (v, '^(.*):(%d+)$')        -- file:NN
       end
 
       -- Fallback to simple `filename`.
@@ -99,7 +101,7 @@ local function process_args(self, parser)
 
       elseif filename ~= nil then
          h = io.open(filename)
-         if h == nil and v:match '^-' then
+         if h == nil and match(v, '^-') then
             return parser:opterr("unrecognised option '" .. v .. "'")
          end
          io.input(h)
