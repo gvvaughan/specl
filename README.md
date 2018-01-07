@@ -69,6 +69,9 @@ points when proposing changes:
 3. Save horizontal space by only using SPACEs where the parser requires
    them.
 
+4. Use vertical space to separate out compound statements to help the
+   coverage reports discover untested lines.
+
 [bdd]:       https://en.wikipedia.org/wiki/Behavior-driven_development
 [github]:    https://github.com/gvvaughan/specl
 [github.io]: https://gvvaughan.github.io/specl

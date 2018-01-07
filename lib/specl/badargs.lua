@@ -52,7 +52,9 @@ local function showarg(types)
    local t = {}
    for i, argtype in ipairs(argtypes) do
       local container, things = match(argtype, '(%S+) of(%S+)')
-      if container ~= nil then argtype = container end
+      if container ~= nil then
+         argtype = container
+      end
 
       if match(argtype, '^#') then
          t[i] = gsub(argtype, '#', 'non-empty ')
@@ -70,7 +72,9 @@ local function showarg(types)
    end
 
    local r = gsub(concat(t, ', '), ',([^,]+)$', ' or %1')
-   if r == 'nil' then r = 'no value' end
+   if r == 'nil' then
+      r = 'no value'
+   end
    return r
 end
 
@@ -90,8 +94,14 @@ local function badargs_format(fname, i, want, field, got)
                      i, fname, field)
    end
 
-   if got == nil then field, got = nil, field end -- field is optional
-   if want == nil then i, want = i - 1, i end       -- numbers only for narg error
+   if got == nil then
+      -- field is optional
+      field, got = nil, field
+   end
+   if want == nil then
+      -- numbers only for narg error
+      i, want = i - 1, i
+   end
 
    if got == nil and type(want) == 'number' then
       return format("bad argument #%d to '%s' (no more than %d argument%s expected, got %d)",
@@ -113,7 +123,10 @@ end
 -- @usage
 --    expect(fn()).to_error(badargs.result(fname, 1, 'int'))
 local function result(fname, i, want, got)
-   if want == nil then i, want =   i - 1, i end -- numbers only for narg error
+   if want == nil then
+      -- numbers only for narg error
+      i, want = i - 1, i
+   end
 
    if got == nil and type(want) == 'number' then
       return format("bad result #%d from '%s' (no more than %d result%s expected, got %d)",
@@ -129,7 +142,9 @@ end
 -- @treturn boolean non-`true` if *t* does not contain 'nil'
 local function nilok(t)
    for _, v in ipairs(t) do
-      if v == 'nil' then return true end
+      if v == 'nil' then
+         return true
+      end
    end
 end
 
@@ -139,7 +154,9 @@ end
 -- @treturn boolean non-`true` if *t* does not contain 'any'
 local function anyok(t)
    for _, v in ipairs(t) do
-      if v == 'any' then return true end
+      if v == 'any' then
+         return true
+      end
    end
 end
 
@@ -153,7 +170,9 @@ local function extendarglist(arglist, i, argtype)
    argtype = typesplit(argtype)[1]
 
    local container, thing = match(argtype or '', '(%S+) of(%S+)')
-   if container ~= nil then argtype = container end
+   if container ~= nil then
+      argtype = container
+   end
 
    if argtype == nil then
       arglist[i] = nil
@@ -200,7 +219,9 @@ end
 -- @tparam string|table argtype either `?bool|:plain` or `{'bool', ':plain', 'nil'}`
 local function poisonarglist(arglist, i, argtype)
    local argtypes = {}
-   for i, v in ipairs(typesplit(argtype)) do argtypes[v] = i end
+   for i, v in ipairs(typesplit(argtype)) do
+      argtypes[v] = i
+   end
 
    if argtypes.boolean == nil then
       arglist[i] = false
@@ -232,10 +253,14 @@ local function poisoncontainerarglist(arglist, i, argtype)
    local container, thing
    for i, v in ipairs(typesplit(argtype)) do
       container, thing = match(v, '(%S+) of(%S+)')
-      if container ~= nil then break end
+      if container ~= nil then
+         break
+      end
    end
 
-   if container == nil then return nil end
+   if container == nil then
+      return nil
+   end
 
    local poison = setmetatable({}, {_type=container})
    extendarglist(poison, 1, thing)
@@ -309,7 +334,9 @@ local function diagnose(decl, fn)
 
    local typemin, specs = #typelist, parsetypes(typelist)
    for _, v in pairs(typelist) do
-      if match(v, '%[.*%]') then typemin = typemin - 1 end
+      if match(v, '%[.*%]') then
+         typemin = typemin - 1
+      end
    end
 
    local fin = specs[#specs]

@@ -42,7 +42,9 @@ local function expandmacros(name)
    end
 
    local path, err = searchpath(name, search_path)
-   if path == nil then return nil, err end
+   if path == nil then
+      return nil, err
+   end
 
    local content, err = macro.substitute_tostring(slurp(path))
    if content == nil then
@@ -103,7 +105,9 @@ local parser_mt = {
          -- Mark indices are character based, but Lua patterns are byte
          -- based, which means refetching doesn't work in the presence of
          -- unicode characters :(
-         if self.unicode then return value end
+         if self.unicode then
+            return value
+         end
          value = self.input:sub(event.start_mark.index, event.end_mark.index)
          if event.style == 'DOUBLE_QUOTED' then
             value = table.concat {value:match([[^(%s*)"(.-)"%s*$]])}
@@ -154,7 +158,9 @@ local parser_mt = {
 
          while true do
             local key = self:load_node()
-            if key == nil then break end
+            if key == nil then
+               break
+            end
             local value, event = self:load_node()
             if value == nil then
                return self:error('unexpected ' .. self:type() .. ' event')
@@ -228,7 +234,9 @@ local parser_mt = {
                value = false
             else
                local number = tonumber(value)
-               if number then value = number end
+               if number then
+                  value = number
+               end
             end
          end
          self:add_anchor(value)

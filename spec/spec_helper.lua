@@ -45,7 +45,9 @@ function spawn_specl(params)
          cmd = SPECL .. ' --color=no ' .. cmd
       end
 
-      if params.stdin then cmd = cmd .. ' -' end
+      if params.stdin then
+         cmd = cmd .. ' -'
+      end
 
       -- Must pass our package.path through to inferior Specl process.
       local env = params.env or {}
@@ -71,9 +73,13 @@ function run_spec(params)
    if type(params) == 'table' then
       -- The command is made from the array part of params table.
       local argt = {'--color=no'}
-      for _, e in ipairs(params) do argt[#argt + 1] = e end
+      for _, e in ipairs(params) do
+         argt[#argt + 1] = e
+      end
 
-      if params.stdin then argt[#argt + 1] = '-' end
+      if params.stdin then
+         argt[#argt + 1] = '-'
+      end
 
       return inprocess.call(Main, argt, params.stdin)
    end

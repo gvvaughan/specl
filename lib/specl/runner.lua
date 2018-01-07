@@ -188,7 +188,9 @@ function run_examples(state, examples, descriptions, env)
       end
 
       -- Now after's have executed, return false for --fail-fast.
-      if keepgoing == false then return false end
+      if keepgoing == false then
+         return false
+      end
    end
 end
 
@@ -204,7 +206,9 @@ function run_contexts(state, contexts, descriptions, env)
 
       -- Return false immediately for a failed expectation if --fail-fast
       -- was given.
-      if status == false then return false end
+      if status == false then
+         return false
+      end
    end
 end
 

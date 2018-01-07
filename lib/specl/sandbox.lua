@@ -217,7 +217,9 @@ end
 local function inner_closures(env, state)
    env.load = function(ld, source, _, fenv)
       local fn, err = load(ld, source)
-      if fn == nil then return nil, err end
+      if fn == nil then
+         return nil, err
+      end
       return function()
          setfenv(fn, fenv or env)
          return fn()
@@ -226,7 +228,9 @@ local function inner_closures(env, state)
 
    env.loadfile = function(filename, _, fenv)
       local fn, err = loadfile(filename)
-      if fn == nil then return nil, err end
+      if fn == nil then
+         return nil, err
+      end
       return function()
          setfenv(fn, fenv or env)
          return fn()

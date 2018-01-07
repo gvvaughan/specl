@@ -36,7 +36,8 @@ define('expect', function(get)
    elseif tk == 'string' then
       tk, expr = get:next()
    end
-   if expr == nil then -- pass through 'expect' token
+   if expr == nil then
+      -- pass through 'expect' token
       return nil, true
    end
    return '(pcall(function() return ' .. expr .. ' end))', true
@@ -56,14 +57,19 @@ define('between', function(get)
    elseif tk == 'string' then
       tk, expr = get:next()
    end
-   if expr == nil then -- pass through 'between' token
+   if expr == nil then
+      -- pass through 'between' token
       return nil, true
    end
    tk, v = get:peek(1)
-   if v ~= '.' then return ' ' .. expr, true end
+   if v ~= '.' then
+      return ' ' .. expr, true
+   end
    get:next() -- consume '.'
    tk, v = get:next()
-   if tk ~= 'iden' then return ' ' .. expr .. '.', true end
+   if tk ~= 'iden' then
+      return ' ' .. expr .. '.', true
+   end
    return 'between_' .. v .. ' ' .. expr
 end)
 
@@ -142,7 +148,9 @@ end
 -- @treturn table dynamic matcher lookup table for this result
 -- @usage expect({}).not_to_be {}
 local function expect(state, ok, actual, ...)
-   if select('#', ...) > 0 then actual = {actual, ...} end
+   if select('#', ...) > 0 then
+      actual = {actual, ...}
+   end
 
    return setmetatable({}, {
       __index = function(_, verb)
@@ -158,7 +166,9 @@ local function expect(state, ok, actual, ...)
          return setmetatable({}, {
             -- `expect(actual).to_be(expected)`
             __call = function(self, expected, ...)
-               if select('#', ...) > 0 then expected = {expected, ...} end
+               if select('#', ...) > 0 then
+                  expected = {expected, ...}
+               end
                local success, msg = matcher:match(actual, expected, ok)
                if type(success) == 'boolean' then
                    vtable.score(success, msg)
@@ -171,7 +181,9 @@ local function expect(state, ok, actual, ...)
                local fn = matcher[adaptor .. '?']
                if fn then
                   return function(expected, ...)
-                     if select('#', ...) > 0 then expected = {expected, ...} end
+                     if select('#', ...) > 0 then
+                        expected = {expected, ...}
+                     end
                      local success, msg = fn(matcher, actual, expected, ok, vtable)
                      if type(success) == 'boolean' then
                         vtable.score(success, msg)

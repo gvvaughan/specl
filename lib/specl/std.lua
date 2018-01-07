@@ -56,7 +56,9 @@ reduce(set, M,
 
 local function copy(src)
    local dest = {}
-   for k, v in pairs(src) do dest[k] = v end
+   for k, v in pairs(src) do
+      dest[k] = v
+   end
    return dest
 end
 
@@ -72,7 +74,9 @@ end
 
 local function opairs(t)
    local keys, i = {}, 0
-   for k in pairs(t) do keys[#keys + 1] = k end
+   for k in pairs(t) do
+      keys[#keys + 1] = k
+   end
    table.sort(keys, keysort)
 
    local _, _t = pairs(t)
@@ -88,8 +92,12 @@ end
 
 local function getmetamethod(x, n)
    local m = (getmetatable(x) or {})[n]
-   if type(m) == 'function' then return m end
-   if type((getmetatable(m) or {}).__call) == 'function' then return m end
+   if type(m) == 'function' then
+      return m
+   end
+   if type((getmetatable(m) or {}).__call) == 'function' then
+      return m
+   end
 end
 
 
@@ -141,14 +149,18 @@ local function render(x, elem, roots)
       return elem(x)
    else
       local buf, keys = {'{'}, {}
-      for k in pairs(x) do keys[#keys +1] = k end
+      for k in pairs(x) do
+         keys[#keys +1] = k
+      end
       table.sort(keys, keysort)
 
       roots[x] = elem(x)
       local kp, vp
       for _, k in ipairs(keys) do
          local v = x[k]
-         if kp ~= nil then buf[#buf +1] = ',' end
+         if kp ~= nil then
+            buf[#buf +1] = ','
+         end
          buf[#buf +1] = stop_roots(k) .. '=' .. stop_roots(v)
          kp, vp = k, v
       end
@@ -180,8 +192,12 @@ end
 
 M.operator = {
    eqv = function(a, b)
-      if a == b then return true end
-      if type(a) ~= 'table' or type(b) ~= 'table' then return false end
+      if a == b then
+         return true
+      end
+      if type(a) ~= 'table' or type(b) ~= 'table' then
+         return false
+      end
       return mnemonic(a) == mnemonic(b)
    end,
 }

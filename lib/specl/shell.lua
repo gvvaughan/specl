@@ -57,7 +57,9 @@ local Command = Object {
    _init = function(self, params)
       argcheck('Command', 1, 'string|table', params)
 
-      if type(params) ~= 'table' then params = {params} end
+      if type(params) ~= 'table' then
+         params = {params}
+      end
 
       local cmd = table_concat(params, ' ')
       local env, stdin = params.env, params.stdin
@@ -108,7 +110,9 @@ local Process = Object {
 -- @tparam string|table|Command o a shell command to run in a subprocess
 -- @treturn Process result of executing *o*
 local function spawn(o)
-   if(getmetatable(o) or {})._type ~= 'Command' then o = Command(o) end
+   if(getmetatable(o) or {})._type ~= 'Command' then
+      o = Command(o)
+   end
 
    -- Capture stdout and stderr to temporary files.
    local fout = os.tmpname()

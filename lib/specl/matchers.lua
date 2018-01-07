@@ -73,12 +73,16 @@ local function totable(obj)
       -- Fetch all key:value pairs where possible...
       r = {}
       for k, v in pairs(obj) do
-         if type(k) == 'table' then k = pickle(k) end
+         if type(k) == 'table' then
+            k = pickle(k)
+         end
          r[k] = v end
    elseif type(obj) == 'string' then
       -- ...or explode a raw string into a table of characters.
       r, i = {}, 1
-      gsub(obj, '(.)', function(c) i, r[i] = i + 1, c end)
+      gsub(obj, '(.)', function(c)
+         i, r[i] = i + 1, c
+      end)
    end
    return r
 end
@@ -173,7 +177,9 @@ local Matcher = Object{
       local success
       for _, expected in ipairs(alternatives) do
          success = self:matchp(actual, expected, ...)
-         if not success then break end
+         if not success then
+            break
+         end
       end
 
       return success, alternatives_msg(self, 'all of', alternatives,
@@ -192,7 +198,9 @@ local Matcher = Object{
       local success
       for _, expected in ipairs(alternatives) do
          success = self:matchp(actual, expected, ...)
-         if success then break end
+         if success then
+            break
+         end
       end
 
       return success, alternatives_msg(self, 'any of', alternatives,
@@ -202,11 +210,17 @@ local Matcher = Object{
    -- Defaults:
    actual_type = '?any',
 
-   matchp = function(self, actual, expected) return actual == expected end,
+   matchp = function(self, actual, expected)
+      return actual == expected
+   end,
 
-   format_actual = function(self, actual) return ' ' .. q(actual) end,
+   format_actual = function(self, actual)
+      return ' ' .. q(actual)
+   end,
 
-   format_expect = function(self, expected) return ' ' .. q(expected) .. ', ' end,
+   format_expect = function(self, expected)
+      return ' ' .. q(expected) .. ', '
+   end,
 
    format_alternatives = function(self, adaptor, alternatives)
       return ' ' .. adaptor .. ' ' ..
@@ -228,7 +242,9 @@ local Matcher = Object{
 -- name field is always set.
 -- @table matchers
 local matchers = setmetatable({content={}}, {
-   __index = function(self, name) return rawget(self.content, name) end,
+   __index = function(self, name)
+      return rawget(self.content, name)
+   end,
 
    __newindex = function(self, name, matcher)
       argcheck('matchers.' .. name, 2, 'Matcher', matcher)
@@ -353,8 +369,10 @@ matchers.be = Matcher{
    -- @param expected a primitive or object that the expect argument must
    --    always be greater than
    ['gt?'] = function(self, actual, expected)
-       local ok, r = pcall(function() return actual > expected end)
-       return ok and r or false, comparative_msg(self, '>', actual, expected)
+      local ok, r = pcall(function()
+         return actual > expected
+      end)
+      return ok and r or false, comparative_msg(self, '>', actual, expected)
    end,
 
    --- `be` specific adaptor for greater than or equal to comparison.
@@ -367,8 +385,10 @@ matchers.be = Matcher{
    --    end
    --    expect(X{'a', 'b'}).to_be.gte(X{'b', 'a'})
    ['gte?'] = function(self, actual, expected)
-       local ok, r = pcall(function() return actual >= expected end)
-       return ok and r or false, comparative_msg(self, '>=', actual, expected)
+      local ok, r = pcall(function()
+        return actual >= expected
+      end)
+      return ok and r or false, comparative_msg(self, '>=', actual, expected)
    end,
 
    --- `be` specific adaptor for less than comparison.
@@ -378,8 +398,10 @@ matchers.be = Matcher{
    -- @usage
    --    expect(5).to_be.lt(42)
    ['lt?'] = function(self, actual, expected)
-       local ok, r = pcall(function() return actual < expected end)
-       return ok and r or false, comparative_msg(self, '<', actual, expected)
+      local ok, r = pcall(function()
+         return actual < expected
+      end)
+      return ok and r or false, comparative_msg(self, '<', actual, expected)
    end,
 
    --- `be` specific adaptor for less than or equal to comparison.
@@ -389,8 +411,10 @@ matchers.be = Matcher{
    -- @usage
    --    expect 'abc'.to_be.lte 'abc'
    ['lte?'] = function(self, actual, expected)
-       local ok, r = pcall(function() return actual <= expected end)
-       return ok and r or false, comparative_msg(self, '<=', actual, expected)
+      local ok, r = pcall(function()
+         return actual <= expected
+      end)
+      return ok and r or false, comparative_msg(self, '<=', actual, expected)
    end,
 
    --- `be` specific adaptor for comparison within delta of expected.
@@ -477,7 +501,8 @@ matchers.copy = Matcher{
 matchers.raise = Matcher{
    function(self, actual, expected, ok)
       if expected ~= nil then
-         if not ok then -- 'not ok' means an error occurred
+         if not ok then
+            -- 'not ok' means an error occurred
             ok = not actual:match(escape_pattern(expected))
          end
       end
@@ -514,7 +539,8 @@ matchers.raise = Matcher{
 matchers.raise_matching = Matcher{
    function(self, actual, expected, ok)
       if expected ~= nil then
-         if not ok then -- 'not ok' means an error occurred
+         if not ok then
+            -- 'not ok' means an error occurred
             ok = not actual:match(expected)
          end
       end
@@ -614,14 +640,22 @@ matchers.contain = Matcher{
          self:format_alternatives('a permutation of', expected, actual) ..
          'but got' .. self:format_actual(actual, expected)
 
-      if objtype(actual) ~= 'table' then actual = totable(actual) end
-      if objtype(expected) ~= 'table' then expected = totable(expected) end
+      if objtype(actual) ~= 'table' then
+         actual = totable(actual)
+      end
+      if objtype(expected) ~= 'table' then
+         expected = totable(expected)
+      end
 
       if size(actual) == size(expected) then
          -- first, check whether expected values are a permutation of actual keys
          local unseen = clone(actual)
-         for _, search in pairs(expected) do unseen[search] = nil end
-         if empty(unseen) then return true, msg end
+         for _, search in pairs(expected) do
+            unseen[search] = nil
+         end
+         if empty(unseen) then
+            return true, msg
+         end
 
          -- else, check whether expected values are a permutation of actual values
          unseen = clone(actual)
@@ -633,7 +667,9 @@ matchers.contain = Matcher{
                end
             end
          end
-         if empty(unseen) then return true, msg end
+         if empty(unseen) then
+            return true, msg
+         end
       end
 
       return false, msg

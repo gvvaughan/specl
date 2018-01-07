@@ -49,7 +49,7 @@ local StrFile = Object{
       lines = function(self, ...)
          local fmts = {...}
          return function()
-         return self:read(unpack(fmts))
+            return self:read(unpack(fmts))
          end
       end,
 
@@ -122,16 +122,24 @@ local StrFile = Object{
             end
          end
 
-         if select('#', r) == 0 then return nil end
+         if select('#', r) == 0 then
+            return nil
+         end
          return unpack(r)
       end,
 
       seek = function(self, whence, offset)
          offset = offset or 0
          self.pos = case(whence or 'cur', {
-            set = function() return offset + 1 end,
-            cur = function() return self.pos + offset end,
-            ['end'] = function() return #self.buffer + offset + 1 end,
+            set = function()
+               return offset + 1
+            end,
+            cur = function()
+               return self.pos + offset
+            end,
+            ['end'] = function()
+               return #self.buffer + offset + 1
+            end,
          })
          return self.pos - 1
       end,
@@ -185,7 +193,9 @@ local function env_init(env, stdin)
 
       output = function(h)
          if h ~= nil then
-            if io.type(pout) ~= 'closed file' then pout:flush() end
+            if io.type(pout) ~= 'closed file' then
+               pout:flush()
+            end
             if object.type(h) == 'StrFile' then
                pout = h
             else
@@ -210,7 +220,9 @@ local function env_init(env, stdin)
    -- Capture print statements to process output.
    env.print = function(...)
       local t = {...}
-      for i = 1, select('#', ...) do t[i] = tostring(t[i]) end
+      for i = 1, select('#', ...) do
+         t[i] = tostring(t[i])
+      end
       env.io.output():write(table.concat(t, '\t') .. '\n')
    end
 
@@ -237,9 +249,15 @@ local function capture(fn, arg, stdin)
       -- Capture exit status without quitting specl process itself.
       exit = function(code)
          case(tostring(code), {
-            ['false'] = function() pstat = 1 end,
-            ['true']  = function() pstat = 0 end,
-                        function() pstat = code end,
+            ['false'] = function()
+               pstat = 1
+            end,
+            ['true'] = function()
+               pstat = 0
+            end,
+            function()
+               pstat = code
+            end,
          })
          -- Abort execution now that status is set.
          error('env.os.exit', 0)
@@ -249,7 +267,9 @@ local function capture(fn, arg, stdin)
    setfenv(fn, env)
    local t = {fn(unpack(arg))}
    local process = Process{pstat, pout.buffer, perr.buffer}
-   for i, v in ipairs(t) do process[i] = v end
+   for i, v in ipairs(t) do
+      process[i] = v
+   end
    return process
 end
 
@@ -273,9 +293,15 @@ local function call(main, arg, stdin)
       -- Capture exit status without quitting specl process itself.
       exit = function(code)
          case(tostring(code), {
-            ['false'] = function() pstat = 1 end,
-            ['true']  = function() pstat = 0 end,
-                        function() pstat = code end,
+            ['false'] = function()
+               pstat = 1
+            end,
+            ['true'] = function()
+               pstat = 0
+            end,
+            function()
+               pstat = code
+            end,
          })
          -- Abort execution now that status is set.
          error('env.os.exit', 0)

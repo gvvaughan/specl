@@ -54,8 +54,12 @@ local function deepcopy(orig, copied)
    end
    copied[orig] = copy
    for k, v in next, orig, nil do
-      if type(k) == 'table' then k = copied[k] or deepcopy(k, copied) end
-      if type(v) == 'table' then v = copied[v] or deepcopy(v, copied) end
+      if type(k) == 'table' then
+         k = copied[k] or deepcopy(k, copied)
+      end
+      if type(v) == 'table' then
+         v = copied[v] or deepcopy(v, copied)
+      end
       rawset(copy, k, v)
    end
    if mt == orig then
@@ -72,7 +76,9 @@ end
 
 local function strip1st(s)
    local r = gsub(s, '^.-%S%s+', '')
-   if r ~= s then return r end
+   if r ~= s then
+      return r
+   end
    -- gsub above didn't change anything, so there must be 0 or 1 words
    -- in *s*(maybe with whitespace for 0 words), so strip everything!
    return ''

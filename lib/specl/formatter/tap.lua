@@ -20,7 +20,9 @@ local function expectations(status, descriptions)
       for _, expectation in ipairs(status.expectations) do
          local fail = (expectation.status == false)
          curr_test = curr_test + 1
-         if fail then io.write 'not ' end
+         if fail then
+            io.write 'not '
+         end
          io.write('ok ' .. curr_test .. ' ' .. title)
          io.write '\n'
          if expectation.status == 'pending' then
