@@ -63,10 +63,10 @@ $(SPECL): $(SPECL).in Makefile
 	$(SED) -e "s,@abs_top_srcdir@,`pwd`," '$<' > '$@'
 	$(CHMOD) 555 '$@'
 
-doc: doc/config.ld $(SOURCES)
-	$(LDOC) -c doc/config.ld .
+doc: build-aux/config.ld $(SOURCES)
+	$(LDOC) -c build-aux/config.ld .
 
-doc/config.ld: doc/config.ld.in
+build-aux/config.ld: build-aux/config.ld.in
 	$(SED) -e 's,@PACKAGE_VERSION@,$(VERSION),' '$<' > '$@'
 
 

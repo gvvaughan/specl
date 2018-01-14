@@ -3,11 +3,9 @@
 .*.swp
 .DS_Store
 .gitmodules
-/ChangeLog
-/INSTALL
+/build-aux/config.ld
 /doc
 !/doc/specl.md
-!/doc/config.ld.in
 /specl
 /specl-*.rockspec
 !specl-git-*.rockspec

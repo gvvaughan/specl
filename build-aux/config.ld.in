@@ -11,7 +11,7 @@ tparam_alias "string"
 tparam_alias "int"
 tparam_alias "bool"
 
-dir = "."
+dir = "../doc"
 file = {
   -- Modules
   "../lib/specl/badargs.lua",
