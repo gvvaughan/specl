@@ -9,7 +9,7 @@ MKDIR	= mkdir -p
 SED	= sed
 SPECL	= ./specl
 
-VERSION	= 15.0.0
+VERSION	= git
 
 luadir	= lib/specl
 SOURCES =				\
@@ -40,7 +40,7 @@ dist_formatter_DATA =			\
 all: doc $(luadir)/version.lua $(SPECL) doc/specl.1
 
 
-$(luadir)/version.lua: $(luadir)/version.lua.in
+$(luadir)/version.lua: $(luadir)/version.lua.in Makefile
 	@$(SED) -e 's,@VERSION@,$(VERSION),' '$<' > '$@T';		\
 	if cmp -s '$@' '$@T'; then					\
 	    rm -f '$@T';						\

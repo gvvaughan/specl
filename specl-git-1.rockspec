@@ -12,18 +12,10 @@ description = {
    license = 'GPLv3+',
 }
 
-source = (function(gitp)
-   if gitp then
-      return {
-         url = 'git://github.com/gvvaughan/specl.git',
-      }
-   else
-      return {
-         url = 'http://github.com/gvvaughan/specl/archive/v' .. _MODREV .. '.zip',
-         dir = 'specl-' .. _MODREV,
-      }
-   end
-end)(_MODREV == 'git')
+source = {
+   url = 'http://github.com/gvvaughan/specl/archive/v' .. _MODREV .. '.zip',
+   dir = 'specl-' .. _MODREV,
+}
 
 dependencies = {
    'luamacro >= 2.5.1',
@@ -32,10 +24,6 @@ dependencies = {
    'optparse',
    'stdlib >= 41.2.0, < 42.0.0',
 }
-
-if _MODREV == 'git' then
-   dependencies[#dependencies + 1] = 'ldoc'
-end
 
 build = {
    type = 'builtin',
@@ -64,3 +52,14 @@ build = {
       ['specl.version']            = 'lib/specl/version.lua',
    }
 }
+
+if _MODREV == 'git' then
+   dependencies[#dependencies + 1] = 'ldoc'
+
+   source = {
+      url = 'git://github.com/gvvaughan/specl.git',
+   }
+
+   build.modules['specl.version'] = 'lib/specl/version-git.lua'
+end
+

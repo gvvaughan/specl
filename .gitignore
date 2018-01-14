@@ -6,6 +6,7 @@
 /build-aux/config.ld
 /doc
 !/doc/specl.md
+/lib/specl/version.lua
 /specl
 /specl-*.rockspec
 !specl-git-*.rockspec

@@ -175,12 +175,17 @@ describe specl:
       expect (run_spec {"-,", stdin = yaml}).
         to_contain_error "error: unrecognised option '-,'"
   - it responds to --version with appropriate version text:
-      expect (run_spec {"--version"}).should_succeed_while_matching (
+      expect (run_spec {"--version"}).should_succeed_while_matching.any_of {
         "^specl %(Specl%) %d[%.%d]*\n" ..
         "Written by Gary V%. Vaughan <%w+@[%w%.]+>, 2013\n" ..
         "\n" ..
         os.date ("Copyright %%(C%%) %Y, Gary V%%. Vaughan\n") ..
-        ".*ABSOLUTELY NO WARRANTY.*$")
+        ".*ABSOLUTELY NO WARRANTY.*$",
+        "^specl %(Specl%) git\n" ..
+        "Written by Gary V%. Vaughan <%w+@[%w%.]+>, 2013\n" ..
+        "\n" ..
+        os.date ("Copyright %%(C%%) %Y, Gary V%%. Vaughan\n") ..
+        ".*ABSOLUTELY NO WARRANTY.*$"}
   - it responds to --help with appropriate help text: |
       expect (run_spec {"--help"}).should_succeed_while_matching (
         "^Usage: specl %[OPTION%]%.%.%. %[FILE%]%.%.%.\n" ..
