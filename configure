@@ -2670,7 +2670,7 @@ $as_echo "no" >&6; }
 
 fi
 
-            _ax_check_text="whether $LUA version >= 5.1, < 5.4"
+            _ax_check_text="whether $LUA version >= 5.1, < 5.5"
       { $as_echo "$as_me:${as_lineno-$LINENO}: checking $_ax_check_text" >&5
 $as_echo_n "checking $_ax_check_text... " >&6; }
 
@@ -2685,7 +2685,7 @@ $as_echo_n "checking $_ax_check_text... " >&6; }
     local minver = verstr2num("5.1")
     local _, _, trimver = string.find(_VERSION, "^Lua (.*)")
     local ver = verstr2num(trimver)
-    local maxver = verstr2num("5.4") or 1e9
+    local maxver = verstr2num("5.5") or 1e9
     if minver <= ver and ver < maxver then
       print("yes")
     else
@@ -2703,7 +2703,7 @@ fi
       ax_display_LUA=$LUA
 
 else
-         _ax_check_text="for a Lua interpreter with version >= 5.1, < 5.4"
+         _ax_check_text="for a Lua interpreter with version >= 5.1, < 5.5"
       { $as_echo "$as_me:${as_lineno-$LINENO}: checking $_ax_check_text" >&5
 $as_echo_n "checking $_ax_check_text... " >&6; }
 if ${ax_cv_pathless_LUA+:} false; then :
@@ -2740,7 +2740,7 @@ fi
     local minver = verstr2num("5.1")
     local _, _, trimver = string.find(_VERSION, "^Lua (.*)")
     local ver = verstr2num(trimver)
-    local maxver = verstr2num("5.4") or 1e9
+    local maxver = verstr2num("5.5") or 1e9
     if minver <= ver and ver < maxver then
       print("yes")
     else

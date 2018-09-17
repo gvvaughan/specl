@@ -13,6 +13,7 @@ env:
     - luadir=$_inst/share/lua
     - luaexecdir=$_inst/lib/lua
   matrix:
+    - VLUA="lua=5.4"
     - VLUA="lua=5.3"
     - VLUA="lua=5.2"
     - VLUA="lua=5.1"
@@ -22,17 +23,16 @@ env:
 
 before_install:
   - pip install hererocks
-  - hererocks here -r^ --$VLUA
+  - hererocks here --luarocks 3 --$VLUA
   - export PATH=$PWD/here/bin:$PATH
+
+  - hererocks tools --luajit=2.0
+  - export PATH=$PATH:$PWD/tools/bin
 
 
 install:
-  # Use Lua 5.3 compatible rocks, where available.
-  - 'for rock in ansicolors ldoc""; do
-       if test -z "$rock"; then break; fi;
-       if luarocks list | grep "^$rock$" >/dev/null; then continue; fi;
-       luarocks install --server=http://rocks.moonscript.org/manifests/gvvaughan $rock;
-    done'
+  - luarocks --lua-dir=$PWD/tools install ldoc
+  - luarocks install ansicolors
 
   # Fudge timestamps on release branches.
   - 'if test -f configure; then
@@ -45,8 +45,8 @@ install:
   # Build from rockspec, forcing uninstall of older luarocks installed
   # above when testing the git rockspec, both for enforcing backwards
   # compatibility by default, and for ease of maintenance.
-  - if test -f 'specl-14.1.6-2.rockspec'; then
-      luarocks make 'specl-14.1.6-2.rockspec';
+  - if test -f 'specl-14.1.6-3.rockspec'; then
+      luarocks make 'specl-14.1.6-3.rockspec';
     else
       luarocks make --force 'specl-git-1.rockspec';
     fi

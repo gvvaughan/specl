@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = '14.1.6', '-2'
+local _MODREV, _SPECREV = '14.1.6', '-3'
 
 package = 'specl'
 version = _MODREV .. _SPECREV
@@ -17,10 +17,10 @@ source = {
 
 dependencies = {
   'luamacro >= 2.0',
-  'lua >= 5.1, < 5.4',
+  'lua >= 5.1, < 5.5',
   'lyaml >= 5',
   'optparse',
-  'stdlib >= 41.2.0',
+  'stdlib >= 41.2.0, < 42.0',
 }
 
 build = {
