@@ -1,0 +1,7 @@
+modules = {
+   ['specl.*'] = 'lib',
+}
+
+runreport = true
+
+tick = true

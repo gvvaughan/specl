@@ -1,30 +1,15 @@
--- Configure constants.
--- lib/specl/version.lua.  Generated from version.lua.in by configure.
--- Written by Gary V. Vaughan, 2014
---
--- Copyright (c) 2014-2018 Gary V. Vaughan
---
--- This program is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3, or (at your option)
--- any later version.
---
--- This program is distributed in the hope that it will be useful, but
--- WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
--- or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
--- for more details.
---
--- You should have received a copy of the GNU General Public License along
--- with this program; if not, see <http://www.gnu.org/licenses/gpl.html>.
+--[[
+  Configure constants.
+  Copyright (c) 2014-2016, 2018 Gary V. Vaughan
+]]
 
 
 return {
-  PACKAGE           = "specl",
   PACKAGE_NAME      = "Specl",
   PACKAGE_BUGREPORT = "http://github.com/gvvaughan/specl/issues",
-  VERSION           = "14.1.6",
+  VERSION           = "14.1.7",
   optspec           = [[
-specl (Specl) 14.1.6
+specl (Specl) 14.1.7
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2018, Gary V. Vaughan

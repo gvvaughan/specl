@@ -8,10 +8,6 @@ addons:
       - help2man
 
 env:
-  global:
-    - _inst=$TRAVIS_BUILD_DIR/_inst
-    - luadir=$_inst/share/lua
-    - luaexecdir=$_inst/lib/lua
   matrix:
     - VLUA="lua=5.4"
     - VLUA="lua=5.3"
@@ -19,7 +15,6 @@ env:
     - VLUA="lua=5.1"
     - VLUA="luajit=2.1"
     - VLUA="luajit=2.0"
-
 
 before_install:
   - pip install hererocks
@@ -29,57 +24,16 @@ before_install:
   - hererocks tools --luajit=2.0
   - export PATH=$PATH:$PWD/tools/bin
 
-
 install:
-  - luarocks --lua-dir=$PWD/tools install ldoc
-  - luarocks install ansicolors
-
-  # Fudge timestamps on release branches.
-  - 'if test -f configure; then
-      test -f aclocal.m4 && touch aclocal.m4;
-      sleep 1; touch Makefile.in;
-      sleep 1; test -f config.h.in && touch config.h.in;
-      sleep 1; touch configure;
-    fi'
-
-  # Build from rockspec, forcing uninstall of older luarocks installed
-  # above when testing the git rockspec, both for enforcing backwards
-  # compatibility by default, and for ease of maintenance.
-  - if test -f 'specl-14.1.6-3.rockspec'; then
-      luarocks make 'specl-14.1.6-3.rockspec';
-    else
-      luarocks make --force 'specl-git-1.rockspec';
-    fi
-
+  - luarocks --lua-dir=$PWD/tools --tree=$PWD/tools install luacov
 
 script:
-  # Reconfigure for in-tree test install.
-  - test -f configure || ./bootstrap --verbose
-  - ./configure --prefix="$_inst" --disable-silent-rules
+  - make all
+  - luarocks make
+  - make check SPECL_OPTS='-vfreport --coverage'
 
-  # Verify luarocks installation.
-  - make installcheck || make installcheck V=1
-
-  # Verify local build.
-  - make
-  - make check || make check V=1
-
-  # Verify configured installation.
-  - make install prefix="$_inst" luadir="$luadir" luaexecdir="$luaexecdir"
-  - LUA_PATH="$luadir/?.lua;$luadir/?/init.lua;;"
-    LUA_CPATH="$luaexecdir/?.so;;"
-    make installcheck V=1
-
-
-# Run sanity checks on CI server, ignoring buggy automakes.
 after_success:
-  - '{ _assign="=";
-       if grep local-checks-to-skip build-aux/sanity-cfg.mk >/dev/null; then
-         _assign="+=";
-       fi;
-       printf "local-checks-to-skip %s sc_vulnerable_makefile_CVE-2012-3386\n" "$_assign";
-     } >> build-aux/sanity-cfg.mk'
-  - 'make syntax-check || : this will usually fail on the release branch'
+  - bash <(curl -s https://codecov.io/bash) -f luacov.report.out
 
 notifications:
   slack: aspirinc:JyWeNrIdS0J5nf2Pn2BS1cih

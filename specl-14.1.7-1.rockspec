@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = '14.1.6', '-3'
+local _MODREV, _SPECREV = '14.1.7', '-1'
 
 package = 'specl'
 version = _MODREV .. _SPECREV

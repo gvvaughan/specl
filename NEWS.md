@@ -1,5 +1,20 @@
 # Specl NEWS - User visible changes.
 
+## Noteworthy changis in release 14.1.7 (2018-09-20) [stable]
+
+### New features:
+
+  - preliminary compatibility with Lua 5.4
+
+### Bug fixes:
+
+  - relicensed under MIT (the same license as Lua itself).
+
+  - removed more than 22000 lines of autotools boilerplate from
+    the distribution (leaving fewer than 11000 lines of actual
+    specl files).
+
+
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
 
 ### New features:
