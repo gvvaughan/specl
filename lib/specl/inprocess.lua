@@ -1,6 +1,6 @@
 --[[
  Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
- Copyright (C) 2015-2018 Gary V. Vaughan
+ Copyright (C) 2015-2023 Gary V. Vaughan
 ]]
 --[[--
  Functions for running a Lua program in the Specl Lua interpreter.

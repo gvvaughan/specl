@@ -1,6 +1,6 @@
 --[[
  Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
- Copyright (C) 2014-2018 Gary V. Vaughan
+ Copyright (C) 2014-2023 Gary V. Vaughan
 ]]
 
 -- First handle debug_init and _DEBUG, being careful not to affect

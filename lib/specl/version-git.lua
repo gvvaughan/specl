@@ -1,6 +1,6 @@
 --[[
  Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
- Copyright (C) 2014-2018 Gary V. Vaughan
+ Copyright (C) 2014-2023 Gary V. Vaughan
 ]]
 
 return {
@@ -12,7 +12,7 @@ return {
 specl (Specl) git
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
-Copyright (C) 2018, Gary V. Vaughan
+Copyright (C) 2023, Gary V. Vaughan
 Specl comes with ABSOLUTELY NO WARRANTY.
 You may redistribute copies of Specl under the terms of the MIT license;
 it may be used for any purpose at absolutely no cost, without permission.

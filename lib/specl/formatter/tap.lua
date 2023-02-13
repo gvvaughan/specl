@@ -1,6 +1,6 @@
 --[[
  Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
- Copyright (C) 2013-2018 Francois Perrad
+ Copyright (C) 2013-2023 Francois Perrad
 ]]
 
 -- Test Anything Protocol style formatter.
