@@ -41,9 +41,9 @@ end
 
 --- Return a normalized list of types.
 -- Initial "?' in any list element is removed, but causes a "nil" item
--- to be added to the normalized list; "func" is expanded to "function",
--- "bool" to "booleand" and then an ordered list of resulting unique type
--- names returned.
+-- to be added to the normalized list; "bool" is expanded to "boolean",
+-- "func" to "function", "int" to "integer" and then an ordered list of
+-- resulting unique type names returned.
 -- @tparam list typelist a list of type names
 -- @treturn table an ordered list of unique type names
 local function normalize (typelist)
@@ -53,7 +53,7 @@ local function normalize (typelist)
       add_nil = true
       v = v:sub (2)
     end
-    v = ({ func = "function", bool = "boolean" })[v] or v
+    v = ({ bool = "boolean", func = "function", int = "integer" })[v] or v
     if not r[v] then
       r[v] = i
       i = i + 1
@@ -107,7 +107,7 @@ local function permutations (typelist)
       local o = #p
       for b = 1, o do
         p[b + o] = copy (p[b])
-	table.insert (p[b], opt)
+        table.insert (p[b], opt)
       end
 
       -- Leave a marker for optional argument in final position.
@@ -172,19 +172,24 @@ local function showarg (...)
 
     if argtype:match "^#" then
       t[i] = argtype:gsub ("#", "non-empty ")
-    elseif argtype == "nil" then
-      t[i] = "nil"
     elseif argtype == "any" then
       t[i] = "any value"
+    elseif argtype == "bool" then
+      t[i] = "boolean"
+    elseif argtype == "nil" then
+      t[i] = "nil"
     elseif argtype == "func" then
       t[i] = "function"
     elseif argtype == "file" then
       t[i] = "FILE*"
+   elseif argtype == "int" then
+      t[i] = "integer"
     else
       t[i] = argtype
     end
   end
 
+  table.sort(t)
   local r = table.concat (t, ", "):gsub (", ([^,]+)$", " or %1")
   if r == "nil" then r = "no value" end
   return r
@@ -263,7 +268,7 @@ local function extendarglist (arglist, i, argtype)
     arglist[i] = io.stderr
   elseif argtype == "func" or argtype == "function" then
     arglist[i] = ipairs
-  elseif argtype == "int" then
+  elseif argtype == "integer" then
     arglist[i] = 42
   elseif argtype:sub (1, 1) == "#" then
     arglist[i] = {}
@@ -392,8 +397,8 @@ local function diagnose (fn, decl)
       examples {
         ["it diagnoses missing argument #" .. tostring (i)] = function ()
           expect (fn (unpack (arglist))).to_raise.any_of {
-	    format ("?", i, argtype),	-- recent LuaJIT
-	    format (fname, i, argtype),	-- PUC-Rio Lua
+            format ("?", i, argtype),        -- recent LuaJIT
+            format (fname, i, argtype),      -- PUC-Rio Lua
           }
         end
       }
@@ -402,25 +407,25 @@ local function diagnose (fn, decl)
     if not anyok (argtype) then
       poisonarglist (arglist, i, argtype)
       examples {
-	[diagnose_badarg_description (i, argtype)] = function ()
+        [diagnose_badarg_description (i, argtype)] = function ()
           expect (fn (unpack (arglist))).to_raise.any_of {
-	    format ("?", i, argtype, showarg (type (arglist[i]))),
-	    format (fname, i, argtype, showarg (type (arglist[i]))),
+            format ("?", i, argtype, showarg (type (arglist[i]))),
+            format (fname, i, argtype, showarg (type (arglist[i]))),
           }
-	end
+        end
       }
       local containertype = poisoncontainerarglist (arglist, i, argtype)
       if containertype ~= nil then
-	local s = "bad argument #%d to '%s' (%s expected, got %s at index 2"
+        local s = "bad argument #%d to '%s' (%s expected, got %s at index 2"
         examples {
-	  ["it diagnoses argument #" .. tostring (i) .. " type not " .. containertype] =
-	    function ()
-	      expect (fn (unpack (arglist))).to_raise.any_of {
-	        s:format (i, "?", containertype, type (arglist[i][2])),
-	        s:format (i, fname, containertype, type (arglist[i][2])),
-	      }
-	    end
-	}
+          ["it diagnoses argument #" .. tostring (i) .. " type not " .. containertype] =
+            function ()
+              expect (fn (unpack (arglist))).to_raise.any_of {
+                s:format (i, "?", containertype, type (arglist[i][2])),
+                s:format (i, fname, containertype, type (arglist[i][2])),
+              }
+            end
+        }
       end
     end
     extendarglist (arglist, i, argtype)
@@ -434,8 +439,8 @@ local function diagnose (fn, decl)
     examples {
       ["it diagnoses more than maximum of " .. max .. " arguments"] = function ()
         expect (fn (unpack (arglist))).to_raise.any_of {
-	  format (fname, max + 1),
-	  format ("?", max + 1),
+          format (fname, max + 1),
+          format ("?", max + 1),
         }
       end
     }
