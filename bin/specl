@@ -1,7 +1,7 @@
 #!/bin/sh
 SH=--[[						# -*- mode: lua; -*-
 
-# Behaviour Driven Development for Lua 5.1, 5.2 & 5.3.
+# Behaviour Driven Development for Lua 5.1, 5.2, 5.3 & 5.4
 # Copyright (C) 2014-2023 Gary V. Vaughan
 
 # If LUA is not set, search PATH for something suitable.
@@ -12,14 +12,14 @@ test -n "$LUA" || {
   {
     test -x "$1" && {
       case `$1 -e 'print (_VERSION)' 2>/dev/null` in
-        *"Lua "5\.[123]*) LUA=$1 ;;
+        *"Lua "5\.[1234]*) LUA=$1 ;;
       esac
     }
   }
 
   save_IFS="$IFS"
   LUA=
-  for x in lua lua5.3 lua5.2 lua5.1 luajit; do
+  for x in lua lua5.4 lua5.3 lua5.2 lua5.1 luajit; do
     IFS=:
     for dir in $PATH; do
       IFS="$save_IFS"
@@ -39,6 +39,8 @@ LUA_INIT_5_2=
 export LUA_INIT_5_2=
 LUA_INIT_5_3=
 export LUA_INIT_5_3=
+LUA_INIT_5_4=
+export LUA_INIT_5_4=
 
 # Reexecute using the interpreter suppiled in LUA, or found above.
 exec "$LUA" "$0" "$@"

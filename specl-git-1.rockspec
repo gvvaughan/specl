@@ -19,7 +19,7 @@ source = {
 
 dependencies = {
    'luamacro >= 2.5.1',
-   'lua >= 5.1, < 5.4',
+   'lua >= 5.1, < 5.5',
    'lyaml >= 5',
    'optparse',
    'stdlib >= 41.2.0, < 42.0.0',

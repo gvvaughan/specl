@@ -2,11 +2,6 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
-### Licensing
-
-  - Specl is now released under the terms of the MIT license, the same
-    license that Lua uses.  See `LICENSE.md` for details.
-
 ### New features
 
   - New `badargs.result` for formatting function result checking failure
@@ -88,6 +83,24 @@
 
   - First word of descriptions is stripped correctly in some corner
     cases that were missed previously.
+
+
+## Noteworthy changis in release 14.1.7 (2018-09-20) [stable]
+
+### Licensing
+
+  - Specl is now released under the terms of the MIT license, the same
+    license that Lua uses.  See `LICENSE.md` for details.
+
+### New features:
+
+  - preliminary compatibility with Lua 5.4
+
+### Bug fixes:
+
+  - removed more than 22000 lines of autotools boilerplate from
+    the distribution (leaving fewer than 11000 lines of actual
+    specl files).
 
 
 ## Noteworthy changes in release 14.1.6 (2016-02-12) [stable]
