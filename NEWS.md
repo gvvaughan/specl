@@ -1,5 +1,13 @@
 # Specl NEWS - User visible changes.
 
+## Noteworthy changis in release 14.1.8 (2023-02-13) [stable]
+
+### New features:
+
+  - Fix badargs.diagnose to use stable sorted argument error
+    types that match output from typecheck.
+
+
 ## Noteworthy changis in release 14.1.7 (2018-09-20) [stable]
 
 ### New features:

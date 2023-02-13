@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Specl git Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Specl git</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>specl.badargs</strong></li>
+  <li><a href="../modules/specl.inprocess.html">specl.inprocess</a></li>
+  <li><a href="../modules/specl.matchers.html">specl.matchers</a></li>
+  <li><a href="../modules/specl.shell.html">specl.shell</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>specl.badargs</code></h1>
+<p>Additional commands useful for writing API argument specs.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#diagnose">diagnose (decl, fn)</a></td>
+	<td class="summary">Generate examples to ensure a function satisfies its type signature.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#format">format (fname, i, want[, field[, got='no value']])</a></td>
+	<td class="summary">Return a formatted bad argument string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#result">result (fname, i, want[, got='no value'])</a></td>
+	<td class="summary">Return a formatted bad result string.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "diagnose"></a>
+    <strong>diagnose (decl, fn)</strong>
+    </dt>
+    <dd>
+
+<p>Generate examples to ensure a function satisfies its type signature.
+ The <em>decl</em> string is a subset of the format used by<code>std.debug.argscheck</code>,
+ the function name expected from argument error messages followed by a
+ comma-delimited list of types in parentheses:</p>
+
+<pre><code> diagnose('string.format(string, ?any...)', string.format)
+</code></pre>
+
+<p> A leading question mark denotes that a nil argument is acceptable in
+ that position, and the trailing <code>...</code> denotes that any number of
+ additional arguments that match this type may follow.   If an argument
+ can be omitted entirely, as opposed to passing a <code>nil</code>, then surround
+ it with brackets:</p>
+
+<pre><code> diagnose('table.insert(table, [int], ?any)', table.insert)
+</code></pre>
+
+<p> Finally, if an argument may be one of several types, list all options
+ with <code>|</code>(pipe) between them:</p>
+
+<pre><code> diagnose('string.gsub(string, string, string|func, [int])',
+           string.gsub)
+</code></pre>
+
+<p> Type names can be the name of a primitive Lua type, a stdlib object
+ name(stored in the <code>_type</code> field of the metatable, usually beginning
+ with an upper-case letter), or one of the special types below:</p>
+
+<pre><code> #table    accept any non-empty table
+ any       accept any non-nil argument type
+ file      accept an open file object
+ function  accept a function, or object with a __call metamethod
+ int       accept an integer valued number
+ list      accept a table where all keys are in a contiguous 1-base range
+ #list     accept any non-empty list
+ object    accept any std.Object derived type
+ :foo      accept only the exact string ':foo', for any :-prefix string
+</code></pre>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">decl</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         argument type declaration
+        </li>
+        <li><span class="parameter">fn</span>
+            <span class="types"><span class="type">func</span></span>
+         the function being specified
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "format"></a>
+    <strong>format (fname, i, want[, field[, got='no value']])</strong>
+    </dt>
+    <dd>
+    Return a formatted bad argument string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fname</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         base-name of the erroring function
+        </li>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         argument number
+        </li>
+        <li><span class="parameter">want</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         expected argument type
+        </li>
+        <li><span class="parameter">field</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         field name for error message
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">got</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         actual argument type
+         (<em>default</em> 'no value')
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(fn()).to_error(badargs.format(fname, <span class="number">1</span>, <span class="string">'function'</span>))</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "result"></a>
+    <strong>result (fname, i, want[, got='no value'])</strong>
+    </dt>
+    <dd>
+    Return a formatted bad result string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fname</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         base-name of the orroring function
+        </li>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         result number
+        </li>
+        <li><span class="parameter">want</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         expected result type
+        </li>
+        <li><span class="parameter">got</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         actual result type
+         (<em>default</em> 'no value')
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(fn()).to_error(badargs.result(fname, <span class="number">1</span>, <span class="string">'int'</span>))</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2023-02-13 11:16:50 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

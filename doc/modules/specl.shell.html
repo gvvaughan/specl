@@ -1,0 +1,546 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Specl git Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Specl git</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Objects">Objects</a></li>
+<li><a href="#Matchers">Matchers</a></li>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/specl.badargs.html">specl.badargs</a></li>
+  <li><a href="../modules/specl.inprocess.html">specl.inprocess</a></li>
+  <li><a href="../modules/specl.matchers.html">specl.matchers</a></li>
+  <li><strong>specl.shell</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>specl.shell</code></h1>
+<p>Additional commands useful for writing command-line specs.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Objects">Objects</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Command">Command</a></td>
+	<td class="summary">Description of a shell command.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Process">Process</a></td>
+	<td class="summary">A completed process.</td>
+	</tr>
+</table>
+<h2><a href="#Matchers">Matchers</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#contain_error">contain_error</a></td>
+	<td class="summary">Matches if the error output of a Process contains <em>err</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#contain_output">contain_output</a></td>
+	<td class="summary">Matches if the output of a Process contains <em>out</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#exit">exit</a></td>
+	<td class="summary">Matches if the exit status of a Process is <em>status</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fail">fail</a></td>
+	<td class="summary">Matches if the exit status of a Process is non-zero.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fail_while_containing">fail_while_containing</a></td>
+	<td class="summary">Matches if the Process exits normally containing error output <em>err</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fail_while_matching">fail_while_matching</a></td>
+	<td class="summary">Matches if the Process exits normally with output matching <em>pattern</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fail_with">fail_with</a></td>
+	<td class="summary">Matches if the Process exits abnormally containing error output <em>err</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#match_error">match_error</a></td>
+	<td class="summary">Matches if the error output of a Process matches <em>pattern</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#match_output">match_output</a></td>
+	<td class="summary">Matches if the output of a Process matches <em>pattern</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#output">output</a></td>
+	<td class="summary">Matches if the output of a Process is exactly <em>stdout</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#output_error">output_error</a></td>
+	<td class="summary">Matches if the error output of a Process is exactly <em>stderr</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#succed_while_matching">succed_while_matching</a></td>
+	<td class="summary">Matches if the Process exits normally with output matching <em>pattern</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#succeed">succeed</a></td>
+	<td class="summary">Matches if the exit status of a Process is 0.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#succeed_while_containing">succeed_while_containing</a></td>
+	<td class="summary">Matches if the process exits normally with output containing <em>out</em></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#succeed_with">succeed_with</a></td>
+	<td class="summary">Matches if the Process exits normally with output containing <em>out</em>.</td>
+	</tr>
+</table>
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#spawn">spawn (o)</a></td>
+	<td class="summary">Run a command in a subprocess</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Objects"></a>Objects</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Command"></a>
+    <strong>Command</strong>
+    </dt>
+    <dd>
+    Description of a shell command.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">params</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         shell command to act on
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Process"></a>
+    <strong>Process</strong>
+    </dt>
+    <dd>
+    A completed process.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">status</span>
+            <span class="types"><span class="type">int</span></span>
+         exit status of a command
+        </li>
+        <li><span class="parameter">output</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         standard output from a command
+        </li>
+        <li><span class="parameter">errout</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         standard error from a command
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Matchers"></a>Matchers</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "contain_error"></a>
+    <strong>contain_error</strong>
+    </dt>
+    <dd>
+    Matches if the error output of a Process contains <em>err</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">err</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring to match against Process error output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "contain_output"></a>
+    <strong>contain_output</strong>
+    </dt>
+    <dd>
+    Matches if the output of a Process contains <em>out</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">out</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring to match against Process output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "exit"></a>
+    <strong>exit</strong>
+    </dt>
+    <dd>
+    Matches if the exit status of a Process is <em>status</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">status</span>
+            <span class="types"><span class="type">int</span></span>
+         expected exit status
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fail"></a>
+    <strong>fail</strong>
+    </dt>
+    <dd>
+    Matches if the exit status of a Process is non-zero.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fail_while_containing"></a>
+    <strong>fail_while_containing</strong>
+    </dt>
+    <dd>
+    Matches if the Process exits normally containing error output <em>err</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">err</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring to match against Process error output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fail_while_matching"></a>
+    <strong>fail_while_matching</strong>
+    </dt>
+    <dd>
+    Matches if the Process exits normally with output matching <em>pattern</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         match this against Process error output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fail_with"></a>
+    <strong>fail_with</strong>
+    </dt>
+    <dd>
+    Matches if the Process exits abnormally containing error output <em>err</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">err</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring to match against Process error output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match_error"></a>
+    <strong>match_error</strong>
+    </dt>
+    <dd>
+    Matches if the error output of a Process matches <em>pattern</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         match this against Process error output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match_output"></a>
+    <strong>match_output</strong>
+    </dt>
+    <dd>
+    Matches if the output of a Process matches <em>pattern</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         match this against Process output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "output"></a>
+    <strong>output</strong>
+    </dt>
+    <dd>
+    Matches if the output of a Process is exactly <em>stdout</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">stdout</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         entire expected Process output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "output_error"></a>
+    <strong>output_error</strong>
+    </dt>
+    <dd>
+    Matches if the error output of a Process is exactly <em>stderr</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">stderr</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         entire expected Process error output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "succed_while_matching"></a>
+    <strong>succed_while_matching</strong>
+    </dt>
+    <dd>
+    Matches if the Process exits normally with output matching <em>pattern</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         match this against Process output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "succeed"></a>
+    <strong>succeed</strong>
+    </dt>
+    <dd>
+    Matches if the exit status of a Process is 0.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "succeed_while_containing"></a>
+    <strong>succeed_while_containing</strong>
+    </dt>
+    <dd>
+    Matches if the process exits normally with output containing <em>out</em>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">out</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring to match against Process output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "succeed_with"></a>
+    <strong>succeed_with</strong>
+    </dt>
+    <dd>
+    Matches if the Process exits normally with output containing <em>out</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">out</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring to match against Process output
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "spawn"></a>
+    <strong>spawn (o)</strong>
+    </dt>
+    <dd>
+    Run a command in a subprocess
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">o</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a>, <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> or <a class="type" href="../modules/specl.shell.html#Command">Command</a></span>
+         a shell command to run in a subprocess
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/specl.shell.html#Process">Process</a></span>
+        result of executing <em>o</em>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2023-02-13 11:16:50 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

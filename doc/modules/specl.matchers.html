@@ -1,0 +1,752 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Specl git Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Specl git</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Objects">Objects</a></li>
+<li><a href="#Matchers">Matchers</a></li>
+<li><a href="#Adaptors">Adaptors</a></li>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/specl.badargs.html">specl.badargs</a></li>
+  <li><a href="../modules/specl.inprocess.html">specl.inprocess</a></li>
+  <li><strong>specl.matchers</strong></li>
+  <li><a href="../modules/specl.shell.html">specl.shell</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>specl.matchers</code></h1>
+<p>Built in matchers for <code>expect</code>.</p>
+<p> This module implements the standard set of matchers that can be used
+ with the result of <code>expect</code>.   There are also some general and matcher
+ specific adaptors implemented here.   They are all available to use in
+ your spec-files without having to require this module.</p>
+
+<p> If you implement custom matchers for your spec-files, the API is
+ available from this module -- the same API used to implement the
+ standard Specl matchers.</p>
+
+
+<h2><a href="#Objects">Objects</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Matcher">Matcher</a></td>
+	<td class="summary">Assembles a self type checking entry for the matchers table.</td>
+	</tr>
+</table>
+<h2><a href="#Matchers">Matchers</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#be">be</a></td>
+	<td class="summary">Identity, only match if <em>actual</em> and <em>expected</em> are the same object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#contain">contain</a></td>
+	<td class="summary">Matches if <em>actual</em> contains <em>expected</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#copy">copy</a></td>
+	<td class="summary">Equal but not the same object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#equal">equal</a></td>
+	<td class="summary">Deep comparison, matches if <em>actual</em> and <em>expected</em> share the same structure.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#match">match</a></td>
+	<td class="summary">Matches if <em>actual</em> matches <em>pattern</em>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#raise">raise</a></td>
+	<td class="summary">Matches if any error is raised inside <code>expect</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#raise_matching">raise_matching</a></td>
+	<td class="summary">Matches if a matching error is raised inside <code>expect</code>.</td>
+	</tr>
+</table>
+<h2><a href="#Adaptors">Adaptors</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#all_of">all_of</a></td>
+	<td class="summary">Matches if expectation matches all of the alternatives.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#any_of">any_of</a></td>
+	<td class="summary">Matches if expectation matches any of the alternatives.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#be.between">be.between</a></td>
+	<td class="summary"><code>be</code> specific adaptor for range constraint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#be.gt">be.gt</a></td>
+	<td class="summary"><code>be</code> specific adaptor for greater than comparison.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#be.gte">be.gte</a></td>
+	<td class="summary"><code>be</code> specific adaptor for greater than or equal to comparison.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#be.lt">be.lt</a></td>
+	<td class="summary"><code>be</code> specific adaptor for less than comparison.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#be.lte">be.lte</a></td>
+	<td class="summary"><code>be</code> specific adaptor for less than or equal to comparison.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#be.within">be.within</a></td>
+	<td class="summary"><code>be</code> specific adaptor for comparison within delta of expected.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#contain.a_permutation_of">contain.a_permutation_of</a></td>
+	<td class="summary"><code>contain</code> specific adaptor to match unordered tables(and strings!).</td>
+	</tr>
+</table>
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#concat">concat (alternatives, adaptor, quoted)</a></td>
+	<td class="summary">Format <em>alternatives</em> with an <em>adaptor</em> appropriate infix.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#reformat">reformat (list, adaptor[, prefix='| '])</a></td>
+	<td class="summary">Reformat a list of alternatives for output.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#stringify">stringify (x)</a></td>
+	<td class="summary">Quote strings nicely, and coerce non-strings into strings.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#matchers">matchers</a></td>
+	<td class="summary">Master table of all active <a href="../modules/specl.matchers.html#Matcher">Matcher</a> objects.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Objects"></a>Objects</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Matcher"></a>
+    <strong>Matcher</strong>
+    </dt>
+    <dd>
+    Assembles a self type checking entry for the matchers table.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">matchp</span>
+            <span class="types"><span class="type">func</span></span>
+         predicate function to determine whether a match occurred
+        </li>
+        <li><span class="parameter">format_expect</span>
+            <span class="types"><span class="type">func</span></span>
+         format the expected result for display
+        </li>
+        <li><span class="parameter">format_actual</span>
+            <span class="types"><span class="type">func</span></span>
+         format the actual result for display
+        </li>
+        <li><span class="parameter">format_alternatives</span>
+            <span class="types"><span class="type">func</span></span>
+         format adaptor alternatives for display
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Matchers"></a>Matchers</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "be"></a>
+    <strong>be</strong>
+    </dt>
+    <dd>
+    Identity, only match if <em>actual</em> and <em>expected</em> are the same object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+         expected result
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "contain"></a>
+    <strong>contain</strong>
+    </dt>
+    <dd>
+    Matches if <em>actual</em> contains <em>expected</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">content</span>
+         element to search for in string or table.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "copy"></a>
+    <strong>copy</strong>
+    </dt>
+    <dd>
+    Equal but not the same object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+         expected result
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "equal"></a>
+    <strong>equal</strong>
+    </dt>
+    <dd>
+    Deep comparison, matches if <em>actual</em> and <em>expected</em> share the same structure.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+         expected result
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match"></a>
+    <strong>match</strong>
+    </dt>
+    <dd>
+    Matches if <em>actual</em> matches <em>pattern</em>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         result must match this pattern
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "raise"></a>
+    <strong>raise</strong>
+    </dt>
+    <dd>
+    Matches if any error is raised inside <code>expect</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">errmsg</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         substring of raised error message
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(<span class="global">error</span> <span class="string">'oh noes!'</span>).to_raise <span class="string">'oh no'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "raise_matching"></a>
+    <strong>raise_matching</strong>
+    </dt>
+    <dd>
+    Matches if a matching error is raised inside <code>expect</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         error message must match this pattern
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Adaptors"></a>Adaptors</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "all_of"></a>
+    <strong>all_of</strong>
+    </dt>
+    <dd>
+    Matches if expectation matches all of the alternatives.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">alternatives</span>
+            <span class="types"><span class="type">list</span></span>
+         a list of match comparisons
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(_G).to_contain.all_of {<span class="string">'io'</span>, <span class="string">'math'</span>, <span class="string">'os'</span>, <span class="string">'string'</span>, <span class="string">'table'</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "any_of"></a>
+    <strong>any_of</strong>
+    </dt>
+    <dd>
+    Matches if expectation matches any of the alternatives.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">alternatives</span>
+            <span class="types"><span class="type">list</span></span>
+         a list of match comparisons
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(ctermid()).to_match.any_of {<span class="string">'/.*tty%d+'</span>, <span class="string">'/.*pts%d+'</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "be.between"></a>
+    <strong>be.between</strong>
+    </dt>
+    <dd>
+    <code>be</code> specific adaptor for range constraint. </p>
+
+<p> The default is to do an inclusive check, which can be made
+ explicit by appending the <code>.inclusive</code> decorator to the adaptor,
+ or changed to an exclusive range with the <code>.exclusive</code> decorator.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">lower</span>
+         lower-bound for the range
+        </li>
+        <li><span class="parameter">upper</span>
+         upper-bound for the range
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(#s).to_be.between(<span class="number">8</span>, <span class="number">20</span>).inclusive
+expect(<span class="number">2</span>).to_be.between(<span class="number">1</span>, <span class="number">3</span>).exclusive</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "be.gt"></a>
+    <strong>be.gt</strong>
+    </dt>
+    <dd>
+    <code>be</code> specific adaptor for greater than comparison.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+
+<p> a primitive or object that the expect argument must</p>
+<pre><code>always be greater than
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "be.gte"></a>
+    <strong>be.gte</strong>
+    </dt>
+    <dd>
+    <code>be</code> specific adaptor for greater than or equal to comparison.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+
+<p> a primitive or object that the expect argument must</p>
+<pre><code>always be greater than or equal to
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">function</span> X(t)
+   <span class="keyword">return</span> <span class="global">setmetatable</span>(t, {__lt=<span class="keyword">function</span>(a,b) <span class="keyword">return</span> #a&lt;#b <span class="keyword">end</span>})
+<span class="keyword">end</span>
+expect(X{<span class="string">'a'</span>, <span class="string">'b'</span>}).to_be.gte(X{<span class="string">'b'</span>, <span class="string">'a'</span>})</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "be.lt"></a>
+    <strong>be.lt</strong>
+    </dt>
+    <dd>
+    <code>be</code> specific adaptor for less than comparison.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+
+<p> a primitive or object that the expect argument must</p>
+<pre><code>always be less than
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect(<span class="number">5</span>).to_be.lt(<span class="number">42</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "be.lte"></a>
+    <strong>be.lte</strong>
+    </dt>
+    <dd>
+    <code>be</code> specific adaptor for less than or equal to comparison.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+
+<p> a primitive or object that the expect argument must</p>
+<pre><code>always be less than or equal to
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect <span class="string">'abc'</span>.to_be.lte <span class="string">'abc'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "be.within"></a>
+    <strong>be.within</strong>
+    </dt>
+    <dd>
+    <code>be</code> specific adaptor for comparison within delta of expected. </p>
+
+<p> Because of the way Lua chains calls, using <code>be.within</code> without the
+ associated <code>of</code> decorator simply returns the table with the <code>of</code>
+ function, and does not run the expectation or pass the result to
+ the selected formatter.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">delta</span>
+         a maximum difference from expected result
+        </li>
+        <li><span class="parameter">expected</span>
+
+<p> a primitive or object that the expect argument must</p>
+<pre><code>be within *delta* range of
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">start = <span class="global">os</span>.time()
+expect(<span class="global">os</span>.time()).to_be.within(<span class="number">1</span>).of(start)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "contain.a_permutation_of"></a>
+    <strong>contain.a_permutation_of</strong>
+    </dt>
+    <dd>
+    <code>contain</code> specific adaptor to match unordered tables(and strings!).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expected</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         result in any order
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">expect({[<span class="global">math</span>.sin]=<span class="keyword">true</span>, [<span class="global">math</span>.cos]=<span class="keyword">true</span>, [<span class="global">math</span>.tan]=<span class="keyword">true</span>}).
+   to_contain.a_permutation_of({<span class="global">math</span>.sin, <span class="global">math</span>.cos, <span class="global">math</span>.tan})</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "concat"></a>
+    <strong>concat (alternatives, adaptor, quoted)</strong>
+    </dt>
+    <dd>
+    Format <em>alternatives</em> with an <em>adaptor</em> appropriate infix.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">alternatives</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         table of expectations
+        </li>
+        <li><span class="parameter">adaptor</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         one of 'all of', 'any of' or 'a permutation of'
+        </li>
+        <li><span class="parameter">quoted</span>
+            <span class="types"><span class="type">bool</span></span>
+         whether to put quote marks around string values
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "reformat"></a>
+    <strong>reformat (list, adaptor[, prefix='| '])</strong>
+    </dt>
+    <dd>
+    Reformat a list of alternatives for output. </p>
+
+<p> For example: '
+ | %{match}as many lines of <list>[1] as provided%{reset}
+ or:
+ | %{match}lines from <list>[2]%}reset}
+ ' etc.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">list</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         of alternatives to act on
+        </li>
+        <li><span class="parameter">adaptor</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         one of 'all of', 'any of' or 'a permutation of'
+        </li>
+        <li><span class="parameter">prefix</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         output this at the start of every line
+         (<em>default</em> '| ')
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        reformatted <em>text</em>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "stringify"></a>
+    <strong>stringify (x)</strong>
+    </dt>
+    <dd>
+    Quote strings nicely, and coerce non-strings into strings.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         item to act on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        string representation of <em>x</em>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "matchers"></a>
+    <strong>matchers</strong>
+    </dt>
+    <dd>
+    Master table of all active <a href="../modules/specl.matchers.html#Matcher">Matcher</a> objects.
+ Only allow Matcher objects to be assigned to a slot in this table.
+ The actual entries are stored in a subtable to ensure that __newindex
+ always fires, the type of new assignments is always checked, and the
+ name field is always set.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2023-02-13 11:16:50 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

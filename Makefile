@@ -6,7 +6,7 @@ LUA	 = lua
 SED	 = sed
 SPECL	 = bin/specl
 
-VERSION	= 14.1.7
+VERSION	= 14.1.8
 
 luadir	= lib/specl
 SOURCES =					\

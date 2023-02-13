@@ -1,18 +1,18 @@
 --[[
   Configure constants.
-  Copyright (c) 2014-2016, 2018 Gary V. Vaughan
+  Copyright (c) 2014-2023 Gary V. Vaughan
 ]]
 
 
 return {
   PACKAGE_NAME      = "Specl",
   PACKAGE_BUGREPORT = "http://github.com/gvvaughan/specl/issues",
-  VERSION           = "14.1.7",
+  VERSION           = "14.1.8",
   optspec           = [[
-specl (Specl) 14.1.7
+specl (Specl) 14.1.8
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
-Copyright (C) 2018, Gary V. Vaughan
+Copyright (C) 2023, Gary V. Vaughan
 Specl comes with ABSOLUTELY NO WARRANTY.
 You may redistribute copies of Specl under the terms of the GNU
 General Public License; either version 3, or any later version.
