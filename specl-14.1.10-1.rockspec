@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'git', '-1'
+local _MODREV, _SPECREV = '14.1.10', '-1'
 
 package = 'specl'
 version = _MODREV .. _SPECREV
