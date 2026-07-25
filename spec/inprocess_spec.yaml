@@ -421,8 +421,11 @@ specify inprocess:
             local n = 0
             for l in io.stdin:lines "*n" do
               n = n + 1
-              if l == math.floor (l) then l = math.floor (l) end
-              print (n, l)
+              if l == math.floor (l) then
+                print(n, math.floor (l))
+              else
+                print (n, l)
+              end
             end
           end
           expect (call (_G, execute, {}, "10\n 2.022\t0x30\t4.5e6")).

@@ -2,6 +2,14 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes:
+
+  - Remove control variable mutations in for loops, for Lua 5.5
+    compatibility.
+
+  - Add explicit __le metamethods in metamethod specs, for Lua 5.4
+    compatibility.
+
 
 ## Noteworthy changes in release 14.1.9 (2026-07-25) [stable]
 

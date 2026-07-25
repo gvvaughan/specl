@@ -101,7 +101,10 @@ describe matcher:
   - context with __lt metamethod:
     - before: |
         preamble = "it fails: |\n" ..
-          "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+          "  mt = {\n" ..
+          "    __lt = function (a,b) return #a<#b end,\n" ..
+          "    __le = function (a,b) return #a<=#b end\n" ..
+          "  }\n" ..
           "  function X (x) return setmetatable (x, mt) end\n" ..
           "  expect "
 
@@ -172,7 +175,10 @@ describe matcher:
     - context with __lt metamethod:
       - before: |
           preamble = "it fails: |\n" ..
-            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  mt = {\n" ..
+            "    __lt = function (a,b) return #a<#b end,\n" ..
+            "    __le = function (a,b) return #a<=#b end\n" ..
+            "  }\n" ..
             "  function X (x) return setmetatable (x, mt) end\n" ..
             "  expect "
 
@@ -239,7 +245,10 @@ describe matcher:
     - context with __lt metamethod:
       - before: |
           preamble = "it fails: |\n" ..
-            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  mt = {\n" ..
+            "    __lt = function (a,b) return #a<#b end,\n" ..
+            "    __le = function (a,b) return #a<=#b end\n" ..
+            "  }\n" ..
             "  function X (x) return setmetatable (x, mt) end\n" ..
             "  expect "
 
@@ -308,7 +317,10 @@ describe matcher:
     - context with __lt metamethod:
       - before: |
           preamble = "it fails: |\n" ..
-            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  mt = {\n" ..
+            "    __lt = function (a,b) return #a<#b end,\n" ..
+            "    __le = function (a,b) return #a<=#b end\n" ..
+            "  }\n" ..
             "  function X (x) return setmetatable (x, mt) end\n" ..
             "  expect "
 
@@ -377,7 +389,10 @@ describe matcher:
     - context with __lt metamethod:
       - before: |
           preamble = "it fails: |\n" ..
-            "  mt = {__lt = function (a,b) return #a<#b end}\n" ..
+            "  mt = {\n" ..
+            "    __lt = function (a,b) return #a<#b end,\n" ..
+            "    __le = function (a,b) return #a<=#b end\n" ..
+            "  }\n" ..
             "  function X (x) return setmetatable (x, mt) end\n" ..
             "  expect "
 
@@ -593,6 +608,7 @@ describe matcher:
           "  function X (x) return setmetatable (x, mt) end\n" ..
           "  mt = {\n" ..
           "    __lt = function (a,b) return #a<#b end,\n" ..
+          "    __le = function (a,b) return #a<=#b end,\n" ..
           "    __add = function (a, b)\n" ..
           "              local r = X{}\n" ..
           "              for _, v in ipairs (a) do r[#r + 1] = v end\n" ..

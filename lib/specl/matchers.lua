@@ -73,10 +73,11 @@ local function totable(obj)
       -- Fetch all key:value pairs where possible...
       r = {}
       for k, v in pairs(obj) do
+         local innerk = k
          if type(k) == 'table' then
-            k = pickle(k)
+            innerk = pickle(k)
          end
-         r[k] = v end
+         r[innerk] = v end
    elseif type(obj) == 'string' then
       -- ...or explode a raw string into a table of characters.
       r, i = {}, 1
