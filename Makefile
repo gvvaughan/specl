@@ -9,7 +9,7 @@ MKDIR	= mkdir -p
 SED	= sed
 SPECL	= ./specl
 
-VERSION	= git
+VERSION	= 14.1.9
 
 luadir	= lib/specl
 SOURCES =				\

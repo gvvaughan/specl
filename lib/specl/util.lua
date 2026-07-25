@@ -54,13 +54,15 @@ local function deepcopy(orig, copied)
    end
    copied[orig] = copy
    for k, v in next, orig, nil do
+      local innerk = k
+      local innerv = v
       if type(k) == 'table' then
-         k = copied[k] or deepcopy(k, copied)
+         innerk = copied[k] or deepcopy(k, copied)
       end
       if type(v) == 'table' then
-         v = copied[v] or deepcopy(v, copied)
+         innerv = copied[v] or deepcopy(v, copied)
       end
-      rawset(copy, k, v)
+      rawset(copy, innerk, innerv)
    end
    if mt == orig then
       setmetatable(copy, copy)

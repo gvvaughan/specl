@@ -7,9 +7,9 @@ return {
   PACKAGE = 'specl',
   PACKAGE_NAME = 'Specl',
   PACKAGE_BUGREPORT = 'https://github.com/gvvaughan/specl/issues',
-  VERSION = '@VERSION@',
+  VERSION = '14.1.9',
   optspec = [[
-specl (Specl) @VERSION@
+specl (Specl) 14.1.9
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
 
 Copyright (C) 2026, Gary V. Vaughan
