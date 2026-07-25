@@ -1,5 +1,5 @@
-# Behaviour Driven Development for Lua 5.1, 5.2, 5.3 & 5.4
-# Copyright (C) 2013-2023 Gary V. Vaughan
+# Behaviour Driven Development for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+# Copyright (C) 2013-2026 Gary V. Vaughan
 
 CHMOD	= chmod
 HELP2MAN= help2man

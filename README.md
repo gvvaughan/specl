@@ -6,7 +6,7 @@ SPECL
 [![codecov.io](https://codecov.io/github/gvvaughan/specl/coverage.svg?branch=master)](https://codecov.io/github/gvvaughan/specl?branch=master)
 
 [Specl][] is a testing tool for [Lua][] 5.1 (including [LuaJit][]), 5.2,
-5.3 and 5.4, providing a [Behaviour Driven Development][BDD] framework in
+5.3, 5.4 and 5.5, providing a [Behaviour Driven Development][BDD] framework in
 the vein of [RSpec][].
 
  * a rich command line program (the `specl` command)

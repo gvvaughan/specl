@@ -2,7 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 14.1.9 (2026-07-25) [stable]
+
 ### New features
+
+  - preliminary compatibility with Lua 5.5
 
   - New `badargs.result` for formatting function result checking failure
     messages.
@@ -83,6 +88,14 @@
 
   - First word of descriptions is stripped correctly in some corner
     cases that were missed previously.
+
+
+## Noteworthy changis in release 14.1.8 (2023-02-13) [stable]
+
+### New features:
+
+  - Fix badargs.diagnose to use stable sorted argument error
+    types that match output from typecheck.
 
 
 ## Noteworthy changis in release 14.1.7 (2018-09-20) [stable]

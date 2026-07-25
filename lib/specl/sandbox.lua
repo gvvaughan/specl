@@ -1,6 +1,6 @@
 --[[
- Behaviour Driven Development for Lua 5.1, 5.2, 5.3 & 5.4
- Copyright (C) 2016-2023 Gary V. Vaughan
+ Behaviour Driven Development for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+ Copyright (C) 2016-2026 Gary V. Vaughan
 ]]
 
 local _ = {
