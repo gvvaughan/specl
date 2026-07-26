@@ -2,7 +2,13 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 14.1.10 (2026-07-26) [stable]
+
 ### Bug fixes:
+
+  - `badargs.result` no longer injects an extra space after the "or"
+    before the final result item.
 
   - Remove control variable mutations in for loops, for Lua 5.5
     compatibility.

@@ -71,7 +71,7 @@ local function showarg(types)
       end
    end
 
-   local r = gsub(concat(t, ', '), ',([^,]+)$', ' or %1')
+   local r = gsub(concat(t, ', '), ',([^,]+)$', ' or%1')
    if r == 'nil' then
       r = 'no value'
    end
