@@ -354,15 +354,13 @@ local function diagnose(decl, fn)
       end
    end
 
-   local fin = specs[#specs]
-
    -- Ensure the following function is executed in the environment that
    -- this function is inside.
    setfenv(examples, getfenv())
 
    local arglist = {}
    for i, argtype in ipairs(specs) do
-      if not nilok(argtype) and i <= typemin and(not fin or i < typemin) then
+      if not nilok(argtype) and i <= typemin then
          examples {
             ['it diagnoses missing argument #' .. tostring(i)] = function()
                expect(fn(unpack(arglist))).to_raise.any_of {
