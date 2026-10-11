@@ -23,6 +23,7 @@ local _ENV = {
    ipairs = ipairs,
    pairs = pairs,
    setfenv = function() end,
+   setmetatable = setmetatable,
    tostring = tostring,
    type = type,
 
