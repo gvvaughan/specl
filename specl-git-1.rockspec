@@ -9,7 +9,7 @@ description = {
       Develop and run BDD specs written in Lua for RSpec style workflow.
    ]],
    homepage = 'http://gvvaughan.github.io/specl',
-   license = 'GPLv3+',
+   license = 'MIT',
 }
 
 source = {
