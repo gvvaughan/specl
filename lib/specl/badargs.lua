@@ -296,8 +296,8 @@ end
 -- 'specl.runner' replaces the _ENV of 'diagnose' with the example
 -- sandbox (so 'examples' and 'expect' resolve there), so capture the
 -- helpers it needs from our private _ENV table as upvalues instead.
-local format, match, parsetypes, split, unpack =
-   format, match, parsetypes, split, unpack
+local format, getfenv, match, parsetypes, setfenv, split, unpack =
+   format, getfenv, match, parsetypes, setfenv, split, unpack
 
 
 --- Generate examples to ensure a function satisfies its type signature.
