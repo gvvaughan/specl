@@ -285,6 +285,13 @@ local function diagnose_badarg_description(i, argtype)
 end
 
 
+-- 'specl.runner' replaces the _ENV of 'diagnose' with the example
+-- sandbox (so 'examples' and 'expect' resolve there), so capture the
+-- helpers it needs from our private _ENV table as upvalues instead.
+local format, match, parsetypes, split, unpack =
+   format, match, parsetypes, split, unpack
+
+
 --- Generate examples to ensure a function satisfies its type signature.
 -- The *decl* string is a subset of the format used by`std.debug.argscheck`,
 -- the function name expected from argument error messages followed by a
