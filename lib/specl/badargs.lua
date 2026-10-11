@@ -168,7 +168,7 @@ end
 -- @tparam string|table argtype either `?bool|:plain` or `{'bool', ':plain', 'nil'}`
 local function extendarglist(arglist, i, argtype)
    -- extend with the first valid argument type
-   argtype = typesplit(argtype)[1]
+   argtype = argtype and typesplit(argtype)[1]
 
    local container, thing = match(argtype or '', '(%S+) of (%S+)')
    if container ~= nil then
