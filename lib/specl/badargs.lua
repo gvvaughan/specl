@@ -33,6 +33,7 @@ local _ENV = {
    match = string.match,
    sub = string.sub,
    concat = table.concat,
+   sort = table.sort,
 
    split = _.std.string.split,
    invert = _.std.table.invert,
@@ -64,8 +65,12 @@ local function showarg(types)
          t[i] = 'nil'
       elseif argtype == 'any' then
          t[i] = 'any value'
+      elseif argtype == 'bool' then
+         t[i] = 'boolean'
       elseif argtype == 'func' then
          t[i] = 'function'
+      elseif argtype == 'int' then
+         t[i] = 'integer'
       elseif argtype == 'file' then
          t[i] = 'FILE*'
       else
@@ -73,6 +78,7 @@ local function showarg(types)
       end
    end
 
+   sort(t)
    local r = gsub(concat(t, ', '), ',([^,]+)$', ' or%1')
    if r == 'nil' then
       r = 'no value'
