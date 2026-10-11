@@ -52,7 +52,7 @@ local function showarg(types)
 
    local t = {}
    for i, argtype in ipairs(argtypes) do
-      local container, things = match(argtype, '(%S+) of(%S+)')
+      local container, things = match(argtype, '(%S+) of (%S+)')
       if container ~= nil then
          argtype = container
       end
@@ -91,7 +91,7 @@ end
 --    expect(fn()).to_error(badargs.format(fname, 1, 'function'))
 local function badargs_format(fname, i, want, field, got)
    if want == nil and field ~= nil then
-      return format("bad argument #%d to '%s'(invalid field name '%s')",
+      return format("bad argument #%d to '%s' (invalid field name '%s')",
                      i, fname, field)
    end
 
@@ -170,7 +170,7 @@ local function extendarglist(arglist, i, argtype)
    -- extend with the first valid argument type
    argtype = typesplit(argtype)[1]
 
-   local container, thing = match(argtype or '', '(%S+) of(%S+)')
+   local container, thing = match(argtype or '', '(%S+) of (%S+)')
    if container ~= nil then
       argtype = container
    end
@@ -253,7 +253,7 @@ end
 local function poisoncontainerarglist(arglist, i, argtype)
    local container, thing
    for i, v in ipairs(typesplit(argtype)) do
-      container, thing = match(v, '(%S+) of(%S+)')
+      container, thing = match(v, '(%S+) of (%S+)')
       if container ~= nil then
          break
       end
@@ -378,7 +378,7 @@ local function diagnose(decl, fn)
          }
          local containertype = poisoncontainerarglist(arglist, i, argtype)
          if containertype ~= nil then
-            local s = "bad argument #%d to '%s'(%s expected, got %s at index 2"
+            local s = "bad argument #%d to '%s' (%s expected, got %s at index 2"
             examples {
                ['it diagnoses argument #' .. tostring(i) .. ' type not ' .. containertype] =
                   function()
