@@ -48,7 +48,7 @@ _ = nil
 
 --- Format typestrings and typelists suitably for display to the user.
 -- @tparam string|table types either `?bool|:plain` or `{'bool', ':plain', 'nil'}`
--- @treturn string a comma(and or) separated list of any types given
+-- @treturn string a comma (and or) separated list of any types given
 local function showarg(types)
    local argtypes = typesplit(types)
 
@@ -301,7 +301,7 @@ local format, getfenv, match, parsetypes, setfenv, split, unpack =
 
 
 --- Generate examples to ensure a function satisfies its type signature.
--- The *decl* string is a subset of the format used by`std.debug.argscheck`,
+-- The *decl* string is a subset of the format used by `std.debug.argscheck`,
 -- the function name expected from argument error messages followed by a
 -- comma-delimited list of types in parentheses:
 --
@@ -316,13 +316,13 @@ local format, getfenv, match, parsetypes, setfenv, split, unpack =
 --     diagnose('table.insert(table, [int], ?any)', table.insert)
 --
 -- Finally, if an argument may be one of several types, list all options
--- with `|`(pipe) between them:
+-- with `|` (pipe) between them:
 --
 --     diagnose('string.gsub(string, string, string|func, [int])',
 --               string.gsub)
 --
 -- Type names can be the name of a primitive Lua type, a stdlib object
--- name(stored in the `_type` field of the metatable, usually beginning
+-- name (stored in the `_type` field of the metatable, usually beginning
 -- with an upper-case letter), or one of the special types below:
 --
 --     #table    accept any non-empty table
