@@ -3,6 +3,52 @@
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
 
+## Noteworthy changes in release 15.0 (2026-10-10) [stable]
+
+### Incompatible changes:
+
+  - `expect` passes every result of its expression to the matcher,
+    packed into a table, and likewise packs multiple expected
+    arguments; release 14.1.8 and earlier compared only the first value
+    on each side.  Because `to_be` compares with `==`, two packed tables
+    are never identical, so `to_be` never matches an expression with
+    more than one result.  Use `to_equal` to compare every result, or
+    wrap the expression in parentheses to compare only its first
+    result:
+
+    ```lua
+    expect(spawn {'true'}).to_equal {0, 'exited'}
+    expect((io.open(path))).to_be(nil)
+    ```
+
+    This change first shipped, undocumented, in 14.1.9; as did the
+    incompatible `badargs.diagnose` argument order and declaration
+    syntax described under 14.1.9 below, hence the major version bump.
+
+### Bug fixes:
+
+  - `badargs.diagnose` works again, instead of failing with "attempt to
+    call a nil value (global 'match')", overflowing the stack, or
+    failing to find `tostring` or `setmetatable`, as it did in 14.1.9
+    and 14.1.10.
+
+  - `badargs.diagnose` accepts declarations with no parameters, such as
+    `'f()'`, and container types such as `table of strings`.
+
+  - `badargs.diagnose` once more generates a missing argument example
+    for the final mandatory parameter.  As with `std.debug.argscheck`,
+    a final `type...` parameter requires at least one argument; write
+    `[type...]` if it can be omitted entirely.
+
+  - `badargs.format` and `badargs.diagnose` show `bool` as `boolean`
+    and `int` as `integer`, and list alternative types in sorted order,
+    matching typecheck again.  This 14.1.8 fix was missing from 14.1.9
+    and 14.1.10.
+
+  - Bad argument messages from `badargs.format` once more have a space
+    before the parenthesized explanation.
+
+
 ## Noteworthy changes in release 14.1.10 (2026-07-26) [stable]
 
 ### Bug fixes:
