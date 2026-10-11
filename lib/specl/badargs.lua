@@ -23,6 +23,7 @@ local _ENV = {
    ipairs = ipairs,
    pairs = pairs,
    setfenv = function() end,
+   tostring = tostring,
    type = type,
 
    stderr = io.stderr,
