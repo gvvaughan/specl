@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'git', '-1'
+local _MODREV, _SPECREV = '15.0', '-1'
 
 package = 'specl'
 version = _MODREV .. _SPECREV
@@ -9,7 +9,7 @@ description = {
       Develop and run BDD specs written in Lua for RSpec style workflow.
    ]],
    homepage = 'http://gvvaughan.github.io/specl',
-   license = 'GPLv3+',
+   license = 'MIT',
 }
 
 source = {
