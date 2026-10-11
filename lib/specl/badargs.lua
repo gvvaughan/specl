@@ -348,10 +348,9 @@ local function diagnose(decl, fn)
 
    local fin = specs[#specs]
 
-   -- Ensure the following functions are executed in the environment that
+   -- Ensure the following function is executed in the environment that
    -- this function is inside.
    setfenv(examples, getfenv())
-   setfenv(expect, getfenv())
 
    local arglist = {}
    for i, argtype in ipairs(specs) do
