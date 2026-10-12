@@ -1,1 +1,17 @@
+*~
+.*.swp
+.DS_Store
+/.jekyll-cache
+/.sass-cache
 /_site
+
+# Build products left behind by master when switching branches.
+*.1
+.gitmodules
+/build-aux
+/doc
+/lib
+/specl
+/specl-*.rockspec
+/specl-*.tar.gz
+/stamp-h1
