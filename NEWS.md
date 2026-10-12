@@ -2,6 +2,22 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features:
+
+  - Example `load` and `loadfile` support the Lua 5.2+ `mode` and `env`
+    arguments on every supported Lua version, including Lua 5.1.
+    Without an `env` argument, the loaded chunk runs in the example
+    environment, as before.
+
+### Bug fixes:
+
+  - Example `load` and `loadfile` return the loaded chunk itself,
+    instead of a wrapper function that discarded its arguments and
+    reset the chunk environment on every call, which undid `setfenv`.
+
+  - Example `dofile` runs the file in the example environment, like
+    `load` and `loadfile`, instead of the real global environment.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 

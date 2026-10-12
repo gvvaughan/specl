@@ -149,18 +149,43 @@ describe environments:
         _G.global_scope = nil
         assert (load "_G.global_scope = true")()
         expect (_G.global_scope).to_be (true)
+    - it returns the chunk itself:
+        f = load ("return 1", "=chunk")
+        expect (debug.getinfo (f, "S").source).to_be "=chunk"
+    - it passes arguments to the chunk:
+        expect (select ("#", load "return ..." (1, nil, 3))).to_be (3)
+    - it loads a reader function:
+        local pieces = {"return ", "42"}
+        f = load (function () return table.remove (pieces, 1) end)
+        expect (f ()).to_be (42)
+    - it honours a text mode:
+        f, err = load (string.dump (function () end), "chunk", "t")
+        expect (f).to_be (nil)
+        expect (err).to_contain "mode"
+    - it honours a binary mode:
+        f, err = load ("return 1", "chunk", "b")
+        expect (f).to_be (nil)
+        expect (err).to_contain "mode"
+    - it runs in a supplied environment:
+        env = {}
+        load ("x = 1", "chunk", "t", env) ()
+        expect (env.x).to_be (1)
+    - it keeps a replaced environment:
+        f = load ("return who", "chunk", "t", {who = "first"})
+        setfenv (f, {who = "second"})
+        expect (f ()).to_be "second"
 
 - describe loadfile:
     - before: |
         mutated_outer_symbol = false
 
-        function doloadfile (s)
+        function doloadfile (s, ...)
           local f = os.tmpname ()
           local h = io.open (f, "w")
 
           h:write (s)
           h:close ()
-          local r, err = loadfile (f)
+          local r, err = loadfile (f, ...)
           os.remove (f)
           return r, err
         end
@@ -179,3 +204,48 @@ describe environments:
         _G.global_scope = nil
         assert (doloadfile "_G.global_scope = true")()
         expect (_G.global_scope).to_be (true)
+    - it passes arguments to the chunk:
+        expect (select ("#", doloadfile "return ..." (1, nil, 3))).to_be (3)
+    - it honours a binary mode:
+        f, err = doloadfile ("return 1", "b")
+        expect (f).to_be (nil)
+        expect (err).to_contain "mode"
+    - it runs in a supplied environment:
+        env = {}
+        doloadfile ("x = 1", "t", env) ()
+        expect (env.x).to_be (1)
+    - it keeps a replaced environment:
+        f = doloadfile ("return who", "t", {who = "first"})
+        setfenv (f, {who = "second"})
+        expect (f ()).to_be "second"
+
+- describe dofile:
+    - before: |
+        mutated_outer_symbol = false
+
+        -- Return the number of results, after removing the file.
+        function dostring (s)
+          local f = os.tmpname ()
+          local h = io.open (f, "w")
+
+          h:write (s)
+          h:close ()
+          local ok, n = pcall (function () return select ("#", dofile (f)) end)
+          os.remove (f)
+          if not ok then
+            error (n, 0)
+          end
+          return n
+        end
+
+    - it diagnoses unloadable argument:
+        expect (dostring "x=").to_raise "unexpected symbol"
+    - it returns all results:
+        expect (dostring "return 1, nil, 3").to_be (3)
+    - it can mutate a symbol in the current scope:
+        mutated_inner_symbol = false
+        dostring "mutated_inner_symbol = true"
+        expect (mutated_inner_symbol).to_be (true)
+    - it can mutate a symbol in an outer scope:
+        dostring "mutated_outer_symbol = true"
+        expect (mutated_outer_symbol).to_be (true)

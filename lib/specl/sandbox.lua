@@ -66,7 +66,7 @@ local sandbox = {
    },
    ipairs = ipairs,
    load = _.compat.load,
-   loadfile = loadfile,
+   loadfile = _.compat.loadfile,
    math = {
       abs = math.abs,
       acos = math.acos,
@@ -183,11 +183,12 @@ local _ENV = {
    expect = require 'specl.expect'.expect,
    ipairs = ipairs,
    load = sandbox.load,
-   loadfile = loadfile,
+   loadfile = sandbox.loadfile,
    matchers = require 'specl.matchers',
    merge = _.std.table.merge,
    package = package,
    pending = require 'specl.expect'.pending,
+   select = select,
    setfenv = function() end,
    tostring = tostring,
    type = type,
@@ -215,26 +216,28 @@ end
 -- and run them in the example block environment to capture side-effects
 -- correctly.
 local function inner_closures(env, state)
-   env.load = function(ld, source, _, fenv)
-      local fn, err = load(ld, source)
-      if fn == nil then
-         return nil, err
+   -- Like Lua 5.2+, use an explicit environment argument even if it
+   -- is nil; but default to the example environment, not the real one.
+   env.load = function(ld, source, mode, ...)
+      if select('#', ...) == 0 then
+         return load(ld, source, mode, env)
       end
-      return function()
-         setfenv(fn, fenv or env)
-         return fn()
-      end
+      return load(ld, source, mode, ...)
    end
 
-   env.loadfile = function(filename, _, fenv)
-      local fn, err = loadfile(filename)
+   env.loadfile = function(filename, mode, ...)
+      if select('#', ...) == 0 then
+         return loadfile(filename, mode, env)
+      end
+      return loadfile(filename, mode, ...)
+   end
+
+   env.dofile = function(filename)
+      local fn, err = loadfile(filename, nil, env)
       if fn == nil then
-         return nil, err
+         error(err, 0)
       end
-      return function()
-         setfenv(fn, fenv or env)
-         return fn()
-      end
+      return fn()
    end
 
    -- For a not-yet-{pre,}loaded module, try to find it on the

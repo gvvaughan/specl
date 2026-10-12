@@ -5,8 +5,10 @@
 
 local _ENV = {
    load = load,
+   loadfile = loadfile,
    loadstring = loadstring,
    pcall = pcall,
+   rawsetfenv = setfenv,
    setfenv = function() end,
    select = select,
    type = type,
@@ -16,22 +18,73 @@ local _ENV = {
    open = io.open,
    config = package.config,
    searchpath = package.searchpath,
+   find = string.find,
+   format = string.format,
    gmatch = string.gmatch,
    gsub = string.gsub,
    match = string.match,
+   sub = string.sub,
    concat = table.concat,
 }
 setfenv(1, _ENV)
 
 
--- Lua 5.1 load implementation does not handle string argument.
+-- Lua 5.1 load and loadfile take no mode or environment arguments, and
+-- load does not accept a string chunk.  LuaJIT and Lua 5.2+ do.
 if not pcall(load, '_=1') then
-   local loadfunction = load
-   load = function(...)
-      if type(...) == 'string' then
-         return loadstring(...)
+   local function checkmode(c, mode)
+      local kind = c == '\27' and 'binary' or 'text'
+      if mode ~= nil and not find(mode, sub(kind, 1, 1), 1, true) then
+         return format("attempt to load a %s chunk (mode is '%s')", kind, mode)
       end
-      return loadfunction(...)
+   end
+
+   local function setenv(fn, err, n, env)
+      -- A Lua 5.1 function can't have a nil environment, so the
+      -- closest equivalent is an empty one.
+      if fn ~= nil and n > 0 then
+         rawsetfenv(fn, env or {})
+      end
+      return fn, err
+   end
+
+   load = function(ld, source, mode, ...)
+      if type(ld) == 'function' then
+         local buf, piece = {}, ld()
+         while piece ~= nil and piece ~= '' do
+            buf[#buf + 1] = piece
+            piece = ld()
+         end
+         ld, source = concat(buf), source or '=(load)'
+      end
+      if type(ld) == 'string' then
+         local err = checkmode(sub(ld, 1, 1), mode)
+         if err then
+            return nil, err
+         end
+      end
+      local fn, err = loadstring(ld, source)
+      return setenv(fn, err, select('#', ...), ...)
+   end
+
+   local nativeloadfile = loadfile
+   loadfile = function(filename, mode, ...)
+      local fh = mode ~= nil and filename ~= nil and open(filename, 'rb')
+      if fh then
+         -- Like Lua, skip a first line starting with '#'.
+         local c = fh:read(1)
+         if c == '#' then
+            fh:read('*l')
+            c = fh:read(1)
+         end
+         fh:close()
+         local err = checkmode(c, mode)
+         if err then
+            return nil, err
+         end
+      end
+      local fn, err = nativeloadfile(filename)
+      return setenv(fn, err, select('#', ...), ...)
    end
 end
 
@@ -78,6 +131,7 @@ end
 
 return {
    load = load,
+   loadfile = loadfile,
    searchpath = searchpath,
    xpcall = xpcall,
 }
