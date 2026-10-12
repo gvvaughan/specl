@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'git', '-1'
+local _MODREV, _SPECREV = 'dev', '-1'
 
 package = 'specl'
 version = _MODREV .. _SPECREV
@@ -53,7 +53,7 @@ build = {
    }
 }
 
-if _MODREV == 'git' then
+if _MODREV == 'dev' then
    dependencies[#dependencies + 1] = 'ldoc'
 
    source = {

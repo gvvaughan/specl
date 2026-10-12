@@ -30,7 +30,7 @@ Or from the rockspec inside the release tarball:
 To install current git master from [GitHub][specl] (for testing):
 
     luarocks install \
-      https://raw.githubusercontent.com/gvvaughan/specl/master/specl-git-1.rockspec
+      https://raw.githubusercontent.com/gvvaughan/specl/master/specl-dev-1.rockspec
 
 The dependencies are listed in the dependencies entry of the 
 [rockspec][depends].
@@ -84,4 +84,4 @@ points when proposing changes:
 [luarocks]:  https://www.luarocks.org
 [rspec]:     https://github.com/rspec/rspec
 [specl]:     https://github.com/gvvaughan/specl
-[depends]:   https://github.com/gvvaughan/specl/blob/master/specl-git-1.rockspec#L28
+[depends]:   https://github.com/gvvaughan/specl/blob/master/specl-dev-1.rockspec#L28
