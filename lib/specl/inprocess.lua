@@ -20,7 +20,7 @@ local util = require 'specl.util'
 
 local xpcall = compat.xpcall
 local Process = shell.Process
-local setfenv = std.setfenv
+local getfenv, setfenv = std.getfenv, std.setfenv
 local case, object = std.functional.case, std.object
 local clone, merge, unpack = std.table.clone, std.table.merge, std.table.unpack
 local nop = util.nop
@@ -180,7 +180,8 @@ local function env_init(env, stdin)
    -- Captured standard input, standard output and standard error.
    local pin, pout, perr = StrFile{'r', stdin}, StrFile{'w'}, StrFile{'w'}
 
-   env.io = {
+   -- Keep any other io functions already in *env*.
+   env.io = merge(env.io or {}, {
       stdin = pin,
       stdout = pout,
       stderr = perr,
@@ -218,7 +219,7 @@ local function env_init(env, stdin)
       write = function(...)
          env.io.output():write(...)
       end,
-   }
+   })
 
    -- Capture print statements to process output.
    env.print = function(...)
@@ -233,42 +234,104 @@ local function env_init(env, stdin)
 end
 
 
---- Run a Lua program in-process
+-- Return a `require` for *env* that loads Lua modules found on
+-- `env.package.path` into *env*, caching them only in *loaded*, so that
+-- every module the program loads sees the captured io and os, even
+-- ones it saves in locals when first loaded.  Modules not found that
+-- way, such as C modules, come from *caller*'s `require` instead.
+local function isolated_require(env, caller, loaded)
+   return function(modname)
+      if loaded[modname] == nil then
+         local loader = env.package.preload[modname]
+         local filename = compat.searchpath(modname, env.package.path)
+         if loader == nil and filename ~= nil then
+            loader = assert(compat.loadfile(filename, 't', env))
+         end
+         if loader == nil then
+            loaded[modname] = (caller.require or require)(modname)
+         else
+            local r = loader(modname, filename)
+            if r ~= nil then
+               loaded[modname] = r
+            elseif loaded[modname] == nil then
+               loaded[modname] = true
+            end
+         end
+      end
+      return loaded[modname]
+   end
+end
+
+
+--- Run a Lua program in-process.
+--
+-- *fn* runs in an environment where `io`, `os.exit` and `print` are
+-- captured, along with every Lua module it loads, which it finds on
+-- the calling example's `package.path`.  Calling `os.exit` sets the
+-- exit status, as does returning a number; an uncaught error writes a
+-- traceback to the captured standard error, and sets exit status 1.
 -- @func fn program-like function to act on
 -- @tparam table arg command-line arguments for *fn*
 -- @string stdin standard input content for *fn*
--- @treturn Process result of executing *fn*
+-- @treturn Process result of executing *fn*, with results of *fn* in
+--    its array part
 local function capture(fn, arg, stdin)
    arg = arg or {}
 
    -- Execution environment.
+   local caller = getfenv(fn) or {}
    local env = sandbox.new()
 
    -- Captured standard output and standard error.
-   local pstat = 0
+   local pstat
    local pout, perr = env_init(env, stdin)
 
-   env.os = {
-      -- Capture exit status without quitting specl process itself.
-      exit = function(code)
-         case(tostring(code), {
-            ['false'] = function()
-               pstat = 1
-            end,
-            ['true'] = function()
-               pstat = 0
-            end,
-            function()
-               pstat = code
-            end,
-         })
-         -- Abort execution now that status is set.
-         error('env.os.exit', 0)
-      end,
-   }
+   -- Capture exit status without quitting specl process itself.
+   env.os.exit = function(code)
+      case(tostring(code), {
+         ['false'] = function()
+            pstat = 1
+         end,
+         ['true'] = function()
+            pstat = 0
+         end,
+         function()
+            pstat = code
+         end,
+      })
+      -- Abort execution now that status is set.
+      error('env.os.exit', 0)
+   end
+
+   -- Load modules afresh into the execution environment, from the
+   -- calling example's module search paths.
+   local callerpackage = caller.package or package
+   env.package.path, env.package.cpath = callerpackage.path, callerpackage.cpath
+   local loaded = merge({}, env.package.loaded)
+   loaded.io, loaded.os = env.io, env.os
+   env.package.loaded = loaded
+   env.require = isolated_require(env, caller, loaded)
+
+   -- Append traceback to an error inside xpcall.
+   local function traceback(errobj)
+      if errobj ~= 'env.os.exit' then
+         env.io.stderr:write(debug.traceback(errobj, 2))
+      end
+   end
 
    setfenv(fn, env)
-   local t = {fn(unpack(arg))}
+   local t = {xpcall(fn, traceback, unpack(arg))}
+   local ok = table.remove(t, 1)
+   if pstat == nil then
+      if not ok then
+         pstat = 1
+      elseif type(t[1]) == 'number' then
+         pstat = t[1]
+      else
+         pstat = 0
+      end
+   end
+
    local process = Process{pstat, pout.buffer, perr.buffer}
    for i, v in ipairs(t) do
       process[i] = v

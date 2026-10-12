@@ -94,6 +94,67 @@ specify inprocess:
         functable = setmetatable ({}, {__call = function (self) io.stderr:write "hello" end })
         expect (capture (functable)).not_to_output "hello"
 
+  - context with exit status:
+    - it captures exit without leaving the example:
+        expect (capture (function () os.exit (3) end)).to_exit (3)
+        expect (capture (function () os.exit (true) end)).to_exit (0)
+        expect (capture (function () os.exit (false) end)).to_exit (1)
+    - it uses a numeric result as the exit status:
+        expect (capture (function () return 7 end)).to_exit (7)
+    - it reports success for other results:
+        expect (capture (function () return "seven" end)).to_exit (0)
+    - it captures an uncaught error without leaving the example: |
+        p = capture (function () error "he deed" end)
+        expect (p).to_exit (1)
+        expect (p).to_match_error "he deed\nstack traceback:\n"
+
+  - context with the rest of io and os:
+    - it keeps io functions besides the standard streams:
+        expect (capture (function () io.write (type (io.open), type (io.lines)) end)).
+          to_output "functionfunction"
+    - it keeps os functions besides exit:
+        expect (capture (function () io.write (type (os.getenv), type (os.time)) end)).
+          to_output "functionfunction"
+
+  - context with modules:
+    - before: |
+        dir = Tmpdir ()
+        module = dir:file ("capture_greeter.lua",
+          "local stderr, exit = io.stderr, os.exit",
+          "return {",
+          "  greet = function (name)",
+          "    stderr:write ('hello, ' .. name)",
+          "    print 'printed'",
+          "  end,",
+          "  die = function () exit (5) end,",
+          "}")
+        package.path = dir.path .. "/?.lua;" .. package.path
+    - after:
+        module:remove ()
+        dir:remove ()
+
+    - it loads modules from the example package.path:
+        expect (type (capture (function () return require "capture_greeter" end)[1].greet)).
+          to_be "function"
+    - it captures streams saved by a module when loaded: |
+        p = capture (function (name) require "capture_greeter".greet (name) end, {"world"})
+        expect (p).to_output_error "hello, world"
+    - it captures globals used by a module: |
+        p = capture (function () require "capture_greeter".greet "world" end)
+        expect (p).to_output "printed\n"
+    - it captures exit saved by a module when loaded:
+        expect (capture (function () require "capture_greeter".die () end)).to_exit (5)
+    - it loads modules afresh each time: |
+        a = capture (function () return require "capture_greeter" end)[1]
+        b = capture (function () return require "capture_greeter" end)[1]
+        expect (a).not_to_be (b)
+    - it uses package.preload set by the captured program: |
+        p = capture (function ()
+          package.preload.capture_preloaded = function () return "preloaded" end
+          io.write (require "capture_preloaded")
+        end)
+        expect (p).to_output "preloaded"
+
 - describe error:
   - before:
       execute = function () return error "he deed" end

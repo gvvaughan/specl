@@ -9,7 +9,32 @@
     Without an `env` argument, the loaded chunk runs in the example
     environment, as before.
 
+  - `inprocess.capture` can now run a whole program, not just the code
+    inside the function it is passed.  Every Lua module that function
+    loads is found on the calling example's `package.path`, loaded
+    afresh for each capture, and sees the captured `io`, `os.exit` and
+    `print`, even when it saves them in locals as it loads.  The rest
+    of `io` and `os`, such as `io.open` and `os.getenv`, remain
+    available:
+
+    ```lua
+    expect(inprocess.capture(function(...)
+       return require 'myprogram'.main {...}
+    end, {'--version'})).to_succeed_while_matching '^myprogram '
+    ```
+
+### Incompatible changes:
+
+  - When `inprocess.capture`'s function returns a number without
+    calling `os.exit`, that number is the exit status of the captured
+    `Process`, as for `os.exit(main(arg))`, instead of always 0.
+
 ### Bug fixes:
+
+  - `inprocess.capture` no longer aborts the whole Specl run when the
+    captured function calls `os.exit` or raises an error.  `os.exit`
+    sets the exit status, and an uncaught error writes a traceback to
+    the captured standard error and sets exit status 1.
 
   - Example `load` and `loadfile` return the loaded chunk itself,
     instead of a wrapper function that discarded its arguments and
