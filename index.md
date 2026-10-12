@@ -203,7 +203,7 @@ can easily add new ones if they make your expectations more expressive.
 The [next section](#2-matchers) describes the built in matchers in
 more detail.  The `specl.shell` module provides some specialist matchers
 for checking whether shell commands have behaved according to
-specifications; see [the section on shell commands](#shell-commands) for
+specifications; see [the section on shell commands](#61-shell-commands) for
 more details on those.
 
 ### 1.5. Pending Examples
@@ -339,7 +339,7 @@ kept in sync with the code being described.
 
 The matchers themselves are stored by just the root of their name (`be`
 in this case).  See
-[Inverting a Matcher with not](#inverting-a-matcher-with-not), for more
+[Inverting a Matcher with not](#28-inverting-a-matcher-with-not), for more
 about why that is.
 
 The matchers built in to [Specl] are listed below.
@@ -374,7 +374,7 @@ determine whether the result is less than the argument.
     expect (5).to_be.lt (42)
 {% endhighlight %}
 
-See [Matcher Adaptors][#matcher-adaptors] for more details about how
+See [Matcher Adaptors](#29-matcher-adaptors) for more details about how
 this adaptor works.  Note that unlike the general adaptors described in
 that section, the adaptors in this section are specific to the `be`
 matcher.
@@ -530,7 +530,7 @@ equivalent functionality - but `all_of` will not complain if `expect`
 was given more elements than those it is supposed `to_contain` at the time
 of comparison.
 
-See [Matcher Adaptors][#matcher-adaptors] for more details about how
+See [Matcher Adaptors](#29-matcher-adaptors) for more details about how
 adaptors are used.  Note that unlike the general adaptors described in
 that section, the `a_permutation_of` adaptor is specific to the
 `contain` matcher.
@@ -679,7 +679,7 @@ a whole to have passed if they are both the same according to a [Lua]
 Of course, our custom `be` matcher reimplementation is not available
 to spec files until it has been registered in [Specl]s matcher table.
 You can do this in a `before` block, or your `spec_helper.lua` (see
-[Separating Helper Functions](#separating-helper-functions)).
+[Separating Helper Functions](#33-separating-helper-functions)).
 
 {% highlight lua %}
     ...
@@ -976,7 +976,7 @@ Furthermore, [Specl] automatically loads the `spec_helper.lua` file in
 the function environment of the outer-most `before` block (a virtual
 `before` is created at runtime if necessary), so it has access to all
 of Specl's [Lua] extensions, such as `expect` and matchers.  See
-[Programmatic Specifications](#programmatic-specifications) for some
+[Programmatic Specifications](#62-programmatic-specifications) for some
 examples of how to take advantage of this.
 
 
@@ -1233,7 +1233,7 @@ and the like, so you could include the final example in addition to the
 first group selected above as follows:
 
 {% highlight bash %}
-    specl --e 'group one' -e '%w+%s*again$'
+    specl -e 'group one' -e '%w+%s*again$'
 {% endhighlight %}
 
 When invoked with `--verbose`, the `progress` and `report` formatters
@@ -1417,8 +1417,8 @@ standard output a `Process` should write throughout its execution:
 #### 6.1.6. contain_output
 
 Where the `output` matcher works with `Process` output in a similar
-way to how the [`be`](#be) matcher works with raw strings, this
-`contain_output` matcher is equivalent to [`contain`](#contain):
+way to how the [`be`](#21-be) matcher works with raw strings, this
+`contain_output` matcher is equivalent to [`contain`](#24-contain):
 
 {% highlight lua %}
     expect (shell.spawn "cat /etc/passwd").to_contain_output "root"
@@ -1427,9 +1427,9 @@ way to how the [`be`](#be) matcher works with raw strings, this
 #### 6.1.7. match_output
 
 Where the `contain_output` matcher works with `Process` output in a
-similar way to how the [`contain`](#contain) matcher works with raw
+similar way to how the [`contain`](#24-contain) matcher works with raw
 strings, this `match_output` matcher is equivalent to
-[`match`](#match):
+[`match`](#25-match):
 
 {% highlight lua %}
     expect (shell.spawn "echo $RANDOM").to_match_output "%d+"
@@ -1488,12 +1488,12 @@ this matcher:
 
 #### 6.1.12. contain_error
 
-Note that [the previous example](#output_error) is likely to fail
+Note that [the previous example](#6111-output_error) is likely to fail
 unexpectedly whenever `/bin/sh` outputs a different error message
 prefix, or if the error message text itself is slightly different on
 the host machine, or on a system with internationalised messages etc.
 
-Much like [`contain_output`](#contain_output), you can specify a
+Much like [`contain_output`](#616-contain_output), you can specify a
 substring to find in standard error with:
 
 {% highlight lua %}
@@ -1611,5 +1611,5 @@ No support for mocks in the current version.
 [rspec]:    http://github.com/rspec/rspec
 [specl]:    http://github.com/gvvaughan/specl
 [thunk]:    https://en.wikipedia.org/wiki/Thunk
-[yaml]:     http//yaml.org
+[yaml]:     https://yaml.org
 [lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1
