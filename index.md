@@ -11,6 +11,7 @@ layout: default
  * self-contained execution environments ([environments](#3-environments))
  * flexible and customizable reporting ([formatters](#4-formatters))
  * a rich command line program (the [`specl` command](#5-command-line))
+ * reference documentation for the Lua modules ([API docs][api])
 
 
 ## 1. Specifications
@@ -1605,6 +1606,7 @@ No support for mocks in the current version.
 
 
 [alien]:    http://github.com/mascarenhas/alien
+[api]:      api/
 [bdd]:      http://en.wikipedia.org/wiki/Behavior-driven_development
 [lua]:      http://www.lua.org
 [luaposix]: http://github.com/luaposix/luaposix
