@@ -36,6 +36,11 @@
     sets the exit status, and an uncaught error writes a traceback to
     the captured standard error and sets exit status 1.
 
+  - `inprocess.capture` and `inprocess.call` report a stream with no
+    output as an empty string rather than `nil`, as `shell.spawn` does,
+    so that `to_succeed_with ""` matches a program that writes nothing,
+    and `to_output (nil)` no longer does.
+
   - Example `load` and `loadfile` return the loaded chunk itself,
     instead of a wrapper function that discarded its arguments and
     reset the chunk environment on every call, which undid `setfenv`.

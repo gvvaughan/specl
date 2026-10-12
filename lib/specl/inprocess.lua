@@ -332,7 +332,7 @@ local function capture(fn, arg, stdin)
       end
    end
 
-   local process = Process{pstat, pout.buffer, perr.buffer}
+   local process = Process{pstat, pout.buffer or '', perr.buffer or ''}
    for i, v in ipairs(t) do
       process[i] = v
    end
@@ -419,7 +419,7 @@ local function call(main, arg, stdin)
       pstat = 1
    end
 
-   return Process{pstat, pout.buffer, perr.buffer}
+   return Process{pstat, pout.buffer or '', perr.buffer or ''}
 end
 
 

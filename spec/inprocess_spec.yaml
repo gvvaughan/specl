@@ -78,6 +78,9 @@ specify inprocess:
     - it unwraps functables:
         functable = setmetatable ({}, {__call = function (self) io.write "hello" end })
         expect (capture (functable)).to_output "hello"
+    - it captures no output as an empty string:
+        expect (capture (function () end)).to_succeed_with ""
+        expect (capture (function () end)).to_output_error ""
 
   - context when matching with not_ prefix:
     - it matches no standard output:
@@ -171,8 +174,8 @@ specify inprocess:
         expect (call (_G, function () os.exit (true) end)).to_exit (0)
         expect (call (_G, function () os.exit (0) end)).to_exit (0)
     - it does not pollute output streams:
-        expect (call (_G, function () os.exit (0) end)).to_output (nil)
-        expect (call (_G, function () os.exit (0) end)).to_output_error (nil)
+        expect (call (_G, function () os.exit (0) end)).to_output ""
+        expect (call (_G, function () os.exit (0) end)).to_output_error ""
     - it reports normal exit for fall-through:
         expect (call (_G, function () end)).to_exit (0)
   - context with abnormal exit:
@@ -180,8 +183,8 @@ specify inprocess:
         expect (call (_G, function () os.exit (false) end)).to_exit (1)
         expect (call (_G, function () os.exit (77) end)).to_exit (77)
     - it does not pollute output streams:
-        expect (call (_G, function () os.exit (false) end)).to_output (nil)
-        expect (call (_G, function () os.exit (false) end)).to_output_error (nil)
+        expect (call (_G, function () os.exit (false) end)).to_output ""
+        expect (call (_G, function () os.exit (false) end)).to_output_error ""
   - it restores core exit function on completion:
       expect (call (_G, function () os.exit (0) end)).to_exit (0)
       expect (os.exit).to_be (core.exit)
