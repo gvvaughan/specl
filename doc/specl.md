@@ -753,25 +753,30 @@ more complicated shell output formatter (`specl.util.reformat`) are
 available in the source code, from `lib/specl/shell.lua`.
 
 One final feature of the `Matcher` constructor is that you can have it
-enforce a particular type (or types) for the `actual` parameter, by
-setting `actual_types` to a list of acceptable types.  For example,
-the built in `contain` matcher handles matching against both Lua string
-types and Lua tables:
+check the type of the `actual` parameter, by setting `actual_type` to
+the types it accepts, separated by `|`.  For example, the built in
+`contain` matcher handles matching against Lua strings, tables and
+objects:
 
 {% highlight lua %}
     matchers.matchers.contain = matchers.Matcher {
       ...
-      actual_type = {"string", "table"},
+      actual_type = "string|table|object",
     ...
 {% endhighlight %}
 
-Valid values for this list include any of the core Lua types as
-returned by the Lua `type` function, but also any extended types
-implemented as a table with a `type` field, such as the `process` and
-`command` objects defined by the `specl.shell` extensions, or anything
-else you care to build using the `specl.std.Object` base type (such
-as the `Matcher` factory object used throughout this section of the
-manual).
+Valid types include any of the core Lua types as returned by the Lua
+`type` function, but also any extended types implemented as a table
+with a `type` field, such as the `Process` and `Command` objects
+defined by the `specl.shell` extensions, or anything else you care to
+build using the `specl.std.Object` base type (such as the `Matcher`
+factory object used throughout this section of the manual).
+
+An expectation whose subject has none of those types fails, whether or
+not it uses `not_to_`, and [Specl] carries on with the rest of the
+examples, reporting the types expected and the subject:
+
+    expecting a string, table or object to contain "x", but got nil
 
 Adding custom matcher with this API automatically handles lookups
 with `to_` and inverting matchers with the `not_` string.
@@ -798,18 +803,17 @@ on the base `Matcher` object:
 {% endhighlight %}
 
 To add a custom adaptor to `be_again`, we simply define the custom
-adaptor method in the same way.  For consistency with the built in
-adaptors, I strongly recommend that you perform type checks against the
-`Matcher`'s `actual_type` field:
+adaptor method in the same way.  [Specl] checks the subject against the
+`Matcher`'s `actual_type` field before calling any adaptor, so the
+adaptor need only check its own argument:
 
 {% highlight lua %}
-    local util = require "specl.util"
+    local argcheck = require "specl.std".debug.argcheck
 
     matchers.matchers.be_again = Matcher {
       ...
       ["the_same_size_as?"] = function (self, actual, expected, ...)
-        util.type_check ("expect", {actual}, {self.actual_type})
-        util.type_check ("the_same_size_as", {expected}, {"#table"})
+        argcheck ("the_same_size_as", 1, "#table", expected)
 
         return (#actual == #expected),
           "expecting a table the same size as" ..
@@ -819,15 +823,10 @@ adaptors, I strongly recommend that you perform type checks against the
       ...
 {% endhighlight %}
 
-The utility function `type_check` checks that the types of each element
-of the table in argument 2 match one of the corresponding type names
-from argument 3, or else raise an error for mismatched arguments using
-the name given in argument 1.  So the first call to `type_check`
-enforces that `actual`, the argument to `"expect"`, matches one of the
-types listed in the object's `actual_type` field; and the next call
-enforces that `expected`, the argument to `"the_same_size_as"`, is a
-non-empty table. See the API documentation for more details of how to
-use `type_check`.
+The `argcheck` call raises an error unless `expected`, argument 1 to
+`"the_same_size_as"`, is a non-empty table, since an argument of the
+wrong type is a mistake in the spec file rather than a failed
+expectation.
 
 To make this adaptor work properly with [Specl], it must return a
 boolean decribing whether the adaptor matched successfully, followed by

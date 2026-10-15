@@ -169,6 +169,11 @@ local function expect(state, ok, actual, ...)
                if select('#', ...) > 0 then
                   expected = {expected, ...}
                end
+               local mismatch = matcher:mismatch(actual, verb, nil, expected)
+               if mismatch then
+                  score(state, false, false, mismatch)
+                  return false
+               end
                local success, msg = matcher:match(actual, expected, ok)
                if type(success) == 'boolean' then
                    vtable.score(success, msg)
@@ -183,6 +188,11 @@ local function expect(state, ok, actual, ...)
                   return function(expected, ...)
                      if select('#', ...) > 0 then
                         expected = {expected, ...}
+                     end
+                     local mismatch = matcher:mismatch(actual, verb, adaptor, expected)
+                     if mismatch then
+                        score(state, false, false, mismatch)
+                        return false
                      end
                      local success, msg = fn(matcher, actual, expected, ok, vtable)
                      if type(success) == 'boolean' then

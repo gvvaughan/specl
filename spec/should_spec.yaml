@@ -195,13 +195,15 @@ describe should matcher:
 
 
 - describe contain:
-  - it diagnoses incompatible arguments:
-      expect (expect (function () end).should_contain "nothing").
-        should_error "string, table or object expected"
+  - it fails for a subject of the wrong type:
+      yaml = preamble .. "(1).should_contain 'nothing'"
+      expect (run_spec (yaml)).should_contain_output
+        'expecting a string, table or object should contain "nothing", but got 1'
   - context with a_permutation_of adaptor:
-    - it diagnoses incompatible arguments to expect:
-        expect (expect (function () end).should_contain.a_permutation_of ("nothing")).
-          should_error "string, table or object expected"
+    - it fails for a subject of the wrong type:
+        yaml = preamble .. "(1).should_contain.a_permutation_of 'nothing'"
+        expect (run_spec (yaml)).should_contain_output
+          'expecting a string, table or object should contain a permutation of "nothing", but got 1'
     - it diagnoses incompatible arguments to adaptor:
         expect (expect ("nothing").should_contain.a_permutation_of (function () end)).
           should_error "string or table expected"
@@ -651,9 +653,10 @@ describe should matcher:
 
 
 - describe match:
-  - it diagnoses non-string arguments:
-      expect (expect ({"a table"}).should_match {}).
-        should_error "string expected"
+  - it fails for a non-string subject:
+      yaml = preamble .. "({'a table'}).should_match '.'"
+      expect (run_spec (yaml)).should_contain_output (fail_1)
+      expect (run_spec (yaml)).should_contain_output 'expecting a string should match ".", but got {'
   - it displays expected and actual output for failures:
       yaml = preamble .. "('no digits').should_match '%d+'"
       expect (run_spec (yaml)).

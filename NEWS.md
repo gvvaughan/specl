@@ -31,6 +31,13 @@
 
 ### Bug fixes:
 
+  - An expectation whose subject has a type its matcher doesn't
+    accept, such as `expect(nil).to_contain 'x'`, fails with a message
+    naming the types expected and the subject, whether or not it uses
+    `not_to_`, instead of raising an error that aborted the whole Specl
+    run.  This applies to every adaptor too, such as `all_of`, so a
+    custom adaptor no longer needs to check its subject itself.
+
   - `inprocess.capture` no longer aborts the whole Specl run when the
     captured function calls `os.exit` or raises an error.  `os.exit`
     sets the exit status, and an uncaught error writes a traceback to

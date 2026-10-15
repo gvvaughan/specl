@@ -18,6 +18,44 @@ describe matcher:
     expect (expect (1).should_not_be.the_thing_that ()).
       to_raise "unknown 'the_thing_that' adaptor with 'should_not_be'"
 
+- context with a subject of the wrong type:
+  - it fails the expectation:
+      yaml = preamble .. "(nil).to_contain 'x'"
+      expect (run_spec (yaml)).to_contain_output (fail_1)
+  - it displays the type expected and the subject:
+      yaml = preamble .. "(nil).to_contain 'x'"
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string, table or object to contain "x", but got nil'
+  - it fails an inverted expectation too:
+      yaml = preamble .. "(nil).not_to_contain 'x'"
+      expect (run_spec (yaml)).to_contain_output (fail_1)
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string, table or object not to contain "x", but got nil'
+  - it fails with should syntax:
+      yaml = preamble .. "({}).should_match '.'"
+      expect (run_spec (yaml)).to_contain_output (fail_1)
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string should match ".", but got {}'
+  - it fails with an adaptor:
+      yaml = preamble .. "(nil).to_match.any_of {'a', 'b'}"
+      expect (run_spec (yaml)).to_contain_output (fail_1)
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string to match any of "a" or "b", but got nil'
+  - it fails with all_of:
+      yaml = preamble .. "(1).to_contain.all_of {'a', 'b'}"
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string, table or object to contain all of "a" and "b", but got 1'
+  - it fails with a_permutation_of:
+      yaml = preamble .. "(1).to_contain.a_permutation_of {'a', 'b'}"
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string, table or object to contain a permutation of "a" and "b", but got 1'
+  - it carries on to the next example: |
+      yaml = "describe expect:\n" ..
+             "- it fails: expect (nil).to_contain 'x'\n" ..
+             "- it passes: expect (1).to_be (1)\n"
+      expect (run_spec (yaml)).
+        to_contain_output "\n1 passed, 0 pending, and 1 failed"
+
 - describe be:
   - it displays expected and actual output for failures:
       yaml = preamble .. "(1).to_be 'one'"
@@ -928,13 +966,15 @@ describe matcher:
 
 
 - describe contain:
-  - it diagnoses incompatible arguments:
-      expect (expect (function () end).to_contain "nothing").
-        to_raise "string, table or object expected"
+  - it fails for a subject of the wrong type:
+      yaml = preamble .. "(1).to_contain 'nothing'"
+      expect (run_spec (yaml)).to_contain_output
+        'expecting a string, table or object to contain "nothing", but got 1'
   - context with a_permutation_of adaptor:
-    - it diagnoses incompatible arguments to expect:
-        expect (expect (function () end).to_contain.a_permutation_of ("nothing")).
-          to_raise "string, table or object expected"
+    - it fails for a subject of the wrong type:
+        yaml = preamble .. "(1).to_contain.a_permutation_of 'nothing'"
+        expect (run_spec (yaml)).to_contain_output
+          'expecting a string, table or object to contain a permutation of "nothing", but got 1'
     - it diagnoses incompatible arguments to adaptor:
         expect (expect ("nothing").to_contain.a_permutation_of (function () end)).
           to_raise "string or table expected"
@@ -1390,8 +1430,10 @@ describe matcher:
 
 
 - describe match:
-  - it diagnoses non-string arguments:
-      expect (expect ({"a table"}).to_match {}).to_raise "string expected"
+  - it fails for a non-string subject:
+      yaml = preamble .. "({'a table'}).to_match '.'"
+      expect (run_spec (yaml)).to_contain_output (fail_1)
+      expect (run_spec (yaml)).to_contain_output 'expecting a string to match ".", but got {'
   - it displays expected and actual output for failures:
       yaml = preamble .. "('no digits').to_match '%d+'"
       expect (run_spec (yaml)).

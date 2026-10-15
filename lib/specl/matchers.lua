@@ -118,6 +118,14 @@ local function concat(alternatives, adaptor, quoted)
 end
 
 
+--- Format the types in an argcheck type specification for display.
+-- @string types such as 'string|table|object'
+-- @treturn string such as 'string, table or object'
+local function typenames(types)
+   return (gsub(gsub(types, '|', ', '), ', ([^,]*)$', ' or %1'))
+end
+
+
 local function comparative_msg(object, adaptor, actual, expected)
    return 'expecting a ' .. type(expected) .. ' ' .. adaptor .. ' ' ..
       q(expected) .. ', but got' .. object:format_actual(actual, expected)
@@ -153,10 +161,35 @@ local Matcher = Object{
    _parmnames = {'matchp',   'format_expect', 'format_actual', 'format_alternatives'},
    _parmtypes = {'function', 'function',      'function',      'function'           },
 
+   --- Unless *actual* has this matcher's `actual_type`, the message for
+   -- failing `expect(actual).verb.adaptor(expected)`, whether or not
+   -- *verb* inverts the matcher, since no such subject can match.
+   -- @param actual result of running expectation
+   -- @string verb such as 'not_to_contain'
+   -- @string[opt] adaptor such as 'all_of'
+   -- @param expected argument to the matcher or adaptor
+   -- @treturn string|nil failure message, or nil if *actual* matches
+   mismatch = function(self, actual, verb, adaptor, expected)
+      if pcall(argcheck, self.name, 1, self.actual_type, actual) then
+         return nil
+      end
+
+      local words, what = gsub(verb, '_', ' '), ''
+      if adaptor ~= nil then
+         adaptor = gsub(adaptor, '_', ' ')
+         words = words .. ' ' .. adaptor
+      end
+      if adaptor ~= nil and type(expected) == 'table' then
+         what = ' ' .. concat(expected, adaptor, ':quoted')
+      elseif expected ~= nil then
+         what = ' ' .. q(expected)
+      end
+      return format('expecting a %s %s%s, but got %s',
+         typenames(self.actual_type), words, what, q(actual))
+   end,
+
    -- Respond to `to_`s and `not_to_`s.
    match = function(self, actual, expected, ...)
-      argcheck(self.name, 1, self.actual_type, actual)
-
       -- Pass all parameters to both formatters!
       local m = 'expecting' .. self:format_expect(expected, actual, ...) ..
          'but got' .. self:format_actual(actual, expected, ...)
@@ -172,7 +205,6 @@ local Matcher = Object{
    -- @usage
    --    expect(_G).to_contain.all_of {'io', 'math', 'os', 'string', 'table'}
    ['all_of?'] = function(self, actual, alternatives, ...)
-      argcheck('expect', 1, self.actual_type, actual)
       argcheck(self.name .. '.all_of', 1, '#table', alternatives)
 
       local success
@@ -193,7 +225,6 @@ local Matcher = Object{
    -- @usage
    --    expect(ctermid()).to_match.any_of {'/.*tty%d+', '/.*pts%d+'}
    ['any_of?'] = function(self, actual, alternatives, ...)
-      argcheck('expect', 1, self.actual_type, actual)
       argcheck(self.name .. '.any_of', 1, '#table', alternatives)
 
       local success
@@ -633,7 +664,6 @@ matchers.contain = Matcher{
    --    expect({[math.sin]=true, [math.cos]=true, [math.tan]=true}).
    --       to_contain.a_permutation_of({math.sin, math.cos, math.tan})
    ['a_permutation_of?'] = function(self, actual, expected)
-      argcheck('expect', 1, self.actual_type, actual)
       argcheck(self.name .. '.a_permutation_of', 1, 'string|table', expected)
 
       -- calculate failure output before coercing strings into tables
