@@ -91,9 +91,9 @@ describe specl:
           to_succeed_while_containing "All expectations met"
     - it reports accurate line numbers after unicode characters: |
         tmp:append ("describe © α:\n- it is ©:\n    expect (\"α\").to_be \"α\"\n" ..
-           "- it is garbage:\n    expect (1).to_be (1)\n    garbage\n")
+           "- it is garbage:\n    expect (1).to_be (1)\n    print garbage\n")
         expect (run_spec {"--color=no", tmp.path}).
-          to_match_error (tmp.path .. ":6: .* near <eof>")
+          to_match_error (tmp.path .. ":6: .* near 'garbage'")
     - it quietly accepts the obsolete --unicode option: |
         tmp:append "describe © α:\n- it is ©:\n    expect (\"α\").to_be \"α\"\n"
         expect (run_spec {"--color=no", "--unicode", tmp.path}).
