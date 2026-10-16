@@ -28,8 +28,6 @@ jobs:
           luaVersion: ${{ matrix.lua-version }}
 
       - uses: luarocks/gh-actions-luarocks@v7
-        with:
-          luaRocksVersion: 3.13.0
 
       - name: install
         run: |
