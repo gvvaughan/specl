@@ -1,7 +1,7 @@
 SPECL
 =====
 
-[![License](http://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
+[![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
 [![workflow status](https://github.com/gvvaughan/specl/actions/workflows/spec.yml/badge.svg?branch=master)](https://github.com/gvvaughan/specl/actions)
 [![codecov.io](https://codecov.io/github/gvvaughan/specl/coverage.svg?branch=master)](https://codecov.io/github/gvvaughan/specl?branch=master)
 
@@ -84,4 +84,4 @@ points when proposing changes:
 [luarocks]:  https://www.luarocks.org
 [rspec]:     https://github.com/rspec/rspec
 [specl]:     https://github.com/gvvaughan/specl
-[depends]:   https://github.com/gvvaughan/specl/blob/master/specl-dev-1.rockspec#L28
+[depends]:   https://github.com/gvvaughan/specl/blob/master/specl-dev-1.rockspec#L21
