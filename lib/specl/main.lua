@@ -120,6 +120,9 @@ local function execute(self)
    parser:on({'f', 'format', 'formatter'},
               parser.required, formatter_opthandler)
 
+   -- Unicode spec files need no option any more, but accept the old one.
+   parser:on('unicode', parser.flag)
+
    self.arg, self.opts = parser:parse(self.arg, self.opts)
 
    -- When opt.example is non-nil, it must be a table.

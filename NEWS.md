@@ -69,6 +69,12 @@
     stdlib.  Previously Specl forgot only the few modules it loaded
     directly, but not the modules that those loaded in turn.
 
+  - Spec files can contain unicode characters without `--unicode`, and
+    errors in their examples still report accurate line numbers, which
+    `--unicode` used to give up.  The option is still accepted, so
+    existing command lines keep working, but it does nothing, and
+    `--help` no longer lists it.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 

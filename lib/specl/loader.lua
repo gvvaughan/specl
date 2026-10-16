@@ -4,6 +4,7 @@
 ]]
 
 local format = string.format
+local gmatch = string.gmatch
 local gsub = string.gsub
 local match = string.match
 local sub = string.sub
@@ -32,6 +33,19 @@ local null = {type='LYAML null'}
 -- files required from these directories are macro-expanded during
 -- loading.
 local spec_path = ''
+
+
+-- Return the byte offset in UTF-8 string *s* of each character, indexed
+-- by its position counting from 1, then the offset just past the end of
+-- *s*: libYAML counts mark indices in characters, not bytes.
+local function charoffsets(s)
+   local offsets = {[0] = 0}
+   for i in gmatch(s, '()[^\128-\191][\128-\191]*') do
+      offsets[#offsets + 1] = i
+   end
+   offsets[#offsets + 1] = #s + 1
+   return offsets
+end
 
 
 --- Search spec_path for module name.
@@ -106,13 +120,9 @@ local parser_mt = {
 
       -- Refetch the original lua format, for accurate error line numbers.
       refetch = function(self, value, event)
-         -- Mark indices are character based, but Lua patterns are byte
-         -- based, which means refetching doesn't work in the presence of
-         -- unicode characters :(
-         if self.unicode then
-            return value
-         end
-         value = sub(self.input, event.start_mark.index, event.end_mark.index)
+         local offsets = self.offsets
+         value = sub(self.input, offsets[event.start_mark.index],
+                     offsets[event.end_mark.index + 1] - 1)
          if event.style == 'DOUBLE_QUOTED' then
             value = table.concat {match(value, [[^(%s*)"(.-)"%s*$]])}
          elseif event.style == 'SINGLE_QUOTED' then
@@ -284,9 +294,9 @@ local function Parser(filename, s, opts)
    spec_path = normalize(catfile(dir, path_mark .. '.lua'), spec_path)
 
    local object = {
-      unicode = opts.unicode,
       anchors = {},
       input = s,
+      offsets = charoffsets(s),
       mark = {line=0, column=0},
       next = yaml.parser(s),
 

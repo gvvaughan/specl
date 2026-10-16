@@ -37,7 +37,6 @@ Where '-' is given as a FILE, then read from standard input.
       --coverage         generate coverage report, if luacov is installed
   -1, --fail-fast        exit immediately on first failed example
   -f, --formatter=FILE   use a specific formatter [default=progress]
-      --unicode          allow unicode in spec files
   -v, --verbose          request verbose formatter output
 
 Filtering:
@@ -62,12 +61,6 @@ failure output, but allows only a single line NN to be filtered (except when
 combined with +NN filters).  The optional :MM suffix is ignored -- and merely
 represents the ordinal number of an `expect` statement in a particular example
 in verbose Specl formatter outputs.
-
-Due to a shortcoming in libYAML, unicode characters in any passed FILE prevent
-Specl from working. The '--unicode' option works around that shortcoming, but
-any error messages caused by Lua code in FILE will usually report line-numbers
-incorrectly.  By default, errors report accurate line-numbers, and unicode
-characters are not supported.
 
 Report bugs to https://github.com/gvvaughan/specl/issues.]]
 }
