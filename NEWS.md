@@ -60,6 +60,9 @@
     its file, line and column, instead of crashing Specl with a Lua
     traceback.  An empty document, such as a stray `---`, is skipped.
 
+  - `spec_helper.lua` is autoloaded for every document in a spec file
+    with several YAML documents, instead of for none of them.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 

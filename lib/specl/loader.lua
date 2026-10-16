@@ -344,9 +344,12 @@ local function load(filename, s, opts)
          -- save document
          documents[#documents + 1] = document
 
-         -- Hoist document-level befores and afters.
-         documents.before, document.before = document.before, nil
-         documents.after, document.after = document.after, nil
+         -- Hoist document-level befores and afters, without letting a
+         -- later document that has none drop the preamble that the
+         -- first document's before carries.
+         documents.before = document.before or documents.before
+         documents.after = document.after or documents.after
+         document.before, document.after = nil, nil
       end
 
       -- reset anchor table

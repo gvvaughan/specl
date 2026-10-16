@@ -103,6 +103,17 @@ specify loader:
           to_succeed_while_containing "\nAll expectations met "
         spec:remove ()
 
+    - it autoloads for every document in the spec-file:
+        spec = dir:file ("spec_spec.yaml",
+                   "describe first:",
+                   "  expect (who ()).to_be (false)",
+                   "---",
+                   "describe second:",
+                   "  expect (who ()).to_be (false)")
+        expect (run_spec {spec.path}).
+          to_succeed_while_containing "\nAll expectations met "
+        spec:remove ()
+
     - it does not expand macros outside spec directories:
         #
         # `- TMPDIR
