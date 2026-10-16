@@ -54,6 +54,31 @@ describe specl:
         expect (run_spec {"--color=no", tmp.path}).
           to_contain_error (tmp.path .. ":2:3: could not find expected ':'")
 
+  - context without an example group description:
+    - before: |
+        tmp = Tmpfile ()
+        message = ": expecting an example group description, but found "
+    - after:
+        tmp:remove ()
+    - it diagnoses a list of examples: |
+        tmp:append "- it is not in a group:\n    expect (1).to_be (1)\n"
+        expect (run_spec {"--color=no", tmp.path}).
+          to_contain_error (tmp.path .. ":1:1" .. message .. "a list")
+    - it diagnoses a scalar: |
+        tmp:append "garbage\n"
+        expect (run_spec {"--color=no", tmp.path}).
+          to_contain_error (tmp.path .. ":1:1" .. message .. "a scalar")
+    - it diagnoses a later document: |
+        tmp:append (yaml .. "\n---\n- it is not in a group:\n")
+        expect (run_spec {"--color=no", tmp.path}).
+          to_contain_error (tmp.path .. ":4:1" .. message .. "a list")
+    - it skips an empty document: |
+        tmp:append (yaml .. "\n---\n")
+        expect (run_spec {"--color=no", tmp.path}).to_exit (0)
+    - it exits with non-zero status: |
+        tmp:append "- it is not in a group:\n"
+        expect (run_spec {"--color=no", tmp.path}).to_exit (1)
+
   - context with LuaMacro parse error in macro expansion:
     - before:
         tmp = Tmpfile ()

@@ -320,22 +320,34 @@ local function load(filename, s, opts)
    end
 
    while parser:parse() ~= 'STREAM_END' do
-      local document = parser:load_node()
-      if document == nil then
-         return parser:error('unexpected ' .. parser:type() .. ' event')
+      -- Every document starts with the description of an example group,
+      -- so its root node must be a mapping.  LibYAML gives an empty
+      -- document an empty plain scalar root, which has no examples.
+      local root = parser:parse()
+      local empty = root == 'SCALAR' and parser.event.value == '' and
+                    parser.event.style == 'PLAIN'
+      if root ~= 'MAPPING_START' and not empty then
+         local found = root == 'SEQUENCE_START' and 'a list' or
+                       root == 'SCALAR' and 'a scalar' or
+                       'an ' .. root .. ' event'
+         return parser:error('expecting an example group description, ' ..
+                             'but found ' .. found)
       end
+      local document = not empty and parser:load_map() or nil
 
       if parser:parse() ~= 'DOCUMENT_END' then
          return parser:error('expecting DOCUMENT_END event, but got ' ..
                              parser:type())
       end
 
-      -- save document
-      documents[#documents + 1] = document
+      if document then
+         -- save document
+         documents[#documents + 1] = document
 
-      -- Hoist document-level befores and afters.
-      documents.before, document.before = document.before, nil
-      documents.after, document.after = document.after, nil
+         -- Hoist document-level befores and afters.
+         documents.before, document.before = document.before, nil
+         documents.after, document.after = document.after, nil
+      end
 
       -- reset anchor table
       parser.anchors = {}

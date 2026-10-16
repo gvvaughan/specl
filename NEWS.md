@@ -55,6 +55,11 @@
   - Example `dofile` runs the file in the example environment, like
     `load` and `loadfile`, instead of the real global environment.
 
+  - A spec file whose top level is a list of examples or a scalar,
+    rather than the description of an example group, is diagnosed with
+    its file, line and column, instead of crashing Specl with a Lua
+    traceback.  An empty document, such as a stray `---`, is skipped.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 
