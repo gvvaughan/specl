@@ -503,8 +503,10 @@ metamethod of any lua-stdlib `std.object` derived objects to coerce
 a table to test for matching keys or values in the expectation.
 
 If `expect` passes anything other than a string, table or `std.object`
-derivative to this matcher, [Specl] aborts with an error; use
-`tostring` or similar if you need to.
+derivative to this matcher, the expectation fails, whether or not it
+uses `not_to_contain`, with a message naming the types it expected
+and what it got instead; use `tostring` or similar if you need to
+compare something else.
 
 #### 2.4.1. contain.a_permutation_of
 
