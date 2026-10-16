@@ -17,6 +17,11 @@ describe matcher:
 - it diagnoses unsupported matcher adaptors:
     expect (expect (1).should_not_be.the_thing_that ()).
       to_raise "unknown 'the_thing_that' adaptor with 'should_not_be'"
+- it diagnoses unknown matchers:
+    expect (expect (1).to_frobnicate (2)).
+      to_raise "unknown 'to_frobnicate' matcher"
+    expect (expect (1).not_to_frobnicate (2)).
+      to_raise "unknown 'not_to_frobnicate' matcher"
 
 - context with a subject of the wrong type:
   - it fails the expectation:

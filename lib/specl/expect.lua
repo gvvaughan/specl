@@ -155,6 +155,9 @@ local function expect(state, ok, actual, ...)
    return setmetatable({}, {
       __index = function(_, verb)
          local matcher, inverse = getmatcher(verb)
+         if matcher == nil then
+            error("unknown '" .. tostring(verb) .. "' matcher")
+         end
 
          local vtable = {
              score = function(success, msg)

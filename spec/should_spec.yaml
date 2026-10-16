@@ -19,6 +19,9 @@ describe should matcher:
 - it diagnoses unsupported matcher adaptors:
     expect (expect (1).should_not_be.the_thing_that ()).
       should_error "unknown 'the_thing_that' adaptor with 'should_not_be'"
+- it diagnoses unknown matchers:
+    expect (expect (1).should_frobnicate (2)).
+      should_error "unknown 'should_frobnicate' matcher"
 
 - describe be:
   - it displays expected and actual output for failures:

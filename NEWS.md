@@ -81,6 +81,11 @@
     counted the lines of code Specl injects ahead of a top-level
     `before`.
 
+  - An expectation with an unknown matcher, such as a misspelt
+    `expect (x).to_equals (y)`, raises "unknown 'to_equals' matcher",
+    like an unknown adaptor does, instead of an internal "attempt to
+    index a nil value" error from Specl's own code.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 
