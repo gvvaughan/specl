@@ -3,15 +3,15 @@
  Copyright (C) 2014-2026 Gary V. Vaughan
 ]]
 
-title = "Specl @PACKAGE_VERSION@ Reference"
-project = "Specl @PACKAGE_VERSION@"
+title = "Specl @version@ Reference"
+project = "Specl @version@"
 description = "Behaviour Driven Development for Lua"
 
 tparam_alias "string"
 tparam_alias "int"
 tparam_alias "bool"
 
-dir = "../doc"
+dir = "../doc/api"
 file = {
   -- Modules
   "../lib/specl/badargs.lua",

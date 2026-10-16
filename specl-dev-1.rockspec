@@ -27,31 +27,18 @@ dependencies = {
 }
 
 build = {
-   type = 'builtin',
-   install = {
-      bin = {
-         specl = 'bin/specl',
-      }
-   },
-   modules = {
-      ['specl.badargs']            = 'lib/specl/badargs.lua',
-      ['specl.color']              = 'lib/specl/color.lua',
-      ['specl.compat']             = 'lib/specl/compat.lua',
-      ['specl.expect']             = 'lib/specl/expect.lua',
-      ['specl.formatter.progress'] = 'lib/specl/formatter/progress.lua',
-      ['specl.formatter.report']   = 'lib/specl/formatter/report.lua',
-      ['specl.formatter.tap']      = 'lib/specl/formatter/tap.lua',
-      ['specl.inprocess']          = 'lib/specl/inprocess.lua',
-      ['specl.loader']             = 'lib/specl/loader.lua',
-      ['specl.main']               = 'lib/specl/main.lua',
-      ['specl.matchers']           = 'lib/specl/matchers.lua',
-      ['specl.runner']             = 'lib/specl/runner.lua',
-      ['specl.sandbox']            = 'lib/specl/sandbox.lua',
-      ['specl.shell']              = 'lib/specl/shell.lua',
-      ['specl.std']                = 'lib/specl/std.lua',
-      ['specl.util']               = 'lib/specl/util.lua',
-      ['specl.version']            = 'lib/specl/version.lua',
-   }
+   type = 'command',
+   build_command = '$(LUA) build-aux/luke'
+      .. ' package="' .. package .. '"'
+      .. ' version="' .. _MODREV .. '"'
+      .. ' PREFIX="$(PREFIX)"'
+      .. ' LUA="$(LUA)"'
+      ,
+   install_command = '$(LUA) build-aux/luke install --quiet'
+      .. ' INST_BINDIR="$(BINDIR)"'
+      .. ' INST_LUADIR="$(LUADIR)"'
+      ,
+   copy_directories = {'doc'},
 }
 
 test_dependencies = {
@@ -65,12 +52,15 @@ test = {
 }
 
 if _MODREV == 'dev' then
-   dependencies[#dependencies + 1] = 'ldoc'
+   -- luarocks.org's ldoc fails on Lua 5.5; gvvaughan's works.
+   build_dependencies = {'gvvaughan/ldoc'}
+
+   build.copy_directories = nil
 
    source = {
       url = 'git+https://github.com/gvvaughan/specl.git',
    }
-
-   build.modules['specl.version'] = 'lib/specl/version-git.lua'
+else
+   -- A release commits its LDocs, so don't build them again.
+   build.build_command = build.build_command .. ' LDOC=true'
 end
-

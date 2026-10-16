@@ -181,7 +181,7 @@ describe specl:
         "\n" ..
         os.date ("Copyright %%(C%%) %Y, Gary V%%. Vaughan\n") ..
         ".*ABSOLUTELY NO WARRANTY.*$",
-        "^specl %(Specl%) git\n" ..
+        "^specl %(Specl%) dev\n" ..
         "Written by Gary V%. Vaughan <%w+@[%w%.]+>, 2013\n" ..
         "\n" ..
         os.date ("Copyright %%(C%%) %Y, Gary V%%. Vaughan\n") ..
