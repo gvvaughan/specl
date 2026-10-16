@@ -34,10 +34,8 @@ jobs:
           sudo apt-get update -q -q --yes
           sudo apt-get install -y help2man
           sudo apt-get install -y libyaml-dev
-          luarocks install ansicolors
           luarocks install --server=https://luarocks.org/manifests/gvvaughan ldoc
-          luarocks install luacov
-          luarocks install specl
+          luarocks test --prepare
 
       - name: build
         run: |
@@ -45,7 +43,7 @@ jobs:
 
       - name: test
         run: |
-          specl -vfreport --coverage spec/*_spec.yaml
+          luarocks test
 
       - uses: codecov/codecov-action@v7
         with:

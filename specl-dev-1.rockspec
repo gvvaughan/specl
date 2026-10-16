@@ -1,5 +1,6 @@
 local _MODREV, _SPECREV = 'dev', '-1'
 
+rockspec_format = '3.0'
 package = 'specl'
 version = _MODREV .. _SPECREV
 
@@ -8,12 +9,12 @@ description = {
    detailed = [[
       Develop and run BDD specs written in Lua for RSpec style workflow.
    ]],
-   homepage = 'http://gvvaughan.github.io/specl',
+   homepage = 'https://gvvaughan.github.io/specl',
    license = 'MIT',
 }
 
 source = {
-   url = 'http://github.com/gvvaughan/specl/archive/v' .. _MODREV .. '.zip',
+   url = 'https://github.com/gvvaughan/specl/archive/v' .. _MODREV .. '.zip',
    dir = 'specl-' .. _MODREV,
 }
 
@@ -53,11 +54,21 @@ build = {
    }
 }
 
+test_dependencies = {
+   'ansicolors',
+   'luacov',
+}
+
+test = {
+   type = 'command',
+   command = 'specl -vfreport --coverage spec/*_spec.yaml',
+}
+
 if _MODREV == 'dev' then
    dependencies[#dependencies + 1] = 'ldoc'
 
    source = {
-      url = 'git://github.com/gvvaughan/specl.git',
+      url = 'git+https://github.com/gvvaughan/specl.git',
    }
 
    build.modules['specl.version'] = 'lib/specl/version-git.lua'
