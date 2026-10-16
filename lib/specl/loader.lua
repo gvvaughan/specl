@@ -94,20 +94,23 @@ local parser_mt = {
          os.exit(1)
       end,
 
-      -- Compile S into a callable function.
-      compile = function(self, s)
+      -- Compile S into a callable function, reporting errors relative to
+      -- FIRSTLINE, the line in the spec file where S starts, which
+      -- defaults to the line of the current event.
+      compile = function(self, s, firstline)
+         firstline = firstline or self.mark.line
          local f, errmsg = macro.substitute_tostring(s)
          if f == nil then
             -- Replace the error message from macro; it's just internal gunk.
             errmsg = format("%s:%d: parse error near 'expect', while collecting arguments",
-                            self.filename, self.mark.line)
+                            self.filename, firstline)
          else
             f, errmsg = load(f)
          end
          if f == nil then
             local line, msg = match(errmsg, '%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
             if msg ~= nil then
-               line = tonumber(line) + self.mark.line - 1
+               line = tonumber(line) + firstline - 1
                errmsg = format('%s:%d: %s', self.filename, line, msg)
             end
          end
@@ -180,11 +183,13 @@ local parser_mt = {
                return self:error('unexpected ' .. self:type() .. ' event')
             end
             if key == 'before' then
-               -- Be careful not to overwrite injected preamble.
+               -- Be careful not to overwrite injected preamble, and count
+               -- its lines so that line is where example would start.
+               local prefix = map.before and map.before.example or ''
                value = self:refetch(value, event)
                map.before = {
-                  example = table.concat {map.before and map.before.example or '', value},
-                  line = self.mark.line,
+                  example = table.concat {prefix, value},
+                  line = self.mark.line - select(2, gsub(prefix, '\n', '')),
                }
             elseif value == '' then
                map[key] = {
@@ -202,7 +207,7 @@ local parser_mt = {
          end
          -- Delayed compilation of before, having injecting preamble now.
          if map.before and type(map.before.example) == 'string' then
-            map.before.example = self:compile(map.before.example)
+            map.before.example = self:compile(map.before.example, map.before.line)
          end
          return map
       end,

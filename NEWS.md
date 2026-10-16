@@ -75,6 +75,12 @@
     existing command lines keep working, but it does nothing, and
     `--help` no longer lists it.
 
+  - Syntax errors in a `before` block report the line of the spec file
+    where they occur, instead of a later one: the loader counted from
+    wherever it had got to by the end of the enclosing map, and also
+    counted the lines of code Specl injects ahead of a top-level
+    `before`.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 

@@ -178,6 +178,32 @@ describe specl:
         expect (run_spec {"--color=no", tmp.path}).
           to_match_error (tmp.path .. ":5: .* near 'garbage'")
 
+  - context with Lua error in a before block:
+    - before: |
+        tmp = Tmpfile ()
+        top = "before:%s\n  x = 1\n  print garbage\n" ..
+              "describe x:\n- it passes: expect (1).to_be (1)\n"
+        nested = "describe x:\n- before:%s\n    x = 1\n    print garbage\n" ..
+                 "- it passes: expect (1).to_be (1)\n"
+    - after:
+        tmp:remove ()
+    - it reports filename and line number for a top-level before: |
+        tmp:append (top:format "")
+        expect (run_spec {"--color=no", tmp.path}).
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
+    - it reports filename and line number for a top-level literal before: |
+        tmp:append (top:format " |")
+        expect (run_spec {"--color=no", tmp.path}).
+          to_match_error (tmp.path .. ":3: .* near 'garbage'")
+    - it reports filename and line number for a nested before: |
+        tmp:append (nested:format "")
+        expect (run_spec {"--color=no", tmp.path}).
+          to_match_error (tmp.path .. ":4: .* near 'garbage'")
+    - it reports filename and line number for a nested literal before: |
+        tmp:append (nested:format " |")
+        expect (run_spec {"--color=no", tmp.path}).
+          to_match_error (tmp.path .. ":4: .* near 'garbage'")
+
   - context with Lua error in multi-example spec-file:
     - before: |
         yaml = yaml .. "\n" ..
