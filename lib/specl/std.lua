@@ -17,7 +17,7 @@ M.require('std', '41')
 
 
 local F = M.functional
-local filter, lambda, map, reduce = F.filter, F.lambda, F.map, F.reduce
+local lambda, map, reduce = F.lambda, F.map, F.reduce
 local set = M.operator.set
 local tostring = _G.tostring
 local type = _G.type
@@ -261,9 +261,5 @@ M.debug.setfenv = nil
 --[[ ================= ]]--
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
-
--- Don't prevent examples from loading a different stdlib(or optparse!).
-map(function(e) package.loaded[e] = nil end,
-   filter(lambda "|k| string.match(k, '^std%.') or k == 'std' or k == 'optparse'", package.loaded))
 
 return M

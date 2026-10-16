@@ -364,11 +364,6 @@ end
 --[[ Public Interface. ]]--
 --[[ ----------------- ]]--
 
--- Don't prevent examples from loading a different luaposix.
-for _, reload in pairs {'yaml', 'lyaml'} do
-   package.loaded[reload] = nil
-end
-
 
 local M = {
    expandmacros = expandmacros,

@@ -63,6 +63,12 @@
   - `spec_helper.lua` is autoloaded for every document in a spec file
     with several YAML documents, instead of for none of them.
 
+  - An example that requires a module loads it from its own
+    `package.path`, even when Specl or one of its dependencies already
+    loaded another copy, such as an installed luaposix, typecheck or
+    stdlib.  Previously Specl forgot only the few modules it loaded
+    directly, but not the modules that those loaded in turn.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 

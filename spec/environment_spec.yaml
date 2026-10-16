@@ -130,6 +130,22 @@ describe environments:
     - it supports requiring core modules:
         expect (type (require "os")).to_be "table"
         expect (type (require "io".open)).to_be "function"
+    - context with a module that specl itself loaded:
+      - before: |
+          dir = Tmpdir ()
+          package.path = dir.path .. "/?.lua;" .. package.path
+      - after:
+          dir:remove ()
+      - it loads the module from package.path: |
+          -- specl's loader and expect modules always load luamacro.
+          f = dir:file ("macro.lua", "return 'from package.path'")
+          expect (require "macro").to_be "from package.path"
+          f:remove ()
+      - it shares specl's own modules with the examples: |
+          d = dir:subdir "specl"
+          f = d:file ("badargs.lua", "return 'from package.path'")
+          expect (type (require "specl.badargs".diagnose)).to_be "function"
+          f:remove () d:remove ()
 
 - describe load:
     - before:

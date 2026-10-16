@@ -181,6 +181,7 @@ local _ENV = {
    deepcopy = require 'specl.util'.deepcopy,
    error = error,
    expect = require 'specl.expect'.expect,
+   find = string.find,
    ipairs = ipairs,
    load = sandbox.load,
    loadfile = sandbox.loadfile,
@@ -188,6 +189,7 @@ local _ENV = {
    merge = _.std.table.merge,
    package = package,
    pending = require 'specl.expect'.pending,
+   searchpath = _.compat.searchpath,
    select = select,
    setfenv = function() end,
    tostring = tostring,
@@ -196,6 +198,24 @@ local _ENV = {
 setfenv(1, _ENV)
 local setfenv = sandbox.setfenv
 _ = nil
+
+
+-- Modules that examples require, kept apart from the modules that specl
+-- loaded for itself, so that an example finds every other module on its
+-- own package.path, however specl came to load a copy of it.
+local modules = {}
+
+
+-- Examples share specl's own modules, which hold the state of this run,
+-- and built-in libraries, which aren't on any search path.
+local function shared(m)
+   if m == 'specl' or find(m, '^specl%.') then
+      return true
+   end
+   return package.loaded[m] ~= nil and
+      searchpath(m, package.path) == nil and
+      searchpath(m, package.cpath) == nil
+end
 
 
 local function root_closures(root_env, state)
@@ -255,10 +275,12 @@ local function inner_closures(env, state)
       package.cpath, package.path, package.searchers = 
          env.package.cpath, env.package.path, env.package.searchers
 
+      local cache = shared(m) and package.loaded or modules
+
       -- We can have a spec_helper.lua in each spec directory, so don't
       -- cache the side effects of a random one!
       if m ~= 'spec_helper' then
-         loaded, loadfn = package.loaded[m], package.preload[m]
+         loaded, loadfn = cache[m], package.preload[m]
       end
 
       if loaded == nil then
@@ -285,11 +307,11 @@ local function inner_closures(env, state)
          end
       end
 
-      package.loaded[m] = package.loaded[m] or loaded or nil
+      cache[m] = cache[m] or loaded or nil
 
       package.cpath, package.path, package.searchers = 
          save.cpath, save.path, save.searchers
-      return package.loaded[m]
+      return cache[m]
    end
 
    return env
