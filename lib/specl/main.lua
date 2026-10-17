@@ -100,7 +100,7 @@ local function process_args(self, parser)
          self:compile(filename)
 
       elseif filename ~= nil then
-         h = io.open(filename)
+         local h = io.open(filename)
          if h == nil and match(v, '^-') then
             return parser:opterr("unrecognised option '" .. v .. "'")
          end
