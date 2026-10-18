@@ -98,9 +98,6 @@ end
 --[[ ================ ]]--
 
 
-TMPDIR = os.getenv 'TMPDIR' or os.getenv 'TMP' or '/tmp'
-
-
 local function append(path, ...)
    local n = select('#', ...)
    if n > 0 then
@@ -151,15 +148,22 @@ Tmpfile = Object{
 }
 
 
+-- Create a temporary directory.
+-- @usage
+--    d = Tmpdir()        -- new generated dirname
+--    d = Tmpdir(dirname) -- create *dirname*
 Tmpdir = Object{
    _type = 'Tmpdir',
-
-   tmpdir = std.io.catfile(TMPDIR, 'specl_' .. math.random(65536)),
 
    path = nil,
 
    _init = function(self, dirname)
-      self.path = dirname or self.tmpdir
+      if dirname == nil then
+         -- Reuse the unique name of a new temporary file.
+         dirname = os.tmpname()
+         os.remove(dirname)
+      end
+      self.path = dirname
       os.execute('mkdir ' .. self.path)
       return self
    end,
