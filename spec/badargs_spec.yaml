@@ -156,3 +156,20 @@ specify badargs:
     - it diagnoses too many arguments:
         expect (run_spec (argt)).
           to_contain_output "diagnoses more than maximum of 0 arguments"
+
+  - context with positional optional parameters:
+    - before:
+        yaml   = preamble ..
+                 "  - it checks positional optional arguments:\n" ..
+                 "      local decl = 'f (string, <int>, <?string>)'\n" ..
+                 "      f = require 'typecheck'.argscheck (decl, function () end)\n" ..
+                 "      badargs.diagnose (decl, f)"
+        argt = {"-freport", stdin = yaml}
+    - it exits successfully:
+        expect (run_spec (argt)).to_exit (0)
+    - it doesn't diagnose a missing positional argument: |
+        expect (run_spec (argt)).
+          not_to_contain_output "diagnoses missing argument #2"
+    - it diagnoses positional argument types: |
+        expect (run_spec (argt)).
+          to_contain_output "diagnoses argument #2 type not integer"

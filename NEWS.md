@@ -4,6 +4,12 @@
 
 ### New features:
 
+  - `badargs.diagnose` accepts typecheck's angle bracketed optional
+    parameters, which can't be skipped, such as `<?int>` in
+    `'string.find(string, string, <?int>, <?boolean>)'`, and doesn't
+    expect a missing one to be diagnosed.  This needs typecheck 3.2 or
+    later.
+
   - Example `load` and `loadfile` support the Lua 5.2+ `mode` and `env`
     arguments on every supported Lua version, including Lua 5.1.
     Without an `env` argument, the loaded chunk runs in the example

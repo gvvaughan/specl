@@ -316,6 +316,11 @@ local format, getfenv, match, parsetypes, setfenv, split, unpack =
 --
 --     diagnose('table.insert(table, [int], ?any)', table.insert)
 --
+-- Or with angle brackets, if it can only be omitted along with every
+-- argument after it:
+--
+--     diagnose('string.find(string, string, <?int>, <?boolean>)', string.find)
+--
 -- Finally, if an argument may be one of several types, list all options
 -- with `|` (pipe) between them:
 --
@@ -350,7 +355,7 @@ local function diagnose(decl, fn)
 
    local typemin, specs = #typelist, parsetypes(typelist)
    for _, v in pairs(typelist) do
-      if match(v, '%[.*%]') then
+      if match(v, '%[.*%]') or match(v, '^<.+>$') then
          typemin = typemin - 1
       end
    end
