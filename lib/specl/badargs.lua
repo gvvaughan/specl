@@ -16,6 +16,7 @@
 
 local _ = {
    std = require 'specl.std',
+   typecheck = require 'typecheck',
 }
 
 local _ENV = {
@@ -38,8 +39,8 @@ local _ENV = {
    split = _.std.string.split,
    invert = _.std.table.invert,
    unpack = _.std.table.unpack,
-   parsetypes = _.std.debug.parsetypes,
-   typesplit = _.std.debug.typesplit,
+   parsetypes = _.typecheck.parsetypes,
+   typesplit = _.typecheck.typesplit,
 }
 setfenv(1, _ENV)
 setfenv = _.std.setfenv
@@ -301,7 +302,7 @@ local format, getfenv, match, parsetypes, setfenv, split, unpack =
 
 
 --- Generate examples to ensure a function satisfies its type signature.
--- The *decl* string is a subset of the format used by `std.debug.argscheck`,
+-- The *decl* string is a subset of the format used by `typecheck.argscheck`,
 -- the function name expected from argument error messages followed by a
 -- comma-delimited list of types in parentheses:
 --

@@ -24,6 +24,7 @@ dependencies = {
    'lyaml >= 5',
    'optparse',
    'stdlib >= 41.2.0, < 42.0.0',
+   'typecheck >= 3.0',
 }
 
 build = {

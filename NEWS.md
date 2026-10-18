@@ -25,6 +25,11 @@
 
 ### Incompatible changes:
 
+  - Specl now depends on typecheck.  `badargs.diagnose` reads its
+    declaration with typecheck's own parser, so it generates examples
+    for exactly the declarations that `typecheck.argscheck` accepts,
+    instead of using the copy of that parser in stdlib 41.
+
   - When `inprocess.capture`'s function returns a number without
     calling `os.exit`, that number is the exit status of the captured
     `Process`, as for `os.exit(main(arg))`, instead of always 0.
