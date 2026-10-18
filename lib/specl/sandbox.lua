@@ -14,6 +14,21 @@ local _ = {
 --[[ ====================================== ]]--
 
 
+-- Examples search the path set in environment variable *var*, rather
+-- than specl's own *current* path, which a luarocks wrapper starts with
+-- the tree specl was installed in.  Only *current* holds the default
+-- path that ';;' in *var* stands for, so keep that.
+local function userpath(current, var)
+   local v = string.match(_VERSION, '^Lua (%d+%.%d+)')
+   local value = v ~= '5.1' and os.getenv(var .. '_' .. string.gsub(v, '%.', '_'))
+      or os.getenv(var)
+   if value == nil or string.find(value, ';;', 1, true) then
+      return current
+   end
+   return value
+end
+
+
 local sandbox = {
    _VERSION = _VERSION,
    arg = _.std.table.clone(arg),
@@ -109,9 +124,9 @@ local sandbox = {
    pack = pack or table.pack,
    package = {
       config = package.config,
-      cpath = package.cpath,
+      cpath = userpath(package.cpath, 'LUA_CPATH'),
       loadlib = package.loadlib,
-      path = package.path,
+      path = userpath(package.path, 'LUA_PATH'),
       preload = package.preload,
       searchers = package.searchers or package.loaders,
       searchpath = _.compat.searchpath,
@@ -190,6 +205,7 @@ local _ENV = {
    matchers = require 'specl.matchers',
    merge = _.std.table.merge,
    package = package,
+   pcall = pcall,
    pending = require 'specl.expect'.pending,
    searchpath = _.compat.searchpath,
    select = select,
@@ -262,6 +278,35 @@ local function tree_loader(m)
 end
 
 
+-- Return the loader function that *searchers* find for module *m*, or
+-- else nil and an error message.
+local function search(m, searchers)
+   local errmsg = ''
+   for _, searcher in ipairs(searchers) do
+      local loadfn = searcher(m)
+      if type(loadfn) == 'function' then
+         return loadfn
+      end
+      errmsg = errmsg .. (loadfn and tostring(loadfn) or '')
+   end
+   return nil, errmsg
+end
+
+
+-- Call *fn* with the global search paths, which searchers and C modules
+-- read, set to *spath* and *scpath*, and restore them even on error.
+local function with_paths(spath, scpath, fn, ...)
+   local save_path, save_cpath = package.path, package.cpath
+   package.path, package.cpath = spath, scpath
+   local ok, a, b = pcall(fn, ...)
+   package.path, package.cpath = save_path, save_cpath
+   if not ok then
+      return error(a, 0)
+   end
+   return a, b
+end
+
+
 local function root_closures(root_env, state)
    -- Add closures to sandbox.
    root_env.expect = function(...)
@@ -310,15 +355,7 @@ local function inner_closures(env, state)
    -- into the example block environment, for this and subsequent
    -- examples that load it.
    env.require = function(m)
-      local errmsg, import, loaded, loadfn
-
-      -- temporarily switch to the environment package context.
-      local save = {
-         cpath = package.cpath, path = package.path, searchers = package.searchers,
-      }
-      package.cpath, package.path, package.searchers = 
-         env.package.cpath, env.package.path, env.package.searchers
-
+      local errmsg, loaded, loadfn
       local cache = shared(m) and package.loaded or modules
 
       -- We can have a spec_helper.lua in each spec directory, so don't
@@ -332,36 +369,27 @@ local function inner_closures(env, state)
          if loadfn == nil and cache == modules then
             loadfn, errmsg = tree_loader(m)
             if errmsg ~= nil then
-               package.path, package.cpath = save.path, save.cpath
                return error(errmsg)
             end
          end
+         -- Specl finds its own modules where it found the rest.
+         local spath, scpath = path, cpath
+         if cache == modules then
+            spath, scpath = env.package.path, env.package.cpath
+         end
          if loadfn == nil then
-            errmsg = ''
-            for _, loader in ipairs(package.searchers) do
-               loadfn = loader(m)
-               if type(loadfn) == 'function' then
-                  break
-               end
-               errmsg = errmsg ..(loadfn and tostring(loadfn) or '')
-            end
+            loadfn, errmsg = with_paths(spath, scpath, search, m, env.package.searchers)
          end
          if type(loadfn) ~= 'function' then
-            package.path, package.cpath = save.path, save.cpath
             return error(errmsg)
          end
 
          -- Capture side effects.
-         if loadfn ~= nil then
-            setfenv(loadfn, env)
-            loaded = loadfn()
-         end
+         setfenv(loadfn, env)
+         loaded = with_paths(spath, scpath, loadfn)
       end
 
       cache[m] = cache[m] or loaded or nil
-
-      package.cpath, package.path, package.searchers = 
-         save.cpath, save.path, save.searchers
       return cache[m]
    end
 

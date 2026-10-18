@@ -183,6 +183,46 @@ describe environments:
       - it falls back to package.path for a module not in the current tree: |
           expect (run_in_tree "expect (require 'dependency').to_be 'from package.path'").
             to_succeed ()
+    - context with a luarocks wrapper:
+      - before: |
+          base = Tmpdir ()
+          rocks, dir = base:subdir "rocks", base:subdir "path"
+          files = {
+            rocks:file ("installed.lua", "return 'from the specl tree'"),
+            dir:file ("dependency.lua", "return 'from LUA_PATH'"),
+          }
+          -- Like a luarocks wrapper, run specl with the tree it was
+          -- installed in, which holds its own modules, first.
+          local i = -1
+          while arg[i - 1] do i = i - 1 end
+          pwd = os.getenv "PWD"
+          tree = rocks.path .. "/?.lua;" .. pwd .. "/lib/?.lua;" .. package.path
+          function run_wrapped (lua_path, example)
+            return spawn_specl {
+              "'" .. arg[i] .. "' -e \"package.path='" .. tree .. ";'..package.path\" '" ..
+                pwd .. "/bin/specl' --color=no";
+              stdin = "describe x:\n- it requires: " .. example .. "\n",
+              env = {LUA_PATH = lua_path},
+            }
+          end
+      - after: |
+          for _, f in ipairs (files) do f:remove () end
+          rocks:remove () dir:remove () base:remove ()
+      - it doesn't search the tree the wrapper added: |
+          expect (run_wrapped (dir.path .. "/?.lua",
+            "expect (require 'installed').to_raise ()")).to_succeed ()
+      - it searches LUA_PATH: |
+          expect (run_wrapped (dir.path .. "/?.lua",
+            "expect (require 'dependency').to_be 'from LUA_PATH'")).to_succeed ()
+      - it keeps specl's search path for a LUA_PATH with a default path: |
+          expect (run_wrapped (dir.path .. "/?.lua;;",
+            "expect (require 'installed').to_be 'from the specl tree'")).to_succeed ()
+      - it finds specl's own modules where specl found the rest: |
+          expect (run_wrapped (dir.path .. "/?.lua",
+            "expect (type (require 'specl.shell'.spawn)).to_be 'function'")).to_succeed ()
+      - it finds specl's own modules with an empty LUA_PATH: |
+          expect (run_wrapped ("",
+            "expect (type (require 'specl.shell'.spawn)).to_be 'function'")).to_succeed ()
 
 - describe load:
     - before:

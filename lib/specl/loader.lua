@@ -304,14 +304,12 @@ local function Parser(filename, s, opts)
       -- strip leading './'
       filename = gsub(filename, catfile('^%.', ''), ''),
 
-      -- Used to simplify requiring from the spec file directory: set the
-      -- path, expand macros in spec_helper, and autoload spec_helper from
-      -- the spec-file directory, if any.  It shares the first line of a
-      -- before block, so that line numbers in the spec file still match.
-      preamble = format("package.path = '%s' " ..
-         "table.insert(package.searchers, 1, require 'specl.loader'.expandmacros) " ..
+      -- Used to simplify requiring from the spec file directory: expand
+      -- macros in spec_helper, and autoload spec_helper from the spec-file
+      -- directory, if any.  It shares the first line of a before block,
+      -- so that line numbers in the spec file still match.
+      preamble = "table.insert(package.searchers, 1, require 'specl.loader'.expandmacros) " ..
          "pcall(require, 'spec_helper') ",
-         package.path),
    }
    return setmetatable(object, parser_mt)
 end

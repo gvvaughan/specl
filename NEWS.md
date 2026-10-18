@@ -113,6 +113,17 @@
     that trims its search paths no longer gets specl's own copy of a
     module that isn't on them.
 
+  - When `LUA_PATH` or `LUA_CPATH` (or their versioned forms) is set,
+    examples search that path, without the tree that specl's luarocks
+    wrapper puts first to find specl's own dependencies.  So a module
+    that specl depends on, such as typecheck, is no longer found by an
+    example unless it's installed where `LUA_PATH` looks.  A path with
+    `;;` still searches specl's tree, which may also be the default.
+    Specl's own modules are still found where specl found the rest.
+
+  - A module that raises an error while an example requires it no
+    longer leaves the example's search paths in place for specl.
+
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 
 ### Incompatible changes:
