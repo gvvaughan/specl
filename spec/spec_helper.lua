@@ -34,7 +34,7 @@ function spawn_specl(params)
       return hell.spawn{
          SPECL, '--color=no', '-';
          stdin = params,
-         env = {LUA_PATH=package.path},
+         env = {LUA_PATH=package.path, LUA_CPATH=package.cpath},
       }
    end
 
@@ -52,9 +52,10 @@ function spawn_specl(params)
          cmd = cmd .. ' -'
       end
 
-      -- Must pass our package.path through to inferior Specl process.
+      -- Must pass our search paths through to inferior Specl process.
       local env = params.env or {}
       env.LUA_PATH = env.LUA_PATH or package.path
+      env.LUA_CPATH = env.LUA_CPATH or package.cpath
 
       return hell.spawn{cmd; env = env, stdin = params.stdin}
    end

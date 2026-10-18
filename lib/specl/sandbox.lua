@@ -178,10 +178,12 @@ sandbox.package.loaded = {
 
 
 local _ENV = {
+   concat = table.concat,
    deepcopy = require 'specl.util'.deepcopy,
    error = error,
    expect = require 'specl.expect'.expect,
    find = string.find,
+   gsub = string.gsub,
    ipairs = ipairs,
    load = sandbox.load,
    loadfile = sandbox.loadfile,
@@ -206,15 +208,57 @@ _ = nil
 local modules = {}
 
 
+-- Where specl found its own modules, before any example changes them.
+local path, cpath = package.path, package.cpath
+
+
 -- Examples share specl's own modules, which hold the state of this run,
--- and built-in libraries, which aren't on any search path.
+-- and built-in libraries, which aren't on specl's search paths.
 local function shared(m)
    if m == 'specl' or find(m, '^specl%.') then
       return true
    end
    return package.loaded[m] ~= nil and
-      searchpath(m, package.path) == nil and
-      searchpath(m, package.cpath) == nil
+      searchpath(m, path) == nil and
+      searchpath(m, cpath) == nil
+end
+
+
+-- Examples test the modules in the current tree, before any copy of
+-- them on the search paths, except for the modules they share.
+local tree_path, tree_cpath
+do
+   local dirsep, pathsep, mark = package.config:match('^(%S+)\n(%S+)\n(%S+)\n')
+   local ext = package.cpath:match('%' .. mark .. '(%.%w+)') or '.so'
+   local function template(...)
+      return concat({'.', ...}, dirsep)
+   end
+   tree_path = concat({
+      template('lib', mark .. '.lua'),
+      template('lib', mark, 'init.lua'),
+      template(mark .. '.lua'),
+      template(mark, 'init.lua'),
+   }, pathsep)
+   tree_cpath = concat({
+      template('lib', mark .. ext),
+      template(mark .. ext),
+   }, pathsep)
+end
+
+
+-- Return the loader function for module *m* in the current tree, or
+-- nil if it isn't there, or else nil and an error message.
+local function tree_loader(m)
+   local filename = searchpath(m, tree_path)
+   if filename then
+      return loadfile(filename)
+   end
+   filename = searchpath(m, tree_cpath)
+   if filename then
+      -- Like Lua, ignore any version prefix up to a hyphen.
+      local name = gsub(gsub(m, '^[^-]*%-', ''), '%.', '_')
+      return package.loadlib(filename, 'luaopen_' .. name)
+   end
 end
 
 
@@ -285,6 +329,13 @@ local function inner_closures(env, state)
 
       if loaded == nil then
          -- No side effects cached; find a loader function.
+         if loadfn == nil and cache == modules then
+            loadfn, errmsg = tree_loader(m)
+            if errmsg ~= nil then
+               package.path, package.cpath = save.path, save.cpath
+               return error(errmsg)
+            end
+         end
          if loadfn == nil then
             errmsg = ''
             for _, loader in ipairs(package.searchers) do

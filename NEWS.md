@@ -93,6 +93,14 @@
     gives the spec file and line where it happened, instead of a
     position in `[string "..."]`.
 
+  - An example's `require` loads a Lua or C module from the current
+    tree, `./lib` or `.`, before looking on the search paths, so a spec
+    tests the code in the tree it runs from, even when a copy of the
+    same module is installed, or luarocks' searcher prefers an
+    installed rock.  Modules not in the current tree, such as
+    dependencies, are found on the search paths as before.  An example
+    that trims its search paths no longer gets specl's own copy of a
+    module that isn't on them.
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 
