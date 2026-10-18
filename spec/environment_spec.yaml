@@ -187,8 +187,10 @@ describe environments:
       - before: |
           base = Tmpdir ()
           rocks, dir = base:subdir "rocks", base:subdir "path"
+          own = rocks:subdir "specl"
           files = {
             rocks:file ("installed.lua", "return 'from the specl tree'"),
+            own:file ("needy.lua", "return require 'installed'"),
             dir:file ("dependency.lua", "return 'from LUA_PATH'"),
           }
           -- Like a luarocks wrapper, run specl with the tree it was
@@ -207,7 +209,7 @@ describe environments:
           end
       - after: |
           for _, f in ipairs (files) do f:remove () end
-          rocks:remove () dir:remove () base:remove ()
+          own:remove () rocks:remove () dir:remove () base:remove ()
       - it doesn't search the tree the wrapper added: |
           expect (run_wrapped (dir.path .. "/?.lua",
             "expect (require 'installed').to_raise ()")).to_succeed ()
@@ -223,6 +225,9 @@ describe environments:
       - it finds specl's own modules with an empty LUA_PATH: |
           expect (run_wrapped ("",
             "expect (type (require 'specl.shell'.spawn)).to_be 'function'")).to_succeed ()
+      - it finds the dependencies of specl's own modules where specl found them: |
+          expect (run_wrapped (dir.path .. "/?.lua",
+            "expect (require 'specl.needy').to_be 'from the specl tree'")).to_succeed ()
 
 - describe load:
     - before:

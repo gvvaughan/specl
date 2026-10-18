@@ -207,9 +207,11 @@ local _ENV = {
    package = package,
    pcall = pcall,
    pending = require 'specl.expect'.pending,
+   require = require,
    searchpath = _.compat.searchpath,
    select = select,
    setfenv = function() end,
+   setmetatable = setmetatable,
    tostring = tostring,
    type = type,
 }
@@ -349,6 +351,18 @@ local function inner_closures(env, state)
       return fn()
    end
 
+   -- Specl's own modules run in the example environment, so that their
+   -- side effects are captured too, but they find their dependencies
+   -- where specl found them.
+   local own_env = setmetatable({
+      require = function(m)
+         if shared(m) then
+            return env.require(m)
+         end
+         return with_paths(path, cpath, require, m)
+      end,
+   }, {__index = env, __newindex = env})
+
    -- For a not-yet-{pre,}loaded module, try to find it on the
    -- environment `package.path` using the system searchers, and cache any
    -- symbols that leak out(the side effects). Copy any leaked symbols
@@ -385,7 +399,7 @@ local function inner_closures(env, state)
          end
 
          -- Capture side effects.
-         setfenv(loadfn, env)
+         setfenv(loadfn, cache == modules and env or own_env)
          loaded = with_paths(spath, scpath, loadfn)
       end
 

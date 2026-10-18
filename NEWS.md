@@ -119,7 +119,8 @@
     that specl depends on, such as typecheck, is no longer found by an
     example unless it's installed where `LUA_PATH` looks.  A path with
     `;;` still searches specl's tree, which may also be the default.
-    Specl's own modules are still found where specl found the rest.
+    Specl's own modules, and the modules they require, are still found
+    where specl found the rest.
 
   - A module that raises an error while an example requires it no
     longer leaves the example's search paths in place for specl.
