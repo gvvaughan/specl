@@ -237,6 +237,44 @@ describe specl:
         expect (run_spec {"--color=no", tmp.path}).
           to_match_error (tmp.path .. ":8: .* near 'garbage'")
 
+  - context with Lua runtime errors:
+    - before: |
+        tmp = Tmpfile ()
+        function run (s)
+          tmp:append (s)
+          return run_spec {"-freport", tmp.path}
+        end
+    - after:
+        tmp:remove ()
+    - it reports an error in an example as a failure at its spec file line: |
+        expect (run "describe x:\n- it raises:\n    x = 1\n    error 'boom'\n").
+          to_contain_output (tmp.path .. ":4: boom")
+    - it runs the examples after an example that raises an error: |
+        expect (run "describe x:\n- it raises: error 'boom'\n- it passes: expect (1).to_be (1)\n").
+          to_contain_output "1 passed, 0 pending and 1 failed"
+    - it fails the run when an example raises an error: |
+        expect (run "describe x:\n- it raises: error 'boom'\n").to_exit (1)
+    - it reports the position of an error raised in a function an example calls: |
+        expect (run ("describe x:\n- before:\n    function boom () error 'boom' end\n" ..
+                     "- it raises: boom ()\n")).
+          to_contain_output (tmp.path .. ":3: boom")
+    - it counts an error in a pending example as pending: |
+        expect (run "describe x:\n- it is pending:\n    pending 'later'\n    error 'boom'\n").
+          to_contain_output "0 passed, 1 pending and 0 failed"
+    - it reports an error in a before block as a failure of its example: |
+        expect (run ("describe x:\n- before:\n    error 'boom'\n" ..
+                     "- it is skipped: expect (1).to_be (1)\n")).
+          to_contain_output (tmp.path .. ":3: boom")
+        expect (run_spec {"-freport", tmp.path}).
+          to_contain_output "0 passed, 0 pending and 1 failed"
+    - it reports an error in an after block as a failure of its example: |
+        expect (run ("describe x:\n- after:\n    error 'boom'\n" ..
+                     "- it passes: expect (1).to_be (1)\n")).
+          to_contain_output (tmp.path .. ":3: boom")
+        expect (run_spec {"-freport", tmp.path}).
+          to_contain_output "1 passed, 0 pending and 1 failed"
+
+
 - describe command line interface:
   - before: |
       yaml = "describe x:\n- it passes: expect (true).to_be (true)"

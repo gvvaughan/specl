@@ -8,6 +8,7 @@ local ipairs = ipairs
 local next = next
 local package = package
 local pairs = pairs
+local pcall = pcall
 local require = require
 local setfenv = setfenv or function() end
 local setmetatable = setmetatable
@@ -101,7 +102,10 @@ function run_example(state, definition, descriptions, fenv)
       local badargs = require 'specl.badargs'
       setfenv(badargs.diagnose, fenv)
       setfenv(definition.example, fenv)
-      definition.example()
+      local ok, err = pcall(definition.example)
+      if not ok then
+         expect.fail(state, err)
+      end
 
       local status = expect.status(state)
       state:accumulator(formatter.expectations(status, descriptions, state.opts))
@@ -117,6 +121,24 @@ function run_example(state, definition, descriptions, fenv)
    end
 
    return keepgoing
+end
+
+
+-- Run a before or after BLOCK in FENV, reporting an error it raises as
+-- a failure of the example or context DESCRIPTION, which starts at LINE.
+-- @treturn boolean whether BLOCK ran without error
+local function run_block(state, block, fenv, descriptions, description, line)
+   setfenv(block.example, fenv)
+   local ok, err = pcall(block.example)
+   if not ok then
+      insert(descriptions, description)
+      expect.init(state, line or block.line)
+      expect.fail(state, err)
+      local formatter = state.opts.formatter
+      state:accumulator(formatter.expectations(expect.status(state), descriptions, state.opts))
+      remove(descriptions)
+   end
+   return ok
 end
 
 
@@ -165,12 +187,11 @@ function run_examples(state, examples, descriptions, env)
          expect.init(state)
       end
 
-      if before ~= nil then
-         setfenv(before.example, fenv)
-         before.example()
-      end
+      if before ~= nil and not run_block(state, before, fenv, descriptions, description, line) then
+         -- Skip the example or context that its before block failed.
+         keepgoing = not state.opts.fail_fast
 
-      if definition.example then
+      elseif definition.example then
          -- An example, execute it.
          insert(descriptions, description)
          if run_example(state, definition, descriptions, fenv) == false then
@@ -184,9 +205,8 @@ function run_examples(state, examples, descriptions, env)
          end
       end
 
-      if after ~= nil then
-         setfenv(after.example, fenv)
-         after.example()
+      if after ~= nil and not run_block(state, after, fenv, descriptions, description, line) then
+         keepgoing = keepgoing and not state.opts.fail_fast
       end
 
       -- Now after's have executed, return false for --fail-fast.

@@ -86,6 +86,13 @@
     like an unknown adaptor does, instead of an internal "attempt to
     index a nil value" error from Specl's own code.
 
+  - An error raised while an example, or its `before` or `after`
+    block, runs is reported as a failure of that example, or as pending
+    inside a pending example, and the run carries on, instead of
+    aborting Specl with a traceback.  An error raised by example code
+    gives the spec file and line where it happened, instead of a
+    position in `[string "..."]`.
+
 
 ## Noteworthy changes in release 15.0 (2026-10-10) [stable]
 

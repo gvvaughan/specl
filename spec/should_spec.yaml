@@ -810,14 +810,14 @@ describe should matcher:
 
   - it diagnoses incompatible expect arguments:
       yaml = preamble .. "(1).should_equal.the_size_of {}"
-      expect (run_spec (yaml)).should_contain_error "table expected"
+      expect (run_spec (yaml)).should_contain_output "table expected"
   - it diagnoses incompatible adaptor arguments:
       yaml = preamble .. "({}).should_equal.the_size_of (1)"
-      expect (run_spec (yaml)).should_contain_error "table expected"
+      expect (run_spec (yaml)).should_contain_output "table expected"
   - it diagnoses unsupported matchers:
       yaml = preamble .. "({}).should_contain.the_size_of ({})"
       expect (run_spec (yaml)).
-        should_contain_error "unknown 'the_size_of' adaptor with 'should_contain'"
+        should_contain_output "unknown 'the_size_of' adaptor with 'should_contain'"
   - it displays the expected and actual output for failures:
       yaml = preamble .. "({1, 2, 3}).should_equal.the_size_of {'one'}"
       expect (run_spec (yaml)).

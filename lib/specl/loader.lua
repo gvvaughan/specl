@@ -7,6 +7,7 @@ local format = string.format
 local gmatch = string.gmatch
 local gsub = string.gsub
 local match = string.match
+local rep = string.rep
 local sub = string.sub
 
 local macro = require 'macro'
@@ -94,9 +95,11 @@ local parser_mt = {
          os.exit(1)
       end,
 
-      -- Compile S into a callable function, reporting errors relative to
-      -- FIRSTLINE, the line in the spec file where S starts, which
-      -- defaults to the line of the current event.
+      -- Compile S into a callable function, named for the spec file and
+      -- with S starting at FIRSTLINE, the line in the spec file where S
+      -- starts, so that errors from compiling or running it report spec
+      -- file positions.  FIRSTLINE defaults to the line of the current
+      -- event.
       compile = function(self, s, firstline)
          firstline = firstline or self.mark.line
          local f, errmsg = macro.substitute_tostring(s)
@@ -105,14 +108,7 @@ local parser_mt = {
             errmsg = format("%s:%d: parse error near 'expect', while collecting arguments",
                             self.filename, firstline)
          else
-            f, errmsg = load(f)
-         end
-         if f == nil then
-            local line, msg = match(errmsg, '%[string "[^"]*"%]:([1-9][0-9]*): (.*)$')
-            if msg ~= nil then
-               line = tonumber(line) + firstline - 1
-               errmsg = format('%s:%d: %s', self.filename, line, msg)
-            end
+            f, errmsg = load(rep('\n', firstline - 1) .. f, '@' .. self.filename)
          end
          if errmsg ~= nil then
             io.stderr:write(errmsg .. '\n')
@@ -308,18 +304,14 @@ local function Parser(filename, s, opts)
       -- strip leading './'
       filename = gsub(filename, catfile('^%.', ''), ''),
 
-      -- Used to simplify requiring from the spec file directory.
-      preamble = format([[
-         package.path = '%s'
-
-         -- Expand macros in spec_helper.
-         local loader = require 'specl.loader'
-         local spec_path = '%s'
-
-         -- Autoload spec_helper from spec-file directory, if any.
-         table.insert(package.searchers, 1, loader.expandmacros)
-         pcall(require, 'spec_helper')
-      ]], package.path, spec_path)
+      -- Used to simplify requiring from the spec file directory: set the
+      -- path, expand macros in spec_helper, and autoload spec_helper from
+      -- the spec-file directory, if any.  It shares the first line of a
+      -- before block, so that line numbers in the spec file still match.
+      preamble = format("package.path = '%s' " ..
+         "table.insert(package.searchers, 1, require 'specl.loader'.expandmacros) " ..
+         "pcall(require, 'spec_helper') ",
+         package.path),
    }
    return setmetatable(object, parser_mt)
 end

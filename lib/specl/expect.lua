@@ -213,6 +213,14 @@ local function expect(state, ok, actual, ...)
 end
 
 
+--- Fail the current example with an error it raised.
+-- @tparam table state shared with formatters
+-- @param err error object raised by the example
+local function fail(state, err)
+   score(state, false, false, 'error: ' .. tostring(err))
+end
+
+
 --- Mark an example as pending.
 -- @function pending
 -- @tparam table state shared with formatters
@@ -232,6 +240,7 @@ end
 
 return {
    expect = expect,
+   fail = fail,
    init = init,
    pending = pending,
    status = status,
