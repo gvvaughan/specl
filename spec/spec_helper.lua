@@ -122,7 +122,9 @@ Tmpfile = Object{
    _init = function(self, path, ...)
       if select('#', ...) == 0 then
          self.path = os.tmpname()
-         append(self.path, path, ...)
+         if path ~= nil then
+            append(self.path, path)
+         end
       else
          self.path = path
          append(path, ...)
