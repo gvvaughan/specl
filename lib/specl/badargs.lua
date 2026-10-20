@@ -70,6 +70,8 @@ local function showarg(types)
          t[i] = 'boolean'
       elseif argtype == 'func' then
          t[i] = 'function'
+      elseif argtype == 'functor' then
+         t[i] = 'functable'
       elseif argtype == 'int' then
          t[i] = 'integer'
       elseif argtype == 'file' then
@@ -193,8 +195,10 @@ local function extendarglist(arglist, i, argtype)
       arglist[i] = true
    elseif argtype == 'file' then
       arglist[i] = stderr
-   elseif argtype == 'func' or argtype == 'function' then
+   elseif argtype == 'func' or argtype == 'function' or argtype == 'callable' then
       arglist[i] = ipairs
+   elseif argtype == 'functable' or argtype == 'functor' then
+      arglist[i] = setmetatable({}, {__call = ipairs})
    elseif argtype == 'int' then
       arglist[i] = 42
    elseif sub(argtype, 1, 1) == '#' then
@@ -333,8 +337,11 @@ local format, getfenv, match, parsetypes, setfenv, split, unpack =
 --
 --     #table    accept any non-empty table
 --     any       accept any non-nil argument type
+--     callable  accept a function, or object with a __call metamethod
 --     file      accept an open file object
---     function  accept a function, or object with a __call metamethod
+--     func      accept a function
+--     functable accept an object with a __call metamethod
+--     functor   the same as functable
 --     int       accept an integer valued number
 --     list      accept a table where all keys are in a contiguous 1-base range
 --     #list     accept any non-empty list

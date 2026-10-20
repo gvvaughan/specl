@@ -173,3 +173,20 @@ specify badargs:
     - it diagnoses positional argument types: |
         expect (run_spec (argt)).
           to_contain_output "diagnoses argument #2 type not integer"
+
+  - context with callable parameters:
+    - before:
+        yaml   = preamble ..
+                 "  - it checks arguments after callable ones:\n" ..
+                 "      local decl = 'f (callable, functable, functor, int)'\n" ..
+                 "      f = require 'typecheck'.argscheck (decl, function () end)\n" ..
+                 "      badargs.diagnose (decl, f)"
+        argt = {"-freport", stdin = yaml}
+    - it exits successfully:
+        expect (run_spec (argt)).to_exit (0)
+    - it diagnoses argument types after callable parameters: |
+        expect (run_spec (argt)).
+          to_contain_output "diagnoses argument #4 type not integer"
+    - it describes functor parameters as functables: |
+        expect (run_spec (argt)).
+          to_contain_output "diagnoses argument #3 type not functable"

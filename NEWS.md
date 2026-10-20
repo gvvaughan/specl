@@ -42,6 +42,11 @@
 
 ### Bug fixes:
 
+  - `badargs.diagnose` passes a valid argument for typecheck's
+    `callable`, `functable` and `functor` parameters, instead of
+    leaving it missing, so it diagnoses the parameters after them
+    correctly.
+
   - An expectation whose subject has a type its matcher doesn't
     accept, such as `expect(nil).to_contain 'x'`, fails with a message
     naming the types expected and the subject, whether or not it uses
