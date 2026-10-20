@@ -36,7 +36,8 @@
     42 is built on instead: std.normalize, std.prototype, std._debug,
     optparse and typecheck, and keeps its own copies of the few
     functions they don't provide.  The fields of `specl.std`, which
-    custom formatters may use, are unchanged.
+    custom formatters may use, are unchanged.  This needs std.prototype
+    2 or later, since 1.1 fails to load alongside std.strict.
 
   - Specl now depends on typecheck 4.  `badargs.diagnose` reads its
     declaration with typecheck's own parser, so it generates examples

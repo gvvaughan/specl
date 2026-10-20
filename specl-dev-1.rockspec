@@ -25,7 +25,7 @@ dependencies = {
    'optparse >= 1.6',
    'std._debug',
    'std.normalize >= 2.0',
-   'std.prototype',
+   'std.prototype >= 2',
    'typecheck >= 4',
 }
 
