@@ -7,7 +7,7 @@
   - `badargs.diagnose` accepts typecheck's angle bracketed optional
     parameters, which can't be skipped, such as `<?int>` in
     `'string.find(string, string, <?int>, <?boolean>)'`, and doesn't
-    expect a missing one to be diagnosed.  This needs typecheck 3.2 or
+    expect a missing one to be diagnosed.  This needs typecheck 4 or
     later.
 
   - Example `load` and `loadfile` support the Lua 5.2+ `mode` and `env`
@@ -38,7 +38,7 @@
     functions they don't provide.  The fields of `specl.std`, which
     custom formatters may use, are unchanged.
 
-  - Specl now depends on typecheck.  `badargs.diagnose` reads its
+  - Specl now depends on typecheck 4.  `badargs.diagnose` reads its
     declaration with typecheck's own parser, so it generates examples
     for exactly the declarations that `typecheck.argscheck` accepts,
     instead of using the copy of that parser in stdlib 41.

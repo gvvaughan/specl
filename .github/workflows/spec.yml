@@ -39,8 +39,6 @@ jobs:
           # gvvaughan/ldoc by hand, before anything else needs an ldoc.
           luarocks install --server=https://luarocks.org/manifests/gvvaughan ldoc
           printf gvvaughan > "$(luarocks show --rock-dir ldoc)/rock_namespace"
-          # Badargs needs typecheck features that are not released yet.
-          luarocks install https://raw.githubusercontent.com/gvvaughan/typecheck/master/typecheck-dev-1.rockspec
           luarocks test --prepare
 
       - name: build
