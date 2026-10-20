@@ -11,7 +11,6 @@ layout: default
  * self-contained execution environments ([environments](#3-environments))
  * flexible and customizable reporting ([formatters](#4-formatters))
  * a rich command line program (the [`specl` command](#5-command-line))
- * reference documentation for the Lua modules ([API docs][api])
 
 
 ## 1. Specifications
@@ -204,7 +203,7 @@ can easily add new ones if they make your expectations more expressive.
 The [next section](#2-matchers) describes the built in matchers in
 more detail.  The `specl.shell` module provides some specialist matchers
 for checking whether shell commands have behaved according to
-specifications; see [the section on shell commands](#61-shell-commands) for
+specifications; see [the section on shell commands](#shell-commands) for
 more details on those.
 
 ### 1.5. Pending Examples
@@ -340,7 +339,7 @@ kept in sync with the code being described.
 
 The matchers themselves are stored by just the root of their name (`be`
 in this case).  See
-[Inverting a Matcher with not](#28-inverting-a-matcher-with-not), for more
+[Inverting a Matcher with not](#inverting-a-matcher-with-not), for more
 about why that is.
 
 The matchers built in to [Specl] are listed below.
@@ -375,7 +374,7 @@ determine whether the result is less than the argument.
     expect (5).to_be.lt (42)
 {% endhighlight %}
 
-See [Matcher Adaptors](#29-matcher-adaptors) for more details about how
+See [Matcher Adaptors][#matcher-adaptors] for more details about how
 this adaptor works.  Note that unlike the general adaptors described in
 that section, the adaptors in this section are specific to the `be`
 matcher.
@@ -504,8 +503,10 @@ metamethod of any lua-stdlib `std.object` derived objects to coerce
 a table to test for matching keys or values in the expectation.
 
 If `expect` passes anything other than a string, table or `std.object`
-derivative to this matcher, [Specl] aborts with an error; use
-`tostring` or similar if you need to.
+derivative to this matcher, the expectation fails, whether or not it
+uses `not_to_contain`, with a message naming the types it expected
+and what it got instead; use `tostring` or similar if you need to
+compare something else.
 
 #### 2.4.1. contain.a_permutation_of
 
@@ -531,7 +532,7 @@ equivalent functionality - but `all_of` will not complain if `expect`
 was given more elements than those it is supposed `to_contain` at the time
 of comparison.
 
-See [Matcher Adaptors](#29-matcher-adaptors) for more details about how
+See [Matcher Adaptors][#matcher-adaptors] for more details about how
 adaptors are used.  Note that unlike the general adaptors described in
 that section, the `a_permutation_of` adaptor is specific to the
 `contain` matcher.
@@ -680,7 +681,7 @@ a whole to have passed if they are both the same according to a [Lua]
 Of course, our custom `be` matcher reimplementation is not available
 to spec files until it has been registered in [Specl]s matcher table.
 You can do this in a `before` block, or your `spec_helper.lua` (see
-[Separating Helper Functions](#33-separating-helper-functions)).
+[Separating Helper Functions](#separating-helper-functions)).
 
 {% highlight lua %}
     ...
@@ -754,25 +755,30 @@ more complicated shell output formatter (`specl.util.reformat`) are
 available in the source code, from `lib/specl/shell.lua`.
 
 One final feature of the `Matcher` constructor is that you can have it
-enforce a particular type (or types) for the `actual` parameter, by
-setting `actual_types` to a list of acceptable types.  For example,
-the built in `contain` matcher handles matching against both Lua string
-types and Lua tables:
+check the type of the `actual` parameter, by setting `actual_type` to
+the types it accepts, separated by `|`.  For example, the built in
+`contain` matcher handles matching against Lua strings, tables and
+objects:
 
 {% highlight lua %}
     matchers.matchers.contain = matchers.Matcher {
       ...
-      actual_type = {"string", "table"},
+      actual_type = "string|table|object",
     ...
 {% endhighlight %}
 
-Valid values for this list include any of the core Lua types as
-returned by the Lua `type` function, but also any extended types
-implemented as a table with a `type` field, such as the `process` and
-`command` objects defined by the `specl.shell` extensions, or anything
-else you care to build using the `specl.std.Object` base type (such
-as the `Matcher` factory object used throughout this section of the
-manual).
+Valid types include any of the core Lua types as returned by the Lua
+`type` function, but also any extended types implemented as a table
+with a `type` field, such as the `Process` and `Command` objects
+defined by the `specl.shell` extensions, or anything else you care to
+build using the `specl.std.Object` base type (such as the `Matcher`
+factory object used throughout this section of the manual).
+
+An expectation whose subject has none of those types fails, whether or
+not it uses `not_to_`, and [Specl] carries on with the rest of the
+examples, reporting the types expected and the subject:
+
+    expecting a string, table or object to contain "x", but got nil
 
 Adding custom matcher with this API automatically handles lookups
 with `to_` and inverting matchers with the `not_` string.
@@ -799,18 +805,17 @@ on the base `Matcher` object:
 {% endhighlight %}
 
 To add a custom adaptor to `be_again`, we simply define the custom
-adaptor method in the same way.  For consistency with the built in
-adaptors, I strongly recommend that you perform type checks against the
-`Matcher`'s `actual_type` field:
+adaptor method in the same way.  [Specl] checks the subject against the
+`Matcher`'s `actual_type` field before calling any adaptor, so the
+adaptor need only check its own argument:
 
 {% highlight lua %}
-    local util = require "specl.util"
+    local argcheck = require "specl.std".debug.argcheck
 
     matchers.matchers.be_again = Matcher {
       ...
       ["the_same_size_as?"] = function (self, actual, expected, ...)
-        util.type_check ("expect", {actual}, {self.actual_type})
-        util.type_check ("the_same_size_as", {expected}, {"#table"})
+        argcheck ("the_same_size_as", 1, "#table", expected)
 
         return (#actual == #expected),
           "expecting a table the same size as" ..
@@ -820,15 +825,10 @@ adaptors, I strongly recommend that you perform type checks against the
       ...
 {% endhighlight %}
 
-The utility function `type_check` checks that the types of each element
-of the table in argument 2 match one of the corresponding type names
-from argument 3, or else raise an error for mismatched arguments using
-the name given in argument 1.  So the first call to `type_check`
-enforces that `actual`, the argument to `"expect"`, matches one of the
-types listed in the object's `actual_type` field; and the next call
-enforces that `expected`, the argument to `"the_same_size_as"`, is a
-non-empty table. See the API documentation for more details of how to
-use `type_check`.
+The `argcheck` call raises an error unless `expected`, argument 1 to
+`"the_same_size_as"`, is a non-empty table, since an argument of the
+wrong type is a mistake in the spec file rather than a failed
+expectation.
 
 To make this adaptor work properly with [Specl], it must return a
 boolean decribing whether the adaptor matched successfully, followed by
@@ -977,7 +977,7 @@ Furthermore, [Specl] automatically loads the `spec_helper.lua` file in
 the function environment of the outer-most `before` block (a virtual
 `before` is created at runtime if necessary), so it has access to all
 of Specl's [Lua] extensions, such as `expect` and matchers.  See
-[Programmatic Specifications](#62-programmatic-specifications) for some
+[Programmatic Specifications](#programmatic-specifications) for some
 examples of how to take advantage of this.
 
 
@@ -1234,7 +1234,7 @@ and the like, so you could include the final example in addition to the
 first group selected above as follows:
 
 {% highlight bash %}
-    specl -e 'group one' -e '%w+%s*again$'
+    specl --e 'group one' -e '%w+%s*again$'
 {% endhighlight %}
 
 When invoked with `--verbose`, the `progress` and `report` formatters
@@ -1418,8 +1418,8 @@ standard output a `Process` should write throughout its execution:
 #### 6.1.6. contain_output
 
 Where the `output` matcher works with `Process` output in a similar
-way to how the [`be`](#21-be) matcher works with raw strings, this
-`contain_output` matcher is equivalent to [`contain`](#24-contain):
+way to how the [`be`](#be) matcher works with raw strings, this
+`contain_output` matcher is equivalent to [`contain`](#contain):
 
 {% highlight lua %}
     expect (shell.spawn "cat /etc/passwd").to_contain_output "root"
@@ -1428,9 +1428,9 @@ way to how the [`be`](#21-be) matcher works with raw strings, this
 #### 6.1.7. match_output
 
 Where the `contain_output` matcher works with `Process` output in a
-similar way to how the [`contain`](#24-contain) matcher works with raw
+similar way to how the [`contain`](#contain) matcher works with raw
 strings, this `match_output` matcher is equivalent to
-[`match`](#25-match):
+[`match`](#match):
 
 {% highlight lua %}
     expect (shell.spawn "echo $RANDOM").to_match_output "%d+"
@@ -1489,12 +1489,12 @@ this matcher:
 
 #### 6.1.12. contain_error
 
-Note that [the previous example](#6111-output_error) is likely to fail
+Note that [the previous example](#output_error) is likely to fail
 unexpectedly whenever `/bin/sh` outputs a different error message
 prefix, or if the error message text itself is slightly different on
 the host machine, or on a system with internationalised messages etc.
 
-Much like [`contain_output`](#616-contain_output), you can specify a
+Much like [`contain_output`](#contain_output), you can specify a
 substring to find in standard error with:
 
 {% highlight lua %}
@@ -1606,12 +1606,11 @@ No support for mocks in the current version.
 
 
 [alien]:    http://github.com/mascarenhas/alien
-[api]:      api/
 [bdd]:      http://en.wikipedia.org/wiki/Behavior-driven_development
 [lua]:      http://www.lua.org
 [luaposix]: http://github.com/luaposix/luaposix
 [rspec]:    http://github.com/rspec/rspec
 [specl]:    http://github.com/gvvaughan/specl
 [thunk]:    https://en.wikipedia.org/wiki/Thunk
-[yaml]:     https://yaml.org
+[yaml]:     http//yaml.org
 [lua patterns]: http://www.lua.org/manual/5.2/manual.html#6.4.1

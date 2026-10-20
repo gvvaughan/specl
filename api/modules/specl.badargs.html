@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>Specl 15.0 Reference</title>
+    <title>Specl 16 Reference</title>
     <link rel="stylesheet" href="../ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>Specl 15.0</h1>
+<h1>Specl 16</h1>
 
 
 <ul>
@@ -86,7 +86,7 @@
     <dd>
 
 <p>Generate examples to ensure a function satisfies its type signature.
- The <em>decl</em> string is a subset of the format used by <code>std.debug.argscheck</code>,
+ The <em>decl</em> string is a subset of the format used by <code>typecheck.argscheck</code>,
  the function name expected from argument error messages followed by a
  comma-delimited list of types in parentheses:</p>
 
@@ -102,6 +102,12 @@
 <pre><code> diagnose('table.insert(table, [int], ?any)', table.insert)
 </code></pre>
 
+<p> Or with angle brackets, if it can only be omitted along with every
+ argument after it:</p>
+
+<pre><code> diagnose('string.find(string, string, &lt;?int&gt;, &lt;?boolean&gt;)', string.find)
+</code></pre>
+
 <p> Finally, if an argument may be one of several types, list all options
  with <code>|</code> (pipe) between them:</p>
 
@@ -115,8 +121,11 @@
 
 <pre><code> #table    accept any non-empty table
  any       accept any non-nil argument type
+ callable  accept a function, or object with a __call metamethod
  file      accept an open file object
- function  accept a function, or object with a __call metamethod
+ func      accept a function
+ functable accept an object with a __call metamethod
+ functor   the same as functable
  int       accept an integer valued number
  list      accept a table where all keys are in a contiguous 1-base range
  #list     accept any non-empty list
@@ -130,7 +139,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">decl</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          argument type declaration
         </li>
         <li><span class="parameter">fn</span>
@@ -155,7 +164,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">fname</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          base-name of the erroring function
         </li>
         <li><span class="parameter">i</span>
@@ -163,16 +172,16 @@
          argument number
         </li>
         <li><span class="parameter">want</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          expected argument type
         </li>
         <li><span class="parameter">field</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          field name for error message
          (<em>optional</em>)
         </li>
         <li><span class="parameter">got</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          actual argument type
          (<em>default</em> 'no value')
         </li>
@@ -198,7 +207,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">fname</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          base-name of the orroring function
         </li>
         <li><span class="parameter">i</span>
@@ -206,11 +215,11 @@
          result number
         </li>
         <li><span class="parameter">want</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          expected result type
         </li>
         <li><span class="parameter">got</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          actual result type
          (<em>default</em> 'no value')
         </li>
@@ -232,7 +241,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/ldoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-10-10 18:38:32 </i>
+<i style="float:right;">Last updated 2026-10-20 13:29:26 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

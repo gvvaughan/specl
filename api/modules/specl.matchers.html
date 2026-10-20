@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>Specl 15.0 Reference</title>
+    <title>Specl 16 Reference</title>
     <link rel="stylesheet" href="../ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>Specl 15.0</h1>
+<h1>Specl 16</h1>
 
 
 <ul>
@@ -147,6 +147,12 @@
 	<tr>
 	<td class="name" nowrap><a href="#concat">concat (alternatives, adaptor, quoted)</a></td>
 	<td class="summary">Format <em>alternatives</em> with an <em>adaptor</em> appropriate infix.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mismatch">mismatch (actual, verb[, adaptor], expected)</a></td>
+	<td class="summary">Unless <em>actual</em> has this matcher's <code>actual_type</code>, the message for
+ failing <code>expect(actual).verb.adaptor(expected)</code>, whether or not
+ <em>verb</em> inverts the matcher, since no such subject can match.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#reformat">reformat (list, adaptor[, prefix='| '])</a></td>
@@ -300,7 +306,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">pattern</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          result must match this pattern
         </li>
     </ul>
@@ -321,7 +327,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">errmsg</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          substring of raised error message
         </li>
     </ul>
@@ -346,7 +352,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">pattern</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          error message must match this pattern
         </li>
     </ul>
@@ -601,7 +607,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">expected</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a> or <a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          result in any order
         </li>
     </ul>
@@ -631,11 +637,11 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">alternatives</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          table of expectations
         </li>
         <li><span class="parameter">adaptor</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          one of 'all of', 'any of' or 'a permutation of'
         </li>
         <li><span class="parameter">quoted</span>
@@ -644,6 +650,46 @@
         </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mismatch"></a>
+    <strong>mismatch (actual, verb[, adaptor], expected)</strong>
+    </dt>
+    <dd>
+    Unless <em>actual</em> has this matcher's <code>actual_type</code>, the message for
+ failing <code>expect(actual).verb.adaptor(expected)</code>, whether or not
+ <em>verb</em> inverts the matcher, since no such subject can match.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">actual</span>
+         result of running expectation
+        </li>
+        <li><span class="parameter">verb</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
+         such as 'not<em>to</em>contain'
+        </li>
+        <li><span class="parameter">adaptor</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
+         such as 'all_of'
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">expected</span>
+         argument to the matcher or adaptor
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a> or <span class="type">nil</span></span>
+        failure message, or nil if <em>actual</em> matches
+    </ol>
 
 
 
@@ -666,15 +712,15 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">list</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          of alternatives to act on
         </li>
         <li><span class="parameter">adaptor</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          one of 'all of', 'any of' or 'a permutation of'
         </li>
         <li><span class="parameter">prefix</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          output this at the start of every line
          (<em>default</em> '| ')
         </li>
@@ -683,7 +729,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         reformatted <em>text</em>
     </ol>
 
@@ -709,7 +755,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         string representation of <em>x</em>
     </ol>
 
@@ -746,7 +792,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/ldoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-10-10 18:38:32 </i>
+<i style="float:right;">Last updated 2026-10-20 13:29:26 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
