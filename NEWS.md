@@ -31,6 +31,13 @@
 
 ### Incompatible changes:
 
+  - Specl no longer depends on lua-stdlib.  It takes most of what it
+    used from lua-stdlib 41 from the separate packages that lua-stdlib
+    42 is built on instead: std.normalize, std.prototype, std._debug,
+    optparse and typecheck, and keeps its own copies of the few
+    functions they don't provide.  The fields of `specl.std`, which
+    custom formatters may use, are unchanged.
+
   - Specl now depends on typecheck.  `badargs.diagnose` reads its
     declaration with typecheck's own parser, so it generates examples
     for exactly the declarations that `typecheck.argscheck` accepts,

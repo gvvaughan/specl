@@ -35,6 +35,20 @@ local function formatter_opthandler(parser, opt, optarg)
 end
 
 
+-- TODO: Call parser:parse(arglist, defaults) instead when specl requires
+-- optparse >= 2, where a default no longer overrides an option that the
+-- command line set to false, such as --color=no.
+local function parse_with_defaults(parser, arglist, defaults)
+   local arg, opts = parser:parse(arglist)
+   for k, v in pairs(defaults or {}) do
+      if rawget(opts, k) == nil then
+         opts[k] = v
+      end
+   end
+   return arg, opts
+end
+
+
 -- Return `filename` if it has a specfile-like filename, else nil.
 local function specfilter(_, filename)
    return match(filename, '_spec%.yaml$') and filename or nil
@@ -152,7 +166,7 @@ local function execute(self)
    -- Unicode spec files need no option any more, but accept the old one.
    parser:on('unicode', parser.flag)
 
-   self.arg, self.opts = parser:parse(self.arg, self.opts)
+   self.arg, self.opts = parse_with_defaults(parser, self.arg, self.opts)
 
    -- When opt.example is non-nil, it must be a table.
    if self.opts.example and type(self.opts.example) ~= 'table' then

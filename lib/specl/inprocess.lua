@@ -433,6 +433,6 @@ end
 
 --- @export
 return {
-   call = X('call(Main, ?table, ?string)', call),
-   capture = X('capture(function, ?table, ?string)', capture),
+   call = X('call(Main, [?table], [?string])', call),
+   capture = X('capture(callable, [?table], [?string])', capture),
 }

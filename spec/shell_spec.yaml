@@ -20,7 +20,7 @@ before: |
 describe shell:
 - describe Command instance:
   - it diagnoses incompatible arguments:
-      expect (Command ()).to_raise "string or table expected, got no value"
+      expect (Command ()).to_raise "string or table expected, got nil"
       expect (Command (function () end)).
         to_raise "string or table expected, got function"
 
@@ -31,7 +31,7 @@ describe shell:
 
 - describe spawn:
   - it diagnoses incompatible arguments:
-      expect (spawn ()).to_raise "string, table or Command expected"
+      expect (spawn ()).to_raise "Command, string or table expected"
 
   - it is a process factory:
       expect (spawn (Command "echo")).to_instantiate_a "Process"

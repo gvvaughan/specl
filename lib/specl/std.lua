@@ -3,56 +3,30 @@
  Copyright (C) 2014-2026 Gary V. Vaughan
 ]]
 
--- First handle debug_init and _DEBUG, being careful not to affect
--- DEBUG disposition of subsequent example loaders for std.debug_init!
-local _DEBUG = require 'std.debug_init'._DEBUG
-_DEBUG.argcheck = true
+-- Check arguments to specl's own functions.  Examples load a separate
+-- copy of std._debug, so this doesn't change the code under test.
+require 'std._debug'.argcheck = true
 
 
--- Handle to the stdlib modules.
-local M = require 'std'
+local normalize = require 'std.normalize'
+local object = require 'std.prototype.object'
+local optparse = require 'optparse'
+local typecheck = require 'typecheck'
 
--- Check minimum version requirement.
-M.require('std', '41')
-
-
-local F = M.functional
-local lambda, map, reduce = F.lambda, F.map, F.reduce
-local set = M.operator.set
+local concat = table.concat
+local find = string.find
+local format = string.format
+local getmetamethod = normalize.getmetamethod
+local gsub = string.gsub
+local match = string.match
+local sub = string.sub
 local tostring = _G.tostring
 local type = _G.type
 
--- Use std.optparse if available, otherwise standalone optparse module.
-local ok
-ok, M.optparse = pcall(require, 'std.optparse')
-if not ok then
-   M.optparse = require 'optparse'
-end
+local dirsep = normalize.package.dirsep
+local path_mark = normalize.package.pathmark
+local pathsep = normalize.package.pathsep
 
-
--- Cache submodule handles into local `std` above.
-reduce(set, M,
-   map(lambda "_2, require('std.' .. _2)", {
-      'container',
-      'debug',
-      'functional',
-      'io',
-      'list',
-      'math',
-      'object',
-      'package',
-      'set',
-      'strbuf',
-      'string',
-      'table',
-      'tree',
-   })
-)
-
-
--- Overwrite with implementations copied from unreleased git stdlib master.
--- We are using these already, even though there isn't a released stdlib
--- that exports them yet.
 
 local function copy(src)
    local dest = {}
@@ -87,17 +61,6 @@ local function opairs(t)
          return k, t[k]
       end
    end, _t, nil
-end
-
-
-local function getmetamethod(x, n)
-   local m = (getmetatable(x) or {})[n]
-   if type(m) == 'function' then
-      return m
-   end
-   if type((getmetatable(m) or {}).__call) == 'function' then
-      return m
-   end
 end
 
 
@@ -170,12 +133,9 @@ local function render(x, elem, roots)
 end
 
 
--- Upto std 41.2, std.object returns an actual object, so we have to
--- inject type into the metatable, otherwise std.object is a module
--- and we can inject the type method directly.
-local objectmethods = (getmetatable(M.object) or {}).__index or M.object
-
-function objectmethods.type(x)
+-- Unlike std.prototype.object.type, fall back to io.type and type for
+-- values that aren't objects.
+local function objtype(x)
    return(getmetatable(x) or {})._type or io.type(x) or type(x)
 end
 
@@ -190,76 +150,376 @@ local function mnemonic(x)
 end
 
 
-M.operator = {
-   eqv = function(a, b)
-      if a == b then
-         return true
-      end
-      if type(a) ~= 'table' or type(b) ~= 'table' then
-         return false
-      end
-      return mnemonic(a) == mnemonic(b)
-   end,
-}
+
+--[[ ================================================================= ]]--
+--[[ Copies of what specl uses from lua-stdlib 42, which no package     ]]--
+--[[ broken out of lua-stdlib provides yet.  Each 'TODO: stdlib 42'     ]]--
+--[[ names the original: replace the copy with a dependency on the      ]]--
+--[[ package that provides it, once one is released.                    ]]--
+--[[ ================================================================= ]]--
 
 
-M.string.tostring = str
-
-M.tostring = M.string.tostring
-
-
--- We rely on choosing correctly between [gs]etfenv and debug.[gs]etfenv
--- in Lua 5.1 based on the object type; but released stdlib still tries
--- to pass stack offsets to debug.[gs]etfenv, which doesn't work.
-
-if debug.getfenv then
-
-   M.getfenv = function(fn)
-      fn = fn or 1
-
-      local type_fn = type(fn)
-      if type_fn == 'table' then
-         fn = (getmetatable(fn) or {}).__call or fn
-      elseif type_fn == 'number' and fn > 0 then
-         fn = fn + 1
-      end
-
-      if type(fn) == 'function' then
-         return debug.getfenv(fn)
-      end
-      return getfenv(fn), nil
+-- TODO: Use std.functional.case when specl requires std.functional >= 2.
+local function case(with, branches)
+   local branch = branches[with] or branches[1]
+   if type(branch) == 'function' or getmetamethod(branch, '__call') then
+      return branch(with)
    end
-
-   M.setfenv = function(fn, env)
-      fn = fn or 1
-
-      local type_fn = type(fn)
-      if type_fn == 'table' then
-         fn = (getmetatable(fn) or {}).__call or fn
-      elseif type_fn == 'number' and fn > 0 then
-         fn = fn + 1
-      end
-
-      if type(fn) == 'function' then
-         return debug.setfenv(fn, env)
-      end
-      return setfenv(fn, env), nil
-   end
-
-else
-
-   M.getfenv = M.debug.getfenv
-   M.setfenv = M.debug.setfenv
-
+   return branch
 end
 
-M.debug.getfenv = nil
-M.debug.setfenv = nil
 
+-- TODO: Use std.functional.map when specl requires std.functional >= 2.
+-- Specl only maps over lists, so this keeps their order.
+local function map(fn, t)
+   local r = {}
+   for i, v in ipairs(t) do
+      r[#r + 1] = fn(i, v)
+   end
+   return r
+end
+
+
+-- TODO: stdlib 42 std.io.catfile.
+local function catfile(...)
+   return concat({...}, dirsep)
+end
+
+
+-- TODO: stdlib 42 std.io.dirname.
+local function dirname(path)
+   return(gsub(path, catfile('', '[^', ']*$'), ''))
+end
+
+
+-- TODO: stdlib 42 std.io.slurp, for a file name or handle.
+local function slurp(file)
+   local h, err = file, nil
+   if type(file) == 'string' then
+      h, err = io.open(file)
+      if h == nil then
+         error(err, 2)
+      end
+   end
+   local s = h:read '*a'
+   h:close()
+   return s
+end
+
+
+-- TODO: stdlib 42 std.io.writelines, for a file handle and strings.
+local function writelines(h, ...)
+   for i = 1, select('#', ...) do
+      h:write((select(i, ...)), '\n')
+   end
+end
+
+
+-- TODO: stdlib 42 std.string.escape_pattern.
+local function escape_pattern(s)
+   return(gsub(s, '[%^%$%(%)%%%.%[%]%*%+%-%?]', '%%%0'))
+end
+
+
+-- TODO: stdlib 42 std.string.chomp.
+local function chomp(s)
+   return(gsub(s, '\n$', ''))
+end
+
+
+-- TODO: stdlib 42 std.string.split.
+local function split(s, sep)
+   local r, patt = {}
+   if sep == '' then
+      patt = '(.)'
+      r[#r + 1] = ''
+   else
+      patt = '(.-)' ..(sep or '%s+')
+   end
+   local b, slen = 0, #s
+   while b <= slen do
+      local _, n, m = find(s, patt, b + 1)
+      r[#r + 1] = m or sub(s, b + 1, slen)
+      b = n or slen + 1
+   end
+   return r
+end
+
+
+-- TODO: stdlib 42 std.string.pickle.
+local function serialize(x, roots)
+   local t = type(x)
+   if t == 'string' then
+      return format('%q', x)
+   elseif t == 'number' then
+      if x ~= x then
+         return '0/0'
+      elseif x == math.huge then
+         return '1/0'
+      elseif x == -math.huge then
+         return '-1/0'
+      end
+      local s = tostring(x)
+      if tonumber(s) ~= x then
+         s = format('%.17g', x)
+      end
+      return s
+   elseif t == 'boolean' or t == 'nil' then
+      return tostring(x)
+   elseif t == 'table' then
+      if roots[x] then
+         return nil, 'cannot pickle recursive table'
+      end
+      roots[x] = true
+      local buf = {}
+      for k in opairs(x) do
+         local ks, err = serialize(k, roots)
+         if ks == nil then
+            return nil, err
+         end
+         local vs
+         vs, err = serialize(x[k], roots)
+         if vs == nil then
+            return nil, err
+         end
+         buf[#buf + 1] = '[' .. ks .. ']=' .. vs
+      end
+      roots[x] = nil
+      return '{' .. concat(buf, ',') .. '}'
+   end
+   return nil, 'cannot pickle ' .. tostring(x)
+end
+
+local function pickle(x)
+   local s, err = serialize(x, {})
+   if s == nil then
+      error(err, 2)
+   end
+   return s
+end
+
+
+-- TODO: stdlib 42 std.string.prettytostring, over std.normalize's
+-- string.render.
+local function prettytostring(x, indent, spacing)
+   indent = indent or '\t'
+   spacing = spacing or ''
+   return normalize.string.render(x, {
+      term = function(x)
+         return type(x) ~= 'table' or getmetamethod(x, '__tostring')
+      end,
+      elem = function(x)
+         return type(x) == 'string' and format('%q', x) or tostring(x)
+      end,
+      sort = function(keylist)
+         table.sort(keylist, keysort)
+         return keylist
+      end,
+      open = function()
+         local s = spacing .. '{'
+         spacing = spacing .. indent
+         return s
+      end,
+      close = function()
+         spacing = gsub(spacing, indent .. '$', '')
+         return spacing .. '}'
+      end,
+      pair = function(_, _, _, k, v, kstr, vstr)
+         local type_k = type(k)
+         local s = spacing
+         if type_k ~= 'string' or match(k, '[^%w_]') then
+            s = s .. '['
+            if type_k == 'table' then
+               s = s .. '\n'
+            end
+            s = s .. kstr
+            if type_k == 'table' then
+               s = s .. '\n'
+            end
+            s = s .. ']'
+         else
+            s = s .. k
+         end
+         s = s .. ' ='
+         if type(v) == 'table' then
+            s = s .. '\n'
+         else
+            s = s .. ' '
+         end
+         return s .. vstr
+      end,
+      sep = function(_, k)
+         local s = '\n'
+         if k then
+            s = ',' .. s
+         end
+         return s
+      end,
+   })
+end
+
+
+-- TODO: stdlib 42 std.package.normalize.
+local function pathsub(path)
+   return(gsub(path, '%%?.', function(capture)
+      if capture == '?' then
+         return path_mark
+      elseif capture == '/' then
+         return dirsep
+      else
+         return(gsub(capture, '^%%', '', 1))
+      end
+   end))
+end
+
+local function normalize_path(...)
+   local i, paths = 1, {}
+   for _, path in ipairs(split(concat({...}, pathsep), pathsep)) do
+      path = gsub(pathsub(path), catfile('^[^', ']'), catfile('.', '%0'))
+      path = gsub(path, catfile('', '%.', ''), dirsep)
+      path = gsub(path, catfile('', '%.$'), '')
+      path = gsub(path, catfile('^%.', '%..', ''), catfile('..', ''))
+      path = gsub(path, catfile('', '$'), '')
+
+      -- Carefully remove redundant /foo/../ matches.
+      repeat
+         local again = false
+         path = gsub(path, catfile('', '([^', ']+)', '%.%.', ''),
+            function(dir1)
+               if dir1 == '..' then   -- don't remove /../../
+                  return catfile('', '..', '..', '')
+               else
+                  again = true
+                  return dirsep
+               end
+            end)
+         path = gsub(path, catfile('', '([^', ']+)', '%.%.$'),
+            function(dir1)
+               if dir1 == '..' then -- don't remove /../..
+                  return catfile('', '..', '..')
+               else
+                  again = true
+                  return ''
+               end
+            end)
+      until again == false
+
+      -- Eliminate duplicates after normalization.
+      if not paths[path] then
+         paths[path], i = i, i + 1
+      end
+   end
+   local r = {}
+   for path, n in pairs(paths) do
+      r[n] = path
+   end
+   return concat(r, pathsep)
+end
+
+
+-- TODO: stdlib 42 std.table.merge, without its map and nometa options.
+local function merge(t, u)
+   setmetatable(t, getmetatable(u))
+   for k, v in pairs(u) do
+      t[k] = v
+   end
+   return t
+end
+
+
+-- TODO: stdlib 42 std.table.clone, without its map and nometa options.
+local function clone(t)
+   return merge({}, t)
+end
+
+
+-- TODO: stdlib 42 std.table.empty.
+local function empty(t)
+   return not next(t)
+end
+
+
+-- TODO: stdlib 42 std.table.invert.
+local function invert(t)
+   local i = {}
+   for k, v in pairs(t) do
+      i[v] = k
+   end
+   return i
+end
+
+
+-- TODO: stdlib 42 std.table.size.
+local function size(t)
+   local n = 0
+   for _ in pairs(t) do
+      n = n + 1
+   end
+   return n
+end
 
 
 --[[ ================= ]]--
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
 
-return M
+
+return {
+   debug = {
+      argcheck = typecheck.argcheck,
+      argscheck = typecheck.argscheck,
+   },
+   functional = {
+      case = case,
+      map = map,
+   },
+   getfenv = normalize.getfenv,
+   getmetamethod = getmetamethod,
+   io = {
+      catfile = catfile,
+      dirname = dirname,
+      slurp = slurp,
+      writelines = writelines,
+   },
+   object = setmetatable({type = objtype}, {
+      __call = function(_, ...)
+         return object(...)
+      end,
+   }),
+   operator = {
+      eqv = function(a, b)
+         if a == b then
+            return true
+         end
+         if type(a) ~= 'table' or type(b) ~= 'table' then
+            return false
+         end
+         return mnemonic(a) == mnemonic(b)
+      end,
+   },
+   optparse = optparse,
+   package = {
+      dirsep = dirsep,
+      normalize = normalize_path,
+      path_mark = path_mark,
+      pathsep = pathsep,
+   },
+   setfenv = normalize.setfenv,
+   string = {
+      chomp = chomp,
+      escape_pattern = escape_pattern,
+      pickle = pickle,
+      prettytostring = prettytostring,
+      split = split,
+      tostring = str,
+   },
+   table = {
+      clone = clone,
+      empty = empty,
+      invert = invert,
+      merge = merge,
+      size = size,
+      unpack = normalize.unpack,
+   },
+   tostring = str,
+}

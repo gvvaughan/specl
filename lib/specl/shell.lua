@@ -57,7 +57,8 @@ local Command = Object {
    _type = 'Command',
 
    _init = function(self, params)
-      argcheck('Command', 1, 'string|table', params)
+      -- Blame the caller of the Command constructor.
+      argcheck('Command', 1, 'string|table', params, 3)
 
       if type(params) ~= 'table' then
          params = {params}
