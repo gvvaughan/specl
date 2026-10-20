@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 16 (2026-10-20) [stable]
+
 ### New features:
 
   - `badargs.diagnose` accepts typecheck's angle bracketed optional
