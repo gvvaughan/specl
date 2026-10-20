@@ -13,7 +13,6 @@ local version = require 'specl.version'
 
 local object, optparse = std.object, std.optparse
 local map = std.functional.map
-local slurp = std.io.slurp
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy, files, gettimeofday = 
    util.deepcopy, util.files, util.gettimeofday
@@ -39,6 +38,16 @@ end
 -- Return `filename` if it has a specfile-like filename, else nil.
 local function specfilter(_, filename)
    return match(filename, '_spec%.yaml$') and filename or nil
+end
+
+
+-- Read and close the current input, which process_args() sets through
+-- the global io table, so that inprocess.call can redirect it.
+local function slurp()
+   local h = io.input()
+   local s, errmsg = h:read '*a'
+   h:close()
+   return s, errmsg
 end
 
 
@@ -115,6 +124,26 @@ end
 local function execute(self)
    -- Parse command line options.
    local parser = optparse(optspec)
+
+   -- optparse writes with the io, os and print it found when it loaded,
+   -- so go through the globals instead, which inprocess.call redirects.
+   -- This opterr writes the same messages as optparse's own.
+   function parser:opterr(msg)
+      if not match(msg, '%.$') then
+         msg = msg .. '.'
+      end
+      io.stderr:write(self.program .. ': error: ' .. msg .. '\n')
+      io.stderr:write(self.program .. ": Try '" .. self.program .. " --help' for help.\n")
+      os.exit(2)
+   end
+   parser:on('help', function(self)
+      print(self.helptext)
+      os.exit(0)
+   end)
+   parser:on('version', function(self)
+      print(self.versiontext)
+      os.exit(0)
+   end)
 
    parser:on('color', parser.required, parser.boolean)
    parser:on({'f', 'format', 'formatter'},
