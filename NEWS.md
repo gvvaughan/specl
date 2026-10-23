@@ -4,6 +4,11 @@
 
 ### Bug fixes
 
+  - Specl runs alongside luaposix 38, which removes the legacy
+    `posix.stat` and `posix.gettimeofday` that Specl used, by using
+    luaposix's `posix.sys.stat` and `posix.sys.time` instead, as found
+    in luaposix 33 and later.
+
   - Specl loads the spec files in the subdirectories of a directory
     named on the command line again, rather than stopping with
     "attempt to call a nil value (global 'files')".

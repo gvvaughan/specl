@@ -62,7 +62,7 @@ specify util:
 
 - describe files:
   - before:
-      have_posix = pcall (require, "posix")
+      have_posix = pcall (require, "posix.dirent")
 
   - it lists the files under a directory, recursively:
       if have_posix then
@@ -74,6 +74,8 @@ specify util:
       end
 
 - describe gettimeofday:
+  - it returns a time that timesince can measure from:
+      expect (util.timesince (util.gettimeofday ()) >= 0).to_be (true)
 
 - describe indent:
 
@@ -104,6 +106,11 @@ specify util:
       expect (fn " \n\r\t").to_be ""
 
 - describe timesince:
+  - it returns the seconds elapsed since an earlier time:
+      local earlier = util.gettimeofday ()
+      local t = util.timesince (earlier)
+      expect (type (t)).to_be "number"
+      expect (t >= 0 and t < 60).to_be (true)
 
 - describe type:
 

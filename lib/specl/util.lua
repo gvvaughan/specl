@@ -3,7 +3,11 @@
  Copyright (C) 2013-2026 Gary V. Vaughan
 ]]
 
-local have_posix, posix = pcall(require, 'posix')
+-- Only luaposix's submodules, whose APIs are the same in every release
+-- since 33, unlike the legacy functions of its `posix` module.
+local have_posix, dirent = pcall(require, 'posix.dirent')
+local sys_stat = have_posix and require 'posix.sys.stat'
+local sys_time = have_posix and require 'posix.sys.time'
 
 
 local _ = {
@@ -136,8 +140,6 @@ local M = {
 }
 
 
-local timersub = false
-
 if not have_posix then
 
    M.files = function(root, t)
@@ -148,10 +150,11 @@ else
 
    M.files = function(root, t)
       t = t or {}
-      for _, file in ipairs(posix.dir(root) or {}) do
+      for _, file in ipairs(dirent.dir(root) or {}) do
          if file ~= '.' and file ~= '..' then
             local path = catfile(root, file)
-            if posix.stat(path).type == 'directory' then
+            local info = sys_stat.lstat(path)
+            if info and sys_stat.S_ISDIR(info.st_mode) ~= 0 then
                t = M.files(path, t)
             else
                t[#t + 1] = path
@@ -161,18 +164,17 @@ else
       return t
    end
 
-   timersub = posix.sys and posix.sys.timersub or posix.timersub
-
 end
 
 
 -- Use higher resolution timers from luaposix if available.
-if timersub then
-   M.gettimeofday = posix.gettimeofday
+if have_posix then
+   M.gettimeofday = sys_time.gettimeofday
 
    M.timesince = function(earlier)
-      local elapsed = timersub(M.gettimeofday(), earlier)
-      return(elapsed.usec / 1000000) + elapsed.sec
+      local now = M.gettimeofday()
+      return(now.tv_sec - earlier.tv_sec) +
+         (now.tv_usec - earlier.tv_usec) / 1000000
    end
 
 else
