@@ -1,7 +1,5 @@
 # Specl NEWS - User visible changes.
 
-## Noteworthy changes in release ?.? (????-??-??) [?]
-
 
 ## Noteworthy changes in release 16.1 (2026-10-22) [stable]
 
