@@ -2,6 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - Specl loads the spec files in the subdirectories of a directory
+    named on the command line again, rather than stopping with
+    "attempt to call a nil value (global 'files')".
+
 
 ## Noteworthy changes in release 16 (2026-10-20) [stable]
 

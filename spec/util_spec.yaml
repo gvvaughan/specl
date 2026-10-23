@@ -61,6 +61,17 @@ specify util:
 - describe examplename:
 
 - describe files:
+  - before:
+      have_posix = pcall (require, "posix")
+
+  - it lists the files under a directory, recursively:
+      if have_posix then
+        expect (util.files "spec").to_contain "spec/formatter/report_spec.yaml"
+      end
+  - it explains that it needs luaposix without it:
+      if not have_posix then
+        expect (select (2, util.files "spec")).to_contain "install luaposix"
+      end
 
 - describe gettimeofday:
 

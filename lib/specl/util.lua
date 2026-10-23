@@ -152,7 +152,7 @@ else
          if file ~= '.' and file ~= '..' then
             local path = catfile(root, file)
             if posix.stat(path).type == 'directory' then
-               t = files(path, t)
+               t = M.files(path, t)
             else
                t[#t + 1] = path
             end
