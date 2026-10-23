@@ -46,19 +46,61 @@ specify util:
         expect (fn (x, nil, "")).to_be (quoteconcat (x))
         expect (fn (x, nil, ":quoted")).to_be (quoteconcat (x))
       end
-  - it handles nil-valued elements:
-      pending "adopting std.normalize.ipairs"
-      expect (fn {nil, 1, nil, nil, false}).to_be "nil, 1, nil, nil, false"
   - it respects __len metamethod:
-      pending "adopting std.normalize.len and std.npairs"
-      local mt  = {__len = function (self) return self.n end}
-      Seq = function (...) return setmetatable (pack (...), mt) end
-      expect (fn (Seq (1, nil, false, nil, nil))).
-        to_be "1, nil, false, nil, nil"
+      t = setmetatable ({1, 2, 3}, {__len = function () return 2 end})
+      expect (fn (t)).to_be "1, 2"
+  - it handles the nil-valued elements of a packed list:
+      pack = require ("std.normalize").pack
+      expect (fn (pack (nil, 1, nil, nil, false))).
+        to_be "nil, 1, nil, nil, false"
 
 - describe deepcopy:
+  - before:
+      fn = util.deepcopy
+
+  - it copies a table:
+      t = {1, "two", three = {4}}
+      expect (fn (t)).to_equal (t)
+      expect (fn (t)).not_to_be (t)
+  - it copies nested tables:
+      t = {{1}, {2, {3}}}
+      expect (fn (t)[2][2]).to_equal {3}
+      expect (fn (t)[2][2]).not_to_be (t[2][2])
+  - it copies table keys:
+      k = {}
+      t = {[k] = "v"}
+      expect (next (fn (t))).not_to_be (k)
+      expect (select (2, next (fn (t)))).to_be "v"
+  - it copies metatables:
+      mt = {x = 1}
+      t = setmetatable ({}, mt)
+      expect (getmetatable (fn (t))).to_equal (mt)
+      expect (getmetatable (fn (t))).not_to_be (mt)
+  - it copies a table that is its own metatable:
+      t = {}
+      setmetatable (t, t)
+      c = fn (t)
+      expect (getmetatable (c)).to_be (c)
+      expect (c).not_to_be (t)
+  - it copies a table that contains itself:
+      t = {}
+      t.self = t
+      c = fn (t)
+      expect (c.self).to_be (c)
+      expect (c).not_to_be (t)
 
 - describe examplename:
+  - before:
+      fn = util.examplename
+
+  - it joins the descriptions after removing the first word of each:
+      expect (fn {"describe foo", "context with bar", "it does baz"}).
+        to_be "foo with bar does baz"
+  - it keeps every word after the first:
+      expect (fn {"it does a thing", "it is not what you expected"}).
+        to_be "does a thing is not what you expected"
+  - it returns the empty string for no descriptions:
+      expect (fn {}).to_be ""
 
 - describe files:
   - before:
@@ -78,8 +120,24 @@ specify util:
       expect (util.timesince (util.gettimeofday ()) >= 0).to_be (true)
 
 - describe indent:
+  - before:
+      fn = util.indent
+
+  - it returns no indent for the first description:
+      expect (fn {"describe x"}).to_be ""
+  - it returns three spaces for each description after the first:
+      expect (fn {"describe x", "it y"}).to_be "   "
+      expect (fn {"describe x", "context y", "it z"}).to_be "      "
 
 - describe nop:
+  - before:
+      fn = util.nop
+
+  - it accepts any number of arguments:
+      expect (fn ()).to_be (nil)
+      expect (fn (1, "two", {}, fn)).to_be (nil)
+  - it returns no values:
+      expect (select ("#", fn (1, 2, 3))).to_be (0)
 
 - describe strip1st:
   - before:
@@ -113,4 +171,19 @@ specify util:
       expect (t >= 0 and t < 60).to_be (true)
 
 - describe type:
+  - before:
+      fn = util.type
+
+  - it returns the name of a primitive type:
+      expect (fn (nil)).to_be "nil"
+      expect (fn (true)).to_be "boolean"
+      expect (fn (42)).to_be "number"
+      expect (fn ("str")).to_be "string"
+      expect (fn (fn)).to_be "function"
+  - it returns "object" for a table:
+      expect (fn {}).to_be "object"
+  - it returns "object" for a table with a metatable:
+      expect (fn (setmetatable ({}, {_type = "Foo"}))).to_be "object"
+  - it returns "table" for a table whose _type is "table":
+      expect (fn (setmetatable ({}, {_type = "table"}))).to_be "table"
 

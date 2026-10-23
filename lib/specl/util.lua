@@ -11,6 +11,7 @@ local sys_time = have_posix and require 'posix.sys.time'
 
 
 local _ = {
+   len = require 'std.normalize'.len,
    std = require 'specl.std',
 }
 
@@ -31,6 +32,7 @@ local _ENV = {
    concat = table.concat,
 
    catfile = _.std.io.catfile,
+   len = _.len,
    str = _.std.tostring,
 }
 setfenv(1, _ENV)
@@ -92,7 +94,8 @@ local M = {
    -- quoted using `string.format('%q')` before concatenation.
    concat = function(alternatives, infix, quoted)
       local buf = {}
-      for i, v in ipairs(alternatives) do
+      for i = 1, len(alternatives) do
+         local v = alternatives[i]
          if quoted ~= nil and isstring(v) then
             buf[i] = format('%q', v)
          else
