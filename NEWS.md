@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 16.1 (2026-10-22) [stable]
+
 ### Incompatible changes
 
   - Specl needs optparse 2, std.functional 2 and std.normalize 4 or
