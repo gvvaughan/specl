@@ -159,27 +159,6 @@ end
 --[[ ================================================================= ]]--
 
 
--- TODO: Use std.functional.case when specl requires std.functional >= 2.
-local function case(with, branches)
-   local branch = branches[with] or branches[1]
-   if type(branch) == 'function' or getmetamethod(branch, '__call') then
-      return branch(with)
-   end
-   return branch
-end
-
-
--- TODO: Use std.functional.map when specl requires std.functional >= 2.
--- Specl only maps over lists, so this keeps their order.
-local function map(fn, t)
-   local r = {}
-   for i, v in ipairs(t) do
-      r[#r + 1] = fn(i, v)
-   end
-   return r
-end
-
-
 -- TODO: stdlib 42 std.io.catfile.
 local function catfile(...)
    return concat({...}, dirsep)
@@ -468,10 +447,6 @@ return {
    debug = {
       argcheck = typecheck.argcheck,
       argscheck = typecheck.argscheck,
-   },
-   functional = {
-      case = case,
-      map = map,
    },
    getfenv = normalize.getfenv,
    getmetamethod = getmetamethod,

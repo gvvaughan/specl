@@ -22,9 +22,10 @@ dependencies = {
    'luamacro >= 2.5.1',
    'lua >= 5.1, < 5.6',
    'lyaml >= 5',
-   'optparse >= 1.6',
-   'std._debug',
-   'std.normalize >= 2.0',
+   'optparse >= 2',
+   'std._debug >= 1',
+   'std.functional >= 2',
+   'std.normalize >= 4',
    'std.prototype >= 2',
    'typecheck >= 4',
 }

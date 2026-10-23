@@ -12,7 +12,7 @@ local util = require 'specl.util'
 local version = require 'specl.version'
 
 local object, optparse = std.object, std.optparse
-local map = std.functional.map
+local filter = require 'std.functional.init'.filter
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy, files, gettimeofday = 
    util.deepcopy, util.files, util.gettimeofday
@@ -35,23 +35,9 @@ local function formatter_opthandler(parser, opt, optarg)
 end
 
 
--- TODO: Call parser:parse(arglist, defaults) instead when specl requires
--- optparse >= 2, where a default no longer overrides an option that the
--- command line set to false, such as --color=no.
-local function parse_with_defaults(parser, arglist, defaults)
-   local arg, opts = parser:parse(arglist)
-   for k, v in pairs(defaults or {}) do
-      if rawget(opts, k) == nil then
-         opts[k] = v
-      end
-   end
-   return arg, opts
-end
-
-
--- Return `filename` if it has a specfile-like filename, else nil.
-local function specfilter(_, filename)
-   return match(filename, '_spec%.yaml$') and filename or nil
+-- Whether *filename* is a specfile-like filename.
+local function specfilter(filename)
+   return match(filename, '_spec%.yaml$') ~= nil
 end
 
 
@@ -166,7 +152,7 @@ local function execute(self)
    -- Unicode spec files need no option any more, but accept the old one.
    parser:on('unicode', parser.flag)
 
-   self.arg, self.opts = parse_with_defaults(parser, self.arg, self.opts)
+   self.arg, self.opts = parser:parse(self.arg, self.opts)
 
    -- When opt.example is non-nil, it must be a table.
    if self.opts.example and type(self.opts.example) ~= 'table' then
@@ -179,7 +165,7 @@ local function execute(self)
       if specs == nil then
          parser:opterr(errmsg)
       else
-         self.arg = map(specfilter, specs)
+         self.arg = filter(specs, specfilter)
       end
    end
 

@@ -2,6 +2,14 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Incompatible changes
+
+  - Specl needs optparse 2, std.functional 2 and std.normalize 4 or
+    later.  It no longer carries private copies of `case` and `map`
+    from stdlib 41, or fills in optparse's defaults itself, and it no
+    longer works around the trailing `nil` that earlier std.normalize
+    releases' `getfenv` returned.
+
 ### Bug fixes
 
   - Specl runs alongside luaposix 38, which removes the legacy

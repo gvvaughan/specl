@@ -18,10 +18,11 @@ local shell = require 'specl.shell'
 local std = require 'specl.std'
 local util = require 'specl.util'
 
+local case = require 'std.functional.init'.case
 local xpcall = compat.xpcall
 local Process = shell.Process
 local getfenv, setfenv = std.getfenv, std.setfenv
-local case, object = std.functional.case, std.object
+local object = std.object
 local clone, merge, unpack = std.table.clone, std.table.merge, std.table.unpack
 local nop = util.nop
 
@@ -114,7 +115,7 @@ local StrFile = Object{
                      return sub(self.buffer, b, e)
                   end,
 
-                  function()
+                  default = function()
                      if type(fmts[i]) ~= 'number' then
                         return error("bad argument #1 to 'read'(invalid option)", 3)
                      end
@@ -295,7 +296,7 @@ local function capture(fn, arg, stdin)
          ['true'] = function()
             pstat = 0
          end,
-         function()
+         default = function()
             pstat = code
          end,
       })
@@ -365,7 +366,7 @@ local function call(main, arg, stdin)
             ['true'] = function()
                pstat = 0
             end,
-            function()
+            default = function()
                pstat = code
             end,
          })

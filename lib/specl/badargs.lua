@@ -369,8 +369,7 @@ local function diagnose(decl, fn)
 
    -- Ensure the following function is executed in the environment that
    -- this function is inside.
-   -- getfenv returns a trailing nil, which setfenv rejects.
-   setfenv(examples, (getfenv()))
+   setfenv(examples, getfenv())
 
    local arglist = {}
    for i, argtype in ipairs(specs) do
