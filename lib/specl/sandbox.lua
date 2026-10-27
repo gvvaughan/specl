@@ -149,7 +149,7 @@ local sandbox = {
       cpath = userpath(package.cpath, 'LUA_CPATH'),
       loadlib = package.loadlib,
       path = userpath(package.path, 'LUA_PATH'),
-      preload = package.preload,
+      preload = {},
       searchers = package.searchers or package.loaders,
       searchpath = _.normalize.package.searchpath,
    },
@@ -252,10 +252,16 @@ local modules = {}
 local path, cpath = package.path, package.cpath
 
 
+-- Whether *m* is one of specl's own modules.
+local function own(m)
+   return m == 'specl' or find(m, '^specl%.') ~= nil
+end
+
+
 -- Examples share specl's own modules, which hold the state of this run,
 -- and built-in libraries, which aren't on specl's search paths.
 local function shared(m)
-   if m == 'specl' or find(m, '^specl%.') then
+   if own(m) then
       return true
    end
    return package.loaded[m] ~= nil and
@@ -397,7 +403,11 @@ local function inner_closures(env, state)
       -- We can have a spec_helper.lua in each spec directory, so don't
       -- cache the side effects of a random one!
       if m ~= 'spec_helper' then
-         loaded, loadfn = cache[m], package.preload[m]
+         -- Specl's own modules are preloaded where specl keeps them, which
+         -- is in the bundle when it is smushed, and any other that an
+         -- example requires is preloaded by the example.
+         loaded = cache[m]
+         loadfn = (own(m) and package.preload or env.package.preload)[m]
       end
 
       if loaded == nil then

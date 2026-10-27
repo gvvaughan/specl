@@ -130,6 +130,11 @@ describe environments:
     - it supports requiring core modules:
         expect (type (require "os")).to_be "table"
         expect (type (require "io".open)).to_be "function"
+    - it loads a module that the example preloads:
+        package.preload.preloaded_by_example = function () return "preloaded" end
+        expect (require "preloaded_by_example").to_be "preloaded"
+    - it starts with nothing preloaded, so a library that specl itself bundles is not:
+        expect (next (package.preload)).to_be (nil)
     - context with a module that specl itself loaded:
       - before: |
           dir = Tmpdir ()
