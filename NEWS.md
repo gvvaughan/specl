@@ -38,13 +38,8 @@
 
 ### Bug fixes
 
-  - `luarocks install` and `luarocks make` no longer fail to build the
-    man page when help2man is installed, and specl's dependencies are
-    in a tree that Lua does not search by default, such as one given
-    with `--tree` or `--local`.
-
-  - The build runs `./specl --help` for the man page with the Lua that
-    it builds for, rather than with whichever `lua` is first on the
+  - The build runs `build-aux/specl --help` for the man page with the Lua
+    that it builds for, rather than with whichever `lua` is first on the
     `PATH`, which may not be there at all, and so fails the install when
     help2man is installed.
 
