@@ -1,0 +1,13 @@
+# Behaviour Driven Development for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+# Copyright (C) 2014-2026 Gary V. Vaughan
+
+before:
+  M = require 'specl.version'
+
+specify specl.version:
+- it is set:
+    expect(M.VERSION).not_to_be(nil)
+- it ends with the release number or the stamp of a development build:
+    expect(M.VERSION).to_match.any_of {'^%d[%.%d]*$', '^[%w_.-]+/%x+$'}
+- it is the version that is described:
+    expect(M.optspec).to_contain(M.VERSION)
