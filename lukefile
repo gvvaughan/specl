@@ -13,6 +13,12 @@ variables = {
    HELP2MAN = {checkprog='HELP2MAN', progs={'help2man', 'true'}},
 }
 
+-- ./specl finds its dependencies in TREE, which LuaRocks passes on the
+-- command line as the tree it installs into.
+substitute = {
+   TREE = '/usr/local',
+}
+
 ldocs    = 'build-aux/config.ld.in'
 
 modules  = {

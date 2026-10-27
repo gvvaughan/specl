@@ -37,6 +37,8 @@ build = {
       .. ' version="' .. _MODREV .. '"'
       .. ' PREFIX="$(PREFIX)"'
       .. ' LUA="$(LUA)"'
+      .. ' LUA_VERSION="$(LUA_VERSION)"'
+      .. ' TREE="$(SCRIPTS_DIR)/.."'
       ,
    install_command = '$(LUA) build-aux/luke install --quiet'
       .. ' INST_BINDIR="$(BINDIR)"'

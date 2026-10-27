@@ -2,6 +2,13 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - `luarocks install` and `luarocks make` no longer fail to build the
+    man page when help2man is installed, and specl's dependencies are
+    in a tree that Lua does not search by default, such as one given
+    with `--tree` or `--local`.
+
 
 ## Noteworthy changes in release 16.1 (2026-10-22) [stable]
 
