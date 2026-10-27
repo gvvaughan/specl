@@ -22,6 +22,6 @@ ${LUA_PATH+$LUA_PATH;}\
 ;"
 export LUA_PATH
 
-exec "@abs_top_srcdir@/bin/specl" \
+exec @LUA@ "@abs_top_srcdir@/bin/specl" \
       ${1+"$@"}
 exit 1
