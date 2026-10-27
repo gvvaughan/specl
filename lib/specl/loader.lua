@@ -20,8 +20,7 @@ local util = require 'specl.util'
 
 local load, searchpath = stdnormalize.load, stdnormalize.package.searchpath
 local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
-local dirsep, pathsep, path_mark =
-   stdnormalize.package.dirsep, stdnormalize.package.pathsep, stdnormalize.package.pathmark
+local dirsep, path_mark = stdnormalize.package.dirsep, stdnormalize.package.pathmark
 local normalize = std.package.normalize
 local escape_pattern = std.string.escape_pattern
 local nop = util.nop
@@ -57,12 +56,7 @@ local function expandmacros(name)
    local errbuf = {}
 
    -- Use spec_path by default, but also package.path for specl submodules.
-   local search_path = spec_path
-   if match(name, '^specl%.') then
-      search_path = search_path .. pathsep .. package.path
-   end
-
-   local path, err = searchpath(name, search_path)
+   local path, err = searchpath(name, spec_path)
    if path == nil then
       return nil, err
    end

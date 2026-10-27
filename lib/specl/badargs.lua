@@ -377,7 +377,7 @@ local function diagnose(decl, fn)
       if not nilok(argtype) and i <= typemin then
          examples {
             ['it diagnoses missing argument #' .. tostring(i)] = function()
-               expect(fn(unpack(arglist))).to_raise.any_of {
+               expect(pcall(function() return fn(unpack(arglist)) end)).to_raise.any_of {
                   badargs_format('?', i, argtype),         -- recent LuaJIT
                   badargs_format(fname, i, argtype),       -- PUC-Rio Lua
                }
@@ -389,7 +389,7 @@ local function diagnose(decl, fn)
          poisonarglist(arglist, i, argtype)
          examples {
             [diagnose_badarg_description(i, argtype)] = function()
-               expect(fn(unpack(arglist))).to_raise.any_of {
+               expect(pcall(function() return fn(unpack(arglist)) end)).to_raise.any_of {
                   badargs_format('?', i, argtype, showarg(type(arglist[i]))),
                   badargs_format(fname, i, argtype, showarg(type(arglist[i]))),
                }
@@ -401,7 +401,7 @@ local function diagnose(decl, fn)
             examples {
                ['it diagnoses argument #' .. tostring(i) .. ' type not ' .. containertype] =
                   function()
-                     expect(fn(unpack(arglist))).to_raise.any_of {
+                     expect(pcall(function() return fn(unpack(arglist)) end)).to_raise.any_of {
                         format(s, i, '?', containertype, type(arglist[i][2])),
                         format(s, i, fname, containertype, type(arglist[i][2])),
                      }
@@ -420,7 +420,7 @@ local function diagnose(decl, fn)
       arglist[max + 1] = false
       examples {
          ['it diagnoses more than maximum of ' .. max .. ' arguments'] = function()
-            expect(fn(unpack(arglist))).to_raise.any_of {
+            expect(pcall(function() return fn(unpack(arglist)) end)).to_raise.any_of {
                badargs_format(fname, max + 1),
                badargs_format('?', max + 1),
             }
