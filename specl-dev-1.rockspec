@@ -77,32 +77,16 @@ local bundled = {
    'typecheck',
 }
 
--- The host provides the modules that are C, or that the specs of a project
--- have to share with specl, or that only some runs need, and the `package`
--- that specl searches the paths of its examples with.
-local externals = {
-   'package',
-   'lpeg',
-   'luacov',
-   'posix.dirent',
-   'posix.sys.stat',
-   'posix.sys.time',
-   'yaml',
-}
-
--- Each library has the one copy of std.normalize's core that it was
--- released with as a file of its own, so use the bundled std.normalize's.
-local aliases = {
-   'optparse._normalize::std.normalize._core',
-   'typecheck._normalize::std.normalize._core',
-}
-
-local smush = {'$SMUSH --main=specl.cli'}
-for _, name in ipairs(externals) do
-   smush[#smush + 1] = '--external=' .. name
-end
-smush[#smush + 1] = '$sources'
-smush[#smush + 1] = table.concat(aliases, ' ')
+-- The host provides compiled modules.
+--
+-- Each library shares one copy of std.normalize's core.
+local smush = '$SMUSH --main=specl.cli' ..
+   ' --external=package --external=lpeg --external=luacov' ..
+   ' --external=posix.dirent --external=posix.sys.stat --external=posix.sys.time' ..
+   ' --external=yaml' ..
+   ' $sources' ..
+   ' optparse._normalize::std.normalize._core' ..
+   ' typecheck._normalize::std.normalize._core'
 
 build = {
    type = 'luke',
@@ -116,7 +100,7 @@ build = {
    bin = {
       {['build-aux/specl'] = {
          command = 'LUA_PATH="$abs_top_srcdir/lib/?.lua;$abs_top_srcdir/lib/?/init.lua;$LUA_PATH;;"' ..
-                   ' ' .. table.concat(smush, ' ') .. ' > $target',
+                   ' ' .. smush .. ' > $target',
          sources = bundled,
       }},
       -- ./specl runs bin/specl with the modules in this source tree.
