@@ -4,10 +4,21 @@
 ]]
 
 -- Only luaposix's submodules, whose APIs are the same in every release
--- since 33, unlike the legacy functions of its `posix` module.
-local have_posix, dirent = pcall(require, 'posix.dirent')
-local sys_stat = have_posix and require 'posix.sys.stat'
-local sys_time = have_posix and require 'posix.sys.time'
+-- since 33, unlike the legacy functions of its `posix` module.  Look for
+-- them when they are first needed, so that showing the help or version
+-- does not load them.
+local posix
+local function posixmodules()
+   if posix == nil then
+      local have, dirent = pcall(require, 'posix.dirent')
+      posix = have and {
+         dirent = dirent,
+         stat = require 'posix.sys.stat',
+         time = require 'posix.sys.time',
+      } or false
+   end
+   return posix
+end
 
 
 local _ = {
@@ -143,51 +154,44 @@ local M = {
 }
 
 
-if not have_posix then
-
-   M.files = function(root, t)
+M.files = function(root, t)
+   local p = posixmodules()
+   if not p then
       return nil, "install luaposix to autoload spec files from '" .. tostring(root) .. "/'"
    end
 
-else
-
-   M.files = function(root, t)
-      t = t or {}
-      for _, file in ipairs(dirent.dir(root) or {}) do
-         if file ~= '.' and file ~= '..' then
-            local path = catfile(root, file)
-            local info = sys_stat.lstat(path)
-            if info and sys_stat.S_ISDIR(info.st_mode) ~= 0 then
-               t = M.files(path, t)
-            else
-               t[#t + 1] = path
-            end
+   t = t or {}
+   for _, file in ipairs(p.dirent.dir(root) or {}) do
+      if file ~= '.' and file ~= '..' then
+         local path = catfile(root, file)
+         local info = p.stat.lstat(path)
+         if info and p.stat.S_ISDIR(info.st_mode) ~= 0 then
+            t = M.files(path, t)
+         else
+            t[#t + 1] = path
          end
       end
-      return t
    end
-
+   return t
 end
 
 
 -- Use higher resolution timers from luaposix if available.
-if have_posix then
-   M.gettimeofday = sys_time.gettimeofday
-
-   M.timesince = function(earlier)
-      local now = M.gettimeofday()
-      return(now.tv_sec - earlier.tv_sec) +
-         (now.tv_usec - earlier.tv_usec) / 1000000
+M.gettimeofday = function()
+   local p = posixmodules()
+   if p then
+      return p.time.gettimeofday()
    end
+   return now()
+end
 
-else
-
-   M.gettimeofday = now
-
-   M.timesince = function(earlier)
-      return now() - earlier
+M.timesince = function(earlier)
+   local later = M.gettimeofday()
+   if type(later) == 'table' then
+      return (later.tv_sec - earlier.tv_sec) +
+         (later.tv_usec - earlier.tv_usec) / 1000000
    end
-
+   return later - earlier
 end
 
 

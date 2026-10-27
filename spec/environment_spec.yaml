@@ -239,6 +239,22 @@ describe environments:
           expect (run_wrapped (dir.path .. "/?.lua",
             "expect (require 'specl.needy').to_be 'from the specl tree'")).to_succeed ()
 
+- describe start-up:
+  - it does not load luaposix, lpeg or lyaml to show the help or version: |
+      -- Anything that specl loads of these raises an error that names it.
+      local preloads = "for _, m in ipairs {'lpeg', 'yaml', 'luacov', 'posix.dirent', " ..
+        "'posix.sys.stat', 'posix.sys.time'} do package.preload[m] = " ..
+        "function() error('loaded ' .. m) end end"
+      local i = -1
+      while arg[i - 1] do i = i - 1 end
+      local pwd = os.getenv "PWD"
+      for _, option in ipairs {"--help", "--version"} do
+        expect (spawn_specl {
+          "'" .. arg[i] .. "' -e \"" .. preloads .. "\" '" .. pwd .. "/bin/specl' " .. option,
+          env = {LUA_PATH = pwd .. "/lib/?.lua;" .. package.path},
+        }).to_succeed ()
+      end
+
 - describe load:
     - before:
         mutated_outer_symbol = false

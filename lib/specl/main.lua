@@ -5,8 +5,6 @@
 
 local match = string.match
 
-local loader = require 'specl.loader'
-local runner = require 'specl.runner'
 local std = require 'specl.std'
 local util = require 'specl.util'
 local version = require 'specl.version'
@@ -65,6 +63,10 @@ local function compile(self, arg)
    if self.opts.example ~= nil then
       self.filters = merge(self.filters or {}, {inclusive = self.opts.example})
    end
+
+   -- The loader needs lpeg and lyaml, which showing the help or version,
+   -- or failing to parse the options, has no use for.
+   local loader = require 'specl.loader'
 
    table.insert(self.specs, {
       filename = arg,
@@ -157,6 +159,7 @@ local function execute(self)
    parser:on('unicode', parser.flag)
 
    self.arg, self.opts = parser:parse(self.arg, self.opts)
+   self.stats.starttime = gettimeofday()
 
    -- When opt.example is non-nil, it must be a table.
    if self.opts.example and type(self.opts.example) ~= 'table' then
@@ -179,7 +182,7 @@ local function execute(self)
       pcall(require, 'luacov')
    end
 
-   os.exit(runner.run(self))
+   os.exit(require 'specl.runner'.run(self))
 end
 
 
@@ -210,9 +213,10 @@ return Object {
       -- Collect compiled specs here.
       self.specs = {}
 
-      -- Expectation statistics.
+      -- Expectation statistics, timed from when the options are parsed, so
+      -- that showing the help or version does not ask luaposix for the time.
       self.stats = {
-         pass = 0, pend = 0, fail = 0, starttime = gettimeofday()
+         pass = 0, pend = 0, fail = 0
       }
 
       return self

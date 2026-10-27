@@ -38,6 +38,13 @@
 
 ### Bug fixes
 
+  - `specl --help` and `specl --version` load none of lpeg, lyaml, luamacro
+    and luaposix, which only running specs needs, so they work, and start
+    sooner, when those are not installed where Lua searches.  That is
+    what help2man runs to make the man page, so building it no longer
+    fails for dependencies in a tree that Lua does not search, such as
+    one given to `luarocks make` with `--tree` or `--local`.
+
   - The build runs `build-aux/specl --help` for the man page with the Lua
     that it builds for, rather than with whichever `lua` is first on the
     `PATH`, which may not be there at all, and so fails the install when
