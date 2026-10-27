@@ -2,6 +2,20 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features:
+
+  - Specl installs as a single file, with the libraries that it needs
+    bundled in, so it needs only lpeg and lyaml to run, and no longer
+    shares optparse, std.normalize or typecheck with the project that
+    it runs the specs of.  Its examples can't `require` any of the
+    bundled libraries unless the project has them too.
+
+### Incompatible changes
+
+  - The modules of Specl, such as `specl.main`, are no longer installed
+    as files of their own.  Examples can still `require` them, as
+    Specl provides them itself.
+
 ### Bug fixes
 
   - `luarocks install` and `luarocks make` no longer fail to build the

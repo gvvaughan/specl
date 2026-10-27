@@ -12,3 +12,4 @@
 !specl-dev-*.rockspec
 /specl-*.tar.gz
 /stamp-h1
+/build-aux/specl

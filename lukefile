@@ -1,77 +1,28 @@
---[[
- Behaviour Driven Development for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
- Copyright (C) 2013-2026 Gary V. Vaughan
-]]
-
 luke_format = 0
 
 package  = 'specl'
-version  = '$USER'
+version  = '$USER/$gitref'
 
--- A build without help2man keeps the man page that a release commits.
-variables = {
-   HELP2MAN = {checkprog='HELP2MAN', progs={'help2man', 'true'}},
-}
+-- LuaRocks builds specl from the rockspec, which is how `luke release`
+-- builds it too, so what is left is for `luke release`.
 
--- ./specl finds its dependencies in TREE, which LuaRocks passes on the
--- command line as the tree it installs into.
-substitute = {
-   LUA  = 'lua',
-   TREE = '/usr/local',
-}
-
-ldocs    = 'build-aux/config.ld.in'
-
-modules  = {
-   {['specl.badargs']            = 'lib/specl/badargs.lua'},
-   {['specl.color']              = 'lib/specl/color.lua'},
-   {['specl.expect']             = 'lib/specl/expect.lua'},
-   {['specl.formatter.progress'] = 'lib/specl/formatter/progress.lua'},
-   {['specl.formatter.report']   = 'lib/specl/formatter/report.lua'},
-   {['specl.formatter.tap']      = 'lib/specl/formatter/tap.lua'},
-   {['specl.inprocess']          = 'lib/specl/inprocess.lua'},
-   {['specl.loader']             = 'lib/specl/loader.lua'},
-   {['specl.main']               = 'lib/specl/main.lua'},
-   {['specl.matchers']           = 'lib/specl/matchers.lua'},
-   {['specl.runner']             = 'lib/specl/runner.lua'},
-   {['specl.sandbox']            = 'lib/specl/sandbox.lua'},
-   {['specl.shell']              = 'lib/specl/shell.lua'},
-   {['specl.std']                = 'lib/specl/std.lua'},
-   {['specl.util']               = 'lib/specl/util.lua'},
-   {['specl.version']            = 'lib/specl/version.lua.in'},
-}
-
-install  = {
-   bin = {
-      {specl = 'bin/specl'},
-   },
-}
-
--- ./specl runs bin/specl with the modules in this source tree.
-bin      = {
-   'specl.in',
-}
-
-files    = {
-   {['doc/specl.1'] = {
-      command = '$HELP2MAN --output=$target --no-info --name=Specl ./specl',
-      sources = 'specl.in',
-   }},
-}
-
-release  = {
-   news               = 'NEWS.md',
-   rockspec           = 'specl-dev-1.rockspec',
-   check_dependencies = true,
-   add                = {'doc/api/'},
-   replacements       = {
-      {['README.md']  = {
-         {['?branch=master'] = '?branch=release-v@version@'},
-      }},
-   },
-   ['gh-pages']       = {
-      {api          = 'doc/api/'},
-      {['index.md'] = 'doc/specl.md'},
-      '_config.yml.in',
+-- `luke release version=X.Y` adds the release to NEWS.md, writes the release
+-- rockspec, points the README badges at the release branch, commits the
+-- built build-aux/specl and its man page, and publishes the manual to
+-- gh-pages.
+release = {
+   ['specl-dev-1.rockspec'] = {
+      news         = 'NEWS.md',
+      add          = {'build-aux/specl', 'doc/api/', 'doc/specl.1', 'lib/specl/version.lua'},
+      replacements = {
+         {['README.md'] = {
+            {['?branch=master'] = '?branch=release-v@version@'},
+         }},
+      },
+      ['gh-pages'] = {
+         {api          = 'doc/api/'},
+         {['index.md'] = 'doc/specl.md'},
+         '_config.yml.in',
+      },
    },
 }
