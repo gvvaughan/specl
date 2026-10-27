@@ -1165,6 +1165,33 @@ all the matching spec-files automatically.
     specl
 {% endhighlight %}
 
+Or name the spec-files to check, with `-` for standard input:
+
+{% highlight bash %}
+    specl [OPTION]... [FILE]...
+{% endhighlight %}
+
+The options are:
+
+  * `--help` shows how to use `specl`, and exits;
+  * `--version` shows which version of `specl` it is, and exits;
+  * `--bundled` lists the rocks that were bundled into this copy of `specl`,
+    with their versions, one to a line, and exits;
+  * `--color=WHEN` colorizes the output of the formatter, unless `WHEN`
+    is `no` [default: yes];
+  * `--coverage` generates a coverage report, if [luacov] is installed;
+  * `-1` or `--fail-fast` stops at the first failed example (see
+    [Running a Subset of Examples](#51-running-a-subset-of-examples));
+  * `-f FILE` or `--formatter=FILE` uses a specific [formatter](#4-formatters)
+    [default: `progress`] (see [Formatting Results](#52-formatting-results));
+  * `-v` or `--verbose` asks the formatter for more output;
+  * `-e PATTERN` or `--example=PATTERN`, `+NN` and `FILE:NN[:MM]` check
+    only some of the examples (see
+    [Running a Subset of Examples](#51-running-a-subset-of-examples)).
+
+An option that takes a value is written `--NAME=VALUE` or `--NAME VALUE`.
+Specl exits with an error for any other option.
+
 
 ### 5.1. Running a Subset of Examples
 
@@ -1286,8 +1313,6 @@ name, including built in formatters, like this:
     specl --formatter=tap
 {% endhighlight %}
 
-Pass the `--help` option for help and brief documentation on usage of the
-remaining available options.
 
 
 ## 6. Writing Program Specifications
