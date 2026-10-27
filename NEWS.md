@@ -16,6 +16,22 @@
     as files of their own.  Examples can still `require` them, as
     Specl provides them itself.
 
+  - `specl.compat` is gone, and `specl.std` no longer hands out what the
+    libraries that Specl uses have of their own.  A spec helper that
+    asks `specl.std` for `getfenv`, `setfenv`, `getmetamethod`,
+    `table.unpack`, `package.dirsep`, `package.pathsep`,
+    `package.path_mark`, `debug.argcheck`, `debug.argscheck` or
+    `optparse` must take them from std.normalize, typecheck or optparse
+    instead, which the project has to provide itself, as Specl no longer
+    shares its own copies.  For example, change `std.setfenv` to
+    `require 'std.normalize'.setfenv`.  The rest of `specl.std` is
+    unchanged.
+
+  - The `specl` that is installed is a script that `lua` runs, found
+    with `/usr/bin/env lua`, instead of a shell script that looked for
+    one, so it no longer honours `LUA`, or clears `LUA_INIT`.  Run it
+    with the Lua of your choice, as `lua5.4 $(which specl)`.
+
 ### Bug fixes
 
   - `luarocks install` and `luarocks make` no longer fail to build the
