@@ -15,12 +15,13 @@
 -- 'specl.sandbox' table.
 
 local _ = {
+   normalize = require 'std.normalize',
    std = require 'specl.std',
    typecheck = require 'typecheck',
 }
 
 local _ENV = {
-   getfenv = _.std.getfenv,
+   getfenv = _.normalize.getfenv,
    ipairs = ipairs,
    pairs = pairs,
    setfenv = function() end,
@@ -38,12 +39,12 @@ local _ENV = {
 
    split = _.std.string.split,
    invert = _.std.table.invert,
-   unpack = _.std.table.unpack,
+   unpack = _.normalize.unpack,
    parsetypes = _.typecheck.parsetypes,
    typesplit = _.typecheck.typesplit,
 }
 setfenv(1, _ENV)
-setfenv = _.std.setfenv
+setfenv = _.normalize.setfenv
 _ = nil
 
 

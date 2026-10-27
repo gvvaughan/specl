@@ -12,18 +12,20 @@ local find = string.find
 local gsub = string.gsub
 local sub = string.sub
 
-local compat = require 'specl.compat'
+local normalize = require 'std.normalize'
 local sandbox = require 'specl.sandbox'
 local shell = require 'specl.shell'
 local std = require 'specl.std'
 local util = require 'specl.util'
+local typecheck = require 'typecheck'
 
 local case = require 'std.functional.init'.case
-local xpcall = compat.xpcall
+local load, xpcall = normalize.load, normalize.xpcall
+local slurp = std.io.slurp
 local Process = shell.Process
-local getfenv, setfenv = std.getfenv, std.setfenv
+local getfenv, setfenv = normalize.getfenv, normalize.setfenv
 local object = std.object
-local clone, merge, unpack = std.table.clone, std.table.merge, std.table.unpack
+local clone, merge, unpack = std.table.clone, std.table.merge, normalize.unpack
 local nop = util.nop
 
 
@@ -244,9 +246,9 @@ local function isolated_require(env, caller, loaded)
    return function(modname)
       if loaded[modname] == nil then
          local loader = env.package.preload[modname]
-         local filename = compat.searchpath(modname, env.package.path)
+         local filename = normalize.package.searchpath(modname, env.package.path)
          if loader == nil and filename ~= nil then
-            loader = assert(compat.loadfile(filename, 't', env))
+            loader = assert(load(slurp(filename), '@' .. filename, 't', env))
          end
          if loader == nil then
             loaded[modname] = (caller.require or require)(modname)
@@ -429,7 +431,7 @@ end
 --[[ = ================ ]]--
 
 local function X(decl, fn)
-   return std.debug.argscheck('specl.inprocess.' .. decl, fn)
+   return typecheck.argscheck('specl.inprocess.' .. decl, fn)
 end
 
 --- @export

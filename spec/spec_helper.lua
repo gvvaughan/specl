@@ -9,7 +9,7 @@ local sub = string.sub
 local hell = require 'specl.shell'
 local std = require 'specl.std'
 
-unpack = std.table.unpack
+unpack = require 'std.normalize'.unpack
 
 local top_srcdir = os.getenv 'top_srcdir' or '.'
 local top_builddir = os.getenv 'top_builddir' or '.'

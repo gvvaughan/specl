@@ -13,15 +13,16 @@ local sub = string.sub
 local macro = require 'macro'
 local yaml = require 'yaml'
 
-local compat = require 'specl.compat'
 local expect = require 'specl.expect'
 local std = require 'specl.std'
+local stdnormalize = require 'std.normalize'
 local util = require 'specl.util'
 
-local load, searchpath = compat.load, compat.searchpath
+local load, searchpath = stdnormalize.load, stdnormalize.package.searchpath
 local catfile, dirname, slurp = std.io.catfile, std.io.dirname, std.io.slurp
-local dirsep, normalize, pathsep, path_mark = 
-   std.package.dirsep, std.package.normalize, std.package.pathsep, std.package.path_mark
+local dirsep, pathsep, path_mark =
+   stdnormalize.package.dirsep, stdnormalize.package.pathsep, stdnormalize.package.pathmark
+local normalize = std.package.normalize
 local escape_pattern = std.string.escape_pattern
 local nop = util.nop
 

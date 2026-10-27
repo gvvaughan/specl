@@ -19,7 +19,9 @@
 
 
 local _ = {
+   normalize = require 'std.normalize',
    std = require 'specl.std',
+   typecheck = require 'typecheck',
 }
 
 local _ENV = {
@@ -35,18 +37,18 @@ local _ENV = {
    setmetatable = setmetatable,
    tostring = _.std.tostring,
    type = type,
-   unpack = _.std.table.unpack,
+   unpack = _.normalize.unpack,
 
    format = string.format,
    gsub = string.gsub,
    match = string.match,
    sub = string.sub,
 
-   getmetamethod = _.std.getmetamethod,
+   getmetamethod = _.normalize.getmetamethod,
 
    Object = _.std.object{},
 
-   argcheck = _.std.debug.argcheck,
+   argcheck = _.typecheck.argcheck,
    objtype = _.std.object.type,
    eqv = _.std.operator.eqv,
    chomp = _.std.string.chomp,

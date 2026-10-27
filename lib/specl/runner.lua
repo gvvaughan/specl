@@ -25,6 +25,7 @@ local matchers = require 'specl.matchers'
 local sandbox = require 'specl.sandbox'
 
 local _ = {
+   normalize = require 'std.normalize',
    std = require 'specl.std',
    util = require 'specl.util',
 }
@@ -35,7 +36,7 @@ setfenv(1, _ENV)
 local deepcopy = _.util.deepcopy
 local examplename = _.util.examplename
 local merge = _.std.table.merge
-local setfenv = _.std.setfenv
+local setfenv = _.normalize.setfenv
 local slurp = _.std.io.slurp
 local split = _.std.string.split
 

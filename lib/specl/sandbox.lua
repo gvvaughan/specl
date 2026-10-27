@@ -4,9 +4,26 @@
 ]]
 
 local _ = {
-   compat = require 'specl.compat',
+   normalize = require 'std.normalize',
    std = require 'specl.std',
 }
+
+
+-- Load a file with `load`, which std.normalize has for every Lua, and
+-- the contents of the file.  A first line that starts with '#' is skipped,
+-- as `loadfile` does, but kept as a comment so that line numbers are right.
+local slurp, load = _.std.io.slurp, _.normalize.load
+
+local function loadfile(filename, mode, ...)
+   local ok, text = pcall(slurp, filename)
+   if not ok then
+      return nil, text
+   end
+   if string.sub(text, 1, 1) == '#' then
+      text = '--' .. text
+   end
+   return load(text, '@' .. filename, mode, ...)
+end
 
 
 --[[ ====================================== ]]--
@@ -61,7 +78,7 @@ local sandbox = {
    },
    dofile = dofile,
    error = error,
-   getfenv = _.std.getfenv,
+   getfenv = _.normalize.getfenv,
    getmetatable = getmetatable,
    io = {
       close = io.close,
@@ -80,8 +97,8 @@ local sandbox = {
       write = io.write,
    },
    ipairs = ipairs,
-   load = _.compat.load,
-   loadfile = _.compat.loadfile,
+   load = _.normalize.load,
+   loadfile = loadfile,
    math = {
       abs = math.abs,
       acos = math.acos,
@@ -129,7 +146,7 @@ local sandbox = {
       path = userpath(package.path, 'LUA_PATH'),
       preload = package.preload,
       searchers = package.searchers or package.loaders,
-      searchpath = _.compat.searchpath,
+      searchpath = _.normalize.package.searchpath,
    },
    pairs = pairs,
    pcall = pcall,
@@ -140,7 +157,7 @@ local sandbox = {
    rawset = rawset,
    require = require,
    select = select,
-   setfenv = _.std.setfenv,
+   setfenv = _.normalize.setfenv,
    setmetatable = setmetatable,
    string = {
       byte = string.byte,
@@ -208,7 +225,7 @@ local _ENV = {
    pcall = pcall,
    pending = require 'specl.expect'.pending,
    require = require,
-   searchpath = _.compat.searchpath,
+   searchpath = _.normalize.package.searchpath,
    select = select,
    setfenv = function() end,
    setmetatable = setmetatable,

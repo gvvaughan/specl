@@ -12,6 +12,7 @@
 local _ = {
    matchers = require 'specl.matchers',
    std = require 'specl.std',
+   typecheck = require 'typecheck',
 }
 
 local _ENV = {
@@ -36,8 +37,8 @@ local _ENV = {
 
    matchers = _.matchers,
    object = _.std.object,
-   argcheck = _.std.debug.argcheck,
-   argscheck = _.std.debug.argscheck,
+   argcheck = _.typecheck.argcheck,
+   argscheck = _.typecheck.argscheck,
    escape_pattern = _.std.string.escape_pattern,
 
    Object = _.std.object {},

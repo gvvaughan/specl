@@ -10,8 +10,6 @@ require 'std._debug'.argcheck = true
 
 local normalize = require 'std.normalize'
 local object = require 'std.prototype.object'
-local optparse = require 'optparse'
-local typecheck = require 'typecheck'
 
 local concat = table.concat
 local find = string.find
@@ -444,12 +442,6 @@ end
 
 
 return {
-   debug = {
-      argcheck = typecheck.argcheck,
-      argscheck = typecheck.argscheck,
-   },
-   getfenv = normalize.getfenv,
-   getmetamethod = getmetamethod,
    io = {
       catfile = catfile,
       dirname = dirname,
@@ -472,14 +464,9 @@ return {
          return mnemonic(a) == mnemonic(b)
       end,
    },
-   optparse = optparse,
    package = {
-      dirsep = dirsep,
       normalize = normalize_path,
-      path_mark = path_mark,
-      pathsep = pathsep,
    },
-   setfenv = normalize.setfenv,
    string = {
       chomp = chomp,
       escape_pattern = escape_pattern,
@@ -494,7 +481,6 @@ return {
       invert = invert,
       merge = merge,
       size = size,
-      unpack = normalize.unpack,
    },
    tostring = str,
 }

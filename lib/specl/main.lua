@@ -11,7 +11,8 @@ local std = require 'specl.std'
 local util = require 'specl.util'
 local version = require 'specl.version'
 
-local object, optparse = std.object, std.optparse
+local object = std.object
+local optparse = require 'optparse'
 local filter = require 'std.functional.init'.filter
 local clone, merge = std.table.clone, std.table.merge
 local deepcopy, files, gettimeofday = 

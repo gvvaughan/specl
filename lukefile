@@ -25,7 +25,6 @@ ldocs    = 'build-aux/config.ld.in'
 modules  = {
    {['specl.badargs']            = 'lib/specl/badargs.lua'},
    {['specl.color']              = 'lib/specl/color.lua'},
-   {['specl.compat']             = 'lib/specl/compat.lua'},
    {['specl.expect']             = 'lib/specl/expect.lua'},
    {['specl.formatter.progress'] = 'lib/specl/formatter/progress.lua'},
    {['specl.formatter.report']   = 'lib/specl/formatter/report.lua'},
