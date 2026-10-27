@@ -130,6 +130,11 @@ describe environments:
     - it supports requiring core modules:
         expect (type (require "os")).to_be "table"
         expect (type (require "io".open)).to_be "function"
+    - it gives an example its own built-in libraries:
+        expect (require "string").to_be (string)
+        expect (require "os").to_be (os)
+        expect (require "io").to_be (io)
+        expect (require "_G").to_be (_G)
     - it loads a module that the example preloads:
         package.preload.preloaded_by_example = function () return "preloaded" end
         expect (require "preloaded_by_example").to_be "preloaded"

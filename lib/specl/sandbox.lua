@@ -207,6 +207,12 @@ sandbox.package.loaded = {
    table = sandbox.table,
 }
 
+-- The built-in libraries that an example has, which `require` gives it.
+local standard = {}
+for name in pairs(sandbox.package.loaded) do
+   standard[name] = true
+end
+
 
 
 --[[ ========================================== ]]--
@@ -255,18 +261,6 @@ local path, cpath = package.path, package.cpath
 -- Whether *m* is one of specl's own modules.
 local function own(m)
    return m == 'specl' or find(m, '^specl%.') ~= nil
-end
-
-
--- Examples share specl's own modules, which hold the state of this run,
--- and built-in libraries, which aren't on specl's search paths.
-local function shared(m)
-   if own(m) then
-      return true
-   end
-   return package.loaded[m] ~= nil and
-      searchpath(m, path) == nil and
-      searchpath(m, cpath) == nil
 end
 
 
@@ -384,7 +378,7 @@ local function inner_closures(env, state)
    -- where specl found them.
    local own_env = setmetatable({
       require = function(m)
-         if shared(m) then
+         if own(m) or standard[m] then
             return env.require(m)
          end
          return with_paths(path, cpath, require, m)
@@ -398,7 +392,11 @@ local function inner_closures(env, state)
    -- examples that load it.
    env.require = function(m)
       local errmsg, loaded, loadfn
-      local cache = shared(m) and package.loaded or modules
+      if standard[m] then
+         return env.package.loaded[m]
+      end
+
+      local cache = own(m) and package.loaded or modules
 
       -- We can have a spec_helper.lua in each spec directory, so don't
       -- cache the side effects of a random one!
