@@ -8,6 +8,7 @@ return {
   PACKAGE_NAME = 'Specl',
   PACKAGE_BUGREPORT = 'https://github.com/gvvaughan/specl/issues',
   VERSION = '@version@',
+  BUNDLED = {@bundled@},
   optspec = [[
 specl (Specl) @version@
 Written by Gary V. Vaughan <gary@gnu.org>, 2013
