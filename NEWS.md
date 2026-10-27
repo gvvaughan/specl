@@ -10,9 +10,10 @@
     it runs the specs of.  Its examples can't `require` any of the
     bundled libraries unless the project has them too.
 
-  - `specl --version` lists the rocks that are bundled in it, with their
-    versions, as LuaRocks has them installed when it builds specl, with
-    luarocks-build-luke 0.3 or later.
+  - `specl --bundled` lists the rocks that are bundled in it, one to a
+    line, with their versions, as LuaRocks has them installed when it
+    builds specl, with luarocks-build-luke 0.3 or later.  `--version` does
+    not, so that the man page does not have them.
 
 ### Incompatible changes
 

@@ -145,9 +145,10 @@ local function execute(self)
    end)
    parser:on('version', function(self)
       print(self.versiontext)
-      if #(version.BUNDLED or {}) > 0 then
-         print('\nBundled rocks:\n  ' .. table.concat(version.BUNDLED, '\n  '))
-      end
+      os.exit(0)
+   end)
+   parser:on('bundled', function()
+      print(table.concat(version.BUNDLED or {}, '\n'))
       os.exit(0)
    end)
 
