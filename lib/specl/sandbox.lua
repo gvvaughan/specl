@@ -9,6 +9,11 @@ local _ = {
 }
 
 
+-- The `package` of the Lua that runs specl. When smushed into a single file
+-- we see the bundle's `package`, so capture the host's `package` here.
+local host_package = require 'package'
+
+
 -- Load a file with `load`, which std.normalize has for every Lua, and
 -- the contents of the file.  A first line that starts with '#' is skipped,
 -- as `loadfile` does, but kept as a comment so that line numbers are right.
@@ -315,10 +320,10 @@ end
 -- Call *fn* with the global search paths, which searchers and C modules
 -- read, set to *spath* and *scpath*, and restore them even on error.
 local function with_paths(spath, scpath, fn, ...)
-   local save_path, save_cpath = package.path, package.cpath
-   package.path, package.cpath = spath, scpath
+   local save_path, save_cpath = host_package.path, host_package.cpath
+   host_package.path, host_package.cpath = spath, scpath
    local ok, a, b = pcall(fn, ...)
-   package.path, package.cpath = save_path, save_cpath
+   host_package.path, host_package.cpath = save_path, save_cpath
    if not ok then
       return error(a, 0)
    end
