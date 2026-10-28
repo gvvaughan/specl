@@ -3,16 +3,10 @@ luke_format = 0
 package  = 'specl'
 version  = '$USER/$gitref'
 
--- LuaRocks builds specl from the rockspec, which is how `luke release`
--- builds it too, so what is left is for `luke release`.
-
--- `luke release version=X.Y` adds the release to NEWS.md, writes the release
--- rockspec, points the README badges at the release branch, commits the
--- built build-aux/specl and its man page, and publishes the manual to
--- gh-pages.
 release = {
    ['specl-dev-1.rockspec'] = {
       news         = 'NEWS.md',
+      prebuild     = true,
       add          = {'build-aux/specl', 'doc/api/', 'doc/specl.1', 'lib/specl/version.lua'},
       replacements = {
          {['README.md'] = {
