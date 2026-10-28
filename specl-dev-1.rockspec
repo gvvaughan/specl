@@ -88,13 +88,13 @@ if _MODREV == 'dev' then
    -- needs them only to build it.
    build_dependencies = {
       'luamacro >= 2.5.1',
-      'luarocks-build-luke >= 0.2',
-      'optparse >= 2',
-      'smush',
-      'std._debug >= 1',
-      'std.functional >= 2',
-      'std.normalize >= 4',
-      'std.prototype >= 2',
+      'luarocks-build-luke >= 0.3.1',
+      'optparse >= 3',
+      'smush >= 0.1',
+      'std._debug >= 1.2',
+      'std.functional >= 2.1',
+      'std.normalize >= 4.1',
+      'std.prototype >= 2.1',
       'typecheck >= 4',
       -- luarocks.org's ldoc fails on Lua 5.5; gvvaughan's works.
       'gvvaughan/ldoc',
@@ -148,7 +148,7 @@ end
 test_dependencies = {
    'ansicolors',
    'luacov',
-   'optparse >= 2',
+   'optparse >= 3',
    'std._debug >= 1.2',
    'std.functional >= 2.1',
    'std.normalize >= 4.1',
