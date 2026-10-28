@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 17 (2026-10-27) [stable]
+
 ### New features:
 
   - Specl installs as a single file, with the libraries that it needs
