@@ -2,8 +2,8 @@ SPECL
 =====
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
-[![workflow status](https://github.com/gvvaughan/specl/actions/workflows/spec.yml/badge.svg?branch=master)](https://github.com/gvvaughan/specl/actions)
-[![codecov.io](https://codecov.io/github/gvvaughan/specl/coverage.svg?branch=master)](https://codecov.io/github/gvvaughan/specl?branch=master)
+[![workflow status](https://github.com/gvvaughan/specl/actions/workflows/spec.yml/badge.svg?branch=release-v17)](https://github.com/gvvaughan/specl/actions)
+[![codecov.io](https://codecov.io/github/gvvaughan/specl/coverage.svg?branch=release-v17)](https://codecov.io/github/gvvaughan/specl?branch=release-v17)
 
 [Specl][] is a testing tool for [Lua][] 5.1 (including [LuaJit][]), 5.2,
 5.3, 5.4 and 5.5, providing a [Behaviour Driven Development][BDD] framework in
