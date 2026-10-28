@@ -19,3 +19,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Bundled software
+
+The `specl` that a release installs is one file, with the Lua libraries
+that it needs inside.  One of them, ansicolors, is made available under
+the same terms as above, by:
+
+    Copyright (c) 2009 Rob Hoelz <rob@hoelzro.net>
+    Copyright (c) 2011 Enrique García Cota <enrique.garcia.cota@gmail.com>

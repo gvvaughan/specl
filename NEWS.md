@@ -2,6 +2,13 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - The report is in color again, with `--color=yes` or when the output is a
+    terminal.  The installed `specl` is one file that could not see the
+    ansicolors that the project has, so it was never in color: ansicolors is
+    one of the libraries that it bundles now, so it always is.
+
 
 ## Noteworthy changes in release 17 (2026-10-27) [stable]
 

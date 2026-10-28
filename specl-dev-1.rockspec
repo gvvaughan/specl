@@ -64,6 +64,7 @@ if _MODREV == 'dev' then
       'lib/specl/std.lua',
       'lib/specl/util.lua',
       'lib/specl/version.lua.in',
+      'ansicolors',
       -- Spec files are macro-expanded at run time, with the macro package.
       'macro',
       'macro.Getter',
@@ -87,6 +88,7 @@ if _MODREV == 'dev' then
    -- Specl is one file with these bundled in, so a development build
    -- needs them only to build it.
    build_dependencies = {
+      'ansicolors >= 1',
       'luamacro >= 2.5.1',
       'luarocks-build-luke >= 0.3.1',
       'optparse >= 3',
