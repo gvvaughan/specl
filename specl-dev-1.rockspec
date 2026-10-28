@@ -148,7 +148,6 @@ end
 -- commits, so they need the libraries that it bundles, whether or not a
 -- development build needs them.
 test_dependencies = {
-   'ansicolors',
    'luacov',
    'optparse >= 3',
    'std._debug >= 1.2',
