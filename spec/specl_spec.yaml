@@ -2,6 +2,20 @@
 # Copyright (C) 2014-2026 Gary V. Vaughan
 
 describe specl:
+- describe text with a color marker in it:
+  - before: |
+      -- The Lua pattern that this expectation fails to match has `%{` in it.
+      yaml = "describe x:\n- it fails: expect ('a').to_match ('%{s}')"
+  - it shows it as it is, without color: |
+      p = spawn_specl {'--color=no', stdin = yaml}
+      expect(p).to_exit(1)
+      expect(p).to_contain_output '"%{s}"'
+  - it shows it as it is, with color: |
+      p = spawn_specl {'--color=yes', stdin = yaml}
+      expect(p).to_exit(1)
+      expect(p).to_contain_output '"%{s}"'
+      expect(p.errout).to_be ''
+
 - describe spec-file format:
   - before: |
       yaml = "describe x:\n- it is pending:"

@@ -8,17 +8,26 @@ local have_color, ansicolors = pcall(require, 'ansicolors')
 local _ENV = {
    setfenv = function() end,
    setmetatable = setmetatable,
+   tostring = tostring,
    gsub = string.gsub,
 }
 setfenv(1, _ENV)
 
 
-local h1 = '%{bright blue}'
-local h2 = '%{blue}'
-local h3 = '%{cyan}'
+-- Specl marks its own colors with control characters, so that text from the
+-- examples, which can have a `%{` in it, as the Lua patterns that they show
+-- do, is never mistaken for one of them.
+local function mark(keys)
+   return '\1' .. keys .. '\2'
+end
+
+
+local h1 = mark 'bright blue'
+local h2 = mark 'blue'
+local h3 = mark 'cyan'
 local default = ''
-local good = '%{green}'
-local bad = '%{bright white redbg}'
+local good = mark 'green'
+local bad = mark 'bright white redbg'
 
 local colormap = {
    specify = h1,
@@ -35,30 +44,35 @@ local colormap = {
    summary = h2,
 
    fail = bad,
-   pend = '%{yellow}',
+   pend = mark 'yellow',
    pass = '',
    good = good,
    bad = bad,
-   warn = '%{red}',
-   strong = '%{bright}',
+   warn = mark 'red',
+   strong = mark 'bright',
 
-   reset = '%{reset}',
-   match = '%{green}',
+   reset = mark 'reset',
+   match = mark 'green',
 
-   listpre = '%{yellow}-%{reset} ',
-   listpost = '%{red}:%{reset}',
+   listpre = mark 'yellow' .. '-' .. mark 'reset' .. ' ',
+   listpost = mark 'red' .. ':' .. mark 'reset',
    allpass = '',
-   notallpass = '%{reverse}',
-   summarypost = '%{red}:%{reset}',
+   notallpass = mark 'reverse',
+   summarypost = mark 'red' .. ':' .. mark 'reset',
    clock = '',
 }
 
 
 local function color(want_color, s)
+   s = tostring(s or '')
    if want_color and have_color then
-      s = ansicolors(s)
+      local function paint(keys)
+         return ansicolors.noReset('%{' .. keys .. '}')
+      end
+      local reset = ansicolors.noReset('%{reset}')
+      s = reset .. (gsub(s, '\1(.-)\2', paint)) .. reset
    else
-      s = gsub(s, '%%{(.-)}', '')
+      s = gsub(s, '\1.-\2', '')
    end
    return s
 end
@@ -67,6 +81,6 @@ end
 return setmetatable(colormap, {
    __call = function(self, ...) return color(...) end,
    __index = function(_, k)
-                return '%{underline}'
+                return mark 'underline'
              end,
 })

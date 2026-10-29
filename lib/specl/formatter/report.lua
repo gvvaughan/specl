@@ -204,7 +204,7 @@ local function footer(stats, reports, opts)
    local pendcolor = (stats.pend > 0) and color.bad or ''
    princ(opts.color, passcolor    .. stats.pass .. ' passed' .. color.reset .. ', ' ..
           pendcolor    .. stats.pend .. ' pending' .. color.reset .. ' and ' ..
-          failcolor    .. stats.fail .. ' failed%{reset} in ' ..
+          failcolor    .. stats.fail .. ' failed' .. color.reset .. ' in ' ..
           color.clock .. tostring(timesince(stats.starttime)) ..
           ' seconds' .. color.reset .. '.')
 end

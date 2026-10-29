@@ -4,6 +4,12 @@
 
 ### Bug fixes
 
+  - Text from an example that has a `%{` in it, such as the Lua pattern
+    that an expectation shows when it fails to match, is no longer taken
+    for the color markup of specl.  With color it stopped the report with
+    an "Unknown key" error from ansicolors, and without color it was
+    taken out of the report.
+
   - The report is in color again, with `--color=yes` or when the output is a
     terminal.  The installed `specl` is one file that could not see the
     ansicolors that the project has, so it was never in color: ansicolors is
