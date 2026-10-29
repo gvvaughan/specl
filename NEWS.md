@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 17.2 (2026-10-29) [stable]
+
 ### New features
 
   - `specl --bundled` shows what smush 0.4 or later says is bundled in
