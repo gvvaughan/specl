@@ -94,9 +94,9 @@ if _MODREV == 'dev' then
    build_dependencies = {
       'ansicolors >= 1',
       'luamacro >= 2.5.1',
-      'luarocks-build-luke >= 0.3.1',
+      'luarocks-build-luke >= 0.3.2',
       'optparse >= 3',
-      'smush >= 0.1',
+      'smush >= 0.4',
       'std._debug >= 1.2',
       'std.functional >= 2.1',
       'std.normalize >= 5.0.1',
