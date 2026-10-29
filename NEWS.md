@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 17.1 (2026-10-28) [stable]
+
 ### Bug fixes
 
   - Text from an example that has a `%{` in it, such as the Lua pattern
