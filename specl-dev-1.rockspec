@@ -36,6 +36,10 @@ end
 build = {
    type = 'builtin',
 
+   -- The rock installs a program, and not the modules of lib that it is made
+   -- from, which builtin would find in a release for itself.
+   modules = {},
+
    install = {
       bin = {specl = 'build-aux/specl'},
    },
