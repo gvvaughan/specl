@@ -286,10 +286,6 @@ describe environments:
         f, err = load (string.dump (function () end), "chunk", "t")
         expect (f).to_be (nil)
         expect (err).to_contain "mode"
-    - it honours a binary mode:
-        f, err = load ("return 1", "chunk", "b")
-        expect (f).to_be (nil)
-        expect (err).to_contain "mode"
     - it runs in a supplied environment:
         env = {}
         load ("x = 1", "chunk", "t", env) ()
@@ -330,10 +326,6 @@ describe environments:
         expect (_G.global_scope).to_be (true)
     - it passes arguments to the chunk:
         expect (select ("#", doloadfile "return ..." (1, nil, 3))).to_be (3)
-    - it honours a binary mode:
-        f, err = doloadfile ("return 1", "b")
-        expect (f).to_be (nil)
-        expect (err).to_contain "mode"
     - it runs in a supplied environment:
         env = {}
         doloadfile ("x = 1", "t", env) ()

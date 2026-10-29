@@ -94,8 +94,10 @@
     expect a missing one to be diagnosed.  This needs typecheck 4 or
     later.
 
-  - Example `load` and `loadfile` support the Lua 5.2+ `mode` and `env`
-    arguments on every supported Lua version, including Lua 5.1.
+  - Example `load` and `loadfile` support the Lua 5.2+ `env` argument, and
+    a `mode` of `'t'` that refuses Lua byte code, on every supported Lua
+    version, including Lua 5.1.  A `mode` that does not allow text, such as
+    `'b'`, is an error, as byte code is not portable between hosts.
     Without an `env` argument, the loaded chunk runs in the example
     environment, as before.
 

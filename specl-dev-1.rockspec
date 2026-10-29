@@ -95,7 +95,7 @@ if _MODREV == 'dev' then
       'smush >= 0.1',
       'std._debug >= 1.2',
       'std.functional >= 2.1',
-      'std.normalize >= 4.1',
+      'std.normalize >= 5',
       'std.prototype >= 2.1',
       'typecheck >= 4',
       -- luarocks.org's ldoc fails on Lua 5.5; gvvaughan's works.
@@ -152,7 +152,7 @@ test_dependencies = {
    'optparse >= 3',
    'std._debug >= 1.2',
    'std.functional >= 2.1',
-   'std.normalize >= 4.1',
+   'std.normalize >= 5',
    'std.prototype >= 2.1',
    'typecheck >= 4',
 }
