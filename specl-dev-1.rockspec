@@ -152,7 +152,7 @@ test_dependencies = {
    'optparse >= 3',
    'std._debug >= 1.2',
    'std.functional >= 2.1',
-   'std.normalize >= 5',
+   'std.normalize >= 5.0.1',
    'std.prototype >= 2.1',
    'typecheck >= 4',
 }
