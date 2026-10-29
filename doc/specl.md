@@ -1175,8 +1175,10 @@ The options are:
 
   * `--help` shows how to use `specl`, and exits;
   * `--version` shows which version of `specl` it is, and exits;
-  * `--bundled` lists the rocks that were bundled into this copy of `specl`,
-    with their versions, one to a line, and exits;
+  * `--bundled` says which version of `smush` bundled this copy of `specl`,
+    and lists the rocks that it bundled into it, with their versions, one to
+    a line, and exits.  A `specl` that is run from a source tree is not
+    bundled, and says so;
   * `--color=WHEN` colorizes the output of the formatter, unless `WHEN`
     is `no` [default: yes];
   * `--coverage` generates a coverage report, if [luacov] is installed;

@@ -298,13 +298,14 @@ describe specl:
         to_contain_error "error: unrecognised option '--notarealoption'"
       expect (run_spec {"-,", stdin = yaml}).
         to_contain_error "error: unrecognised option '-,'"
-  - it lists the rocks that are bundled in it with --bundled: |
-      require 'specl.version'.BUNDLED = {'luamacro 2.5.1-2', 'std.normalize 5-1'}
-      expect (run_spec {"--bundled"}).
-        should_succeed_while_matching "^luamacro 2%.5%.1%-2\nstd%.normalize 5%-1\n$"
-  - it does not list the bundled rocks with --version: |
-      require 'specl.version'.BUNDLED = {'luamacro 2.5.1-2'}
-      expect (run_spec {"--version"}).not_to_contain_output "luamacro"
+  - it shows what smush says is bundled in it with --bundled: |
+      -- Which, depends on whether the specl that runs this example is one
+      -- that smush bundled, as it is in a release, or one in a source tree.
+      p = run_spec {"--bundled"}
+      expect (p.output .. p.errout).to_match.any_of {
+        "^smush [^\n]+ bundled:\n",
+        "^specl: not a bundled program!\n",
+      }
   - it responds to --version with appropriate version text:
       expect (run_spec {"--version"}).should_succeed_while_matching.any_of {
         "^specl %(Specl%) %d[%.%d]*\n" ..

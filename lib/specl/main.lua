@@ -148,7 +148,15 @@ local function execute(self)
       os.exit(0)
    end)
    parser:on('bundled', function()
-      print(table.concat(version.BUNDLED or {}, '\n'))
+      -- What smush says is bundled in specl, from the module that it writes
+      -- into every bundle.  Specl from a source tree is not one.
+      local ok, smushed = pcall(require, 'smush.bundled')
+      if not ok then
+         io.stderr:write('specl: not a bundled program!\n',
+            'Use build-aux/specl, which smush bundles, to list what is in it.\n')
+         os.exit(1)
+      end
+      smushed.showbundled()
       os.exit(0)
    end)
 

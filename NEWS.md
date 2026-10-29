@@ -2,6 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - `specl --bundled` shows what smush 0.4 or later says is bundled in
+    specl, as `smush 0.4 bundled:` and then the rocks that it has bundled,
+    and says that specl is not a bundled program, in a source tree.
+
 
 ## Noteworthy changes in release 17.1 (2026-10-28) [stable]
 
