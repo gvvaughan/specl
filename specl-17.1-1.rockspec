@@ -149,6 +149,7 @@ end
 -- development build needs them.
 test_dependencies = {
    'luacov',
+   'luamacro >= 2.5.1',
    'optparse >= 3',
    'std._debug >= 1.2',
    'std.functional >= 2.1',
