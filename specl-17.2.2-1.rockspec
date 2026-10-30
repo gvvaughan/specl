@@ -1,7 +1,7 @@
 -- Use the source, Luke!
 -- Copyright (C) 2026 Gary V. Vaughan
 
-local _MODREV, _SPECREV = 'dev', '-1'
+local _MODREV, _SPECREV = '17.2.2', '-1'
 
 rockspec_format = '3.0'
 package = 'specl'
