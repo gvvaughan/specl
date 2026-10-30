@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 17.2.1 (2026-10-29) [stable]
+
 ### Bug fixes
 
   - An example can `require` the libraries that only some Luas have built
