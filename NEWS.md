@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 17.2.2 (2026-10-29) [stable]
+
 ### Bug fixes
 
   - Specl no longer crashes with a segmentation fault in LuaJIT 2.1 for
