@@ -16,6 +16,23 @@ describe specl:
       expect(p).to_contain_output '"%{s}"'
       expect(p.errout).to_be ''
 
+- describe the libraries that the host has built in:
+  - it gives them to an example to require: |
+      -- bit32 in Lua 5.2, utf8 in Lua 5.3 and later, bit, ffi and jit in
+      -- LuaJIT, and none in Lua 5.1.
+      yaml = "describe x:\n- it has them:"
+      count = 0
+      for _, name in ipairs {'bit', 'bit32', 'ffi', 'jit', 'utf8'} do
+         if package.loaded[name] ~= nil then
+            count = count + 1
+            yaml = yaml .. "\n    expect (require '" .. name .. "').not_to_be (nil)"
+         end
+      end
+      if count > 0 then
+         p = spawn_specl {'--color=no', stdin = yaml}
+         expect(p).to_succeed_while_containing 'All expectations met'
+      end
+
 - describe spec-file format:
   - before: |
       yaml = "describe x:\n- it is pending:"

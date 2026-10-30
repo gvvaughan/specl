@@ -2,6 +2,14 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - An example can `require` the libraries that only some Luas have built
+    in: `bit32` in Lua 5.2, `utf8` in Lua 5.3 and later, and `bit`, `ffi`
+    and `jit` in LuaJIT.  Release 17 gave an example only the libraries
+    that every Lua has, so a project that needs one of them, such as
+    luaposix with `bit32` in Lua 5.2, failed to load.
+
 
 ## Noteworthy changes in release 17.2 (2026-10-29) [stable]
 

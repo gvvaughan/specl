@@ -207,6 +207,14 @@ sandbox.package.loaded = {
    table = sandbox.table,
 }
 
+-- The libraries that only some Luas have built in, which `require` gives an
+-- example in a Lua that has them, as it does anywhere.
+for _, name in ipairs {'bit', 'bit32', 'ffi', 'jit', 'utf8'} do
+   if host_package.loaded[name] ~= nil then
+      sandbox.package.loaded[name] = host_package.loaded[name]
+   end
+end
+
 -- The built-in libraries that an example has, which `require` gives it.
 local standard = {}
 for name in pairs(sandbox.package.loaded) do
