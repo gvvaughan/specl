@@ -2,6 +2,14 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - Specl no longer crashes with a segmentation fault in LuaJIT 2.1 for
+    x64 built from its git master since 2026-10-29, which compiled a trace
+    for the loop that expands the macros of a spec file that sometimes
+    crashed, more often for a longer file.  Specl expands them without
+    compiling that loop.
+
 
 ## Noteworthy changes in release 17.2.1 (2026-10-29) [stable]
 

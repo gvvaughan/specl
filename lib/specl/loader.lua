@@ -11,6 +11,15 @@ local rep = string.rep
 local sub = string.sub
 
 local macro = require 'macro'
+
+-- LuaJIT 2.1 for x64 since its commit b310887b (2026-10-29) can crash with
+-- a segmentation fault in the trace it compiles for the token loop of
+-- luamacro's substitute, so specl expands the macros of a spec file
+-- without compiling that loop.
+local jit = rawget(_G, 'jit')
+if jit then
+   jit.off(macro.substitute, true)
+end
 local yaml = require 'yaml'
 
 local expect = require 'specl.expect'
