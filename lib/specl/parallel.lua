@@ -29,6 +29,8 @@ local find, format, match, sub = string.find, string.format, string.match, strin
 
 local runner = require 'specl.runner'
 
+local stats_ok, stats = pcall(require, 'luacov.stats')
+
 local load = loadstring or load
 
 
@@ -55,6 +57,40 @@ end
 local function deserialize(text)
    local chunk = load('return ' .. text)
    return chunk and chunk()
+end
+
+
+-- The luacov runner, when `--coverage` has it running.
+local function coverage()
+   local luacov = debug.getregistry()._LOADED['luacov.runner']
+   return luacov and luacov.initialized and stats_ok and luacov or nil
+end
+
+
+-- The file that the worker with process id PID saves the lines it runs in.
+local function worker_stats(luacov, pid)
+   return luacov.configuration.statsfile .. '.' .. pid
+end
+
+
+-- Add the lines that the worker with process id PID ran to the stats file
+-- of the parent, and remove the file of the worker.
+local function merge_stats(luacov, pid)
+   local file = worker_stats(luacov, pid)
+   local extra = stats.load(file)
+   if extra then
+      local main = luacov.configuration.statsfile
+      local total = stats.load(main) or {}
+      for name, data in pairs(extra) do
+         if total[name] then
+            luacov.update_stats(total[name], data)
+         else
+            total[name] = data
+         end
+      end
+      stats.save(main, total)
+   end
+   os.remove(file)
 end
 
 
@@ -156,6 +192,13 @@ local function work(state, parser, units, w)
          break
       end
    end
+
+   -- luacov saves only when the process leaves by `os.exit` or the end of
+   -- the program, neither of which a worker does.
+   local luacov = coverage()
+   if luacov then
+      luacov.save_stats()
+   end
    unistd._exit(0)
 end
 
@@ -166,6 +209,13 @@ local function spawn(state, parser, units, workers)
    local cmd_r, cmd_w = unistd.pipe()
    local res_r, res_w = unistd.pipe()
    io.stdout:flush()
+
+   -- What the parent has run so far is the parent's to save, not each
+   -- worker's, which would then count it again.
+   local luacov = coverage()
+   if luacov then
+      luacov.save_stats()
+   end
    local pid = unistd.fork()
    assert(pid, 'could not start a worker')
 
@@ -179,6 +229,9 @@ local function spawn(state, parser, units, workers)
       end
       unistd.close(cmd_w)
       unistd.close(res_r)
+      if luacov then
+         luacov.configuration.statsfile = worker_stats(luacov, unistd.getpid())
+      end
       work(state, parser, units, w)
    end
 
@@ -264,6 +317,10 @@ function M.run(state, parser, units, jobs)
       end
       unistd.close(w.res_r)
       wait(w.pid)
+      local luacov = coverage()
+      if luacov then
+         merge_stats(luacov, w.pid)
+      end
       workers[w] = nil
       live = live - 1
    end

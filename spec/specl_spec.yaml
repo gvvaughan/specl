@@ -599,8 +599,21 @@ describe specl:
         local a, b = specs (two, two)
         expect (spawn_specl {'-j0', a, b}).to_contain_error "'0' is not a number of jobs"
         expect (spawn_specl {'-jmany', a, b}).to_contain_error "'many' is not a number of jobs"
-    - it does not combine with --coverage: |
-        local a, b = specs (two, two)
-        local p = spawn_specl {'-j2', '--coverage', a, b}
-        expect (p).to_exit (2)
-        expect (p).to_contain_error '--jobs cannot be used with --coverage'
+    - it combines the coverage of the workers into one stats file: |
+        local ok, stats = pcall (require, 'luacov.stats')
+        if not ok then pending 'needs luacov' end
+        local file = 'luacov.stats.out'
+        local a, b, c = specs (two, two, two)
+        local p = spawn_specl {'-j2', '--coverage', a, b, c}
+        expect (p).to_exit (0)
+        expect (p).to_contain_output 'All expectations met'
+        -- The workers saved to files of their own, and left none behind.
+        expect (spawn_specl {'ls', file .. '.*'}).not_to_exit (0)
+        -- The file has what the parent ran, and what only the workers ran.
+        local ran = {}
+        for name in pairs (stats.load (file) or {}) do
+           ran[#ran + 1] = name
+        end
+        ran = table.concat (ran, ' ')
+        expect (ran).to_contain 'specl/parallel.lua'
+        expect (ran).to_contain 'specl/sandbox.lua'

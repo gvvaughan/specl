@@ -9,7 +9,9 @@
     of each spec-file is shown whole when it is done, and the results of
     all of them are in one summary at the end, so that it is as readable as
     one process, and a long run is shorter by about the number of cores.
-    It needs luaposix, and cannot be used with `--coverage`.
+    It needs luaposix.  With `--coverage`, each worker saves the lines it
+    ran in a file of its own, which are combined into the one statistics
+    file of luacov when the worker is done.
 
   - `specl.pty` runs a function or a program on a pseudo-terminal, so
     that the specs of what draws on a terminal or reads keys from one can

@@ -1343,9 +1343,11 @@ that shares a resource, such as a port or a fixed file name, needs one that
 each worker has to itself, and timing of a busy machine can make an example
 that waits for a short time fail when it would not alone.
 
-`--jobs` needs [luaposix] for the processes and pipes, and cannot be used
-with `--coverage`, whose workers would write over the statistics of each
-other.  A `-` for standard input is checked by the one process with no jobs.
+`--jobs` needs [luaposix] for the processes and pipes.  With `--coverage`,
+each worker saves the lines that it ran in a file of its own, as they would
+write over the statistics of each other, and they are combined into the
+usual statistics file when the worker is done.  A `-` for standard input is
+checked by the one process with no jobs.
 
 
 

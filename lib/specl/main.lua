@@ -144,15 +144,17 @@ local function has_stdin(args)
 end
 
 
--- The module that runs spec files in several processes, which needs luaposix
--- and has no use with a coverage report, that each process would write over.
+-- The module that runs spec files in several processes, which needs luaposix.
 local function parallel(self, parser)
-   if self.opts.coverage then
-      parser:opterr "--jobs cannot be used with --coverage"
-   end
    local ok, mod = pcall(require, 'specl.parallel')
    if not ok then
       parser:opterr('--jobs needs luaposix: ' .. tostring(mod))
+   end
+
+   -- Each process saves the lines that it runs in a file of its own, so
+   -- luacov has to be running before they are made.
+   if self.opts.coverage then
+      pcall(require, 'luacov')
    end
    return mod
 end
