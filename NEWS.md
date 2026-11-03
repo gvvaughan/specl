@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 17.3 (2026-11-03) [stable]
+
 ### New features
 
   - `-jN` or `--jobs=N` checks `N` spec-files at a time, with a worker
