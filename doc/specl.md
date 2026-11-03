@@ -1659,6 +1659,85 @@ from an example block in any spec-file:
 {% endhighlight %}
 
 
+### 6.3. Programs that Need a Terminal
+
+A program that draws on a terminal, or reads keys from one, can't be
+checked with a pipe.  `specl.pty` gives it a pseudo-terminal, and
+`specl.screen` has [matchers](#2-matchers) for what it drew, on the
+virtual terminal of [lvterm].  They need [luaposix], and the matchers
+need lvterm, which is only on the hosts that it has a backend for: the
+rest of `specl.pty` works without it, and the screen is `nil`.
+
+`pty.run` calls a function in a new process, with a terminal for its
+standard input, output and error.  It shares what the process that forks
+it has loaded, so that the code that it runs is covered by `--coverage`:
+
+{% highlight lua %}
+    before:
+      pty = require "specl.pty"
+      require "specl.screen"
+
+    - describe a drawing function:
+      - it draws on the screen:
+          local results, output, screen = pty.run (function (ready)
+            io.stdout:write "\027[2;3Hhello"
+            return "done"
+          end)
+          expect (results[1]).to_be "done"
+          expect (screen).to_show_row (1, "  hello")
+{% endhighlight %}
+
+It returns what the function returned, with their count in `n`, what it
+wrote to the terminal, and the screen.  An error in the function is
+raised, and so is waiting too long for it, so `timeout` is how many
+milliseconds it may take.  The function is given a function `ready` that
+types `input` at the terminal when it is called, for a function that
+reads.
+
+`pty.start` runs a program, which is not the Lua that runs the specs, so
+it can have an environment of its own, and keeps it, for an example that
+types at it and looks at what a person would see.  A spec that needs
+methods of its own, such as a command that is typed in a way that is
+particular to the program, adds them to a class derived from `pty.Session`:
+
+{% highlight lua %}
+    - describe the editor:
+      - it shows what is typed:
+          local session = pty.start {argv = {"nino"}, env = {HOME = tmp}}
+          session:type "ihello"
+          expect (session:screen ()).to_show_row (1, "hello")
+          session:stop ()
+{% endhighlight %}
+
+`specl.pty` loads `lvterm` itself, as one of the libraries that specl is
+built on, so a project that is `lvterm` has the copy that specl loaded, and
+the copy in its own tree that the examples test, which is a different
+copy.  It asks for the C backend, because a copy that uses the LuaJIT
+`ffi` can't be in the same process as another, as they declare the same C
+types.  `lvterm = false` in the options of a call is a call without a
+screen.
+
+After each `type`, the session reads what the program writes until it is
+quiet for 300 milliseconds, which is the program waiting for a key.  Its
+other methods are `settle`, `screen`, `output`, `exited`, `wait`,
+`suspended`, `resize`, `signal`, `resume` and `stop`.  A session that an
+example does not stop is stopped by `pty.reap` when nothing refers to it
+any more, which `pty.start` calls when there are many, so that the many
+spec files of one process do not use up the pseudo-terminals that the
+host has.
+
+The matchers take the screen as the subject:
+
+ * `to_show_row (row, text)` has the text in a row, from 0, without the
+   spaces after it.
+ * `to_have_cursor_at (row, col)` has the cursor there.
+ * `to_show_cell (row, col, fields)` has a cell that has the fields,
+   such as `{text = "x", bold = true}`.
+ * `to_look_like (picture)` is what the whole screen shows, with nothing
+   else on it.  A long string picture loses the indentation of its closing
+   delimiter, and the blank lines at the end of it.
+
+
 ## 7. Not Yet Implemented
 
 No support for mocks in the current version.
@@ -1668,6 +1747,7 @@ No support for mocks in the current version.
 [bdd]:      http://en.wikipedia.org/wiki/Behavior-driven_development
 [lua]:      http://www.lua.org
 [luaposix]: http://github.com/luaposix/luaposix
+[lvterm]:   http://github.com/gvvaughan/lvterm
 [rspec]:    http://github.com/rspec/rspec
 [specl]:    http://github.com/gvvaughan/specl
 [thunk]:    https://en.wikipedia.org/wiki/Thunk

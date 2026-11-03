@@ -1,0 +1,84 @@
+# Behaviour Driven Development for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+# Copyright (C) 2026 Gary V. Vaughan
+
+before: |
+  require 'specl.screen'
+
+  -- A terminal that shows ROWS, with the cursor at ROW and COL, and CELLS
+  -- for what it can say about the cells, which are named 'row,col'.
+  function screen (rows, row, col, cells)
+     local term = {}
+     function term:lines () return rows end
+     function term:row (n) return rows[n + 1] end
+     function term:cursor () return row or 0, col or 0 end
+     function term:cell (r, c)
+        local cell = cells and cells[r .. ',' .. c]
+        if not cell then error 'off the screen' end
+        return cell
+     end
+     return term
+  end
+
+specify specl.screen:
+- describe to_show_row:
+  - it matches the text of a row: |
+      expect (screen {'one', 'two'}).to_show_row (1, 'two')
+  - it ignores spaces at the end of a row: |
+      expect (screen {'one   ', 'two'}).to_show_row (0, 'one')
+      expect (screen {'one', 'two'}).to_show_row (0, 'one  ')
+  - it does not match other text: |
+      expect (screen {'one', 'two'}).not_to_show_row (0, 'two')
+  - it does not match what is not a terminal: |
+      expect ('one').not_to_show_row (0, 'one')
+  - it does not match a row that is not there: |
+      expect (screen {'one'}).not_to_show_row (5, 'one')
+
+- describe to_have_cursor_at:
+  - it matches the position of the cursor: |
+      expect (screen ({'x'}, 2, 5)).to_have_cursor_at (2, 5)
+  - it does not match another position: |
+      expect (screen ({'x'}, 2, 5)).not_to_have_cursor_at (5, 2)
+
+- describe to_show_cell:
+  - it matches the fields that are asked for: |
+      local term = screen ({'x'}, 0, 0, {['0,0'] = {text = 'x', bold = true, fg = 1}})
+      expect (term).to_show_cell (0, 0, {text = 'x', bold = true})
+  - it matches a color by its parts: |
+      local term = screen ({'x'}, 0, 0, {['0,0'] = {fg = {red = 1, green = 2, blue = 3}}})
+      expect (term).to_show_cell (0, 0, {fg = {red = 1, green = 2, blue = 3}})
+      expect (term).not_to_show_cell (0, 0, {fg = {red = 1, green = 2, blue = 4}})
+  - it does not match another value: |
+      local term = screen ({'x'}, 0, 0, {['0,0'] = {bold = false}})
+      expect (term).not_to_show_cell (0, 0, {bold = true})
+  - it does not match a cell that is off the screen: |
+      expect (screen {'x'}).not_to_show_cell (9, 9, {text = 'x'})
+
+- describe to_look_like:
+  - it matches the rows of the picture: |
+      expect (screen {'one', '', 'two'}).to_look_like 'one\n\ntwo'
+  - it ignores blank rows at the end of the screen: |
+      expect (screen {'one', '', ''}).to_look_like 'one'
+  - it lines the picture up with the end of the long string: |
+      expect (screen {'one', ' two'}).to_look_like [[
+         one
+          two
+         ]]
+  - it takes blank rows at the start of the picture for rows of the screen: |
+      expect (screen {'', 'one'}).to_look_like '\none'
+  - it does not match anything else on the screen: |
+      expect (screen {'one', 'two'}).not_to_look_like 'one'
+  - it matches an empty screen with an empty picture: |
+      expect (screen {'', ''}).to_look_like ''
+
+- describe a failure:
+  - it shows the screen that there was: |
+      local yaml = "before: |\n" ..
+         "  require 'specl.screen'\n" ..
+         "  term = {lines = function () return {'one'} end,\n" ..
+         "          row = function () return 'one' end,\n" ..
+         "          cursor = function () return 3, 4 end}\n" ..
+         "describe screen:\n" ..
+         "- it fails: expect (term).to_show_row (0, 'two')\n"
+      local out = run_spec (yaml)
+      expect (out).to_contain_output 'row 0 to show:'
+      expect (out).to_contain_output '(cursor at 3,4)'

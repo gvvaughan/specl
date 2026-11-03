@@ -11,6 +11,21 @@
     one process, and a long run is shorter by about the number of cores.
     It needs luaposix, and cannot be used with `--coverage`.
 
+  - `specl.pty` runs a function or a program on a pseudo-terminal, so
+    that the specs of what draws on a terminal or reads keys from one can
+    be written with specl alone.  `pty.run` calls a function in a child
+    process and returns what it returned and what it wrote, and
+    `pty.start` keeps a program, for an example to type at and look at the
+    screen of, as a person would.  A session that an example does not stop
+    is stopped when `pty.start` finds that there are many, so a run of many
+    spec files in one process does not use up the pseudo-terminals of the
+    host.
+
+  - `specl.screen` has matchers for what a virtual terminal shows:
+    `to_show_row`, `to_have_cursor_at`, `to_show_cell` and `to_look_like`.
+    The screen is made with lvterm, with its C backend, when it is
+    installed.
+
 
 ## Noteworthy changes in release 17.2.2 (2026-10-29) [stable]
 

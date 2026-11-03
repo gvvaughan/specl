@@ -63,8 +63,10 @@ if _MODREV == 'dev' then
       'lib/specl/main.lua',
       'lib/specl/matchers.lua',
       'lib/specl/parallel.lua',
+      'lib/specl/pty.lua',
       'lib/specl/runner.lua',
       'lib/specl/sandbox.lua',
+      'lib/specl/screen.lua',
       'lib/specl/shell.lua',
       'lib/specl/std.lua',
       'lib/specl/util.lua',
@@ -118,9 +120,11 @@ if _MODREV == 'dev' then
    -- Each library shares one copy of std.normalize's core.
    local smush = '$SMUSH --main=specl.cli' ..
       ' --external=package --external=lpeg --external=luacov' ..
-      ' --external=posix.dirent --external=posix.poll --external=posix.stdio' ..
+      ' --external=posix.dirent --external=posix.fcntl --external=posix.poll' ..
+      ' --external=posix.signal --external=posix.stdio --external=posix.stdlib' ..
       ' --external=posix.sys.stat --external=posix.sys.time --external=posix.sys.wait' ..
-      ' --external=posix.unistd' ..
+      ' --external=posix.termio --external=posix.unistd' ..
+      ' --external=lvterm' ..
       ' --external=yaml' ..
       ' $sources' ..
       ' optparse._normalize::std.normalize._core' ..
@@ -157,6 +161,8 @@ end
 test_dependencies = {
    'luacov',
    'luamacro >= 2.5.1',
+   'luaposix >= 36',
+   'lvterm >= 0.1',
    'optparse >= 3',
    'std._debug >= 1.2',
    'std.functional >= 2.1',

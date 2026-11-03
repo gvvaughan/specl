@@ -1,0 +1,208 @@
+# Behaviour Driven Development for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+# Copyright (C) 2026 Gary V. Vaughan
+
+before: |
+  pty = require 'specl.pty'
+  posix = require 'posix'
+
+  -- Whether there is a virtual terminal to look at.
+  have_lvterm = pcall (require, 'lvterm')
+
+  function sh (script, options)
+     options = options or {}
+     options.argv = {'/bin/sh', '-c', script}
+     return pty.start (options)
+  end
+
+after: |
+  if session then
+     session:stop ()
+     session = nil
+  end
+
+specify specl.pty:
+- describe run:
+  - it returns what the function returns, and how many values: |
+      local r = pty.run (function () return 1, 'two', true, nil end)
+      expect (r.n).to_be (4)
+      expect ({r[1], r[2], r[3], r[4]}).to_equal {1, 'two', true, nil}
+  - it returns nothing from a function that returns nothing: |
+      expect (pty.run (function () end).n).to_be (0)
+  - it returns strings that need quoting: |
+      local r = pty.run (function () return 'a "b"\n\0\\' end)
+      expect (r[1]).to_be 'a "b"\n\0\\'
+  - it raises an error from the function: |
+      expect (pty.run (function () error 'boom' end)).to_raise 'boom'
+  - it gives the function a terminal: |
+      local r = pty.run (function ()
+         local unistd = require 'posix.unistd'
+         return unistd.isatty (0), unistd.isatty (1), unistd.isatty (2)
+      end)
+      expect (r).to_equal {1, 1, 1, n = 3}
+  - it captures what the function writes to the terminal: |
+      local _, output = pty.run (function () io.stdout:write 'hello' end)
+      expect (output).to_contain 'hello'
+  - it runs the function in another process: |
+      local r = pty.run (function () return require 'posix.unistd'.getpid () end)
+      expect (r[1]).not_to_be (require 'posix.unistd'.getpid ())
+  - it describes an xterm of 24 lines and 80 columns: |
+      local r = pty.run (function ()
+         return os.getenv 'TERM', os.getenv 'LINES', os.getenv 'COLUMNS'
+      end)
+      expect (r).to_equal {'xterm', '24', '80', n = 3}
+  - it describes another terminal when asked to: |
+      local r = pty.run (function ()
+         return os.getenv 'TERM', os.getenv 'LINES', os.getenv 'COLUMNS'
+      end, {term = 'vt100', lines = 10, columns = 40})
+      expect (r).to_equal {'vt100', '10', '40', n = 3}
+  - it sets the environment that it is asked to: |
+      local r = pty.run (function () return os.getenv 'SPECL_PTY' end,
+                         {env = {SPECL_PTY = 'yes'}})
+      expect (r[1]).to_be 'yes'
+  - it types at the terminal once the function is ready: |
+      local r = pty.run (function (ready)
+         ready ()
+         return require 'posix.unistd'.read (0, 2)
+      end, {input = 'x\n'})
+      expect (r[1]).to_be 'x\n'
+  - it gives up on a function that takes too long: |
+      expect (pty.run (function ()
+         require 'posix.unistd'.sleep (5)
+      end, {timeout = 200})).to_raise 'timed out'
+  - it closes what it opened when it gives up: |
+      local fcntl = require 'posix.fcntl'
+      local function next_fd ()
+         local fd = fcntl.open ('/dev/null', fcntl.O_RDONLY)
+         require 'posix.unistd'.close (fd)
+         return fd
+      end
+      local before = next_fd ()
+      for _ = 1, 3 do
+         pcall (pty.run, function () require 'posix.unistd'.sleep (5) end,
+                {timeout = 100})
+      end
+      expect (next_fd ()).to_be (before)
+  - it shows what was written when there is a virtual terminal: |
+      if not have_lvterm then pending 'needs lvterm' end
+      local _, _, screen = pty.run (function () io.stdout:write 'hello' end)
+      expect (screen:row (0)).to_match '^hello'
+  - it has no screen without a virtual terminal: |
+      local _, _, screen = pty.run (function () end, {lvterm = false})
+      expect (screen).to_be (nil)
+
+- describe start:
+  - it runs a program on a terminal, and reads what it writes: |
+      session = sh 'echo hello'
+      session:settle ()
+      expect (session:output ()).to_contain 'hello'
+  - it types at the program: |
+      session = pty.start {argv = {'/bin/cat'}}
+      session:type 'typed\r'
+      expect (session:output ()).to_contain 'typed'
+  - it gives the program a terminal: |
+      session = sh 'test -t 0 && test -t 1 && echo tty'
+      session:settle ()
+      expect (session:output ()).to_contain 'tty'
+  - it describes a terminal of 24 lines and 80 columns: |
+      session = sh 'echo $TERM $LINES $COLUMNS'
+      session:settle ()
+      expect (session:output ()).to_contain 'xterm 24 80'
+  - it sets the environment that it is asked to: |
+      session = sh ('echo $SPECL_PTY', {env = {SPECL_PTY = 'yes'}})
+      session:settle ()
+      expect (session:output ()).to_contain 'yes'
+  - it runs the program in the directory that it is asked to: |
+      session = sh ('pwd -P', {cwd = '/'})
+      session:settle ()
+      expect (session:output ()).to_contain '/\r\n'
+  - it shows what the program drew when there is a virtual terminal: |
+      if not have_lvterm then pending 'needs lvterm' end
+      session = sh 'printf "\\033[2;3Hhere"; cat'
+      session:settle ()
+      expect (session:screen ():row (1)).to_match '^  here'
+  - it has no screen without a virtual terminal: |
+      session = sh ('echo hello', {lvterm = false})
+      expect (session:screen ()).to_be (nil)
+  - it answers what the program asks the virtual terminal: |
+      if not have_lvterm then pending 'needs lvterm' end
+      session = sh 'printf "\\033[6n"; cat'
+      session:settle ()
+      expect (session:output ()).to_contain '\027[6n'
+  - it is not there when the program has not been found: |
+      session = pty.start {argv = {'/no/such/program'}}
+      expect ((session:wait ())).to_be (true)
+      expect (select (2, session:exited ())).to_be (127)
+
+- describe exited:
+  - it is false while the program runs: |
+      session = pty.start {argv = {'/bin/cat'}}
+      expect ((session:exited ())).to_be (false)
+  - it gives the status of the program that has exited: |
+      session = sh 'exit 3'
+      expect ((session:wait ())).to_be (true)
+      expect (select (2, session:exited ())).to_be (3)
+  - it gives 128 and the signal of a program that was killed: |
+      session = pty.start {argv = {'/bin/cat'}}
+      session:signal (posix.SIGTERM)
+      expect ((session:wait ())).to_be (true)
+      expect (select (2, session:exited ())).to_be (128 + posix.SIGTERM)
+
+- describe resize:
+  - it tells the program the size of the terminal: |
+      session = sh 'while read x; do stty size; done'
+      session:type '\r'
+      expect (session:output ()).to_contain '24 80'
+      session:resize (10, 30)
+      session:type '\r'
+      expect (session:output ()).to_contain '10 30'
+
+- describe suspended:
+  - it is true after the program is stopped, and resume continues it: |
+      session = pty.start {argv = {'/bin/cat'}}
+      session:signal (posix.SIGSTOP)
+      expect ((session:suspended ())).to_be (true)
+      session:resume ()
+      expect ((session:exited ())).to_be (false)
+
+- describe stop:
+  - it kills the program, and gives the status: |
+      session = pty.start {argv = {'/bin/cat'}}
+      expect ((session:stop ())).to_be (137)
+      session = nil
+  - it can be called again: |
+      session = pty.start {argv = {'/bin/cat'}}
+      session:stop ()
+      expect ((session:stop ())).to_be (137)
+  - it leaves what has exited alone: |
+      session = sh 'exit 4'
+      session:wait ()
+      expect (session:stop ()).to_be (4)
+
+- describe lvterm:
+  - it is specl's own copy, with the C backend if there is one: |
+      if not have_lvterm then pending 'needs lvterm' end
+      local with_core = pcall (require, 'lvterm.core')
+      if not with_core then pending 'needs the C backend' end
+      expect (pty.lvterm.backend).to_be 'core'
+  - it leaves LVTERM_BACKEND as it was: |
+      expect (os.getenv 'LVTERM_BACKEND').to_be (nil)
+
+- describe reap:
+  - it stops a session that nothing refers to: |
+      local pid
+      do
+         local lost = pty.start {argv = {'/bin/cat'}}
+         pid = lost.pid
+      end
+      pty.reap ()
+      expect ((posix.kill (pid, 0))).to_be (nil)
+  - it leaves a session that something refers to: |
+      session = pty.start {argv = {'/bin/cat'}}
+      pty.reap ()
+      expect ((session:exited ())).to_be (false)
+  - it is done by start when there are very many: |
+      local pids = {}
+      for i = 1, 100 do
+         pids[i] = pty.start {argv = {'/bin/cat'}}.pid
+      end
+      expect ((posix.kill (pids[1], 0))).to_be (nil)
