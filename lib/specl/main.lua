@@ -34,6 +34,16 @@ local function formatter_opthandler(parser, opt, optarg)
 end
 
 
+-- optparse opt handler for `-j, --jobs=N`.
+local function jobs_opthandler(parser, opt, optarg)
+   local jobs = tonumber(optarg)
+   if jobs == nil or jobs < 1 or jobs ~= math.floor(jobs) then
+      parser:opterr("'" .. optarg .. "' is not a number of jobs")
+   end
+   return jobs
+end
+
+
 -- Whether *filename* is a specfile-like filename.
 local function specfilter(filename)
    return match(filename, '_spec%.yaml$') ~= nil
@@ -123,6 +133,31 @@ local function process_args(self, parser)
 end
 
 
+-- Whether one of ARGS is standard input.
+local function has_stdin(args)
+   for _, v in ipairs(args) do
+      if v == '-' then
+         return true
+      end
+   end
+   return false
+end
+
+
+-- The module that runs spec files in several processes, which needs luaposix
+-- and has no use with a coverage report, that each process would write over.
+local function parallel(self, parser)
+   if self.opts.coverage then
+      parser:opterr "--jobs cannot be used with --coverage"
+   end
+   local ok, mod = pcall(require, 'specl.parallel')
+   if not ok then
+      parser:opterr('--jobs needs luaposix: ' .. tostring(mod))
+   end
+   return mod
+end
+
+
 -- Execute this program.
 local function execute(self)
    -- Parse command line options.
@@ -161,6 +196,7 @@ local function execute(self)
    end)
 
    parser:on('color', parser.required, parser.boolean)
+   parser:on({'j', 'jobs'}, parser.required, jobs_opthandler)
    parser:on({'f', 'format', 'formatter'},
               parser.required, formatter_opthandler)
 
@@ -185,6 +221,16 @@ local function execute(self)
       end
    end
 
+   local jobs = self.opts.jobs or 1
+   if jobs > 1 then
+      local parallel = self:parallel(parser)
+      local units = parallel.units(self.arg)
+      -- Only a file can be sent to a worker, and one is not worth it.
+      if #units > 1 and not has_stdin(self.arg) then
+         os.exit(parallel.run(self, parser, units, jobs))
+      end
+   end
+
    self:process_args(parser)
 
    if self.opts.coverage then
@@ -204,6 +250,7 @@ return Object {
    __index = {
       compile = compile,
       execute = execute,
+      parallel = parallel,
       process_args = process_args,
    },
 

@@ -1186,6 +1186,8 @@ The options are:
     [Running a Subset of Examples](#51-running-a-subset-of-examples));
   * `-f FILE` or `--formatter=FILE` uses a specific [formatter](#4-formatters)
     [default: `progress`] (see [Formatting Results](#52-formatting-results));
+  * `-jN` or `--jobs=N` checks `N` spec-files at a time (see
+    [Running Spec-files at Once](#53-running-spec-files-at-once));
   * `-v` or `--verbose` asks the formatter for more output;
   * `-e PATTERN` or `--example=PATTERN`, `+NN` and `FILE:NN[:MM]` check
     only some of the examples (see
@@ -1314,6 +1316,36 @@ name, including built in formatters, like this:
 {% highlight bash %}
     specl --formatter=tap
 {% endhighlight %}
+
+
+### 5.3. Running Spec-files at Once
+
+A project with many spec-files, or slow ones, is checked sooner by more
+than one process at a time:
+
+{% highlight bash %}
+    specl -j4
+{% endhighlight %}
+
+[Specl] starts `N` workers, that each take the next spec-file that none
+has, until there are no more.  What a worker's formatter writes for a
+spec-file, and anything else that is written to standard output while it
+is checked, is shown in one piece when the spec-file is done, so the
+output of different spec-files is not mixed, and there is one summary of
+all of them at the end.  The files are shown in the order that they are
+done, and not in the order that they were named.  The exit status is
+non-zero if any example failed, or a worker ended before it had checked its
+spec-file, which is said on standard error.
+
+Each spec-file is checked on its own in a new sandbox as before, so a
+project whose spec-files do not depend on one another needs no change.  One
+that shares a resource, such as a port or a fixed file name, needs one that
+each worker has to itself, and timing of a busy machine can make an example
+that waits for a short time fail when it would not alone.
+
+`--jobs` needs [luaposix] for the processes and pipes, and cannot be used
+with `--coverage`, whose workers would write over the statistics of each
+other.  A `-` for standard input is checked by the one process with no jobs.
 
 
 

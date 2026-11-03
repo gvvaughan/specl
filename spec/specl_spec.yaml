@@ -530,3 +530,77 @@ describe specl:
             to_contain_output "\n0 passed, 0 pending and 1 failed "
           expect (run_spec {"-freport", "-:6:999", stdin = yaml}).
             to_contain_output "\n0 passed, 1 pending and 0 failed "
+
+  - context when running spec files at once:
+    - before: |
+        two = "describe a:\n- it passes: |\n    expect (1).to_be (1)\n    expect (2).to_be (2)\n"
+        mixed = "describe b:\n- it passes: expect (1).to_be (1)\n- it fails: expect (1).to_be (0)\n"
+        quits = "describe c:\n- it quits: os.exit (3)\n"
+        files = {}
+        local function spec (text)
+           files[#files + 1] = Tmpfile (text)
+           return files[#files].path
+        end
+        function specs (...)
+           local paths = {}
+           for _, text in ipairs {...} do
+              paths[#paths + 1] = spec (text)
+           end
+           return unpack (paths)
+        end
+    - after: |
+        for _, f in ipairs (files) do
+           f:remove ()
+        end
+
+    - it adds up the results of all of the files: |
+        local a, b = specs (two, mixed)
+        local p = spawn_specl {'-j2', a, b}
+        expect (p).to_exit (1)
+        expect (p).to_contain_output '\n3 passed, 0 pending, and 1 failed '
+    - it exits with zero status when none fail: |
+        local a, b = specs (two, two)
+        local p = spawn_specl {'-j2', a, b}
+        expect (p).to_exit (0)
+        expect (p).to_contain_output 'All expectations met in '
+    - it runs all of the files when there are more than jobs: |
+        local a, b, c, d, e = specs (two, two, two, two, two)
+        local p = spawn_specl {'-j2', a, b, c, d, e}
+        expect (p).to_exit (0)
+        expect (p).to_contain_output 'All expectations met in '
+        expect (p).to_contain_output '..........\n'
+    - it accepts --jobs as an equivalent to -j: |
+        local a, b = specs (two, mixed)
+        local p = spawn_specl {'--jobs=2', a, b}
+        expect (p).to_contain_output '\n3 passed, 0 pending, and 1 failed '
+    - it runs a single file as it does with no jobs: |
+        local a = specs (mixed)
+        local p = spawn_specl {'-j4', a}
+        expect (p).to_exit (1)
+        expect (p).to_contain_output '\n1 passed, 0 pending, and 1 failed '
+    - it applies a line filter to the file after it only: |
+        local a, b = specs (mixed, two)
+        local p = spawn_specl {'-j2', '+3', a, b}
+        expect (p).to_contain_output '\n2 passed, 0 pending, and 1 failed '
+    - it reports a file whose worker ended, and the results of the others: |
+        local a, b = specs (quits, two)
+        local p = spawn_specl {'-j2', a, b}
+        expect (p).to_exit (1)
+        expect (p).to_contain_error 'the worker ended before it was done'
+        expect (p).to_contain_output 'All expectations met in '
+    - it stops handing out files after one fails with --fail-fast: |
+        local slow = "describe s:\n- it passes: |\n    os.execute ('sleep 1')\n" ..
+                     "    expect (1).to_be (1)\n    expect (2).to_be (2)\n"
+        local a, b, c, d, e = specs (mixed, slow, slow, slow, slow)
+        local p = spawn_specl {'-j2', '--fail-fast', a, b, c, d, e}
+        expect (p).to_exit (1)
+        expect (p).to_contain_output '\n3 passed, 0 pending, and 1 failed '
+    - it diagnoses a number of jobs that is not a count: |
+        local a, b = specs (two, two)
+        expect (spawn_specl {'-j0', a, b}).to_contain_error "'0' is not a number of jobs"
+        expect (spawn_specl {'-jmany', a, b}).to_contain_error "'many' is not a number of jobs"
+    - it does not combine with --coverage: |
+        local a, b = specs (two, two)
+        local p = spawn_specl {'-j2', '--coverage', a, b}
+        expect (p).to_exit (2)
+        expect (p).to_contain_error '--jobs cannot be used with --coverage'

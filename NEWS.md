@@ -2,6 +2,15 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - `-jN` or `--jobs=N` checks `N` spec-files at a time, with a worker
+    process each that takes the next spec-file that none has.  The output
+    of each spec-file is shown whole when it is done, and the results of
+    all of them are in one summary at the end, so that it is as readable as
+    one process, and a long run is shorter by about the number of cores.
+    It needs luaposix, and cannot be used with `--coverage`.
+
 
 ## Noteworthy changes in release 17.2.2 (2026-10-29) [stable]
 

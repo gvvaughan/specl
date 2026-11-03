@@ -38,6 +38,7 @@ Where '-' is given as a FILE, then read from standard input.
       --coverage         generate coverage report, if luacov is installed
   -1, --fail-fast        exit immediately on first failed example
   -f, --formatter=FILE   use a specific formatter [default=progress]
+  -j, --jobs=N           run N spec files at a time, which needs luaposix
   -v, --verbose          request verbose formatter output
 
 Filtering:

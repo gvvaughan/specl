@@ -236,18 +236,20 @@ function run_contexts(state, contexts, descriptions, env)
 end
 
 
--- Run `specs` from `state`.
-function run(state)
-   local formatter = state.opts.formatter
-
+-- Make STATE ready to collect the output of the formatter.
+local function prepare(state)
    state.accumulator = accumulator -- so we can pass self with ':'
-   state.accumulated = nil
+end
+
+
+-- Run `specs` from `state`, in order, with the formatter's output for each
+-- example accumulated in the state, and no header or footer.
+local function run_specs(state)
+   prepare(state)
 
    -- Outermost execution environment.
    state.sandbox = sandbox.new(state, state.env)
 
-   -- Run compiled specs, in order.
-   state:accumulator(formatter.header(state.stats, state.opts))
    for _, spec in ipairs(state.specs) do
       state.spec = spec
 
@@ -257,6 +259,18 @@ function run(state)
          break
       end
    end
+end
+
+
+-- Run `specs` from `state`.
+function run(state)
+   local formatter = state.opts.formatter
+
+   prepare(state)
+   state.accumulated = nil
+
+   state:accumulator(formatter.header(state.stats, state.opts))
+   run_specs(state)
 
    formatter.footer(state.stats, state.accumulated, state.opts)
    return state.stats.fail ~= 0 and 1 or 0
@@ -269,7 +283,9 @@ end
 --[[ ================= ]]--
 
 local M = {
+   prepare = prepare,
    run = run,
+   run_specs = run_specs,
 }
 
 

@@ -62,6 +62,7 @@ if _MODREV == 'dev' then
       'lib/specl/loader.lua',
       'lib/specl/main.lua',
       'lib/specl/matchers.lua',
+      'lib/specl/parallel.lua',
       'lib/specl/runner.lua',
       'lib/specl/sandbox.lua',
       'lib/specl/shell.lua',
@@ -117,7 +118,9 @@ if _MODREV == 'dev' then
    -- Each library shares one copy of std.normalize's core.
    local smush = '$SMUSH --main=specl.cli' ..
       ' --external=package --external=lpeg --external=luacov' ..
-      ' --external=posix.dirent --external=posix.sys.stat --external=posix.sys.time' ..
+      ' --external=posix.dirent --external=posix.poll --external=posix.stdio' ..
+      ' --external=posix.sys.stat --external=posix.sys.time --external=posix.sys.wait' ..
+      ' --external=posix.unistd' ..
       ' --external=yaml' ..
       ' $sources' ..
       ' optparse._normalize::std.normalize._core' ..
